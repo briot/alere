@@ -1,0 +1,41 @@
+#app {
+   --row-gap: 5px;
+   --col-gap: 5px;
+   background: var(--background);
+   color: var(--text-color);
+   min-width: 100vw;
+   min-height: 100vh;
+
+   display: grid;
+   grid-template-columns: 50px 1fr 120px;
+   grid-template-rows: 40px calc(100vh - 80px - 2 * var(--row-gap)) 40px;
+   grid-template-areas:
+      "header header header"
+      "lsidebar main rsidebar"
+      "footer footer footer";
+   column-gap: var(--col-gap);
+   row-gap: var(--row-gap);
+   justify-items: stretch;
+}
+
+h1 {
+   font-size: 1.5em;
+}
+
+.italic {
+   font-style: italic;
+}
+input:focus,
+button:focus,
+select:focus {
+   outline: 3px solid var(--focus-color);
+}
+
+a {
+   color: inherit;
+   text-decoration: underline rgb(150,150,150);
+}
+a:hover {
+   text-decoration: underline;
+}
+

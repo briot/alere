@@ -1,0 +1,58 @@
+.accountSummary {
+   --summary-bg: var(--tool-background);
+   --summary-bg2: #195977;
+   --tl-radius: 15px;
+
+   background: var(--summary-background);
+   border-top-left-radius: var(--tl-radius);
+
+   color: var(--text-color);
+   font-size: var(--font-size-sidebar);
+}
+.accountSummary.selected {
+   --summary-bg: green;
+   --summary-bg2: #265527;
+}
+
+.accountSummary > .title {
+   background: linear-gradient(var(--summary-bg), var(--summary-bg2));
+   border-top-left-radius: var(--tl-radius);
+   padding-left: 15px;
+}
+.accountSummary .content {
+   border: 1px solid var(--summary-bg2);
+   text-align: right;
+}
+
+.accountSummary .popup {
+   display: none;
+   animation: popup 0.2s;
+}
+@keyframes popup {
+  0%   { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
+.accountSummary:hover .popup {
+   --width: 170px;
+   --padd: 20px;
+   --gap: 5px;  /* between popup and accountSummary */
+
+   display: block;
+   position: absolute;
+   margin-left: calc( 0px - var(--width) - 2 * var(--padd) - var(--gap));
+   width: var(--width);
+   background: var(--background-summary-popup);
+   border: 1px solid green;
+   border-radius: 10px;
+   padding: 10px var(--padd);
+}
+.accountSummary .popup .name {
+   font-weight: bold;
+}
+.accountSummary .popup th {
+   font-weight: normal;
+   text-align: left;
+}
+
+
