@@ -1,0 +1,185 @@
+#main {
+   grid-area: main;
+
+   display: flex;
+   flex-flow: column nowrap;
+   padding: 0 20px;
+}
+
+/* Always display the scrollbar: otherwise it ends up resizing the width of
+ * tbody when it appears, and the header's width is no longer in sync. We
+ * style it to make it less like a gray block though, using either standard
+ * CSS (firefox), or -webkit specific ones (Chrome + Safari)
+ *    https://alligator.io/css/css-scrollbars/
+ */
+.ledger .scrollbar-width {
+   overflow-y: scroll;
+   visibility: hidden;   /* Always the exact width of a scrollbar */
+}
+.ledger .tbody {
+   overflow-y: scroll;   /* Show scrollbar always */
+   scrollbar-color: var(--tool-background) var(--background);  /* firefox */
+}
+.ledger .tbody::-webkit-scrollbar {
+   width: auto;
+}
+.ledger .tbody::-webkit-scrollbar-track {
+   background: var(--background);
+}
+.ledger .tbody::-webkit-scrollbar-thumb {
+   background-color: var(--tool-background);
+   border-radius: 20px;
+   border: 3px solid var(--background);
+}
+
+
+.ledger .tr {
+   display: flex;
+   width: 100%;         /* All rows use the full width */
+}
+.ledger .th,
+.ledger .td {
+   display: inline-block;
+   flex: 1 1;
+   border-style: solid;
+   border-color: var(--table-color);
+   border-width: var(--table-horiz-border-width) var(--table-vert-border-width);
+   padding: 3px 2px;
+   overflow: hidden;  /* obey column sizes */
+}
+.ledger .th {
+   font-weight: bold;
+}
+.ledger .td {
+   text-align: left;  /* default alignment */
+}
+
+.ledger .thead .tr .th {
+   border-bottom: 1px solid var(--table-color);
+   margin-bottom: 5px;
+   cursor: pointer;  /* indicate that we can sort by clicking */
+}
+
+
+/* Show sorting icons */
+.ledger .thead .tr .th.sorted-down:after,
+.ledger .thead .tr .th.sorted-up:after,
+.ledger .thead .tr:hover .th.sortable:after {
+   display: inline-block;
+   font: normal normal normal 14px/1 FontAwesome;
+   text-rendering: auto;
+   margin-left: 5px;
+   -webkit-font-smoothing: antialiased;
+   -moz-osx-font-smoothing: grayscale;
+}
+.ledger .thead .tr:hover .th.sortable:after {
+   content: "\f0dc" !important;
+}
+.ledger .thead .tr .th.sorted-down:after {
+   content: "\f0dd";
+}
+.ledger .thead .tr .th.sorted-up:after {
+   content: "\f0de";
+}
+
+
+/* Expandable rows */
+.ledger .tr.expandable:before {
+   --size: 20px;
+
+   position: relative;
+   font: normal normal normal 14px/1 FontAwesome;
+   text-rendering: auto;
+   width: var(--size);
+   margin-left: -20px;
+   font-size: 25px;
+   -webkit-font-smoothing: antialiased;
+   -moz-osx-font-smoothing: grayscale;
+   float: left;
+   display: inline-block;
+   cursor: pointer;
+}
+.ledger .tr.expandable.collapsed:before {
+   content: "\f0da";
+}
+.ledger .tr.expandable.expanded:before {
+   content: "\f0dd";
+   margin-top: -0.5ex;
+}
+.ledger .thead,
+.ledger .tbody,
+.ledger .tfoot {
+   /* Leave space on the sides of the table for the expansion arrows */
+   padding-left: 20px;
+}
+
+.ledger .tfoot .tr .th {
+   margin-top: 10px;   /* between table and footer */
+   margin-left: 20px;  /* space between items */
+}
+
+.ledger .tr.details .td {
+   color: #aaa;       /* darker color for split transaction details */
+   font-style: italic;
+}
+
+
+/* Rows can have a background color */
+.ledger .tbody .tr {
+   background: var(--table-row-background);
+}
+.ledger .tbody .tr.double {
+   background: var(--table-row-double-background);
+}
+.ledger .tbody .tr.details {
+   background: var(--table-row-details-background);
+}
+
+/* A row can have all its cells right-aligned (i.e. not in the usual columns) */
+.ledger .tr.right-aligned {
+   justify-content: flex-end;
+}
+.ledger .tr.right-aligned .th,
+.ledger .tr.right-aligned .td {
+   flex: 0 0 auto;
+   white-space: nowrap;
+}
+
+/* Highlight row under the mouse cursor. Rows can be grouped so that they are
+ * all highlighted when the mouse is over any of them, used for split
+ * transactions. */
+.ledger .tbody .trgroup:hover .tr,
+.ledger .tbody .tr:hover {
+   background: var(--table-hover-background);
+}
+
+/* Warning for inconsistent data */
+.ledger .td.warn:before {
+   content: '\f06a';
+   font: normal normal normal 14px/1 FontAwesome;
+   margin-right: 2px;
+   color: #f2e154;
+}
+
+/* Editing */
+.ledger .tr.edit .td input,
+.ledger .tr.edit .td select {
+   width: 100%;
+}
+
+
+.ledger .date {
+   flex: 0 0 6em;
+}
+.ledger .num {
+   flex: 0 0 60px;
+}
+.ledger .reconcile {
+   flex: 0 0 1.5em;
+   text-align: center;
+}
+.ledger .amount {
+   flex: 0 0 7em;
+   text-align: right;
+}
+
