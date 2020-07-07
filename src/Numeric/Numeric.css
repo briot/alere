@@ -1,0 +1,22 @@
+.numeric {
+   font-family: "minion pro", "myriad pro", "tahoma";
+   font-variant-numeric: oldstyle-nums tabular-nums;
+   font-variant-numeric: lining-nums tabular-nums;
+}
+.numeric.positive {
+   color: #06ea06;
+}
+.numeric.negative {
+   color: red;
+}
+.numeric.euro:before {
+   content: '\f153';
+   font: normal normal normal 14px/1 FontAwesome;
+   margin-right: 4px;
+}
+.numeric.usd:before {
+   content: '\f155';
+   font: normal normal normal 14px/1 FontAwesome;
+   margin-right: 4px;
+}
+
