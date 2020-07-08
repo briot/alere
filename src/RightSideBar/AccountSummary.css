@@ -6,7 +6,6 @@
    background: var(--summary-background);
    border-top-left-radius: var(--tl-radius);
 
-   color: var(--text-color);
    font-size: var(--font-size-sidebar);
 }
 .accountSummary.selected {
@@ -16,12 +15,14 @@
 
 .accountSummary > .title {
    background: linear-gradient(var(--summary-bg), var(--summary-bg2));
+   color: var(--tool-color);
    border-top-left-radius: var(--tl-radius);
    padding-left: 15px;
 }
 .accountSummary .content {
    border: 1px solid var(--summary-bg2);
    text-align: right;
+   color: var(--text-color);
 }
 
 .accountSummary .popup {

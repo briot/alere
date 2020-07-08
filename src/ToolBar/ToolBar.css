@@ -64,7 +64,7 @@
    background: var(--tool-background);
    border: 1px solid var(--dark-grey);
    border-radius: var(--tool-border-radius);
-   color: var(--text-color);
+   color: var(--tool-color);
    text-align: center;  /* center icons */
    font-size: 10px;     /* for the text within */
 

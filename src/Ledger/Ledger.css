@@ -6,7 +6,45 @@
    padding: 0 20px;
 }
 
-/* Always display the scrollbar: otherwise it ends up resizing the width of
+.ledger .tr {
+   display: flex;
+   width: 100%;         /* All rows use the full width */
+}
+.ledger .th,
+.ledger .td {
+   display: inline-block;
+   flex: 1 1;
+   min-height: 1.2em;    /* even empty lines should use some space */
+   border-style: solid;
+   border-color: var(--table-color);
+   border-width: var(--table-horiz-border-width) var(--table-vert-border-width);
+   padding: 3px 2px;
+   overflow: hidden;  /* obey column sizes */
+}
+.ledger .th {
+   font-weight: bold;
+}
+.ledger .td {
+   text-align: left;  /* default alignment */
+}
+.ledger .thead .tr .th {
+   border-bottom: 1px solid var(--table-color);
+   margin-bottom: 5px;
+   cursor: pointer;  /* indicate that we can sort by clicking */
+}
+.ledger .tfoot .tr .th {
+   margin-top: 10px;   /* between table and footer */
+   margin-left: 20px;  /* space between items */
+}
+
+.ledger .tr.details .td {
+   color: #aaa;       /* darker color for split transaction details */
+   font-style: italic;
+}
+
+
+/**
+ * Always display the scrollbar: otherwise it ends up resizing the width of
  * tbody when it appears, and the header's width is no longer in sync. We
  * style it to make it less like a gray block though, using either standard
  * CSS (firefox), or -webkit specific ones (Chrome + Safari)
@@ -32,37 +70,9 @@
    border: 3px solid var(--background);
 }
 
-
-.ledger .tr {
-   display: flex;
-   width: 100%;         /* All rows use the full width */
-}
-.ledger .th,
-.ledger .td {
-   display: inline-block;
-   flex: 1 1;
-   min-height: 1.2em;    /* even empty lines should use some space */
-   border-style: solid;
-   border-color: var(--table-color);
-   border-width: var(--table-horiz-border-width) var(--table-vert-border-width);
-   padding: 3px 2px;
-   overflow: hidden;  /* obey column sizes */
-}
-.ledger .th {
-   font-weight: bold;
-}
-.ledger .td {
-   text-align: left;  /* default alignment */
-}
-
-.ledger .thead .tr .th {
-   border-bottom: 1px solid var(--table-color);
-   margin-bottom: 5px;
-   cursor: pointer;  /* indicate that we can sort by clicking */
-}
-
-
-/* Show sorting icons */
+/**
+ * Show sorting icons
+ */
 .ledger .thead .tr .th.sorted-down:after,
 .ledger .thead .tr .th.sorted-up:after,
 .ledger .thead .tr:hover .th.sortable:after {
@@ -83,8 +93,9 @@
    content: "\f0de";
 }
 
-
-/* Expandable rows */
+/**
+ * Expandable rows
+ */
 .ledger .tr.expandable:before {
    --size: 20px;
 
@@ -114,19 +125,10 @@
    padding-left: 20px;
 }
 
-.ledger .tfoot .tr .th {
-   margin-top: 10px;   /* between table and footer */
-   margin-left: 20px;  /* space between items */
-}
-
-.ledger .tr.details .td {
-   color: #aaa;       /* darker color for split transaction details */
-   font-style: italic;
-}
-
-
-/* Rows can have a background color */
-.ledger .tbody .tr {
+/**
+ * Rows can have a background color
+ */
+.ledger.background .tbody .tr {
    background: var(--table-row-background);
 }
 .ledger .tbody .tr.double {

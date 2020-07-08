@@ -15,7 +15,6 @@
 }
 
 #header .tools {
-   flow: 0;
    display: flex;
    flex-flow: row nowrap;
    gap: 10px;

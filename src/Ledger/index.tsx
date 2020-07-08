@@ -1,9 +1,11 @@
 import React from 'react';
-import { amountForAccount, Split, Transaction } from 'Transaction';
+import { amountForAccount, firstSplitForAccount,
+         Split, Transaction } from 'Transaction';
 import Numeric from 'Numeric';
 import './Ledger.css';
 
 export enum SplitMode {
+   HIDE,       // never show the splits
    COLLAPSED,  // do not show splits if there are only two accounts involved
    MULTILINE,  // one line per split in a transaction
    SUMMARY,    // only one line for all splits (when more than two)
@@ -92,25 +94,24 @@ interface FirstRowProps {
 }
 const FirstRow: React.FC<FirstRowProps> = p => {
    const t = p.transaction;
-   let use_first: boolean;
+   let s: Split = {
+      account: '--split--',
+      reconcile: '',
+      amount: amountForAccount(t, p.accountName),
+   };
 
    switch (p.options.split_mode) {
+      case SplitMode.HIDE:
       case SplitMode.COLLAPSED:
       case SplitMode.SUMMARY:
-         use_first = (t.splits.length > 2);
+         if (t.splits.length < 3) {
+            const s2 = firstSplitForAccount(t, p.accountName);
+            s = {...s2, amount: s.amount};
+         }
          break;
       case SplitMode.MULTILINE:
-         use_first = false;
          break;
    }
-
-   const s: Split = use_first
-      ? t.splits[0]
-      : {
-         account: '--split--',
-         reconcile: '',
-         amount: amountForAccount(t, p.accountName),
-      };
 
    return (
       <TR>
@@ -283,8 +284,18 @@ interface LedgerProps {
 }
 
 const Ledger: React.FC<LedgerProps> = p => {
+   const className = 'ledger'
+
+      // no background necessary if we are only ever going to display one line
+      // per transaction
+      + (p.options.trans_mode === TransactionMode.ONE_LINE
+         && p.options.split_mode === SplitMode.HIDE
+         ? ''
+         : ' background'
+        );
+
    return (
-      <div id='main' className='ledger'>
+      <div id='main' className={className} >
          <div className="thead">
             <TR>
                <TH kind='date' sortable={true}>Date</TH>
