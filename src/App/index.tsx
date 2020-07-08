@@ -13,7 +13,7 @@ const App: React.FC<{}> = () => {
       id: id + 10,
       date: '2020-06-04',
       payee: 'garage',
-      balance: 4500 - id * 100,
+      balance: 8200 - id * 100,
       splits: [
          {account: 'expense:car', amount: 100},
          {account: 'assets:boursorama:commun', amount: -100, },
@@ -44,9 +44,20 @@ const App: React.FC<{}> = () => {
       },
       {
          id: 2,
+         date: '2020-06-02',
+         payee: 'copied from gnucash',
+         balance: 8200,
+         splits: [
+            {account: 'income:salary', amount: -4200, },
+            {account: 'expenses:taxes', amount: 500, },
+            {account: 'assets:boursorama:commun', amount: 3700, },
+         ]
+      },
+      {
+         id: 3,
          date: '2020-06-03',
          payee: 'with notes',
-         balance: 4600,
+         balance: 8300,
          notes: 'gift from X',
          splits: [
             {account: 'income:cadeau', amount: -100, },
@@ -59,7 +70,7 @@ const App: React.FC<{}> = () => {
    const accountName = 'assets:boursorama:commun';
    const options = {
       trans_mode: TransactionMode.AUTO,
-      split_mode: SplitMode.SUMMARY,
+      split_mode: SplitMode.MULTILINE,
    }
 
    return (

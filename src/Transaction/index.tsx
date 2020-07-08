@@ -18,11 +18,17 @@ export interface Transaction {
 }
 
 /**
+ * Return the first split that applies to the given account
+ */
+export const firstSplitForAccount = (t: Transaction, account: string) =>
+    t.splits.filter(s => s.account === account)[0];
+
+/**
  * Compute what the transaction amount is, for the given account.
  * This is the sum of the splits that apply to this account.
  */
 export const amountForAccount = (t: Transaction, account: string) =>
     t.splits.reduce(
-       (acc, curr) => curr.account === account ? acc + curr.amount : acc,
+       (acc, s) => s.account === account ? acc + s.amount : acc,
        0
     );
