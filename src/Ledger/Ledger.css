@@ -41,6 +41,7 @@
 .ledger .td {
    display: inline-block;
    flex: 1 1;
+   min-height: 1.2em;    /* even empty lines should use some space */
    border-style: solid;
    border-color: var(--table-color);
    border-width: var(--table-horiz-border-width) var(--table-vert-border-width);

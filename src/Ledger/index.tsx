@@ -1,7 +1,25 @@
 import React from 'react';
-import { Transaction } from 'Transaction';
+import { amountForAccount, Split, Transaction } from 'Transaction';
 import Numeric from 'Numeric';
 import './Ledger.css';
+
+export enum SplitMode {
+   COLLAPSED,  // do not show splits if there are only two accounts involved
+   MULTILINE,  // one line per split in a transaction
+   SUMMARY,    // only one line for all splits (when more than two)
+}
+
+export enum TransactionMode {
+   ONE_LINE,   // only use one line (notes are never displayed)
+   AUTO,       // transactions use two lines if they have notes
+   TWO_LINES,  // transactions always use two lines (to show notes)
+}
+
+
+interface LedgerOptions {
+   trans_mode: TransactionMode;
+   split_mode: SplitMode;
+}
 
 /**
  * A header cell
@@ -50,8 +68,8 @@ interface TRProps {
 }
 const TR: React.FC<TRProps> = p => {
    const expClass = p.expanded === undefined ? ''
-       : p.expanded ? 'expandable'
-       : 'expandable expanded';
+       : p.expanded ? 'expandable expanded'
+       : 'expandable';
    const detClass = p.details ? 'details' : '';
    const className = `tr ${p.partial ? 'right-aligned' : ''} ${expClass} ${detClass}`;
    return (
@@ -62,88 +80,206 @@ const TR: React.FC<TRProps> = p => {
 }
 
 /**
- * One or more rows to describe a transaction
+ * The first two for a transaction.
+ * It will show either the single split associated with the transaction, or a
+ * summary of all the splits.
  */
 
-const TransactionRow: React.FC<Transaction> = p => {
-   if (p.splits.length === 1) {
-      const s = p.splits[0];
-      return (
-         <TR>
-            <TD kind='date'>{p.date}</TD>
-            <TD kind='num'>{s.num}</TD>
-            <TD kind='payee'>{p.payee}</TD>
-            <TD kind='transfer'>{s.account}</TD>
-            <TD kind='reconcile'>{s.reconcile}</TD>
-            <TD kind='amount'>
-               {
-                  s.amount < 0 && (
-                     <Numeric amount={s.amount} />
-                  )
-               }
-            </TD>
-            <TD kind='amount'>
-               {
-                  s.amount >= 0 && (
-                     <Numeric amount={s.amount} />
-                  )
-               }
-            </TD>
-            <TD kind='amount'>
-               <Numeric amount={p.balance} />
-            </TD>
-         </TR>
-      );
+interface FirstRowProps {
+   transaction: Transaction;
+   accountName: string;
+   options: LedgerOptions;
+}
+const FirstRow: React.FC<FirstRowProps> = p => {
+   const t = p.transaction;
+   let use_first: boolean;
 
-   } else {
-      return (
-         <>
-            <TR expanded={true}>
-               <TD kind='date'>{p.date}</TD>
-               <TD kind='num' />
-               <TD kind='payee'>{p.payee}</TD>
-               <TD kind='transfer'>--split--</TD>
-               <TD kind='reconcile' />
-               <TD kind='amount' />
-               <TD kind='amount' />
-               <TD kind='amount'>
-                  <Numeric amount={p.balance} />
-               </TD>
-            </TR>
+   switch (p.options.split_mode) {
+      case SplitMode.COLLAPSED:
+      case SplitMode.SUMMARY:
+         use_first = (t.splits.length > 2);
+         break;
+      case SplitMode.MULTILINE:
+         use_first = false;
+         break;
+   }
 
+   const s: Split = use_first
+      ? t.splits[0]
+      : {
+         account: '--split--',
+         reconcile: '',
+         amount: amountForAccount(t, p.accountName),
+      };
+
+   return (
+      <TR>
+         <TD kind='date'>{t.date}</TD>
+         <TD kind='num'>{s.num}</TD>
+         <TD kind='payee'>{t.payee}</TD>
+         <TD kind='transfer'>{s.account}</TD>
+         <TD kind='reconcile'>{s.reconcile || 'n'}</TD>
+         <TD kind='amount'>
             {
-               p.splits.map((s, sid) => (
-                  <TR details={true} key={`${p.id} ${sid}`} >
-                     <TD kind='date' />
-                     <TD kind='num'>{s.num}</TD>
-                     <TD kind='payee' />
-                     <TD kind='transfer'>{s.account}</TD>
-                     <TD kind='reconcile'>{s.reconcile}</TD>
-                     <TD kind='amount'>
-                        {
-                           s.amount < 0 && (
-                              <Numeric amount={s.amount} />
-                           )
-                        }
-                     </TD>
-                     <TD kind='amount'>
-                        {
-                           s.amount >= 0 && (
-                              <Numeric amount={s.amount} />
-                           )
-                        }
-                     </TD>
-                     <TD kind='amount' />
-                  </TR>
-               ))
+               s.amount < 0 && (
+                  <Numeric amount={Math.abs(s.amount)} />
+               )
             }
-         </>
-      );
+         </TD>
+         <TD kind='amount'>
+            {
+               s.amount >= 0 && (
+                  <Numeric amount={s.amount} />
+               )
+            }
+         </TD>
+         <TD kind='amount'>
+            <Numeric amount={t.balance} />
+         </TD>
+      </TR>
+   );
+}
+
+/**
+ * The row that shows the details for a transaction
+ */
+
+interface NotesRowProps {
+   transaction: Transaction;
+   options: LedgerOptions;
+}
+const NotesRow: React.FC<NotesRowProps> = p => {
+   switch (p.options.trans_mode) {
+      case TransactionMode.ONE_LINE:
+         return null;
+      case TransactionMode.AUTO:
+         if (!p.transaction.notes) {
+            return null;
+         }
+         /* fall through */
+      default:
+         return (
+            <div className="tr double">
+               <TD kind="date" />
+               <TD kind="num"></TD>
+               <TD kind="payee">{p.transaction.notes}</TD>
+               <TD kind="transfer" />
+               <TD kind="reconcile" />
+               <TD kind="amount" />
+               <TD kind="amount" />
+               <TD kind="amount" />
+            </div>
+         );
    }
 }
 
+/**
+ * Split details
+ */
+
+interface SplitRowProps {
+   split: Split;
+}
+const SplitRow: React.FC<SplitRowProps> = p => {
+   const s = p.split;
+   return (
+      <TR details={true}>
+         <TD kind='date' />
+         <TD kind='num'>{s.num}</TD>
+         <TD kind='payee' />
+         <TD kind='transfer'>{s.account}</TD>
+         <TD kind='reconcile'>{s.reconcile || 'n'}</TD>
+         <TD kind='amount'>
+            {
+               s.amount < 0 && (
+                  <Numeric amount={Math.abs(s.amount)} />
+               )
+            }
+         </TD>
+         <TD kind='amount'>
+            {
+               s.amount >= 0 && (
+                  <Numeric amount={s.amount} />
+               )
+            }
+         </TD>
+         <TD kind='amount' />
+      </TR>
+   );
+}
+
+/**
+ * One or more rows to describe a transaction
+ */
+
+interface TransactionRowProps {
+   transaction: Transaction;
+   accountName: string;
+   options: LedgerOptions;
+}
+
+const TransactionRow: React.FC<TransactionRowProps> = p => {
+   const t = p.transaction;
+   let lines: (JSX.Element|null)[] = [];
+
+   switch (p.options.split_mode) {
+      case SplitMode.COLLAPSED:
+         if (t.splits.length > 2) {
+            lines = t.splits.map((s, sid) => (
+               <SplitRow split={s} key={`${t.id} ${sid}`} />
+            ));
+         }
+         break;
+      case SplitMode.MULTILINE:
+         lines = t.splits.map((s, sid) => (
+            <SplitRow split={s} key={`${t.id} ${sid}`} />
+         ));
+         break;
+
+      case SplitMode.SUMMARY:
+         const amount = amountForAccount(t, p.accountName);
+         if (t.splits.length > 2) {
+            lines = [
+               <TR partial={true} details={true}>
+                  <TD>
+                     <Numeric amount={amount} />
+                     &nbsp;=&nbsp;
+                     {
+                        t.splits.map(s =>
+                           (s.account !== p.accountName)
+                           ? [
+                              <span>{ s.amount >= 0 ? ' - ' : ' + ' }</span>,
+                              <Numeric amount={Math.abs(s.amount)} />,
+                              ' (',
+                              <a href='#'>{s.account}</a>,
+                              ')'
+                           ] : null
+                        )
+                     }
+                  </TD>
+               </TR>
+            ];
+         }
+         break;
+   }
+
+   return (
+      <>
+         <FirstRow
+            transaction={t}
+            options={p.options}
+            accountName={p.accountName}
+          />
+         <NotesRow transaction={t} options={p.options} />
+         {lines}
+      </>
+   );
+}
+
 interface LedgerProps {
+   accountName: string;
    transactions: Transaction[];
+   options: LedgerOptions;
 }
 
 const Ledger: React.FC<LedgerProps> = p => {
@@ -156,7 +292,7 @@ const Ledger: React.FC<LedgerProps> = p => {
                <TH kind='payee' sortable={true}>Payee</TH>
                <TH kind='transfer' sortable={true}>From/To</TH>
                <TH kind='reconcile'>R</TH>
-               <TH kind='amount' sortable={true} asc={false}>Payment</TH>
+               <TH kind='amount' sortable={true} asc={false}>Withdrawal</TH>
                <TH kind='amount' sortable={true} asc={true}>Deposit</TH>
                <TH kind='amount' >Balance</TH>
                <div className="scrollbar-width"></div>
@@ -166,7 +302,12 @@ const Ledger: React.FC<LedgerProps> = p => {
          <div className="tbody">
             {
                p.transactions.map(t => (
-                  <TransactionRow key={t.id} {...t} />
+                  <TransactionRow
+                     key={t.id}
+                     transaction={t}
+                     accountName={p.accountName}
+                     options={p.options}
+                  />
                ))
             }
          </div>
