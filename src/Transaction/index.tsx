@@ -4,8 +4,6 @@ export interface Split {
    reconcile?: string;
    amount: number;
    currency?: string;
-   action?: string;
-   notes?: string;
 }
 
 export interface Transaction {
@@ -16,5 +14,15 @@ export interface Transaction {
    splits: Split[];  // at least one (there are two in the database, but here
                      // we might be seeing a partial view specific to one
                      // account only).
+   notes?: string;
 }
 
+/**
+ * Compute what the transaction amount is, for the given account.
+ * This is the sum of the splits that apply to this account.
+ */
+export const amountForAccount = (t: Transaction, account: string) =>
+    t.splits.reduce(
+       (acc, curr) => curr.account === account ? acc + curr.amount : acc,
+       0
+    );

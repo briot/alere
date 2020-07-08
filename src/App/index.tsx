@@ -3,7 +3,7 @@ import Header from 'Header';
 import LeftSideBar from 'LeftSideBar';
 import RightSideBar from 'RightSideBar';
 import Footer from 'Footer';
-import Ledger from 'Ledger';
+import { default as Ledger, SplitMode, TransactionMode } from 'Ledger';
 import { Transaction } from 'Transaction';
 import './App.css';
 import "font-awesome/css/font-awesome.min.css";
@@ -13,9 +13,10 @@ const App: React.FC<{}> = () => {
       id: id + 10,
       date: '2020-06-04',
       payee: 'garage',
-      balance: 4800 - id * 100,
+      balance: 4500 - id * 100,
       splits: [
-         { account: 'expense:car', amount: -100},
+         {account: 'expense:car', amount: 100},
+         {account: 'assets:boursorama:commun', amount: -100, },
       ]
    }));
    const real: Transaction[] = [
@@ -25,43 +26,54 @@ const App: React.FC<{}> = () => {
          payee: 'random payee',
          balance: 800,
          splits: [
-            {
-               account: 'expenses:car',
-               amount: -200,
-            },
+            {account: 'expenses:car', amount: -200, },
+            {account: 'assets:boursorama:commun', amount: 200, },
          ]
       },
       {
          id: 1,
          date: '2020-06-02',
          payee: 'copied from gnucash',
-         balance: 4700,
+         balance: 4500,
+         notes: 'gift from Y',
          splits: [
-            { account: 'income:salary', amount: -4200, },
-            { account: 'expenses:taxes', amount: 500, },
-            { account: 'assets:boursorama:commun', amount: 3700, },
+            {account: 'income:salary', amount: -4200, },
+            {account: 'expenses:taxes', amount: 500, },
+            {account: 'assets:boursorama:commun', amount: 3700, },
          ]
       },
       {
          id: 2,
          date: '2020-06-03',
          payee: 'with notes',
-         balance: 4800,
+         balance: 4600,
+         notes: 'gift from X',
          splits: [
-            { account: 'income:cadeau', amount: 100, notes: 'gift from X', },
+            {account: 'income:cadeau', amount: -100, },
+            {account: 'assets:boursorama:commun', amount: 100, },
          ]
       },
    ]
    const transactions: Transaction[] = real.concat(dummy);
 
+   const accountName = 'assets:boursorama:commun';
+   const options = {
+      trans_mode: TransactionMode.AUTO,
+      split_mode: SplitMode.SUMMARY,
+   }
+
    return (
      <div id="app">
-         <Header title="assets:Boursorama:Commun" />
+         <Header title={accountName} />
          <LeftSideBar />
          <RightSideBar />
          <Footer />
 
-         <Ledger transactions={transactions} />
+         <Ledger
+            transactions={transactions}
+            accountName={accountName}
+            options={options}
+         />
      </div>
    );
 }
