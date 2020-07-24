@@ -9,7 +9,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = p => {
    return (
       <div id='header'>
-         <Toolbar.Bar vertical={false}>
+         <Toolbar.Bar vertical={false} background={true}>
             <Toolbar.Button grows={true} label={p.title} />
             <Toolbar.Group>
                <Toolbar.Button label="Sync" icon="fa-refresh" />

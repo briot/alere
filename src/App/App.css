@@ -1,7 +1,7 @@
 #app {
    --row-gap: 25px;
    --col-gap: 25px;
-   background: var(--background);
+   background: var(--page-background);
    color: var(--text-color);
    min-width: 100vw;
    min-height: 100vh;
@@ -27,6 +27,7 @@ h1 {
 .italic {
    font-style: italic;
 }
+
 input:focus,
 button:focus,
 select:focus {

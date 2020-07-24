@@ -67,14 +67,16 @@ const TD: React.FC<TDProps> = p => {
 interface TRProps {
    partial?: boolean;  // if yes, cells will be aligned to the right
    expanded?: boolean; // undefined if not expandable, otherwise true|false
-   details?: boolean;
+   level?: number;
+   editable?: boolean;
 }
 const TR: React.FC<TRProps> = p => {
    const expClass = p.expanded === undefined ? ''
        : p.expanded ? 'expandable expanded'
-       : 'expandable';
-   const detClass = p.details ? 'details' : '';
-   const className = `tr ${p.partial ? 'right-aligned' : ''} ${expClass} ${detClass}`;
+       : 'expandable collapsed';
+   const levClass = !p.level ? 'first' : 'details';
+   const editClass = p.editable ? 'edit' : '';
+   const className = `tr ${p.partial ? 'right-aligned' : ''} ${editClass} ${expClass} ${levClass}`;
    return (
       <div className={className} >
          {p.children}
@@ -92,6 +94,7 @@ interface FirstRowProps {
    transaction: Transaction;
    accountName: string;
    options: LedgerOptions;
+   expanded?: boolean;
 }
 const FirstRow: React.FC<FirstRowProps> = p => {
    const t = p.transaction;
@@ -115,12 +118,12 @@ const FirstRow: React.FC<FirstRowProps> = p => {
    }
 
    return (
-      <TR>
+      <TR expanded={p.expanded} >
          <TD kind='date'>{t.date}</TD>
          <TD kind='num'>{s.num}</TD>
-         <TD kind='payee'>{t.payee}</TD>
-         <TD kind='transfer'>{s.account}</TD>
-         <TD kind='reconcile'>{s.reconcile || 'n'}</TD>
+         <TD kind='payee'><a href='#'>{t.payee}</a></TD>
+         <TD kind='transfer'><a href='#'>{s.account}</a></TD>
+         <TD kind='reconcile'>{s.reconcile}</TD>
          <TD kind='amount'>
             {
                s.amount < 0 && (
@@ -185,12 +188,12 @@ interface SplitRowProps {
 const SplitRow: React.FC<SplitRowProps> = p => {
    const s = p.split;
    return (
-      <TR details={true}>
+      <TR level={1}>
          <TD kind='date' />
          <TD kind='num'>{s.num}</TD>
          <TD kind='payee' />
          <TD kind='transfer'>{s.account}</TD>
-         <TD kind='reconcile'>{s.reconcile || 'n'}</TD>
+         <TD kind='reconcile'>{s.reconcile}</TD>
          <TD kind='amount'>
             {
                s.amount < 0 && (
@@ -223,6 +226,7 @@ interface TransactionRowProps {
 const TransactionRow: React.FC<TransactionRowProps> = p => {
    const t = p.transaction;
    let lines: (JSX.Element|null)[] = [];
+   let expanded: undefined|boolean;  // undefined if not expandable
 
    switch (p.options.split_mode) {
       case SplitMode.COLLAPSED:
@@ -230,19 +234,21 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
             lines = t.splits.map((s, sid) => (
                <SplitRow split={s} key={`${t.id} ${sid}`} />
             ));
+            expanded = true;
          }
          break;
       case SplitMode.MULTILINE:
          lines = t.splits.map((s, sid) => (
             <SplitRow split={s} key={`${t.id} ${sid}`} />
          ));
+         expanded = true;
          break;
 
       case SplitMode.SUMMARY:
          const amount = amountForAccount(t, p.accountName);
          if (t.splits.length > 2) {
             lines = [
-               <TR partial={true} details={true}>
+               <TR partial={true} level={1}>
                   <TD>
                      <Numeric amount={amount} />
                      &nbsp;=&nbsp;
@@ -261,22 +267,129 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
                   </TD>
                </TR>
             ];
+            expanded = true;
          }
          break;
    }
 
    return (
-      <>
+      <div className="trgroup">
          <FirstRow
             transaction={t}
             options={p.options}
             accountName={p.accountName}
+            expanded={expanded}
           />
          <NotesRow transaction={t} options={p.options} />
          {lines}
-      </>
+      </div>
    );
 }
+
+/**
+ * A row to edit a new transaction
+ */
+
+interface EditingRowProps {
+   accountName: string;
+}
+
+const EditingRow: React.FC<EditingRowProps> = p => {
+   return (
+      <div className="trgroup">
+         <TR editable={true} >
+            <TD kind='date'>
+               <input type="date" placeholder="2020-07-01" tabIndex={1} />
+            </TD>
+            <TD kind='num'>
+               <input placeholder="num" />
+            </TD>
+            <TD kind='payee'>
+               <input placeholder="payee" tabIndex={2} />
+            </TD>
+            <TD kind='transfer' />
+            <TD kind='reconcile' />
+            <TD kind='amount' />
+            <TD kind='amount' />
+            <TD kind='amount'>
+               <button className="fa fa-check" tabIndex={13} />
+            </TD>
+         </TR>
+         <TR editable={true} >
+            <TD kind='date' />
+            <TD kind='num'>
+               <input placeholder="action" tabIndex={3} />
+            </TD>
+            <TD kind='payee'>
+               <input placeholder="notes" tabIndex={4} />
+            </TD>
+            <TD kind='transfer'>
+               {p.accountName}
+            </TD>
+            <TD kind='reconcile'>
+               <select>
+                  <option>n</option>
+                  <option>C</option>
+                  <option>R</option>
+               </select>
+            </TD>
+            <TD kind='amount'>
+               <input
+                  type="numeric"
+                  placeholder="0.00"
+                  tabIndex={6}
+                  style={{textAlign: 'right'}}
+               />
+            </TD>
+            <TD kind='amount'>
+               <input
+                  type="numeric"
+                  placeholder="0.00"
+                  tabIndex={7}
+                  style={{textAlign: 'right'}}
+               />
+            </TD>
+            <TD kind='amount'>
+               <button className="fa fa-ban" />
+            </TD>
+         </TR>
+         <TR editable={true} >
+            <TD kind='date' />
+            <TD kind='num'>
+               <input placeholder="action" tabIndex={8} />
+            </TD>
+            <TD kind='payee'>
+               <input placeholder="notes" tabIndex={9} />
+            </TD>
+            <TD kind='transfer'>
+               <input placeholder="transfer to/from" tabIndex={10} />
+            </TD>
+            <TD kind='reconcile' />
+            <TD kind='amount'>
+               <input
+                  type="numeric"
+                  placeholder="0.00"
+                  tabIndex={11}
+                  style={{textAlign: 'right'}}
+               />
+            </TD>
+            <TD kind='amount'>
+               <input
+                  type="numeric"
+                  placeholder="0.00"
+                  tabIndex={12}
+                  style={{textAlign: 'right'}}
+               />
+            </TD>
+            <TD kind='amount' />
+         </TR>
+      </div>
+   );
+}
+
+/**
+ * The full ledger
+ */
 
 interface LedgerProps {
    accountName: string;
@@ -307,7 +420,6 @@ const Ledger: React.FC<LedgerProps> = p => {
                <TH kind='amount' sortable={true} asc={false}>Withdrawal</TH>
                <TH kind='amount' sortable={true} asc={true}>Deposit</TH>
                <TH kind='amount' >Balance</TH>
-               <div className="scrollbar-width"></div>
             </TR>
          </div>
 
@@ -322,6 +434,7 @@ const Ledger: React.FC<LedgerProps> = p => {
                   />
                ))
             }
+            <EditingRow accountName={p.accountName} />
          </div>
 
          <div className="tfoot">
@@ -342,7 +455,6 @@ const Ledger: React.FC<LedgerProps> = p => {
                   Present:
                   <Numeric amount={3421.10} currency="euro" />
                </TH>
-               <div className="scrollbar-width"></div>
             </TR>
          </div>
       </div>

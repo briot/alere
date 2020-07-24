@@ -12,6 +12,7 @@ interface ButtonProps {
 const ToolButton: React.FC<ButtonProps> = p => {
    const className = "tool " + (p.grows ? "grow": "");
 
+   // ??? Should use a real button instead
    return (
       <div className={className} >
          {p.label}

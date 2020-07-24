@@ -15,8 +15,8 @@ const App: React.FC<{}> = () => {
       payee: 'garage',
       balance: 8200 - id * 100,
       splits: [
-         {account: 'expense:car', amount: 100},
-         {account: 'assets:boursorama:commun', amount: -100, },
+         {account: 'expense:car', amount: 100, reconcile: 'n'},
+         {account: 'assets:boursorama:commun', reconcile: 'R', amount: -100, },
       ]
    }));
    const real: Transaction[] = [
@@ -26,8 +26,8 @@ const App: React.FC<{}> = () => {
          payee: 'random payee',
          balance: 800,
          splits: [
-            {account: 'expenses:car', amount: -200, },
-            {account: 'assets:boursorama:commun', amount: 200, },
+            {account: 'expenses:car', amount: -200, reconcile: 'R'},
+            {account: 'assets:boursorama:commun', amount: 200, reconcile: 'n'},
          ]
       },
       {
@@ -37,9 +37,9 @@ const App: React.FC<{}> = () => {
          balance: 4500,
          notes: 'gift from Y',
          splits: [
-            {account: 'income:salary', amount: -4200, },
-            {account: 'expenses:taxes', amount: 500, },
-            {account: 'assets:boursorama:commun', amount: 3700, },
+            {account: 'income:salary', amount: -4200, reconcile: 'n'},
+            {account: 'expenses:taxes', amount: 500, reconcile: 'n'},
+            {account: 'assets:boursorama:commun', amount: 3700, reconcile: 'n'},
          ]
       },
       {
@@ -48,9 +48,9 @@ const App: React.FC<{}> = () => {
          payee: 'copied from gnucash',
          balance: 8200,
          splits: [
-            {account: 'income:salary', amount: -4200, },
-            {account: 'expenses:taxes', amount: 500, },
-            {account: 'assets:boursorama:commun', amount: 3700, },
+            {account: 'income:salary', amount: -4200, reconcile: 'n'},
+            {account: 'expenses:taxes', amount: 500, reconcile: 'n'},
+            {account: 'assets:boursorama:commun', amount: 3700, reconcile: 'n'},
          ]
       },
       {
@@ -60,8 +60,8 @@ const App: React.FC<{}> = () => {
          balance: 8300,
          notes: 'gift from X',
          splits: [
-            {account: 'income:cadeau', amount: -100, },
-            {account: 'assets:boursorama:commun', amount: 100, },
+            {account: 'income:cadeau', amount: -100, reconcile: 'n'},
+            {account: 'assets:boursorama:commun', amount: 100, reconcile: 'n'},
          ]
       },
    ]

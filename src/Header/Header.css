@@ -1,11 +1,6 @@
 #header {
    --break: calc(100% - var(--tool-border-radius));
    grid-area: header;
-   background: linear-gradient(
-      to bottom,
-      var(--background-header),
-      var(--grey) var(--break),
-      var(--transparent) var(--break));
 
    display: flex;
    flex-flow: row nowrap;

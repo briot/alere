@@ -26,16 +26,16 @@
    /* The grey column beneath the icons */
    background: linear-gradient(
       to right,
-      var(--grey),
-      var(--grey) var(--break),
+      var(--toolbar-background),
+      var(--toolbar-background2) var(--break),
       var(--transparent) var(--break));
 }
 .tools.horiz.background {
    /* The grey column beneath the icons */
    background: linear-gradient(
       to bottom,
-      var(--grey),
-      var(--grey) var(--break),
+      var(--toolbar-background),
+      var(--toolbar-background2) var(--break),
       var(--transparent) var(--break));
 }
 
@@ -62,7 +62,7 @@
 
 .tool {
    background: var(--tool-background);
-   border: 1px solid var(--dark-grey);
+   border: 1px solid var(--tool-border);
    border-radius: var(--tool-border-radius);
    color: var(--tool-color);
    font-size: var(--font-size-tool);     /* for the text within */
@@ -81,7 +81,7 @@
 }
 
 .tools.horiz .tool {
-   width: 50px;
+   width: 70px;
    border-top-left-radius: 0;
    border-top-right-radius: 0;
 }
@@ -93,12 +93,20 @@
    font-size: 18px;
    font-weight: bold;
 
-   align-items: flex-start;  /* left-align the text */
-   padding: 0 5px;   
 }
 
 .tools.vert .tool {
    border-top-left-radius: 0;
    border-bottom-left-radius: 0;
    height: 70px;
+}
+
+/**
+ * The page title
+ */
+.tools.horiz .tool.grow {
+   background: none;
+   border-color: var(--transparent);
+   font-size: 2em;
+   align-items: flex-start;  /* left-align the text */
 }
