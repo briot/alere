@@ -1,7 +1,7 @@
 .accountSummary {
    --summary-bg: var(--tool-background);
-   --summary-bg2: #195977;
-   --tl-radius: 15px;
+   --summary-bg2: var(--tool-background2);
+   --tl-radius: 10px;
 
    background: var(--summary-background);
    border-top-left-radius: var(--tl-radius);

@@ -1,5 +1,7 @@
 #main {
    grid-area: main;
+   background: var(--panel-background);
+   box-shadow: 3px 3px 4px 0px var(--gray-400);
 
    display: flex;
    flex-flow: column nowrap;
@@ -49,24 +51,24 @@
  * CSS (firefox), or -webkit specific ones (Chrome + Safari)
  *    https://alligator.io/css/css-scrollbars/
  */
-.ledger .scrollbar-width {
-   overflow-y: auto;
-   visibility: hidden;   /* Always the exact width of a scrollbar */
+.ledger .tr:after {
+   width: var(--scrollbar-width);
+   content: '';
 }
 .ledger .tbody {
    overflow-y: scroll;   /* Show scrollbar always */
-   scrollbar-color: var(--tool-background) var(--background);  /* firefox */
+   scrollbar-color: var(--tool-background) var(--panel-background);  /* firefox */
 }
 .ledger .tbody::-webkit-scrollbar {
    width: auto;
 }
 .ledger .tbody::-webkit-scrollbar-track {
-   background: var(--background);
+   background: var(--panel-background);
 }
 .ledger .tbody::-webkit-scrollbar-thumb {
    background-color: var(--tool-background);
    border-radius: 20px;
-   border: 3px solid var(--background);
+   border: 3px solid var(--panel-background);
 }
 
 /**
@@ -127,11 +129,8 @@
 /**
  * Rows can have a background color
  */
-.ledger.background .tbody .tr {
+.ledger.background .tbody .tr.first {
    background: var(--table-row-background);
-}
-.ledger .tbody .tr.double {
-   background: var(--table-row-double-background);
 }
 .ledger .tbody .tr.details {
    background: var(--table-row-details-background);
@@ -166,12 +165,20 @@
 /* Editing */
 .ledger .tr.edit .td input,
 .ledger .tr.edit .td select {
-   width: 100%;
+   width: calc(100% - 9px);
+}
+.ledger .tr.edit .td.reconcile select {
+   -moz-appearance: none;
+   -webkit-appearance: none;
+   appearance: none;
 }
 
 
 .ledger .date {
    flex: 0 0 6em;
+   font-family: "minion pro", "myriad pro", "tahoma";
+   font-variant-numeric: oldstyle-nums tabular-nums;
+   font-variant-numeric: lining-nums tabular-nums;
 }
 .ledger .num {
    flex: 0 0 60px;
