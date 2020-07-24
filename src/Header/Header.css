@@ -9,7 +9,7 @@
 
    display: flex;
    flex-flow: row nowrap;
-   justify-content: space-around;
+   justify-content: space-between;
    align-items: stretch;
    gap: 10px;
 }

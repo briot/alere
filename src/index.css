@@ -1,12 +1,13 @@
 :root {
    --font-size: 16px;
-   --font-size-sidebar: 14px;
+   --font-size-sidebar: 15px;
+   --font-size-tool: 13px;
    --scrollbar-width: 15px;  /* for webkit + chrome */
    --tool-border-radius: 10px;
    --table-vert-border-width: 0px;
    --table-horiz-border-width: 0px;
 }
-:root.dark {
+:root {
    --background: #0c2531;
    --background-summary-popup: rgba(0,0,0,0.9);
    --text-color: white;
@@ -26,7 +27,7 @@
    --tool-background: #497c9b;   /* #087cb5;*/
 
 }
-:root {
+:root.light {
    --background: white;
    --background-summary-popup: rgba(0,0,0,0.9);
    --text-color: #333;

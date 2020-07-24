@@ -3,7 +3,7 @@
    --gap-horiz: 10px;
 
    /* How far should the background gray bar expand */
-   --break: calc(100% - var(--tool-border-radius));
+   --break: calc(min(40px, 100% - var(--tool-border-radius)));
 
    flex: 1;
 
@@ -65,8 +65,7 @@
    border: 1px solid var(--dark-grey);
    border-radius: var(--tool-border-radius);
    color: var(--tool-color);
-   text-align: center;  /* center icons */
-   font-size: 10px;     /* for the text within */
+   font-size: var(--font-size-tool);     /* for the text within */
 
    flex-grow: 0;        /* Do not increase width or height of this item */
 
@@ -93,11 +92,13 @@
    min-width: 300px;
    font-size: 18px;
    font-weight: bold;
-   margin: 0 auto;    /* center text within allocated space */
+
+   align-items: flex-start;  /* left-align the text */
+   padding: 0 5px;   
 }
 
 .tools.vert .tool {
    border-top-left-radius: 0;
    border-bottom-left-radius: 0;
-   height: 50px;
+   height: 70px;
 }
