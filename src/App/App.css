@@ -1,16 +1,18 @@
 #app {
-   --row-gap: 5px;
-   --col-gap: 5px;
+   --row-gap: 25px;
+   --col-gap: 25px;
    background: var(--background);
    color: var(--text-color);
    min-width: 100vw;
    min-height: 100vh;
 
+   --header-height: 50px;
+   --footer-height: 0px;
    display: grid;
-   grid-template-columns: 50px 1fr 120px;
-   grid-template-rows: 40px calc(100vh - 80px - 2 * var(--row-gap)) 40px;
+   grid-template-columns: 70px 1fr 120px;
+   grid-template-rows: var(--header-height) calc(100vh - var(--header-height) - var(--footer-height) - 2 * var(--row-gap)) var(--footer-height);
    grid-template-areas:
-      "header header header"
+      "lheader header rheader"
       "lsidebar main rsidebar"
       "footer footer footer";
    column-gap: var(--col-gap);

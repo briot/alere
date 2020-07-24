@@ -2,7 +2,7 @@ import React from 'react';
 import Header from 'Header';
 import LeftSideBar from 'LeftSideBar';
 import RightSideBar from 'RightSideBar';
-import Footer from 'Footer';
+// import Footer from 'Footer';
 import { default as Ledger, SplitMode, TransactionMode } from 'Ledger';
 import { Transaction } from 'Transaction';
 import './App.css';
@@ -69,8 +69,8 @@ const App: React.FC<{}> = () => {
 
    const accountName = 'assets:boursorama:commun';
    const options = {
-      trans_mode: TransactionMode.AUTO,
-      split_mode: SplitMode.MULTILINE,
+      trans_mode: TransactionMode.ONE_LINE,
+      split_mode: SplitMode.COLLAPSED,
    }
 
    return (
@@ -78,7 +78,7 @@ const App: React.FC<{}> = () => {
          <Header title={accountName} />
          <LeftSideBar />
          <RightSideBar />
-         <Footer />
+         { /* <Footer /> */ }
 
          <Ledger
             transactions={transactions}

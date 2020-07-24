@@ -3,7 +3,6 @@
 
    display: flex;
    flex-flow: column nowrap;
-   padding: 0 20px;
 }
 
 .ledger .tr {
@@ -51,7 +50,7 @@
  *    https://alligator.io/css/css-scrollbars/
  */
 .ledger .scrollbar-width {
-   overflow-y: scroll;
+   overflow-y: auto;
    visibility: hidden;   /* Always the exact width of a scrollbar */
 }
 .ledger .tbody {

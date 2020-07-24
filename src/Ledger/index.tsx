@@ -6,8 +6,9 @@ import './Ledger.css';
 
 export enum SplitMode {
    HIDE,       // never show the splits
-   COLLAPSED,  // do not show splits if there are only two accounts involved
    MULTILINE,  // one line per split in a transaction
+   COLLAPSED,  // same as multiline, but do not show splits if there are only
+               // two accounts involved
    SUMMARY,    // only one line for all splits (when more than two)
 }
 
