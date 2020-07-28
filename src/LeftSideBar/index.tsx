@@ -1,5 +1,4 @@
 import React from 'react';
-import Toolbar from 'ToolBar';
 import './LeftSideBar.css';
 
 interface LeftSideBarProps {
@@ -8,43 +7,48 @@ interface LeftSideBarProps {
 const LeftSideBar: React.FC<LeftSideBarProps> = p => {
    return (
       <div id='lsidebar'>
-         <Toolbar.Bar vertical={true} background={true}>
-            <Toolbar.Group>
-               <Toolbar.Button
-                  label="Home"
-                  icon="fa-tachometer"
-                  title="Dashboard"
-               />
-               <Toolbar.Button
-                  label="Ledger"
-                  icon="fa-book"
-                  title="Accounts and Ledgets"
-               />
-               <Toolbar.Button
-                  label="Budget"
-                  icon="fa-balance-scale"
-               />
-               <Toolbar.Button
-                  label="Invest"
-                  icon="fa-bank"
-                  title="Investments"
-               />
-               <Toolbar.Button
-                  label="Reports"
-                  icon="fa-pie-chart"
-               />
-            </Toolbar.Group>
-            <Toolbar.Group>
-               <Toolbar.Button
-                  label="Custom 1"
-                  icon="fa-line-chart"
-               />
-               <Toolbar.Button
-                  label="Custom 2"
-                  icon="fa-line-chart"
-               />
-           </Toolbar.Group>
-         </Toolbar.Bar>
+         <ul>
+           <li>
+              <a href='#a'>
+                 <span className="fa fa-tachometer" /> Home
+              </a>
+           </li>
+           <li className='selected'>
+              <a href='#a'>
+                 <span className="fa fa-book" /> Ledger
+              </a>
+           </li>
+           <li>
+              <a href='#a'>
+                 <span className="fa fa-balance-scale" /> Budget
+              </a>
+           </li>
+           <li>
+              <a href='#a'>
+                 <span className="fa fa-bank" /> Investments
+              </a>
+           </li>
+           <li>
+              <a href='#a'>
+                 <span className="fa fa-pie-chart" /> Reports
+              </a>
+           </li>
+        </ul>
+
+        <h3>Favorite reports</h3>
+
+        <ul>
+           <li>
+              <a href='#a'>
+                 <span className="fa fa-line-chart" /> Custom 1
+              </a>
+           </li>
+           <li>
+              <a href='#a'>
+                 <span className="fa fa-line-chart" /> Custom 2
+              </a>
+           </li>
+        </ul>
       </div>
    );
 }
