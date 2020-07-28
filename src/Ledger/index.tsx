@@ -18,6 +18,7 @@ export enum TransactionMode {
    TWO_LINES,  // transactions always use two lines (to show notes)
 }
 
+const SPLIT = '--split--';
 
 interface LedgerOptions {
    trans_mode: TransactionMode;
@@ -99,7 +100,7 @@ interface FirstRowProps {
 const FirstRow: React.FC<FirstRowProps> = p => {
    const t = p.transaction;
    let s: Split = {
-      account: '--split--',
+      account: SPLIT,
       reconcile: '',
       amount: amountForAccount(t, p.accountName),
    };
@@ -121,8 +122,14 @@ const FirstRow: React.FC<FirstRowProps> = p => {
       <TR expanded={p.expanded} >
          <TD kind='date'>{t.date}</TD>
          <TD kind='num'>{s.num}</TD>
-         <TD kind='payee'><a href='#'>{t.payee}</a></TD>
-         <TD kind='transfer'><a href='#'>{s.account}</a></TD>
+         <TD kind='payee'><a href='#a'>{t.payee}</a></TD>
+         <TD kind='transfer'>
+            {
+               s.account !== SPLIT && s.account !== p.accountName ?
+                  <a href='#a'>{s.account}</a>
+               : s.account
+            }
+         </TD>
          <TD kind='reconcile'>{s.reconcile}</TD>
          <TD kind='amount'>
             {
@@ -184,6 +191,7 @@ const NotesRow: React.FC<NotesRowProps> = p => {
 
 interface SplitRowProps {
    split: Split;
+   accountName: string;
 }
 const SplitRow: React.FC<SplitRowProps> = p => {
    const s = p.split;
@@ -192,7 +200,13 @@ const SplitRow: React.FC<SplitRowProps> = p => {
          <TD kind='date' />
          <TD kind='num'>{s.num}</TD>
          <TD kind='payee' />
-         <TD kind='transfer'>{s.account}</TD>
+         <TD kind='transfer'>
+            {
+               s.account !== p.accountName
+               ? <a href='#a'>{s.account}</a>
+               : s.account
+            }
+         </TD>
          <TD kind='reconcile'>{s.reconcile}</TD>
          <TD kind='amount'>
             {
@@ -232,14 +246,22 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
       case SplitMode.COLLAPSED:
          if (t.splits.length > 2) {
             lines = t.splits.map((s, sid) => (
-               <SplitRow split={s} key={`${t.id} ${sid}`} />
+               <SplitRow
+                  key={`${t.id} ${sid}`}
+                  split={s}
+                  accountName={p.accountName}
+               />
             ));
             expanded = true;
          }
          break;
       case SplitMode.MULTILINE:
          lines = t.splits.map((s, sid) => (
-            <SplitRow split={s} key={`${t.id} ${sid}`} />
+            <SplitRow
+               key={`${t.id} ${sid}`}
+               split={s}
+               accountName={p.accountName}
+            />
          ));
          expanded = true;
          break;
@@ -259,7 +281,7 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
                               <span>{ s.amount >= 0 ? ' - ' : ' + ' }</span>,
                               <Numeric amount={Math.abs(s.amount)} />,
                               ' (',
-                              <a href='#'>{s.account}</a>,
+                              <a href='#a'>{s.account}</a>,
                               ')'
                            ] : null
                         )
