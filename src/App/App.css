@@ -1,12 +1,12 @@
 #app {
-   --row-gap: 25px;
+   --row-gap: 15px;
    --col-gap: 25px;
    background: var(--page-background);
    color: var(--text-color);
    min-width: 100vw;
    min-height: 100vh;
 
-   --header-height: 50px;
+   --header-height: var(--header-tool-height);
    --footer-height: 0px;
    display: grid;
    grid-template-columns: auto 1fr 120px;

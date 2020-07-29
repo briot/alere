@@ -75,6 +75,7 @@ const App: React.FC<{}> = () => {
 
    return (
      <div id="app">
+         <div className="headerbg" />
          <Header title={accountName} />
          <LeftSideBar />
          <RightSideBar />
