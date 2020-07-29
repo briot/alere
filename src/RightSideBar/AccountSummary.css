@@ -3,26 +3,39 @@
    --summary-bg2: var(--tool-background2);
    --tl-radius: 10px;
 
-   background: var(--summary-background);
-   border-top-left-radius: var(--tl-radius);
-
    font-size: var(--font-size-sidebar);
 }
-.accountSummary.selected {
-   --summary-bg: green;
-   --summary-bg2: #265527;
+.accountSummary .icon {
+   background: var(--tool-background-on-page);
+   border: 1px solid var(--tool-border);
+   border-radius: 50%;
+   width: 2rem;
+   height: 2rem;
+   margin-right: 5px;
+
+   display: flex;          /* center text inside */
+   align-items: center;
+   justify-content: center;
+}
+.accountSummary img {
+   width: calc(2rem - 12px);
 }
 
-.accountSummary > .title {
-   background: linear-gradient(var(--summary-bg), var(--summary-bg2));
-   color: var(--tool-color);
-   border-top-left-radius: var(--tl-radius);
-   padding-left: 15px;
+.accountSummary .name {
+   display: flex;
+   flex-flow: row nowrap;
+   align-items: center;
+   justify-content: space-between;
 }
+.accountSummary .name span:last-child {
+   flex: 1 1;
+   white-space: nowrap;
+   text-overflow: ellipsis;
+   overflow: hidden;
+}
+
 .accountSummary .content {
-   border: 1px solid var(--summary-bg2);
    text-align: right;
-   color: var(--text-color);
 }
 
 .accountSummary .popup {

@@ -17,19 +17,6 @@
    gap: var(--gap-horiz);
 }
 
-.tools.vert {
-   flex-flow: column nowrap;
-   gap: var(--gap-vert);
-}
-
-.tools.vert.background {
-   /* The grey column beneath the icons */
-   background: linear-gradient(
-      to right,
-      var(--toolbar-background),
-      var(--toolbar-background2) var(--break),
-      var(--transparent) var(--break));
-}
 .tools.horiz.background {
    /* The grey column beneath the icons */
    background: linear-gradient(
@@ -44,10 +31,6 @@
    display: flex;
    justify-content: center;   /* center horizontally */
    align-items: stretch;       /* center vertically */
-}
-.tools.vert .group {
-   flex-flow: column nowrap;
-   gap: var(--gap-vert);
 }
 .tools.vert .group:not(:last-child) {
    margin-bottom: calc(3 * var(--gap-vert));
@@ -85,27 +68,15 @@
    margin: 3px;
 }
 
-.tools.horiz .tool.grow {
-   flex: 1 1;         /* Allow to expand as needed, to fit text */
-   max-width: 500px;  /* but within limits */
-   min-width: 300px;
-   font-size: 18px;
-   font-weight: bold;
-
-}
-
-.tools.vert .tool {
-   border-top-left-radius: 0;
-   border-bottom-left-radius: 0;
-   height: 70px;
-}
-
 /**
  * The page title
  */
 .tools.horiz .tool.grow {
+   flex: 1 1;         /* Allow to expand as needed, to fit text */
    background: none;
    border-color: var(--transparent);
    font-size: 1.2em;
+   font-weight: bold;
+
    align-items: flex-start;  /* left-align the text */
 }

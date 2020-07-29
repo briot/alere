@@ -4,6 +4,7 @@
 
    display: flex;
    flex-flow: column nowrap;
+   gap: 6px;
 }
 
 #lsidebar h3 {
@@ -18,7 +19,6 @@
 }
 
 .roundButton {
-   padding-bottom: 6px;
    text-decoration: none;
 
    display: flex;

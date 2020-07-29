@@ -5,7 +5,6 @@
 }
 
 #header {
-   --break: calc(100% - var(--tool-border-radius));
    grid-area: header;
 
    display: flex;
