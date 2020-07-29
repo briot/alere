@@ -1,26 +1,9 @@
 #lsidebar {
    grid-area: lsidebar;
-   margin-left: 5px;
-}
+   margin-left: 10px;
 
-#lsidebar {
-   font-size: 1rem;
-   line-height: 1.8em;
-}
-#lsidebar span {
-   display: inline-block;
-   width: 23px;
-}
-#lsidebar ul {
-   list-style-type: none;
-   padding: 0;
-   margin: 0;
-   white-space: nowrap;
-   text-overflow: ellipsis;
-   overflow: hidden;
-}
-#lsidebar a {
-   text-decoration: none;
+   display: flex;
+   flex-flow: column nowrap;
 }
 
 #lsidebar h3 {
@@ -32,4 +15,34 @@
 
 #lsidebar .selected {
    font-weight: bold;
+}
+
+.roundButton {
+   padding-bottom: 6px;
+   text-decoration: none;
+
+   display: flex;
+   flex-flow: row nowrap;      /* always use a single line */
+   align-items: center;        /* align children vertically */
+   justify-content: space-between;
+}
+.roundButton span:first-child {
+   background: var(--tool-background-on-page);
+   border: 1px solid var(--tool-border);
+   border-radius: 50%;
+   width: 2rem;
+   height: 2rem;
+   margin-right: 5px;
+
+   display: flex;          /* center text inside */
+   align-items: center;
+   justify-content: center;
+}
+.roundButton span:last-child {
+   height: 1rem;
+   flex: 1 1;
+
+   white-space: nowrap;
+   text-overflow: ellipsis;
+   overflow: hidden;
 }
