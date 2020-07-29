@@ -101,10 +101,9 @@
 /**
  * Expandable rows
  */
-.ledger .trgroup.expandable:before {
+.ledger .trgroup.expandable::before {
    --size: 20px;
 
-   position: absolute;
    font: normal normal normal 14px/1 FontAwesome;
    text-rendering: auto;
    width: var(--size);
@@ -114,19 +113,17 @@
    -moz-osx-font-smoothing: grayscale;
    display: inline-block;
    cursor: pointer;
+   float: left;
 }
-.ledger .trgroup.collapsed:before {
+.ledger .trgroup.collapsed::before {
    content: "\f0da";
    transform: rotateZ(0) translate(25%,0%);
    transition: transform 0.2s;
 }
-.ledger .trgroup.expanded:before {
+.ledger .trgroup.expanded::before {
    content: "\f0da";
    transform: rotateZ(90deg) translate(25%,0%);
    transition: transform 0.2s;
-}
-.ledger .trgroup {
-   overflow-y: hidden;
 }
 .ledger .trgroup.collapsed .tr.details .th,
 .ledger .trgroup.collapsed .tr.details .td {
