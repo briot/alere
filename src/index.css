@@ -70,7 +70,7 @@
 
    --tool-color: var(--gray-700);
    --tool-background: var(--gray-200);
-   --tool-background2: var(--gray-500);
+   --tool-background-on-page: var(--gray-400);
    --tool-border: none;
 }
 

@@ -63,7 +63,7 @@
 .tool {
    background: var(--tool-background);
    border: 1px solid var(--tool-border);
-   border-radius: var(--tool-border-radius);
+   border-radius: 50%;
    color: var(--tool-color);
    font-size: var(--font-size-tool);     /* for the text within */
 
