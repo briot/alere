@@ -72,12 +72,9 @@ interface TRProps {
    editable?: boolean;
 }
 const TR: React.FC<TRProps> = p => {
-   const expClass = p.expanded === undefined ? ''
-       : p.expanded ? 'expandable expanded'
-       : 'expandable collapsed';
    const levClass = !p.level ? 'first' : 'details';
    const editClass = p.editable ? 'edit' : '';
-   const className = `tr ${p.partial ? 'right-aligned' : ''} ${editClass} ${expClass} ${levClass}`;
+   const className = `tr ${p.partial ? 'right-aligned' : ''} ${editClass} ${levClass}`;
    return (
       <div className={className} >
          {p.children}
@@ -119,7 +116,7 @@ const FirstRow: React.FC<FirstRowProps> = p => {
    }
 
    return (
-      <TR expanded={p.expanded} >
+      <TR expanded={p.expanded}>
          <TD kind='date'>{t.date}</TD>
          <TD kind='num'>{s.num}</TD>
          <TD kind='payee'><a href='#a'>{t.payee}</a></TD>
@@ -239,8 +236,34 @@ interface TransactionRowProps {
 
 const TransactionRow: React.FC<TransactionRowProps> = p => {
    const t = p.transaction;
+
+   // undefined if not expandable
+   const [expanded, setExpanded] = React.useState<undefined|boolean>(
+      () => {
+         switch (p.options.split_mode) {
+            case SplitMode.COLLAPSED:
+            case SplitMode.SUMMARY:
+               return t.splits.length > 2 ? true : undefined;
+            case SplitMode.MULTILINE:
+               return true;
+         }
+      }
+   );
+
+   const onExpand = React.useCallback(
+      () => {
+         setExpanded(old => !old);
+      },
+      []
+   );
+
    let lines: (JSX.Element|null)[] = [];
-   let expanded: undefined|boolean;  // undefined if not expandable
+
+   const expClass = 'trgroup ' + (
+       expanded === undefined ? ''
+       : expanded ? 'expandable expanded'
+       : 'expandable collapsed'
+   );
 
    switch (p.options.split_mode) {
       case SplitMode.COLLAPSED:
@@ -252,9 +275,9 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
                   accountName={p.accountName}
                />
             ));
-            expanded = true;
          }
          break;
+
       case SplitMode.MULTILINE:
          lines = t.splits.map((s, sid) => (
             <SplitRow
@@ -263,7 +286,6 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
                accountName={p.accountName}
             />
          ));
-         expanded = true;
          break;
 
       case SplitMode.SUMMARY:
@@ -289,13 +311,12 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
                   </TD>
                </TR>
             ];
-            expanded = true;
          }
          break;
    }
 
    return (
-      <div className="trgroup">
+      <div className={expClass} onClick={onExpand} >
          <FirstRow
             transaction={t}
             options={p.options}
