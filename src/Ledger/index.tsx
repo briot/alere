@@ -482,22 +482,22 @@ const Ledger: React.FC<LedgerProps> = p => {
 
          <div className="tfoot">
             <TR partial={true}>
-               <TH>
+               <TD>
                   Selected:
                   <Numeric amount={0} />
-               </TH>
-               <TH>
+               </TD>
+               <TD>
                   Cleared:
                   <Numeric amount={0} />
-               </TH>
-               <TH>
+               </TD>
+               <TD>
                   Reconciled:
                   <Numeric amount={0} />
-               </TH>
-               <TH>
+               </TD>
+               <TD>
                   Present:
                   <Numeric amount={3421.10} currency="euro" />
-               </TH>
+               </TD>
             </TR>
          </div>
       </div>

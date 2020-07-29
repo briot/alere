@@ -37,6 +37,7 @@
    margin-bottom: 5px;
    cursor: pointer;  /* indicate that we can sort by clicking */
 }
+.ledger .tfoot .tr .td,
 .ledger .tfoot .tr .th {
    margin-top: 10px;   /* between table and footer */
    margin-left: 20px;  /* space between items */
