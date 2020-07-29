@@ -7,6 +7,10 @@
    flex-flow: column nowrap;
 }
 
+.ledger {
+   --line-height: 1.2em;
+}
+
 .ledger .tr {
    display: flex;
    width: 100%;         /* All rows use the full width */
@@ -15,7 +19,7 @@
 .ledger .td {
    display: inline-block;
    flex: 1 1;
-   min-height: 1.2em;    /* even empty lines should use some space */
+   height: var(--line-height); /* even empty lines should use some space */
    border-style: solid;
    border-color: var(--table-color);
    border-width: var(--table-horiz-border-width) var(--table-vert-border-width);
@@ -97,10 +101,10 @@
 /**
  * Expandable rows
  */
-.ledger .tr.expandable:before {
+.ledger .trgroup.expandable:before {
    --size: 20px;
 
-   position: relative;
+   position: absolute;
    font: normal normal normal 14px/1 FontAwesome;
    text-rendering: auto;
    width: var(--size);
@@ -108,16 +112,31 @@
    font-size: 25px;
    -webkit-font-smoothing: antialiased;
    -moz-osx-font-smoothing: grayscale;
-   float: left;
    display: inline-block;
    cursor: pointer;
 }
-.ledger .tr.expandable.collapsed:before {
+.ledger .trgroup.collapsed:before {
    content: "\f0da";
+   transform: rotateZ(0) translate(25%,0%);
+   transition: transform 0.2s;
 }
-.ledger .tr.expandable.expanded:before {
-   content: "\f0dd";
-   margin-top: -0.5ex;
+.ledger .trgroup.expanded:before {
+   content: "\f0da";
+   transform: rotateZ(90deg) translate(25%,0%);
+   transition: transform 0.2s;
+}
+.ledger .trgroup {
+   overflow-y: hidden;
+}
+.ledger .trgroup.collapsed .tr.details .th,
+.ledger .trgroup.collapsed .tr.details .td {
+   transition: height 0.2s, padding 0.2s;
+   height: 0;
+   padding: 0 0;
+}
+.ledger .trgroup.expanded .tr.details .th,
+.ledger .trgroup.expanded .tr.details .td {
+   transition: height 0.2s, padding 0.2s;
 }
 .ledger .thead,
 .ledger .tbody,
@@ -174,6 +193,9 @@
 }
 
 
+/**
+ * Column-specific settings
+ */
 .ledger .date {
    flex: 0 0 6em;
    font-family: "minion pro", "myriad pro", "tahoma";
