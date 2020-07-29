@@ -3,9 +3,10 @@
    --font-size-sidebar: 15px;
    --font-size-tool: 13px;
    --scrollbar-width: 15px;  /* for webkit + chrome */
-   --tool-border-radius: 10px;
+   --tool-border-radius: 1rem; /* 10px; */
    --table-vert-border-width: 0px;
    --table-horiz-border-width: 0px;
+   --header-tool-height: 40px;
 }
 :root.dark {
    --page-background: #0c2531;
@@ -53,7 +54,7 @@
    --text-color: #333;
    --summary-background: rgba(255,255,255,0.2);
    --table-color: #b1afaf;
-   --table-hover-background: var(--gray-200); /* rgba(100,100,100,0.2); */
+   --table-hover-background: var(--gray-200);
    --table-row-first-background: none;
    --table-row-double-background: rgb(198,225,240);
    --table-row-details-background: none;
@@ -65,10 +66,12 @@
    --toolbar-background: none;
    --toolbar-background2: none;
 
-   --tool-color: var(--fg-100);
-   --tool-background: var(--color-100);
-   --tool-background2: var(--color-300);
-   --tool-border: var(--color-400);
+   --shadow-color: var(--gray-400);
+
+   --tool-color: var(--gray-700);
+   --tool-background: var(--gray-200);
+   --tool-background2: var(--gray-500);
+   --tool-border: none;
 }
 
 

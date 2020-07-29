@@ -76,14 +76,13 @@
 }
 
 .tool .fa {
-   font-size: 25px;
+   font-size: 1.2em;
    margin: 3px 0;  /* leave space between text and icon, vertically */
 }
 
 .tools.horiz .tool {
-   width: 70px;
-   border-top-left-radius: 0;
-   border-top-right-radius: 0;
+   width: calc(var(--header-tool-height) - 6px);
+   margin: 3px;
 }
 
 .tools.horiz .tool.grow {
@@ -107,6 +106,6 @@
 .tools.horiz .tool.grow {
    background: none;
    border-color: var(--transparent);
-   font-size: 2em;
+   font-size: 1.2em;
    align-items: flex-start;  /* left-align the text */
 }

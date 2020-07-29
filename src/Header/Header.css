@@ -1,3 +1,9 @@
+.headerbg {
+   background: white;
+   grid-area: 1 / 1 / 2 / 4;
+   border-bottom: 1px solid var(--shadow-color);
+}
+
 #header {
    --break: calc(100% - var(--tool-border-radius));
    grid-area: header;

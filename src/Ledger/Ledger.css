@@ -1,7 +1,7 @@
 #main {
    grid-area: main;
    background: var(--panel-background);
-   box-shadow: 3px 3px 4px 0px var(--gray-400);
+   box-shadow: 3px 3px 4px 0px var(--shadow-color);
 
    display: flex;
    flex-flow: column nowrap;
