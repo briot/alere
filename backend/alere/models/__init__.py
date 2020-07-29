@@ -45,6 +45,8 @@ class Transaction(AlereModel):
     (we take from one or more accounts and give to one or more accounts).
     """
 
+    # CREATE TABLE kmmTransactions (id varchar(32) NOT NULL, txType char(1), postDate timestamp, memo mediumtext, entryDate timestamp, currencyId char(3), bankId mediumtext, PRIMARY KEY (id));
+
     # ??? use UUID for primary key
     # ??? How to handle multiple currencies within the same transaction
 
