@@ -4,7 +4,7 @@ if (!process.env.NODE_ENV === 'development') {
    throw `Invalid node env: ${process.env.NODE_ENV}`;
 }
 
-// See run_frontend.sh
+// See package.json
 proxy_to = process.env.REACT_APP_API_URL;
 
 module.exports = function(app) {

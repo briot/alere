@@ -1,4 +1,44 @@
 from .json import JSONView
+from typing import List
+
+class Split:
+    def __init__(
+            self, account: str, amount: int, reconcile='n',
+            currency=''):
+        self.account = account
+        self.amount = amount
+        self.reconcile = reconcile
+        self.currency = currency
+
+    def to_json(self):
+        return {
+            "account": self.account,
+            "amount": self.amount,
+            "reconcile": self.reconcile,
+            "currency": self.currency,
+        }
+
+
+class Transaction:
+    def __init__(
+            self, id, date, balance: int, splits: List[Split], payee='',
+            notes=''):
+        self.id = id
+        self.date = date
+        self.payee = payee
+        self.balance = balance
+        self.splits = splits
+        self.notes = notes
+
+    def to_json(self):
+        return {"id": self.id,
+                "date": self.date,
+                "payee": self.payee,
+                "balance": self.balance,
+                "splits": self.splits,
+                "notes": self.notes
+               }
+
 
 class LedgerView(JSONView):
 
@@ -22,7 +62,7 @@ class LedgerView(JSONView):
                 payee="copied from gnucash",
                 balance=4500,
                 splits=[
-                    Split(account="income:salary", amount=-4200, reconile="n"),
+                    Split(account="income:salary", amount=-4200, reconcile="n"),
                     Split(account="expenses:taxes", amount=500, reconcile="C"),
                     Split(account="assets:boursorama:commun",
                           amount=3700,
