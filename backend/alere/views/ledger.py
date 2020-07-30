@@ -3,7 +3,7 @@ from typing import List
 
 class Split:
     def __init__(
-            self, account: str, amount: int, reconcile='n',
+            self, account: int, amount: int, reconcile='n',
             currency=''):
         self.account = account
         self.amount = amount
@@ -50,8 +50,8 @@ class LedgerView(JSONView):
                 payee="random payee",
                 balance=800,
                 splits=[
-                    Split(account='expenses:car', amount=-200, reconcile="R"),
-                    Split(account='assets:boursorama:commun',
+                    Split(account=3, amount=-200, reconcile="R"),
+                    Split(account=1,
                           amount=200,
                           reconcile='n'),
                 ]
@@ -62,9 +62,9 @@ class LedgerView(JSONView):
                 payee="copied from gnucash",
                 balance=4500,
                 splits=[
-                    Split(account="income:salary", amount=-4200, reconcile="n"),
-                    Split(account="expenses:taxes", amount=500, reconcile="C"),
-                    Split(account="assets:boursorama:commun",
+                    Split(account=4, amount=-4200, reconcile="n"),
+                    Split(account=6, amount=500, reconcile="C"),
+                    Split(account=1,
                           amount=3700,
                           reconcile="n"),
                 ]
@@ -75,9 +75,9 @@ class LedgerView(JSONView):
                 payee="copied from gnucash",
                 balance=8200,
                 splits=[
-                    Split(account="income:salary", amount=-4200, reconcile="n"),
-                    Split(account="expenses:taxes", amount=500, reconcile="n"),
-                    Split(account="assets:boursorama:commun",
+                    Split(account=4, amount=-4200, reconcile="n"),
+                    Split(account=6, amount=500, reconcile="n"),
+                    Split(account=1,
                           amount=3700,
                           reconcile="R"),
                 ]
@@ -89,8 +89,8 @@ class LedgerView(JSONView):
                 balance=8300,
                 notes="gift from X",
                 splits=[
-                    Split(account="incomde:cadeau", amount=-100, reconcile="n"),
-                    Split(account="assets:boursorama:commun",
+                    Split(account=5, amount=-100, reconcile="n"),
+                    Split(account=1,
                           amount=100,
                           reconcile="C"),
                 ]
@@ -104,10 +104,10 @@ class LedgerView(JSONView):
                payee='garage',
                balance=8200 - j * 100,
                splits=[
-                   Split(account='expense:car',
+                   Split(account=3,
                          amount=100,
                          reconcile='n'),
-                   Split(account='assets:boursorama:commun',
+                   Split(account=1,
                          amount=-100,
                          reconcile='R'),
                 ]

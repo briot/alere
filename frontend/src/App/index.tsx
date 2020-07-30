@@ -2,14 +2,15 @@ import React from 'react';
 import Header from 'Header';
 import LeftSideBar from 'LeftSideBar';
 import RightSideBar from 'RightSideBar';
-// import Footer from 'Footer';
 import { default as Ledger, SplitMode, TransactionMode } from 'Ledger';
 import { Transaction } from 'Transaction';
+import useAccounts from 'services/useAccounts';
 import './App.css';
 import "font-awesome/css/font-awesome.min.css";
 
 const App: React.FC<{}> = () => {
    const [transactions, setTransactions] = React.useState<Transaction[]>([]);
+   const { accounts } = useAccounts();
 
    React.useEffect(
       () => {
@@ -23,7 +24,7 @@ const App: React.FC<{}> = () => {
       []
    );
 
-   const accountName = 'assets:boursorama:commun';
+   const accountId = 1;
    const options = {
       trans_mode: TransactionMode.ONE_LINE,
       split_mode: SplitMode.COLLAPSED,
@@ -32,14 +33,13 @@ const App: React.FC<{}> = () => {
    return (
      <div id="app">
          <div className="headerbg" />
-         <Header title={accountName} />
+         <Header title={accounts.name(accountId)} />
          <LeftSideBar />
          <RightSideBar />
-         { /* <Footer /> */ }
 
          <Ledger
             transactions={transactions}
-            accountName={accountName}
+            accountId={accountId}
             options={options}
          />
      </div>
