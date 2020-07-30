@@ -1,7 +1,8 @@
 import React from 'react';
 import { amountForAccount, firstSplitForAccount,
-         Split, Transaction } from 'Transaction';
+         AccountId, Split, Transaction } from 'Transaction';
 import Numeric from 'Numeric';
+import useAccounts, { AccountList } from 'services/useAccounts';
 import './Ledger.css';
 
 export enum SplitMode {
@@ -19,6 +20,7 @@ export enum TransactionMode {
 }
 
 const SPLIT = '--split--';
+const SPLIT_ID = -1;
 
 interface LedgerOptions {
    trans_mode: TransactionMode;
@@ -90,16 +92,17 @@ const TR: React.FC<TRProps> = p => {
 
 interface FirstRowProps {
    transaction: Transaction;
-   accountName: string;
+   accountId: AccountId;
+   accounts: AccountList;
    options: LedgerOptions;
    expanded?: boolean;
 }
 const FirstRow: React.FC<FirstRowProps> = p => {
    const t = p.transaction;
    let s: Split = {
-      account: SPLIT,
+      account: SPLIT_ID,
       reconcile: '',
-      amount: amountForAccount(t, p.accountName),
+      amount: amountForAccount(t, p.accountId),
    };
 
    switch (p.options.split_mode) {
@@ -107,7 +110,7 @@ const FirstRow: React.FC<FirstRowProps> = p => {
       case SplitMode.COLLAPSED:
       case SplitMode.SUMMARY:
          if (t.splits.length < 3) {
-            const s2 = firstSplitForAccount(t, p.accountName);
+            const s2 = firstSplitForAccount(t, p.accountId);
             s = {...s2, amount: s.amount};
          }
          break;
@@ -122,9 +125,11 @@ const FirstRow: React.FC<FirstRowProps> = p => {
          <TD kind='payee'><a href='#a'>{t.payee}</a></TD>
          <TD kind='transfer'>
             {
-               s.account !== SPLIT && s.account !== p.accountName ?
-                  <a href='#a'>{s.account}</a>
-               : s.account
+               s.account === SPLIT_ID
+               ? SPLIT
+               : s.account !== p.accountId
+               ? <a href='#a'>{p.accounts.name(s.account)}</a>
+               : p.accounts.name(s.account)
             }
          </TD>
          <TD kind='reconcile'>{s.reconcile}</TD>
@@ -188,7 +193,8 @@ const NotesRow: React.FC<NotesRowProps> = p => {
 
 interface SplitRowProps {
    split: Split;
-   accountName: string;
+   accountId: AccountId;
+   accounts: AccountList;
 }
 const SplitRow: React.FC<SplitRowProps> = p => {
    const s = p.split;
@@ -199,9 +205,9 @@ const SplitRow: React.FC<SplitRowProps> = p => {
          <TD kind='payee' />
          <TD kind='transfer'>
             {
-               s.account !== p.accountName
-               ? <a href='#a'>{s.account}</a>
-               : s.account
+               s.account !== p.accountId
+               ? <a href='#a'>{p.accounts.name(s.account)}</a>
+               : p.accounts.name(s.account)
             }
          </TD>
          <TD kind='reconcile'>{s.reconcile}</TD>
@@ -230,7 +236,8 @@ const SplitRow: React.FC<SplitRowProps> = p => {
 
 interface TransactionRowProps {
    transaction: Transaction;
-   accountName: string;
+   accountId: AccountId;
+   accounts: AccountList;
    options: LedgerOptions;
 }
 
@@ -272,7 +279,8 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
                <SplitRow
                   key={`${t.id} ${sid}`}
                   split={s}
-                  accountName={p.accountName}
+                  accountId={p.accountId}
+                  accounts={p.accounts}
                />
             ));
          }
@@ -283,13 +291,14 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
             <SplitRow
                key={`${t.id} ${sid}`}
                split={s}
-               accountName={p.accountName}
+               accountId={p.accountId}
+               accounts={p.accounts}
             />
          ));
          break;
 
       case SplitMode.SUMMARY:
-         const amount = amountForAccount(t, p.accountName);
+         const amount = amountForAccount(t, p.accountId);
          if (t.splits.length > 2) {
             lines = [
                <TR partial={true} level={1}>
@@ -298,12 +307,12 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
                      &nbsp;=&nbsp;
                      {
                         t.splits.map(s =>
-                           (s.account !== p.accountName)
+                           (s.account !== p.accountId)
                            ? [
                               <span>{ s.amount >= 0 ? ' - ' : ' + ' }</span>,
                               <Numeric amount={Math.abs(s.amount)} />,
                               ' (',
-                              <a href='#a'>{s.account}</a>,
+                              <a href='#a'>{p.accounts.name(s.account)}</a>,
                               ')'
                            ] : null
                         )
@@ -320,7 +329,8 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
          <FirstRow
             transaction={t}
             options={p.options}
-            accountName={p.accountName}
+            accountId={p.accountId}
+            accounts={p.accounts}
             expanded={expanded}
           />
          <NotesRow transaction={t} options={p.options} />
@@ -334,7 +344,8 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
  */
 
 interface EditingRowProps {
-   accountName: string;
+   accountId: AccountId;
+   accounts: AccountList;
 }
 
 const EditingRow: React.FC<EditingRowProps> = p => {
@@ -367,7 +378,7 @@ const EditingRow: React.FC<EditingRowProps> = p => {
                <input placeholder="notes" tabIndex={4} />
             </TD>
             <TD kind='transfer'>
-               {p.accountName}
+               {p.accounts.name(p.accountId)}
             </TD>
             <TD kind='reconcile'>
                <select>
@@ -435,14 +446,22 @@ const EditingRow: React.FC<EditingRowProps> = p => {
  */
 
 interface LedgerProps {
-   accountName: string;
+   accountId: AccountId;
    transactions: Transaction[];
    options: LedgerOptions;
 }
 
 const Ledger: React.FC<LedgerProps> = p => {
-   const className = 'ledger'
+   const { accounts } = useAccounts();
+   const account = accounts.get_account(p.accountId);
 
+   window.console.log('Render ledger', account, p.transactions);
+
+   if (!account) {
+      return <div>Loading...</div>
+   }
+
+   const className = 'ledger'
       // no background necessary if we are only ever going to display one line
       // per transaction
       + (p.options.trans_mode === TransactionMode.ONE_LINE
@@ -472,12 +491,13 @@ const Ledger: React.FC<LedgerProps> = p => {
                   <TransactionRow
                      key={t.id}
                      transaction={t}
-                     accountName={p.accountName}
+                     accountId={p.accountId}
+                     accounts={accounts}
                      options={p.options}
                   />
                ))
             }
-            <EditingRow accountName={p.accountName} />
+            <EditingRow accountId={p.accountId} accounts={accounts} />
          </div>
 
          <div className="tfoot">

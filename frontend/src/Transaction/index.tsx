@@ -1,13 +1,15 @@
+export type AccountId = number;
+
 export interface Split {
    num?: string;
-   account: string;
+   account: AccountId;
    reconcile?: string;
    amount: number;
    currency?: string;
 }
 
 export interface Transaction {
-   id: number;
+   id: AccountId;
    date: string;
    payee?: string;
    balance: number;  // balance after the transaction
@@ -20,14 +22,14 @@ export interface Transaction {
 /**
  * Return the first split that applies to the given account
  */
-export const firstSplitForAccount = (t: Transaction, account: string) =>
+export const firstSplitForAccount = (t: Transaction, account: AccountId) =>
     t.splits.filter(s => s.account === account)[0];
 
 /**
  * Compute what the transaction amount is, for the given account.
  * This is the sum of the splits that apply to this account.
  */
-export const amountForAccount = (t: Transaction, account: string) =>
+export const amountForAccount = (t: Transaction, account: AccountId) =>
     t.splits.reduce(
        (acc, s) => s.account === account ? acc + s.amount : acc,
        0
