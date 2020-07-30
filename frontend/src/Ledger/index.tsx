@@ -20,7 +20,7 @@ export enum TransactionMode {
 }
 
 const SPLIT = '--split--';
-const SPLIT_ID = -1;
+const SPLIT_ID: AccountId = "";
 
 interface LedgerOptions {
    trans_mode: TransactionMode;
@@ -110,7 +110,17 @@ const FirstRow: React.FC<FirstRowProps> = p => {
       case SplitMode.COLLAPSED:
       case SplitMode.SUMMARY:
          if (t.splits.length < 3) {
+            // Find the split for the account itself, to get balance
             const s2 = firstSplitForAccount(t, p.accountId);
+
+            // Find the split not for the account, to get the target account
+            for (const s of t.splits) {
+               if (s.account !== p.accountId) {
+                  s2.account = s.account;
+                  break;
+               }
+            }
+
             s = {...s2, amount: s.amount};
          }
          break;
@@ -325,7 +335,10 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
    }
 
    return (
-      <div className={expClass} onClick={onExpand} >
+      <div
+         className={expClass}
+         onClick={expanded === undefined ? undefined : onExpand}
+      >
          <FirstRow
             transaction={t}
             options={p.options}
