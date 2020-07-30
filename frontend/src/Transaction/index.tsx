@@ -1,4 +1,4 @@
-export type AccountId = number;
+export type AccountId = string|number;
 
 export interface Split {
    num?: string;

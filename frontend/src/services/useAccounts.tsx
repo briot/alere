@@ -8,7 +8,7 @@ export interface Account {
 }
 
 export class AccountList {
-   private accounts: Map<number, Account>;
+   private accounts: Map<AccountId, Account>;
 
    static async fetch() {
       const resp = await window.fetch('/api/account/list');

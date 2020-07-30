@@ -29,7 +29,7 @@ def static(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/account/list', AccountList.as_view()),
-    path('api/ledger/<int:id>', LedgerView.as_view()),
+    path('api/ledger/<str:id>', LedgerView.as_view()),
 
     # re_path(r'^.*$', static),
 ]
