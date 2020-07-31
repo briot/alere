@@ -1,4 +1,5 @@
 export type AccountId = string|number;
+export type TransactionId = string;
 
 export interface Split {
    num?: string;
@@ -9,7 +10,7 @@ export interface Split {
 }
 
 export interface Transaction {
-   id: AccountId;
+   id: TransactionId;
    date: string;
    payee?: string;
    balance: number;  // balance after the transaction
