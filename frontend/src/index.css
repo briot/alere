@@ -56,8 +56,8 @@
    --table-color: #b1afaf;
    --table-hover-background: var(--gray-200);
    --table-row-first-background: none;
-   --table-row-double-background: rgb(198,225,240);
    --table-row-details-background: none;
+   --table-row-details-fg: var(--gray-500);
    --transparent: rgba(0,0,0,.0);
    --grey: var(--gray-300);
    --color-on-grey: var(--fg-100);  /* text color on --grey background */
@@ -66,12 +66,18 @@
    --toolbar-background: none;
    --toolbar-background2: none;
 
+   --expand-arrow-color: var(--gray-400);
+
    --shadow-color: var(--gray-400);
 
    --tool-color: var(--gray-700);
    --tool-background: var(--gray-200);
    --tool-background-on-page: var(--gray-400);
    --tool-border: none;
+
+   --scrollbar-fg: var(--gray-200);
+   --scrollbar-bg: none;
+   --scrollbar-border: none;
 }
 
 

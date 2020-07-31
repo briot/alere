@@ -1,4 +1,6 @@
 import React from 'react';
+import { VariableSizeList, ListChildComponentProps } from 'react-window';
+import AutoSizer from 'react-virtualized-auto-sizer';
 import { amountForAccount, firstSplitForAccount,
          AccountId, Split, Transaction } from 'Transaction';
 import Numeric from 'Numeric';
@@ -19,12 +21,53 @@ export enum TransactionMode {
    TWO_LINES,  // transactions always use two lines (to show notes)
 }
 
+const ROW_HEIGHT = 25;  // pixels
+
 const SPLIT = '--split--';
 const SPLIT_ID: AccountId = "";
 
 interface LedgerOptions {
    trans_mode: TransactionMode;
    split_mode: SplitMode;
+}
+
+const splitRowsCount = (
+   t: Transaction,
+   split_mode: SplitMode,
+   expanded: boolean|undefined,
+): number => {
+   if (!expanded) {
+      return 0;
+   }
+   switch (split_mode) {
+      case SplitMode.COLLAPSED:
+         return (t.splits.length > 2) ? t.splits.length : 0;
+      case SplitMode.MULTILINE:
+         return t.splits.length;
+      case SplitMode.SUMMARY:
+         return (t.splits.length > 2) ? 1 : 0;
+      default:
+         return 0;
+   }
+}
+
+const showNotesRow = (
+   t: Transaction,
+   trans_mode: TransactionMode,
+   expanded: boolean|undefined,
+): boolean => {
+   if (!expanded) {
+      return false;
+   }
+
+   switch (trans_mode) {
+      case TransactionMode.ONE_LINE:
+         return false;
+      case TransactionMode.AUTO:
+         return (t?.notes !== undefined);
+      default:
+         return true;
+   }
 }
 
 /**
@@ -69,14 +112,11 @@ const TD: React.FC<TDProps> = p => {
 
 interface TRProps {
    partial?: boolean;  // if yes, cells will be aligned to the right
-   expanded?: boolean; // undefined if not expandable, otherwise true|false
-   level?: number;
    editable?: boolean;
 }
 const TR: React.FC<TRProps> = p => {
-   const levClass = !p.level ? 'first' : 'details';
    const editClass = p.editable ? 'edit' : '';
-   const className = `tr ${p.partial ? 'right-aligned' : ''} ${editClass} ${levClass}`;
+   const className = `tr ${p.partial ? 'right-aligned' : ''} ${editClass}`;
    return (
       <div className={className} >
          {p.children}
@@ -129,7 +169,7 @@ const FirstRow: React.FC<FirstRowProps> = p => {
    }
 
    return (
-      <TR expanded={p.expanded}>
+      <TR>
          <TD kind='date'>{t.date}</TD>
          <TD kind='num'>{s.num}</TD>
          <TD kind='payee'><a href='#a'>{t.payee}</a></TD>
@@ -173,28 +213,18 @@ interface NotesRowProps {
    options: LedgerOptions;
 }
 const NotesRow: React.FC<NotesRowProps> = p => {
-   switch (p.options.trans_mode) {
-      case TransactionMode.ONE_LINE:
-         return null;
-      case TransactionMode.AUTO:
-         if (!p.transaction.notes) {
-            return null;
-         }
-         /* fall through */
-      default:
-         return (
-            <div className="tr double">
-               <TD kind="date" />
-               <TD kind="num"></TD>
-               <TD kind="payee">{p.transaction.notes}</TD>
-               <TD kind="transfer" />
-               <TD kind="reconcile" />
-               <TD kind="amount" />
-               <TD kind="amount" />
-               <TD kind="amount" />
-            </div>
-         );
-   }
+   return (
+      <div className="tr double">
+         <TD kind="date" />
+         <TD kind="num"></TD>
+         <TD kind="payee">{p.transaction.notes}</TD>
+         <TD kind="transfer" />
+         <TD kind="reconcile" />
+         <TD kind="amount" />
+         <TD kind="amount" />
+         <TD kind="amount" />
+      </div>
+   );
 }
 
 /**
@@ -209,7 +239,7 @@ interface SplitRowProps {
 const SplitRow: React.FC<SplitRowProps> = p => {
    const s = p.split;
    return (
-      <TR level={1}>
+      <TR>
          <TD kind='date' />
          <TD kind='num'>{s.num}</TD>
          <TD kind='payee' />
@@ -249,69 +279,34 @@ interface TransactionRowProps {
    accountId: AccountId;
    accounts: AccountList;
    options: LedgerOptions;
+   style?: React.CSSProperties;
+   expanded: undefined|boolean;
+   setExpanded: (tr: Transaction, expanded: boolean) => void;
 }
 
 const TransactionRow: React.FC<TransactionRowProps> = p => {
    const t = p.transaction;
-
-   // undefined if not expandable
-   const [expanded, setExpanded] = React.useState<undefined|boolean>(
-      () => {
-         switch (p.options.split_mode) {
-            case SplitMode.COLLAPSED:
-            case SplitMode.SUMMARY:
-               return t.splits.length > 2 ? true : undefined;
-            case SplitMode.MULTILINE:
-               return true;
-         }
-      }
-   );
+   const { setExpanded } = p;
 
    const onExpand = React.useCallback(
-      () => {
-         setExpanded(old => !old);
-      },
-      []
+      () => setExpanded(t, !p.expanded),
+      [setExpanded, p.expanded, t]
    );
 
    let lines: (JSX.Element|null)[] = [];
 
    const expClass = 'trgroup ' + (
-       expanded === undefined ? ''
-       : expanded ? 'expandable expanded'
+       p.expanded === undefined ? ''
+       : p.expanded ? 'expandable expanded'
        : 'expandable collapsed'
    );
 
-   switch (p.options.split_mode) {
-      case SplitMode.COLLAPSED:
-         if (t.splits.length > 2) {
-            lines = t.splits.map((s, sid) => (
-               <SplitRow
-                  key={`${t.id} ${sid}`}
-                  split={s}
-                  accountId={p.accountId}
-                  accounts={p.accounts}
-               />
-            ));
-         }
-         break;
-
-      case SplitMode.MULTILINE:
-         lines = t.splits.map((s, sid) => (
-            <SplitRow
-               key={`${t.id} ${sid}`}
-               split={s}
-               accountId={p.accountId}
-               accounts={p.accounts}
-            />
-         ));
-         break;
-
-      case SplitMode.SUMMARY:
+   if (splitRowsCount(t, p.options.split_mode, p.expanded) > 0) {
+      if (p.options.split_mode === SplitMode.SUMMARY) {
          const amount = amountForAccount(t, p.accountId);
          if (t.splits.length > 2) {
             lines = [
-               <TR partial={true} level={1}>
+               <TR partial={true}>
                   <TD>
                      <Numeric amount={amount} />
                      &nbsp;=&nbsp;
@@ -331,22 +326,35 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
                </TR>
             ];
          }
-         break;
+      } else {
+         lines = t.splits.map((s, sid) => (
+            <SplitRow
+               key={`${t.id} ${sid}`}
+               split={s}
+               accountId={p.accountId}
+               accounts={p.accounts}
+            />
+         ));
+      }
    }
 
    return (
       <div
          className={expClass}
-         onClick={expanded === undefined ? undefined : onExpand}
+         onClick={p.expanded === undefined ? undefined : onExpand}
+         style={p.style}
       >
          <FirstRow
             transaction={t}
             options={p.options}
             accountId={p.accountId}
             accounts={p.accounts}
-            expanded={expanded}
+            expanded={p.expanded}
           />
-         <NotesRow transaction={t} options={p.options} />
+         {
+            showNotesRow(t, p.options.trans_mode, p.expanded) &&
+            <NotesRow transaction={t} options={p.options} />
+         }
          {lines}
       </div>
    );
@@ -455,6 +463,50 @@ const EditingRow: React.FC<EditingRowProps> = p => {
 }
 
 /**
+ * The logical rows of the table (one transaction is one logical row, but
+ * occupies multiple rows on the screen).
+ */
+
+interface RowState {
+   expanded: undefined|boolean;
+   num_rows: number;
+}
+
+type RowStateProps = { [transactionId: string]: RowState|undefined };
+
+const setupLogicalRows = (
+   transactions: Transaction[],
+   split_mode: SplitMode,
+) => {
+   const r: RowStateProps = {};
+
+   transactions.forEach(t => {
+      let expanded: undefined|boolean;
+      switch (split_mode) {
+         case SplitMode.COLLAPSED:
+         case SplitMode.SUMMARY:
+            expanded = t.splits.length > 2 ? true : undefined;
+            break;
+         case SplitMode.MULTILINE:
+            expanded = true;
+            break;
+      }
+
+      if (r[t.id] !== undefined) {
+         window.console.log('MANU duplicate id=', t.id);
+         r[t.id] = {expanded, num_rows: 10};
+      } else {
+         r[t.id] = {expanded, num_rows: 3};
+      }
+   });
+   window.console.log('MANU call setupLogicalRows', transactions.length,
+      " => ", Object.keys(r).length
+   );
+
+   return r;
+}
+
+/**
  * The full ledger
  */
 
@@ -466,11 +518,76 @@ interface LedgerProps {
 
 const Ledger: React.FC<LedgerProps> = p => {
    const { accounts } = useAccounts();
+   const [ rowState, setRowState ] = React.useState<RowStateProps>({});
+   const list = React.useRef<VariableSizeList>(null);
+
    const account = accounts.get_account(p.accountId);
 
-   window.console.log('Render ledger', account, p.transactions);
+   window.console.log('Render ledger', account,
+      p.transactions.length,
+      Object.keys(rowState).length);
 
-   if (!account) {
+   React.useLayoutEffect(
+      () => {
+         setRowState(setupLogicalRows(p.transactions, p.options.split_mode));
+         if (list.current) {
+            list.current!.resetAfterIndex(0);
+         }
+      },
+      [p.transactions, p.options.split_mode]
+   );
+
+   const setTransactionExpanded = React.useCallback(
+      (tr: Transaction, expanded: boolean) => {
+         if (list.current) {
+            // ??? Could optimize and only recompute after this row
+            list.current!.resetAfterIndex(0);
+         }
+         setRowState(old => ({
+               ...old,
+               [tr.id]: {expanded, num_rows: old[tr.id]!.num_rows},
+         }));
+      },
+      []
+   );
+
+   const Row = React.useCallback(
+      (r: ListChildComponentProps) => {
+         const t = p.transactions[r.index];
+         delete r.style['width'];   // set in the CSS
+         return (
+            <TransactionRow
+               style={r.style}
+               transaction={t}
+               accountId={p.accountId}
+               accounts={accounts}
+               options={p.options}
+               expanded={rowState[t.id]?.expanded}
+               setExpanded={setTransactionExpanded}
+            />
+         );
+      },
+      [p.transactions, setTransactionExpanded, rowState, accounts,
+       p.accountId, p.options]
+   );
+
+   const getTransactionHeight = React.useCallback(
+      (index: number) => {
+         const t = p.transactions[index];
+         const d = rowState[t?.id];
+         return ROW_HEIGHT * (
+            1
+            + (showNotesRow(t, p.options.trans_mode, d?.expanded) ? 1 : 0)
+            + splitRowsCount(t, p.options.split_mode, d?.expanded));
+      },
+      [rowState, p.transactions, p.options.trans_mode, p.options.split_mode]
+   );
+
+   const getTransactionKey = (index: number) => {
+      return p.transactions[index].id;
+   }
+
+   if (!account) { // || Object.keys(rowState).length !== p.transactions.length) {
       return <div>Loading...</div>
    }
 
@@ -499,19 +616,28 @@ const Ledger: React.FC<LedgerProps> = p => {
          </div>
 
          <div className="tbody">
-            {
-               p.transactions.map(t => (
-                  <TransactionRow
-                     key={t.id}
-                     transaction={t}
-                     accountId={p.accountId}
-                     accounts={accounts}
-                     options={p.options}
-                  />
-               ))
-            }
-            <EditingRow accountId={p.accountId} accounts={accounts} />
+            <AutoSizer>
+               {
+                  ({width, height}) => (
+                     <VariableSizeList
+                        ref={list}
+                        height={height}
+                        width={width}
+                        itemCount={p.transactions.length}
+                        itemSize={getTransactionHeight}
+                        itemKey={getTransactionKey}
+                     >
+                        {Row}
+                     </VariableSizeList>
+                  )
+               }
+            </AutoSizer>
          </div>
+
+         {
+            false &&
+            <EditingRow accountId={p.accountId} accounts={accounts} />
+         }
 
          <div className="tfoot">
             <TR partial={true}>
