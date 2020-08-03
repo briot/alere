@@ -46,27 +46,64 @@ class Transaction:
 class LedgerView(JSONView):
 
     def get_json(self, params, id: str):
-        query, params = kmm.query_ledger(
-            accounts=[id]
-        )
-        return [
-            Transaction(
-                id=t.transactionId,
-                date=t.date,
-                payee=t.payee,
-                balance=t.balance,
-                splits=[
-                    Split(
-                        account=t.categoryId,
-                        amount=t.value,
-                        reconcile='n'
-                    ),
-                    Split(
-                        account=t.accountId,
-                        amount=-t.value,
-                        reconcile='n'
-                    ),
-                ]
-            )
-            for t in do_query(query, params)
-        ]
+        # ??? Should use kmm._query_detailed_splits
+        query = (f"""
+        SELECT
+           t.id as transactionId,
+           payee.name as payee,
+           (CASE s.reconcileFlag
+               WHEN '2' then 'R'
+               WHEN '1' then 'C'
+               ELSE ''
+            END) as reconcile,
+           {kmm._to_float('s.value')} as value,
+           {kmm._to_float('s.shares')} as shares,
+           {kmm._to_float('s.price')} as price,
+           s.accountId,
+           s.checkNumber,
+           s.postDate as date,
+           t.postDate as transactionDate
+        FROM kmmTransactions t
+           JOIN kmmSplits s on (s.transactionId = t.id)
+           LEFT JOIN kmmPayees payee on (s.payeeId = payee.id)
+        WHERE
+           t.id IN (
+               SELECT DISTINCT s2.transactionId
+               FROM kmmSplits s2
+               WHERE s2.accountId = :account
+           )
+        ORDER BY transactionDate, transactionId
+        """)
+
+        balance = 0.0
+        result = []
+        current = None
+
+        for row in do_query(query, {'account': id}):
+            if row.accountId == id:
+                # ??? need to handle shares * price
+                balance += row.value
+
+            if current is not None and row.transactionId != current.id:
+                result.append(current)
+                current = None
+
+            if current is None:
+                current = Transaction(
+                    id=row.transactionId,
+                    date=row.transactionDate,
+                    payee=row.payee,
+                    balance=balance,
+                    splits=[]
+                )
+
+            current.splits.append(Split(
+                account=row.accountId,
+                amount=row.value,
+                reconcile=row.reconcile,
+            ))
+
+        if current is not None:
+            result.append(current)
+
+        return result
