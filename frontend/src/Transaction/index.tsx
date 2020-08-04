@@ -6,7 +6,7 @@ export interface Split {
    reconcile?: string;
    amount: number;
    currency?: string;
-   notes?: string;
+   memo?: string;
    checknum?: string;
 }
 
@@ -18,7 +18,7 @@ export interface Transaction {
    splits: Split[];  // at least one (there are two in the database, but here
                      // we might be seeing a partial view specific to one
                      // account only).
-   notes?: string;
+   memo?: string;
 }
 
 /**
