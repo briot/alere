@@ -2,10 +2,11 @@ import * as React from 'react';
 
 export enum SplitMode {
    HIDE,       // never show the splits
-   MULTILINE,  // one line per split in a transaction
+   SUMMARY,    // only one line for all splits (when more than two)
    COLLAPSED,  // same as multiline, but do not show splits if there are only
                // two accounts involved
-   SUMMARY,    // only one line for all splits (when more than two)
+   OTHERS,     // same as multiline, but omit current account's splits
+   MULTILINE,  // one line per split in a transaction
 }
 
 export enum TransactionMode {

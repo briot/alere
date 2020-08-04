@@ -169,16 +169,20 @@ const Settings: React.FC<SettingsProps> = p => {
                                 value={SplitMode.HIDE}
                             />
                             <Option
-                                text="Show splits if more than two"
+                                text="Show summary"
+                                value={SplitMode.SUMMARY}
+                            />
+                            <Option
+                                text="Show if more than two accounts"
                                 value={SplitMode.COLLAPSED}
+                            />
+                            <Option
+                                text="Show multiple rows, no duplicate for current"
+                                value={SplitMode.OTHERS}
                             />
                             <Option
                                 text="Show multiple rows"
                                 value={SplitMode.MULTILINE}
-                            />
-                            <Option
-                                text="Show summary"
-                                value={SplitMode.SUMMARY}
                             />
                         </select>
                      </div>
