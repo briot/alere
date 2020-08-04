@@ -14,13 +14,16 @@ export enum TransactionMode {
    TWO_LINES,  // transactions always use two lines (to show notes)
 }
 
+export interface LedgerPrefs {
+   trans_mode: TransactionMode;
+   split_mode: SplitMode;
+   borders: boolean;
+   defaultExpand: boolean;
+   valueColumn: boolean;
+}
+
 export interface Preferences {
-   ledgers: {
-      trans_mode: TransactionMode;
-      split_mode: SplitMode;
-      borders: boolean;
-      defaultExpand: boolean;
-   },
+   ledgers: LedgerPrefs;
 }
 
 const defaultPref: Preferences = {
@@ -29,6 +32,7 @@ const defaultPref: Preferences = {
       split_mode: SplitMode.COLLAPSED,
       borders: false,
       defaultExpand: true,
+      valueColumn: false,
    },
 }
 

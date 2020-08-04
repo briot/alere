@@ -111,6 +111,7 @@ class LedgerView(JSONView):
                 memo=row.memo,
                 checknum=row.checkNumber,
             ))
+            current.balance = balance
 
         if current is not None:
             result.append(current)
