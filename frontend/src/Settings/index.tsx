@@ -6,20 +6,17 @@ import "./Settings.css";
 interface CheckboxProps {
    checked: boolean;
    disabled?: boolean;
-   onChange?: (checked: boolean) => void;
+   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
    text?: string;
 }
 const Checkbox: React.FC<CheckboxProps> = p => {
-   const changed = (event: React.ChangeEvent<HTMLInputElement>) =>
-      p.onChange?.(event.target.checked);
-
    return (
       <div className={`button option ${p.disabled ? 'disabled' : ''}`}>
          <label>
             <input
                checked={p.checked}
                disabled={p.disabled}
-               onChange={changed}
+               onChange={p.onChange}
                type="checkbox"
             />
             {p.text}
@@ -52,29 +49,37 @@ const Settings: React.FC<SettingsProps> = p => {
       []
    );
 
-   const changeTrans = (event: React.ChangeEvent<HTMLSelectElement>) =>
+   const changeTrans = (event: React.ChangeEvent<HTMLSelectElement>) => {
       updatePrefs({
          ledgers: {...prefs.ledgers,
                    trans_mode: parseInt(event.target.value, 10)},
       });
+      event.stopPropagation();
+   }
 
-   const changeSplit = (event: React.ChangeEvent<HTMLSelectElement>) =>
+   const changeSplit = (event: React.ChangeEvent<HTMLSelectElement>) => {
       updatePrefs({
          ledgers: {...prefs.ledgers,
                    split_mode: parseInt(event.target.value, 10)},
       });
+      event.stopPropagation();
+   }
 
-   const changeBorders = (checked: boolean) =>
+   const changeBorders = (event: React.ChangeEvent<HTMLInputElement>) => {
       updatePrefs({
          ledgers: {...prefs.ledgers,
-                   borders: checked},
+                   borders: event.target.checked},
       });
+      event.stopPropagation();
+   }
 
-   const changeExpand = (checked: boolean) =>
+   const changeExpand = (event: React.ChangeEvent<HTMLInputElement>) => {
       updatePrefs({
          ledgers: {...prefs.ledgers,
-                   defaultExpand: checked},
+                   defaultExpand: event.target.checked},
       });
+      event.stopPropagation();
+   }
 
    return (
       <>
@@ -83,7 +88,9 @@ const Settings: React.FC<SettingsProps> = p => {
             onClick={toggleVisible}
             title="Settings"
          />
-         <div className={`settings ${visible ? 'opened' : 'closed'}`} >
+         <div
+            className={`settings ${visible ? 'opened' : 'closed'}`}
+         >
             {
                visible &&
                <form>
