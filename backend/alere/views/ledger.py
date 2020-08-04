@@ -5,12 +5,12 @@ from .kmm import kmm, do_query
 class Split:
     def __init__(
             self, account: Union[int, str], amount: int, reconcile='n',
-            currency='', notes='', checknum=None):
+            currency='', memo='', checknum=None):
         self.account = account
         self.amount = amount
         self.reconcile = reconcile
         self.currency = currency
-        self.notes = notes
+        self.memo = memo
         self.checknum = checknum
 
     def to_json(self):
@@ -19,7 +19,7 @@ class Split:
             "amount": self.amount,
             "reconcile": self.reconcile,
             "currency": self.currency,
-            "notes": self.notes,
+            "memo": self.memo,
             "checknum": self.checknum,
         }
 
@@ -29,13 +29,13 @@ class Transaction:
             self, id: Union[int, str], date, balance: int,
             splits: List[Split],
             payee='',
-            notes=''):
+            memo=''):
         self.id = id
         self.date = date
         self.payee = payee
         self.balance = balance
         self.splits = splits
-        self.notes = notes
+        self.memo = memo
 
     def to_json(self):
         return {"id": self.id,
@@ -43,7 +43,7 @@ class Transaction:
                 "payee": self.payee,
                 "balance": self.balance,
                 "splits": self.splits,
-                "notes": self.notes
+                "memo": self.memo
                }
 
 
@@ -63,10 +63,10 @@ class LedgerView(JSONView):
            {kmm._to_float('s.value')} as value,
            {kmm._to_float('s.shares')} as shares,
            {kmm._to_float('s.price')} as price,
-           t.memo as transactionNotes,
+           t.memo as transactionMemo,
            s.accountId,
            s.checkNumber,
-           s.memo as notes,
+           s.memo,
            s.postDate as date,
            t.postDate as transactionDate
         FROM kmmTransactions t
@@ -100,7 +100,7 @@ class LedgerView(JSONView):
                     date=row.transactionDate,
                     payee=row.payee,
                     balance=balance,
-                    notes=row.transactionNotes,
+                    memo=row.transactionMemo,
                     splits=[]
                 )
 
@@ -108,7 +108,7 @@ class LedgerView(JSONView):
                 account=row.accountId,
                 amount=row.value,
                 reconcile=row.reconcile,
-                notes=row.notes,
+                memo=row.memo,
                 checknum=row.checkNumber,
             ))
 

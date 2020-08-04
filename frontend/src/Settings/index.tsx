@@ -121,22 +121,22 @@ const Settings: React.FC<SettingsProps> = p => {
                      />
 
                      <div className="option">
-                        <label htmlFor="transmode">Notes</label>
+                        <label htmlFor="transmode">Memos</label>
                         <select
                            id="transmode"
                            onChange={changeTrans}
                            value={prefs.ledgers.trans_mode}
                         >
                             <Option
-                                text="Hide notes"
+                                text="Hide memos"
                                 value={TransactionMode.ONE_LINE}
                             />
                             <Option
-                                text="Show notes if not empty"
+                                text="Show memos if not empty"
                                 value={TransactionMode.AUTO}
                             />
                             <Option
-                                text="Show notes always"
+                                text="Show memos always"
                                 value={TransactionMode.TWO_LINES}
                             />
                         </select>

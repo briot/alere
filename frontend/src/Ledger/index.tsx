@@ -46,7 +46,7 @@ const noteRowsCount = (
       case TransactionMode.ONE_LINE:
          return 0;
       case TransactionMode.AUTO:
-         return t?.notes ? 1 : 0;
+         return t?.memo ? 1 : 0;
       default:
          return 1;
    }
@@ -202,7 +202,7 @@ const NotesRow: React.FC<NotesRowProps> = p => {
       <TR>
          <TD kind="date" />
          <TD kind="num"></TD>
-         <TD kind="payee">{p.transaction.notes}</TD>
+         <TD kind="payee">{p.transaction.memo}</TD>
          <TD kind="transfer" />
          <TD kind="reconcile" />
          <TD kind="amount" />
@@ -227,7 +227,7 @@ const SplitRow: React.FC<SplitRowProps> = p => {
       <TR>
          <TD kind='date' />
          <TD kind='num' className='numeric'>{s.checknum}</TD>
-         <TD kind='payee'>{s.notes}</TD>
+         <TD kind='payee'>{s.memo}</TD>
          <TD kind='transfer'>
             {
                s.account !== p.accountId
