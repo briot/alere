@@ -4,12 +4,14 @@ import LeftSideBar from 'LeftSideBar';
 import RightSideBar from 'RightSideBar';
 import Ledger from 'Ledger';
 import { AccountId, Transaction } from 'Transaction';
+import usePrefs from 'services/usePrefs';
 import useAccounts from 'services/useAccounts';
 import './App.css';
 import "font-awesome/css/font-awesome.min.css";
 
 const App: React.FC<{}> = () => {
    const [transactions, setTransactions] = React.useState<Transaction[]>([]);
+   const { prefs } = usePrefs();
 
    const { accounts } = useAccounts();
    const accountId: AccountId = 'A000106';
@@ -27,7 +29,7 @@ const App: React.FC<{}> = () => {
    );
 
    return (
-     <div id="app">
+     <div id="app" className={prefs.dark_mode ? 'dark' : 'light' }>
          <div className="headerbg" />
          <Header
             title={accounts.name(accountId)}

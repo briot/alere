@@ -12,6 +12,7 @@
    white-space: nowrap;
    text-overflow: ellipsis;
    overflow: hidden;
+   color: var(--tool-color);
 }
 
 #lsidebar .selected {
@@ -25,6 +26,8 @@
    flex-flow: row nowrap;      /* always use a single line */
    align-items: center;        /* align children vertically */
    justify-content: space-between;
+
+   color: var(--tool-color);
 }
 .roundButton span:first-child {
    background: var(--tool-background-on-page);
@@ -39,8 +42,8 @@
    justify-content: center;
 
    box-shadow:
-       -5px -5px 5px 0 rgba(255,255,255,1),
-       5px 5px 5px 0 rgba(0,0,0,.2);
+       -4px -4px 4px 0 var(--neumorph-light),
+       4px 4px 4px 0 var(--neumorph-dark);
 }
 .roundButton span:last-child {
    height: 1rem;
