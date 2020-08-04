@@ -587,7 +587,7 @@ const Ledger: React.FC<LedgerProps> = p => {
             <TR>
                <TH kind='date' sortable={true}>Date</TH>
                <TH kind='num' className="numeric" sortable={true}>Num</TH>
-               <TH kind='payee' sortable={true}>Payee</TH>
+               <TH kind='payee' sortable={true}>Payee/Memos</TH>
                <TH kind='transfer' sortable={true}>From/To</TH>
                <TH kind='reconcile'>R</TH>
                <TH kind='amount' sortable={true} asc={false}>Withdrawal</TH>

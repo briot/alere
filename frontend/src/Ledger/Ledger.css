@@ -45,6 +45,12 @@
 .ledger .tfoot .tr .th {
    margin-left: 20px;  /* space between items */
 }
+.ledger a {
+   text-decoration: none;
+}
+.ledger a:hover {
+   text-decoration: underline;
+}
 
 /* split transaction details */
 .ledger .tr:not(:first-child) .td {

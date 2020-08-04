@@ -26,7 +26,12 @@ export class AccountList {
    }
 
    name(id: AccountId): string {
-      return this.get_account(id)?.name || `account ${id}`;
+      return (this.get_account(id)?.name || `account ${id}`)
+         .replace('Asset:', '')
+         .replace('Liability:', '')
+         .replace('Income:', '')
+         .replace('Expense:', '')
+         .replace('Equity:', '');
    }
 }
 
