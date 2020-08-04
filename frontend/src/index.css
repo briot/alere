@@ -70,7 +70,7 @@
 
    --expand-arrow-color: var(--gray-400);
 
-   --shadow-color: var(--gray-400);
+   --shadow-color: rgba(206,206,206,0.8); /*   var(--gray-400); */
 
    --tool-color: var(--gray-700);
    --tool-background: var(--gray-200);
