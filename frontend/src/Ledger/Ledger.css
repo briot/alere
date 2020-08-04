@@ -15,6 +15,7 @@
 }
 .ledger {
    --row-height: 25px;  /* must match ROW_HEIGHT in javascript */
+   color: var(--panel-fg);
 }
 
 .ledger .tr {

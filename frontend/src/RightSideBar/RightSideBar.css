@@ -9,6 +9,8 @@
 
    margin-right: 10px;
    max-width: 300px;
+
+   color: var(--panel-fg);
 }
 
 #rsidebar h3 {

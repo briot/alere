@@ -73,6 +73,11 @@ const Settings: React.FC<SettingsProps> = p => {
       event.stopPropagation();
    }
 
+   const changeDark = (event: React.ChangeEvent<HTMLInputElement>) => {
+      updatePrefs({ dark_mode: event.target.checked });
+      event.stopPropagation();
+   }
+
    const changeExpand = (event: React.ChangeEvent<HTMLInputElement>) => {
       updatePrefs({
          ledgers: {...prefs.ledgers,
@@ -102,6 +107,17 @@ const Settings: React.FC<SettingsProps> = p => {
             {
                visible &&
                <form>
+                  <fieldset>
+                     <legend>General</legend>
+
+                     <Checkbox
+                         checked={prefs.dark_mode}
+                         onChange={changeDark}
+                         text="Dark mode"
+                     />
+
+                  </fieldset>
+
                   <fieldset>
                      <legend>Ledgers</legend>
 

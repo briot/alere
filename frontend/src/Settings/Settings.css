@@ -4,6 +4,7 @@
    top: var(--header-tool-height);
    border: 1px solid var(--gray-500);
    background-color: var(--panel-background);
+   color: var(--panel-fg);
    border-radius: 10px;
    box-shadow: 3px 3px 4px 0 var(--shadow-color);
    padding: 10px;

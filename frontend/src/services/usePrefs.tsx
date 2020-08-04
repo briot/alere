@@ -24,10 +24,12 @@ export interface LedgerPrefs {
 }
 
 export interface Preferences {
+   dark_mode: boolean;
    ledgers: LedgerPrefs;
 }
 
 const defaultPref: Preferences = {
+   dark_mode: true,
    ledgers: {
       trans_mode: TransactionMode.ONE_LINE,
       split_mode: SplitMode.COLLAPSED,
