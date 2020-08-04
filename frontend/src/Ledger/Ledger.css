@@ -1,7 +1,14 @@
 #main {
    grid-area: main;
    background: var(--panel-background);
-   box-shadow: 3px 3px 4px 0px var(--shadow-color);
+   box-shadow: 5px 5px 5px 0px var(--shadow-color);
+
+   /** neumorphism
+   box-shadow:
+       -8px -8px 8px 0 rgba(255,255,255,1),
+       8px 8px 8px 0 rgba(0,0,0,.08);
+   */
+   border-radius: .5em;
 
    display: flex;
    flex-flow: column nowrap;
