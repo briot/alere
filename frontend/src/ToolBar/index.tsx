@@ -7,12 +7,10 @@ import Button from './Button';
  */
 
 interface BarProps {
-   vertical: boolean;
    background?: boolean;  // whether to include the gray background bar
 }
 const Bar: React.FC<BarProps> = p => {
-   const className = 'tools'
-      + (p.vertical ? ' vert' : ' horiz')
+   const className = 'tools horiz'
       + (p.background ? ' background' : '');
    return (
       <div className={className} >

@@ -2,11 +2,12 @@ export type AccountId = string|number;
 export type TransactionId = string;
 
 export interface Split {
-   num?: string;
    account: AccountId;
    reconcile?: string;
    amount: number;
    currency?: string;
+   notes?: string;
+   checknum?: string;
 }
 
 export interface Transaction {

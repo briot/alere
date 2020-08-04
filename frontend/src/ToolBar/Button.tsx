@@ -1,6 +1,7 @@
 import React from 'react';
 
 interface ButtonProps {
+   onClick?: () => void;
    label?: string;  // visible text
    icon?: string;
    title?: string;  // tooltip, defaults to {label}
@@ -10,11 +11,11 @@ interface ButtonProps {
 }
 
 const ToolButton: React.FC<ButtonProps> = p => {
-   const className = "tool " + (p.grows ? "grow": "");
+   const className = "tool button " + (p.grows ? "grow": "");
 
    // ??? Should use a real button instead
    return (
-      <div className={className} >
+      <div className={className} onClick={p.onClick}>
          {p.label}
          {
             p.icon && (

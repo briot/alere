@@ -26,9 +26,11 @@ const ROW_HEIGHT = 25;  // pixels
 const SPLIT = '--split--';
 const SPLIT_ID: AccountId = "";
 
-interface LedgerOptions {
+export interface LedgerOptions {
    trans_mode: TransactionMode;
    split_mode: SplitMode;
+   borders: boolean;
+   defaultExpand: boolean;
 }
 
 const splitRowsCount = (
@@ -51,22 +53,22 @@ const splitRowsCount = (
    }
 }
 
-const showNotesRow = (
+const noteRowsCount = (
    t: Transaction,
    trans_mode: TransactionMode,
    expanded: boolean|undefined,
-): boolean => {
+): number => {
    if (!expanded) {
-      return false;
+      return 0;
    }
 
    switch (trans_mode) {
       case TransactionMode.ONE_LINE:
-         return false;
+         return 0;
       case TransactionMode.AUTO:
-         return (t?.notes !== undefined);
+         return (t?.notes !== undefined) ? 1 : 0;
       default:
-         return true;
+         return 1;
    }
 }
 
@@ -78,13 +80,13 @@ interface THProps {
    sortable?: boolean;
    asc?: boolean; // if sorted (not undefined), whether ascending or descending
    kind?: string;
+   className?: string;
 }
 const TH: React.FC<THProps> = p => {
    const sortClass = p.sortable ? 'sortable' : '';
    const ascClass = p.asc === undefined ? '' : p.asc ? 'sort-up' : 'sort-down';
-   const className = `th ${p.kind || ''} ${sortClass} ${ascClass}`;
    return (
-       <span className={className}>
+       <span className={`th ${p.kind || ''} ${sortClass} ${ascClass} ${p.className || ''}`}>
           {p.children}
        </span>
    );
@@ -96,9 +98,10 @@ const TH: React.FC<THProps> = p => {
 
 interface TDProps {
    kind?: string;
+   className?: string;
 }
 const TD: React.FC<TDProps> = p => {
-   const className = `td ${p.kind}`;
+   const className = `td ${p.kind} ${p.className || ''}`;
    return (
       <span className={className}>
          {p.children}
@@ -151,12 +154,14 @@ const FirstRow: React.FC<FirstRowProps> = p => {
       case SplitMode.SUMMARY:
          if (t.splits.length < 3) {
             // Find the split for the account itself, to get balance
-            const s2 = firstSplitForAccount(t, p.accountId);
+            const s2 = {
+               ...firstSplitForAccount(t, p.accountId)
+            };
 
             // Find the split not for the account, to get the target account
-            for (const s of t.splits) {
-               if (s.account !== p.accountId) {
-                  s2.account = s.account;
+            for (const s3 of t.splits) {
+               if (s3.account !== p.accountId) {
+                  s2.account = s3.account;
                   break;
                }
             }
@@ -171,7 +176,7 @@ const FirstRow: React.FC<FirstRowProps> = p => {
    return (
       <TR>
          <TD kind='date'>{t.date}</TD>
-         <TD kind='num'>{s.num}</TD>
+         <TD kind='num' className='numeric'>{s.checknum}</TD>
          <TD kind='payee'><a href='#a'>{t.payee}</a></TD>
          <TD kind='transfer'>
             {
@@ -204,6 +209,7 @@ const FirstRow: React.FC<FirstRowProps> = p => {
    );
 }
 
+
 /**
  * The row that shows the details for a transaction
  */
@@ -214,7 +220,7 @@ interface NotesRowProps {
 }
 const NotesRow: React.FC<NotesRowProps> = p => {
    return (
-      <div className="tr double">
+      <TR>
          <TD kind="date" />
          <TD kind="num"></TD>
          <TD kind="payee">{p.transaction.notes}</TD>
@@ -223,7 +229,7 @@ const NotesRow: React.FC<NotesRowProps> = p => {
          <TD kind="amount" />
          <TD kind="amount" />
          <TD kind="amount" />
-      </div>
+      </TR>
    );
 }
 
@@ -241,8 +247,8 @@ const SplitRow: React.FC<SplitRowProps> = p => {
    return (
       <TR>
          <TD kind='date' />
-         <TD kind='num'>{s.num}</TD>
-         <TD kind='payee' />
+         <TD kind='num' className='numeric'>{s.checknum}</TD>
+         <TD kind='payee'>{s.notes}</TD>
          <TD kind='transfer'>
             {
                s.account !== p.accountId
@@ -293,7 +299,7 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
       [setExpanded, p.expanded, t]
    );
 
-   let lines: (JSX.Element|null)[] = [];
+   let lines: (JSX.Element|null)[] | JSX.Element = [];
 
    const expClass = 'trgroup ' + (
        p.expanded === undefined ? ''
@@ -305,26 +311,26 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
       if (p.options.split_mode === SplitMode.SUMMARY) {
          const amount = amountForAccount(t, p.accountId);
          if (t.splits.length > 2) {
-            lines = [
+            lines = (
                <TR partial={true}>
                   <TD>
                      <Numeric amount={amount} />
                      &nbsp;=&nbsp;
                      {
-                        t.splits.map(s =>
+                        t.splits.map((s, index) =>
                            (s.account !== p.accountId)
-                           ? [
-                              <span>{ s.amount >= 0 ? ' - ' : ' + ' }</span>,
-                              <Numeric amount={Math.abs(s.amount)} />,
-                              ' (',
-                              <a href='#a'>{p.accounts.name(s.account)}</a>,
-                              ')'
-                           ] : null
+                           ? <span key={index}>
+                              <span>{ s.amount >= 0 ? ' - ' : ' + ' }</span>
+                              <Numeric amount={Math.abs(s.amount)} />
+                              (
+                              <a href='#a'>{p.accounts.name(s.account)}</a>
+                              )
+                           </span> : null
                         )
                      }
                   </TD>
                </TR>
-            ];
+            );
          }
       } else {
          lines = t.splits.map((s, sid) => (
@@ -352,7 +358,7 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
             expanded={p.expanded}
           />
          {
-            showNotesRow(t, p.options.trans_mode, p.expanded) &&
+            noteRowsCount(t, p.options.trans_mode, p.expanded) > 0 &&
             <NotesRow transaction={t} options={p.options} />
          }
          {lines}
@@ -469,39 +475,27 @@ const EditingRow: React.FC<EditingRowProps> = p => {
 
 interface RowState {
    expanded: undefined|boolean;
-   num_rows: number;
 }
 
 type RowStateProps = { [transactionId: string]: RowState|undefined };
 
 const setupLogicalRows = (
    transactions: Transaction[],
+   trans_mode: TransactionMode,
    split_mode: SplitMode,
+   defaultExpand: boolean,
 ) => {
    const r: RowStateProps = {};
 
    transactions.forEach(t => {
-      let expanded: undefined|boolean;
-      switch (split_mode) {
-         case SplitMode.COLLAPSED:
-         case SplitMode.SUMMARY:
-            expanded = t.splits.length > 2 ? true : undefined;
-            break;
-         case SplitMode.MULTILINE:
-            expanded = true;
-            break;
-      }
+      const rows =
+         splitRowsCount(t, split_mode, true)
+         + noteRowsCount(t, trans_mode, true);
 
-      if (r[t.id] !== undefined) {
-         window.console.log('MANU duplicate id=', t.id);
-         r[t.id] = {expanded, num_rows: 10};
-      } else {
-         r[t.id] = {expanded, num_rows: 3};
-      }
+      r[t.id] = {
+         expanded: rows > 0 ? defaultExpand : undefined,
+      };
    });
-   window.console.log('MANU call setupLogicalRows', transactions.length,
-      " => ", Object.keys(r).length
-   );
 
    return r;
 }
@@ -523,18 +517,21 @@ const Ledger: React.FC<LedgerProps> = p => {
 
    const account = accounts.get_account(p.accountId);
 
-   window.console.log('Render ledger', account,
-      p.transactions.length,
-      Object.keys(rowState).length);
+   //  window.console.log('Render ledger', account,
+   //     p.transactions.length,
+   //     Object.keys(rowState).length);
 
    React.useLayoutEffect(
       () => {
-         setRowState(setupLogicalRows(p.transactions, p.options.split_mode));
+         setRowState(setupLogicalRows(
+            p.transactions, p.options.trans_mode, p.options.split_mode,
+            p.options.defaultExpand));
          if (list.current) {
             list.current!.resetAfterIndex(0);
          }
       },
-      [p.transactions, p.options.split_mode]
+      [p.transactions, p.options.split_mode, p.options.trans_mode,
+       p.options.defaultExpand]
    );
 
    const setTransactionExpanded = React.useCallback(
@@ -545,7 +542,7 @@ const Ledger: React.FC<LedgerProps> = p => {
          }
          setRowState(old => ({
                ...old,
-               [tr.id]: {expanded, num_rows: old[tr.id]!.num_rows},
+               [tr.id]: {expanded},
          }));
       },
       []
@@ -577,7 +574,7 @@ const Ledger: React.FC<LedgerProps> = p => {
          const d = rowState[t?.id];
          return ROW_HEIGHT * (
             1
-            + (showNotesRow(t, p.options.trans_mode, d?.expanded) ? 1 : 0)
+            + noteRowsCount(t, p.options.trans_mode, d?.expanded)
             + splitRowsCount(t, p.options.split_mode, d?.expanded));
       },
       [rowState, p.transactions, p.options.trans_mode, p.options.split_mode]
@@ -592,6 +589,7 @@ const Ledger: React.FC<LedgerProps> = p => {
    }
 
    const className = 'ledger'
+      + (p.options.borders ? ' borders' : '')
       // no background necessary if we are only ever going to display one line
       // per transaction
       + (p.options.trans_mode === TransactionMode.ONE_LINE
@@ -605,7 +603,7 @@ const Ledger: React.FC<LedgerProps> = p => {
          <div className="thead">
             <TR>
                <TH kind='date' sortable={true}>Date</TH>
-               <TH kind='num' sortable={true}>Num</TH>
+               <TH kind='num' className="numeric" sortable={true}>Num</TH>
                <TH kind='payee' sortable={true}>Payee</TH>
                <TH kind='transfer' sortable={true}>From/To</TH>
                <TH kind='reconcile'>R</TH>

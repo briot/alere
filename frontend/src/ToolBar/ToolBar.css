@@ -80,3 +80,7 @@
 
    align-items: flex-start;  /* left-align the text */
 }
+
+.tool.button {
+   cursor: pointer;
+}

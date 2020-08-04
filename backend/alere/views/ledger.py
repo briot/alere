@@ -5,11 +5,13 @@ from .kmm import kmm, do_query
 class Split:
     def __init__(
             self, account: Union[int, str], amount: int, reconcile='n',
-            currency=''):
+            currency='', notes='', checknum=None):
         self.account = account
         self.amount = amount
         self.reconcile = reconcile
         self.currency = currency
+        self.notes = notes
+        self.checknum = checknum
 
     def to_json(self):
         return {
@@ -17,6 +19,8 @@ class Split:
             "amount": self.amount,
             "reconcile": self.reconcile,
             "currency": self.currency,
+            "notes": self.notes,
+            "checknum": self.checknum,
         }
 
 
@@ -59,8 +63,10 @@ class LedgerView(JSONView):
            {kmm._to_float('s.value')} as value,
            {kmm._to_float('s.shares')} as shares,
            {kmm._to_float('s.price')} as price,
+           t.memo as transactionNotes,
            s.accountId,
            s.checkNumber,
+           s.memo as notes,
            s.postDate as date,
            t.postDate as transactionDate
         FROM kmmTransactions t
@@ -94,6 +100,7 @@ class LedgerView(JSONView):
                     date=row.transactionDate,
                     payee=row.payee,
                     balance=balance,
+                    notes=row.transactionNotes,
                     splits=[]
                 )
 
@@ -101,6 +108,8 @@ class LedgerView(JSONView):
                 account=row.accountId,
                 amount=row.value,
                 reconcile=row.reconcile,
+                notes=row.notes,
+                checknum=row.checkNumber,
             ))
 
         if current is not None:
