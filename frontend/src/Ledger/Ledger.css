@@ -224,20 +224,20 @@
  * Column-specific settings
  */
 .ledger .date {
-   flex: 0 0 6em;
+   flex: 0 0 6rem;
    font-family: "minion pro", "myriad pro", "tahoma";
    font-variant-numeric: oldstyle-nums tabular-nums;
    font-variant-numeric: lining-nums tabular-nums;
 }
 .ledger .num {
-   flex: 0 0 5em;
+   flex: 0 0 5rem;
 }
 .ledger .reconcile {
-   flex: 0 0 1.5em;
+   flex: 0 0 1.5rem;
    text-align: center;
 }
 .ledger .amount {
-   flex: 0 0 7em;
+   flex: 0 0 7rem;
    text-align: right;
 }
 

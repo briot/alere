@@ -5,33 +5,13 @@ import { amountForAccount, firstSplitForAccount,
          AccountId, Split, Transaction } from 'Transaction';
 import Numeric from 'Numeric';
 import useAccounts, { AccountList } from 'services/useAccounts';
+import usePrefs, { SplitMode, TransactionMode } from 'services/usePrefs';
 import './Ledger.css';
-
-export enum SplitMode {
-   HIDE,       // never show the splits
-   MULTILINE,  // one line per split in a transaction
-   COLLAPSED,  // same as multiline, but do not show splits if there are only
-               // two accounts involved
-   SUMMARY,    // only one line for all splits (when more than two)
-}
-
-export enum TransactionMode {
-   ONE_LINE,   // only use one line (notes are never displayed)
-   AUTO,       // transactions use two lines if they have notes
-   TWO_LINES,  // transactions always use two lines (to show notes)
-}
 
 const ROW_HEIGHT = 25;  // pixels
 
 const SPLIT = '--split--';
 const SPLIT_ID: AccountId = "";
-
-export interface LedgerOptions {
-   trans_mode: TransactionMode;
-   split_mode: SplitMode;
-   borders: boolean;
-   defaultExpand: boolean;
-}
 
 const splitRowsCount = (
    t: Transaction,
@@ -66,7 +46,7 @@ const noteRowsCount = (
       case TransactionMode.ONE_LINE:
          return 0;
       case TransactionMode.AUTO:
-         return (t?.notes !== undefined) ? 1 : 0;
+         return t?.notes ? 1 : 0;
       default:
          return 1;
    }
@@ -137,7 +117,7 @@ interface FirstRowProps {
    transaction: Transaction;
    accountId: AccountId;
    accounts: AccountList;
-   options: LedgerOptions;
+   split_mode: SplitMode;
    expanded?: boolean;
 }
 const FirstRow: React.FC<FirstRowProps> = p => {
@@ -148,7 +128,7 @@ const FirstRow: React.FC<FirstRowProps> = p => {
       amount: amountForAccount(t, p.accountId),
    };
 
-   switch (p.options.split_mode) {
+   switch (p.split_mode) {
       case SplitMode.HIDE:
       case SplitMode.COLLAPSED:
       case SplitMode.SUMMARY:
@@ -216,7 +196,6 @@ const FirstRow: React.FC<FirstRowProps> = p => {
 
 interface NotesRowProps {
    transaction: Transaction;
-   options: LedgerOptions;
 }
 const NotesRow: React.FC<NotesRowProps> = p => {
    return (
@@ -284,7 +263,8 @@ interface TransactionRowProps {
    transaction: Transaction;
    accountId: AccountId;
    accounts: AccountList;
-   options: LedgerOptions;
+   split_mode: SplitMode;
+   trans_mode: TransactionMode;
    style?: React.CSSProperties;
    expanded: undefined|boolean;
    setExpanded: (tr: Transaction, expanded: boolean) => void;
@@ -307,8 +287,8 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
        : 'expandable collapsed'
    );
 
-   if (splitRowsCount(t, p.options.split_mode, p.expanded) > 0) {
-      if (p.options.split_mode === SplitMode.SUMMARY) {
+   if (splitRowsCount(t, p.split_mode, p.expanded) > 0) {
+      if (p.split_mode === SplitMode.SUMMARY) {
          const amount = amountForAccount(t, p.accountId);
          if (t.splits.length > 2) {
             lines = (
@@ -352,14 +332,14 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
       >
          <FirstRow
             transaction={t}
-            options={p.options}
+            split_mode={p.split_mode}
             accountId={p.accountId}
             accounts={p.accounts}
             expanded={p.expanded}
           />
          {
-            noteRowsCount(t, p.options.trans_mode, p.expanded) > 0 &&
-            <NotesRow transaction={t} options={p.options} />
+            noteRowsCount(t, p.trans_mode, p.expanded) > 0 &&
+            <NotesRow transaction={t} />
          }
          {lines}
       </div>
@@ -507,12 +487,12 @@ const setupLogicalRows = (
 interface LedgerProps {
    accountId: AccountId;
    transactions: Transaction[];
-   options: LedgerOptions;
 }
 
 const Ledger: React.FC<LedgerProps> = p => {
    const { accounts } = useAccounts();
    const [ rowState, setRowState ] = React.useState<RowStateProps>({});
+   const { prefs } = usePrefs();
    const list = React.useRef<VariableSizeList>(null);
 
    const account = accounts.get_account(p.accountId);
@@ -524,14 +504,15 @@ const Ledger: React.FC<LedgerProps> = p => {
    React.useLayoutEffect(
       () => {
          setRowState(setupLogicalRows(
-            p.transactions, p.options.trans_mode, p.options.split_mode,
-            p.options.defaultExpand));
+            p.transactions,
+            prefs.ledgers.trans_mode, prefs.ledgers.split_mode,
+            prefs.ledgers.defaultExpand));
          if (list.current) {
             list.current!.resetAfterIndex(0);
          }
       },
-      [p.transactions, p.options.split_mode, p.options.trans_mode,
-       p.options.defaultExpand]
+      [p.transactions, prefs.ledgers.split_mode, prefs.ledgers.trans_mode,
+       prefs.ledgers.defaultExpand]
    );
 
    const setTransactionExpanded = React.useCallback(
@@ -558,14 +539,15 @@ const Ledger: React.FC<LedgerProps> = p => {
                transaction={t}
                accountId={p.accountId}
                accounts={accounts}
-               options={p.options}
+               split_mode={prefs.ledgers.split_mode}
+               trans_mode={prefs.ledgers.trans_mode}
                expanded={rowState[t.id]?.expanded}
                setExpanded={setTransactionExpanded}
             />
          );
       },
       [p.transactions, setTransactionExpanded, rowState, accounts,
-       p.accountId, p.options]
+       p.accountId, prefs.ledgers.split_mode, prefs.ledgers.trans_mode]
    );
 
    const getTransactionHeight = React.useCallback(
@@ -574,10 +556,11 @@ const Ledger: React.FC<LedgerProps> = p => {
          const d = rowState[t?.id];
          return ROW_HEIGHT * (
             1
-            + noteRowsCount(t, p.options.trans_mode, d?.expanded)
-            + splitRowsCount(t, p.options.split_mode, d?.expanded));
+            + noteRowsCount(t, prefs.ledgers.trans_mode, d?.expanded)
+            + splitRowsCount(t, prefs.ledgers.split_mode, d?.expanded));
       },
-      [rowState, p.transactions, p.options.trans_mode, p.options.split_mode]
+      [rowState, p.transactions, prefs.ledgers.trans_mode,
+       prefs.ledgers.split_mode]
    );
 
    const getTransactionKey = (index: number) => {
@@ -589,11 +572,11 @@ const Ledger: React.FC<LedgerProps> = p => {
    }
 
    const className = 'ledger'
-      + (p.options.borders ? ' borders' : '')
+      + (prefs.ledgers.borders ? ' borders' : '')
       // no background necessary if we are only ever going to display one line
       // per transaction
-      + (p.options.trans_mode === TransactionMode.ONE_LINE
-         && p.options.split_mode === SplitMode.HIDE
+      + (prefs.ledgers.trans_mode === TransactionMode.ONE_LINE
+         && prefs.ledgers.split_mode === SplitMode.HIDE
          ? ''
          : ' background'
         );

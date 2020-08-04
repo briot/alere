@@ -4,12 +4,15 @@ import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 import { AccountsProvider } from 'services/useAccounts';
+import { PrefProvider } from 'services/usePrefs';
 
 ReactDOM.render(
   <React.StrictMode>
-      <AccountsProvider>
-         <App />
-      </AccountsProvider>
+      <PrefProvider>
+         <AccountsProvider>
+            <App />
+         </AccountsProvider>
+      </PrefProvider>
   </React.StrictMode>,
   document.getElementById('root')
 );
