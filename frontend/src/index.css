@@ -1,4 +1,24 @@
 :root {
+   /* From bootstrap v5 palette */
+   --color-100: #a8cbfe;
+   --fg-100: #212529;  /* good color for contrast on --color-100 */
+   --color-200: #81b4fe;
+   --color-300: #5a9cfe;
+   --color-400: #3485fd;
+   --color-500: #0d6efd;
+
+   --gray-100: #f8f9fa;
+   --gray-200: #e9ecef;
+   --gray-300: #dee2e6;
+   --gray-400: #ced4da;
+   --gray-500: #adb5bd;
+   --gray-600: #6c757d;  /* use white on top */
+   --gray-700: #495057;
+   --gray-800: #343a40;
+   --gray-900: #212529;
+
+   --gray-400-50p: rgba(206,212,212,50%);
+
    --font-size: 16px;
    --font-size-sidebar: 15px;
    --font-size-tool: 13px;
@@ -30,24 +50,6 @@
 
 }
 :root {
-   /* From bootstrap v5 palette */
-   --color-100: #a8cbfe;
-   --fg-100: #212529;  /* good color for contrast on --color-100 */
-   --color-200: #81b4fe;
-   --color-300: #5a9cfe;
-   --color-400: #3485fd;
-   --color-500: #0d6efd;
-
-   --gray-100: #f8f9fa;
-   --gray-200: #e9ecef;
-   --gray-300: #dee2e6;
-   --gray-400: #ced4da;
-   --gray-500: #adb5bd;
-   --gray-600: #6c757d;  /* use white on top */
-   --gray-700: #495057;
-   --gray-800: #343a40;
-   --gray-900: #212529;
-
    --page-background: var(--gray-200);
    --panel-background: white;
    --background-summary-popup: rgba(0,0,0,0.9);

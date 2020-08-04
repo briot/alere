@@ -51,16 +51,21 @@
    color: var(--table-row-details-fg);
    font-style: italic;
 }
+.ledger .tr:not(:first-child) .numeric {
+   font-size: 0.8rem;
+}
 
 /**
  * Show borders
  */
-   /*
-.ledger .td,
-.ledger .th {
-   border: 1px solid gray;
+
+.ledger.borders .td,
+.ledger.borders .th {
+   border: 1px solid var(--gray-100);
 }
-*/
+.ledger.borders .trgroup {
+   border: 1px solid var(--gray-400);
+}
 
 
 /**
@@ -225,7 +230,7 @@
    font-variant-numeric: lining-nums tabular-nums;
 }
 .ledger .num {
-   flex: 0 0 60px;
+   flex: 0 0 5em;
 }
 .ledger .reconcile {
    flex: 0 0 1.5em;
