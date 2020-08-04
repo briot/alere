@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { LedgerOptions, SplitMode, TransactionMode } from 'Ledger';
 import Toolbar from 'ToolBar';
+import usePrefs, { SplitMode, TransactionMode } from 'services/usePrefs';
 import "./Settings.css";
 
 interface CheckboxProps {
@@ -41,12 +41,11 @@ const Option: React.FC<OptionProps> = p => {
 }
 
 interface SettingsProps {
-   ledger: LedgerOptions;
-   setLedger: (opt: LedgerOptions) => void;
 }
 
 const Settings: React.FC<SettingsProps> = p => {
    const [visible, setVisible] = React.useState(false);
+   const { prefs, updatePrefs } = usePrefs();
 
    const toggleVisible = React.useCallback(
       () => setVisible(old => !old),
@@ -54,27 +53,27 @@ const Settings: React.FC<SettingsProps> = p => {
    );
 
    const changeTrans = (event: React.ChangeEvent<HTMLSelectElement>) =>
-       p.setLedger({
-          ...p.ledger,
-          trans_mode: parseInt(event.target.value, 10),
-       });
+      updatePrefs({
+         ledgers: {...prefs.ledgers,
+                   trans_mode: parseInt(event.target.value, 10)},
+      });
 
    const changeSplit = (event: React.ChangeEvent<HTMLSelectElement>) =>
-       p.setLedger({
-          ...p.ledger,
-          split_mode: parseInt(event.target.value, 10),
-       });
+      updatePrefs({
+         ledgers: {...prefs.ledgers,
+                   split_mode: parseInt(event.target.value, 10)},
+      });
 
    const changeBorders = (checked: boolean) =>
-      p.setLedger({
-         ...p.ledger,
-         borders: checked,
+      updatePrefs({
+         ledgers: {...prefs.ledgers,
+                   borders: checked},
       });
 
    const changeExpand = (checked: boolean) =>
-      p.setLedger({
-         ...p.ledger,
-         defaultExpand: checked,
+      updatePrefs({
+         ledgers: {...prefs.ledgers,
+                   defaultExpand: checked},
       });
 
    return (
@@ -106,7 +105,7 @@ const Settings: React.FC<SettingsProps> = p => {
                      */ }
 
                      <Checkbox
-                         checked={p.ledger.borders}
+                         checked={prefs.ledgers.borders}
                          onChange={changeBorders}
                          text="Show borders"
                      />
@@ -116,7 +115,7 @@ const Settings: React.FC<SettingsProps> = p => {
                          disabled={true}
                      />
                      <Checkbox
-                         checked={p.ledger.defaultExpand}
+                         checked={prefs.ledgers.defaultExpand}
                          onChange={changeExpand}
                          text="Expand rows by default"
                      />
@@ -126,7 +125,7 @@ const Settings: React.FC<SettingsProps> = p => {
                         <select
                            id="transmode"
                            onChange={changeTrans}
-                           value={p.ledger.trans_mode}
+                           value={prefs.ledgers.trans_mode}
                         >
                             <Option
                                 text="Hide notes"
@@ -148,7 +147,7 @@ const Settings: React.FC<SettingsProps> = p => {
                         <select
                             id="splitmode"
                             onChange={changeSplit}
-                            value={p.ledger.split_mode}
+                            value={prefs.ledgers.split_mode}
                         >
                             <Option
                                 text="Never show splits"

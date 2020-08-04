@@ -2,12 +2,9 @@ import React from 'react';
 import './Header.css';
 import Toolbar from 'ToolBar';
 import Settings from 'Settings';
-import { LedgerOptions } from 'Ledger';
 
 
 interface HeaderProps {
-   ledger: LedgerOptions;
-   setLedger: (opt: LedgerOptions) => void;
    title: string;
 }
 
@@ -18,7 +15,7 @@ const Header: React.FC<HeaderProps> = p => {
             <Toolbar.Button grows={true} label={p.title} />
             <Toolbar.Group>
                <Toolbar.Button title="Sync" icon="fa-refresh" />
-               <Settings ledger={p.ledger} setLedger={p.setLedger} />
+               <Settings />
             </Toolbar.Group>
          </Toolbar.Bar>
       </div>
