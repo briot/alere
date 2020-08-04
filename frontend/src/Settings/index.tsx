@@ -81,6 +81,14 @@ const Settings: React.FC<SettingsProps> = p => {
       event.stopPropagation();
    }
 
+   const changeValueColumn = (event: React.ChangeEvent<HTMLInputElement>) => {
+      updatePrefs({
+         ledgers: {...prefs.ledgers,
+                   valueColumn: event.target.checked},
+      });
+      event.stopPropagation();
+   }
+
    return (
       <>
          <Toolbar.Button
@@ -117,9 +125,9 @@ const Settings: React.FC<SettingsProps> = p => {
                          text="Show borders"
                      />
                      <Checkbox
+                         checked={prefs.ledgers.valueColumn}
+                         onChange={changeValueColumn}
                          text="Deposit and paiements in same column"
-                         checked={false}
-                         disabled={true}
                      />
                      <Checkbox
                          checked={prefs.ledgers.defaultExpand}

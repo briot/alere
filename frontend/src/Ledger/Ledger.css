@@ -247,3 +247,12 @@
    text-align: right;
 }
 
+/*
+.ledger .notes {
+   border-left: 1px solid var(--gray-400);
+}
+.ledger .trgroup .tr:first-child .date,
+.ledger .trgroup .tr:first-child .num {
+   border-bottom: 1px solid var(--gray-400);
+}
+*/
