@@ -19,37 +19,3 @@
    font-weight: bold;
 }
 
-.roundButton {
-   text-decoration: none;
-
-   display: flex;
-   flex-flow: row nowrap;      /* always use a single line */
-   align-items: center;        /* align children vertically */
-   justify-content: space-between;
-
-   color: var(--tool-color);
-}
-.roundButton span:first-child {
-   background: var(--tool-background-on-page);
-   border: 1px solid var(--tool-border);
-   border-radius: 50%;
-   width: 2rem;
-   height: 2rem;
-   margin-right: 10px;
-
-   display: flex;          /* center text inside */
-   align-items: center;
-   justify-content: center;
-
-   box-shadow:
-       -4px -4px 4px 0 var(--neumorph-light),
-       4px 4px 4px 0 var(--neumorph-dark);
-}
-.roundButton span:last-child {
-   height: 1rem;
-   flex: 1 1;
-
-   white-space: nowrap;
-   text-overflow: ellipsis;
-   overflow: hidden;
-}

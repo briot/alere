@@ -1,0 +1,35 @@
+.roundButton {
+   text-decoration: none;
+
+   display: flex;
+   flex-flow: row nowrap;      /* always use a single line */
+   align-items: center;        /* align children vertically */
+   justify-content: space-between;
+}
+
+.roundButton.selected span:first-child {
+   color: var(--color-500);
+}
+
+/* the text. This rule must come first, in case we show no text */
+.roundButton span:last-child {
+   height: 1rem;
+   flex: 1 1;
+
+   white-space: nowrap;
+   text-overflow: ellipsis;
+   overflow: hidden;
+}
+
+.roundButton span:first-child {
+   background: var(--tool-background-on-page);
+   border-width: 1px;
+   border-radius: 50%;
+   width: 2rem;
+   height: 2rem;
+   margin-right: 10px;
+
+   display: flex;          /* center text inside */
+   align-items: center;
+   justify-content: center;
+}

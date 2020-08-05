@@ -1,6 +1,6 @@
 import React from 'react';
 import './Header.css';
-import Toolbar from 'ToolBar';
+import RoundButton from 'RoundButton';
 import Settings from 'Settings';
 
 
@@ -11,13 +11,13 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = p => {
    return (
       <div id='header'>
-         <Toolbar.Bar background={true}>
-            <Toolbar.Button grows={true} label={p.title} />
-            <Toolbar.Group>
-               <Toolbar.Button title="Sync" icon="fa-refresh" />
-               <Settings />
-            </Toolbar.Group>
-         </Toolbar.Bar>
+         <div className='title'>
+             {p.title}
+         </div>
+         <div className='group'>
+            <RoundButton fa='fa-refresh' title='sync' />
+            <Settings />
+         </div>
       </div>
    );
 }

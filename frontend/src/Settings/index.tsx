@@ -1,6 +1,6 @@
 import * as React from 'react';
-import Toolbar from 'ToolBar';
 import usePrefs, { SplitMode, TransactionMode } from 'services/usePrefs';
+import RoundButton from 'RoundButton';
 import "./Settings.css";
 
 interface CheckboxProps {
@@ -96,9 +96,10 @@ const Settings: React.FC<SettingsProps> = p => {
 
    return (
       <>
-         <Toolbar.Button
-            icon="fa-gear"
+         <RoundButton
+            fa='fa-gear'
             onClick={toggleVisible}
+            selected={visible}
             title="Settings"
          />
          <div

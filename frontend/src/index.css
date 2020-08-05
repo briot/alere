@@ -87,8 +87,8 @@
 }
 #app.light {
    --page-background: var(--gray-200);
-   --panel-background: white;
-   --panel-fg: black;
+   --panel-background: #f6f6f6;
+   --panel-fg: #222;
    --background-summary-popup: rgba(0,0,0,0.9);
    --text-color: #333;
    --summary-background: rgba(255,255,255,0.2);
@@ -105,16 +105,17 @@
    --toolbar-background: none;
    --toolbar-background2: none;
 
-   --neumorph-light: white;
-   --neumorph-dark: rgba(0,0,0,.2);
+   --neumorph-light: rgba(255,255,255,0.83);
+   --neumorph-dark: rgba(217,210,200,.51);
+   --neumorph-bg: rgba(233,236,239,.9);  /* --gray-200, transparent */
 
    --expand-arrow-color: var(--gray-400);
 
-   --shadow-color: rgba(206,206,206,0.8);
+   --shadow-color: var(--neumorph-dark);
 
    --tool-color: var(--gray-700);
    --tool-background: var(--gray-200);
-   --tool-background-on-page: var(--gray-400);
+   --tool-background-on-page: var(--neumorph-bg);
    --tool-border: none;
 
    --scrollbar-fg: var(--gray-200);
