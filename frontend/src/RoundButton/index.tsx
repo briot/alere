@@ -8,6 +8,8 @@ interface RoundButtonProps {
    text?: string;   // shown besides the round button
    title?: string;  // tooltip
    selected?: boolean;
+   disabled?: boolean;
+   small?: boolean;
 
    url?: string;          // the button should be a link
    onClick?: () => void;  // or a custom callback
@@ -30,7 +32,7 @@ const RoundButton: React.FC<RoundButtonProps> = p => {
       </>
    );
 
-   const c = `roundButton ${p.selected ? 'selected' : ''}`;
+   const c = `roundButton ${p.selected ? 'selected' : ''} ${p.disabled ? 'disabled': ''} ${p.small ? 'small' : ''}`;
 
    return (
       p.onClick
