@@ -80,7 +80,7 @@
    --tool-background-on-page: var(--panel-background);
    --tool-border: none;
 
-   --scrollbar-fg: var(--gray-200);
+   --scrollbar-fg: var(--color-200);
    --scrollbar-bg: var(--panel-background);
    --scrollbar-border: none;
 
@@ -118,7 +118,7 @@
    --tool-background-on-page: var(--neumorph-bg);
    --tool-border: none;
 
-   --scrollbar-fg: var(--gray-200);
+   --scrollbar-fg: var(--color-200);
    --scrollbar-bg: var(--panel-background);
    --scrollbar-border: none;
 }
