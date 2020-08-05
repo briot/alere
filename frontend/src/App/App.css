@@ -46,3 +46,22 @@ a {
    text-decoration: underline rgb(150,150,150);
 }
 
+.morph {
+   background: inherit !important;
+   border-color: var(--neumorph-bg);
+   box-shadow:
+       -6px -6px 10px 0 var(--neumorph-light),
+       6px 6px 10px 0 var(--neumorph-dark);
+   transition: box-shadow 0.2s;
+}
+.morph:hover {
+   box-shadow: none;
+   transition: box-shadow 0.2s;
+}
+
+.panel {
+   background: var(--panel-background);
+   color: var(--panel-fg);
+   box-shadow: 6px 6px 10px 0 var(--shadow-color);
+   border-radius: .5em;
+}

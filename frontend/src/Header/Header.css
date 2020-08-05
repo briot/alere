@@ -11,11 +11,23 @@
    flex-flow: row nowrap;
    justify-content: space-between;
    align-items: stretch;
-   gap: 10px;
+   gap: var(--gap-horiz);
 }
 
-#header .tools {
+#header .group {
+   flex: 0;   /* Do not increase width or height of the group */
    display: flex;
-   flex-flow: row nowrap;
-   gap: 10px;
+   justify-content: center;   /* horizontally */
+   align-items: stretch;      /* vertically */
+}
+
+#header .title {
+   flex: 1 1;         /* Allow to expand as needed, to fit text */
+   font-size: 1.2em;
+   font-weight: bold;
+
+   display: flex;
+   flex-flow: column nowrap;
+   justify-content: center;  /* center text vertically */
+   align-items: flex-start;  /* left-align the text */
 }

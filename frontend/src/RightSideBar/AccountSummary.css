@@ -6,8 +6,6 @@
    font-size: var(--font-size-sidebar);
 }
 .accountSummary .icon {
-   background: var(--tool-background-on-page);
-   border: 1px solid var(--tool-border);
    border-radius: 50%;
    width: 2rem;
    height: 2rem;

@@ -630,7 +630,7 @@ const Ledger: React.FC<LedgerProps> = p => {
       return <div>Loading...</div>
    }
 
-   const className = 'ledger'
+   const className = 'panel ledger'
       + (opt.borders ? ' borders' : '')
       // no background necessary if we are only ever going to display one line
       // per transaction

@@ -1,5 +1,6 @@
 import React from 'react';
 import Numeric from 'Numeric';
+import RoundButton from 'RoundButton';
 import './AccountSummary.css';
 
 interface AccountSummaryProps {
@@ -12,10 +13,7 @@ const AccountSummary: React.FC<AccountSummaryProps> = p => {
    return (
       <div className="accountSummary">
          <div className="name">
-            <span className="icon">
-               <img src={p.logoUrl} alt="" />
-            </span>
-            <span>{p.name}</span>
+            <RoundButton img={p.logoUrl} text={p.name} />
          </div>
          <div className="content">
             <Numeric amount={p.amount} />
