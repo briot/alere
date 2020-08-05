@@ -105,8 +105,8 @@
    --toolbar-background: none;
    --toolbar-background2: none;
 
-   --neumorph-light: rgba(255,255,255,0.83);
-   --neumorph-dark: rgba(217,210,200,.51);
+   --neumorph-light: rgba(255,255,255,0.5);
+   --neumorph-dark: rgba(70,70,70,.12);
    --neumorph-bg: rgba(233,236,239,.9);  /* --gray-200, transparent */
 
    --expand-arrow-color: var(--gray-400);

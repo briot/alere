@@ -100,6 +100,7 @@ const Settings: React.FC<SettingsProps> = p => {
             fa='fa-gear'
             onClick={toggleVisible}
             selected={visible}
+            small={true}
             title="Settings"
          />
          <div

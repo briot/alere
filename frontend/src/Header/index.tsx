@@ -15,7 +15,12 @@ const Header: React.FC<HeaderProps> = p => {
              {p.title}
          </div>
          <div className='group'>
-            <RoundButton fa='fa-refresh' title='sync' />
+            <RoundButton
+               fa='fa-refresh'
+               small={true}
+               title='sync'
+               disabled={true}
+            />
             <Settings />
          </div>
       </div>
