@@ -145,7 +145,7 @@ interface TDProps {
    className?: string;
 }
 const TD: React.FC<TDProps> = p => {
-   const className = `td ${p.kind} ${p.className || ''}`;
+   const className = `td ${p.kind || ''} ${p.className || ''}`;
    return (
       <span className={className}>
          {p.children}
@@ -589,6 +589,42 @@ const Ledger: React.FC<LedgerProps> = p => {
       []
    );
 
+   const [future, present, reconciled, cleared, selected] = React.useMemo(
+      () => {
+         const future = p.transactions[p.transactions.length - 1]?.balance;
+
+         const now = new Date();
+         const y = ('0' + now.getFullYear()).slice(-4);
+         const m = ('0' + (now.getMonth() + 1)).slice(-2);
+         const d = ('0' + now.getDate()).slice(-2);
+         const formatted = `${y}-${m}-${d}`;
+
+         let present: undefined|number;
+         let reconciled: number = 0;
+         let cleared: number = 0;
+         let selected: undefined|number;
+
+         const addSplit = (s: Split) => {
+            switch (s.reconcile) {
+               case 'R': reconciled += s.amount; break;
+               case 'C': cleared += s.amount; break;
+               default: break;
+            }
+         }
+
+         for (let j = p.transactions.length - 1; j >= 0; j--) {
+            const t = p.transactions[j];
+            if (present === undefined && t.date <= formatted) {
+               present = t.balance;
+            }
+            t.splits.filter(s => s.account === p.accountId).forEach(addSplit);
+         }
+
+         return [future, present, reconciled, cleared, selected];
+      },
+      [p.transactions, p.accountId]
+   );
+
    const Row = React.useCallback(
       (r: ListChildComponentProps) => {
          const t = p.transactions[r.index];
@@ -682,22 +718,46 @@ const Ledger: React.FC<LedgerProps> = p => {
 
          <div className="tfoot">
             <TR partial={true}>
-               <TD>
-                  Selected:
-                  <Numeric amount={0} />
-               </TD>
-               <TD>
-                  Cleared:
-                  <Numeric amount={0} />
-               </TD>
-               <TD>
-                  Reconciled:
-                  <Numeric amount={0} />
-               </TD>
-               <TD>
-                  Present:
-                  <Numeric amount={3421.10} currency="euro" />
-               </TD>
+               {
+                  selected !== undefined &&
+                  <TD>
+                     selected:
+                     <Numeric amount={selected} />
+                  </TD>
+               }
+               {
+                  reconciled  // also omit when 0
+                  ? (
+                     <TD>
+                        reconciled:
+                        <Numeric amount={reconciled} />
+                     </TD>
+                  ) : null
+               }
+               {
+                  cleared  // also omit when 0
+                  ? (
+                     <TD>
+                        cleared:
+                        <Numeric amount={cleared} />
+                     </TD>
+                  ) : null
+               }
+               {
+                  present !== undefined &&
+                  <TD>
+                     present:
+                     <Numeric amount={present} />
+                  </TD>
+               }
+               {
+                  future !== undefined &&
+                  future !== present &&
+                  <TD>
+                     future:
+                     <Numeric amount={future} />
+                  </TD>
+               }
             </TR>
          </div>
       </div>
