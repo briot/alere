@@ -1,7 +1,6 @@
 .settings {
    z-index: 100;
    position: absolute;
-   top: var(--header-tool-height);
    border: 1px solid var(--gray-500);
    background-color: var(--panel-background);
    color: var(--panel-fg);

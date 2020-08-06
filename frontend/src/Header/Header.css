@@ -31,3 +31,7 @@
    justify-content: center;  /* center text vertically */
    align-items: flex-start;  /* left-align the text */
 }
+
+#header .settings {
+   top: var(--header-tool-height);
+}

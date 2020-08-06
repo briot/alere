@@ -10,7 +10,12 @@ interface DataItemType {
    name: string;
    value: number;
 }
-type DataType = DataItemType[];
+interface DataType {
+   items:   DataItemType[];
+   mindate: string;
+   maxdate: string;
+}
+const noData: DataType = {items: [], mindate: '', maxdate: ''};
 
 const RADIAN = Math.PI / 180;
 
@@ -44,7 +49,7 @@ const CustomTooltip = (p: TooltipProps & {data: DataType} ) => {
    }
    const label = pay.name;
    const value = pay.value as number;
-   const total = p.data.reduce((t, d) => t + d.value, 0);
+   const total = p.data.items.reduce((t, d) => t + d.value, 0);
    return p.active
      ? (
        <div className="customTooltip" >
@@ -63,31 +68,40 @@ const CustomTooltip = (p: TooltipProps & {data: DataType} ) => {
 
 interface PiePlotProps {
    expenses: boolean;
+   mindate?: string;
+   maxdate?: string;
 }
 
 const PiePlot: React.FC<PiePlotProps> = p => {
-   const [data, setData] = React.useState<DataType>([]);
+   const [data, setData] = React.useState(noData);
 
    React.useEffect(
       () => {
          const dofetch = async () => {
             const resp = await window.fetch(
-               `/api/plots/category/${p.expenses ? 'expenses' : 'income'}`);
+               `/api/plots/category/${p.expenses ? 'expenses' : 'income'}`
+               + `?mindate=${p.mindate || ''}`
+               + `&maxdate=${p.maxdate || ''}`
+            );
             const d: DataType = await resp.json();
 
             // Filter out negative data, which we cannot show in a pie graph
-            setData(d.filter(v => v.value > 0));
+            setData({
+               items: d.items.filter(v => v.value > 0),
+               mindate: d.mindate,
+               maxdate: d.maxdate,
+            });
          }
          dofetch();
       },
-      [p.expenses]
+      [p.expenses, p.mindate, p.maxdate]
    );
 
    const color = p.expenses
-      ? (index: number) =>
-          d3ScaleChromatic.interpolateTurbo((data.length - index) / data.length)
-      : (index: number) =>
-          d3ScaleChromatic.interpolateTurbo((index + 1) / data.length)
+      ? (index: number) => d3ScaleChromatic.interpolateTurbo(
+         (data.items.length - index) / data.items.length)
+      : (index: number) => d3ScaleChromatic.interpolateTurbo(
+         (index + 1) / data.items.length)
 
    return (
       <AutoSizer>
@@ -103,7 +117,7 @@ const PiePlot: React.FC<PiePlotProps> = p => {
                     content={<CustomTooltip data={data} />}
                  />
                  <Pie
-                   data={data}
+                   data={data.items}
                    cx="50%"
                    cy="50%"
                    isAnimationActive={false}
@@ -114,7 +128,7 @@ const PiePlot: React.FC<PiePlotProps> = p => {
                    dataKey="value"
                  >
                    {
-                     data.map((entry, index) =>
+                     data.items.map((entry, index) =>
                         <Cell
                            key={`cell-${index}`}
                            fill={color(index)}

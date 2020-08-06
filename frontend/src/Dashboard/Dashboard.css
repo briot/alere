@@ -10,13 +10,3 @@
    font-size: 0.8rem;
 }
 
-.dashboard .col1 { grid-column-end: span 1; }
-.dashboard .col2 { grid-column-end: span 2; }
-.dashboard .col3 { grid-column-end: span 4; }
-.dashboard .col4 { grid-column-end: span 4; }
-
-.dashboard .row1 { grid-row-end: span 1; }
-.dashboard .row2 { grid-row-end: span 2; }
-.dashboard .row3 { grid-row-end: span 3; }
-.dashboard .row4 { grid-row-end: span 4; }
-
