@@ -14,22 +14,56 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
          <RoundButton
             fa="fa-tachometer"
             selected={location.pathname.startsWith('/dashboard')}
+            size='large'
             text="Overview"
             url="/dashboard"
          />
-         <RoundButton fa="fa-money" text="Accounts" disabled={true}/>
+         <RoundButton
+            fa="fa-money"
+            text="Accounts"
+            size='large'
+            disabled={true}
+         />
          <RoundButton
             fa="fa-book"
             selected={location.pathname.startsWith('/ledger/')}
             text="Ledger"
+            size='large'
             url="/ledger/1"
           />
-         <RoundButton fa="fa-balance-scale" text="Budget" disabled={true}/>
-         <RoundButton fa="fa-bank" text="Investments" disabled={true}/>
-         <RoundButton fa="fa-pie-chart" text="Reports" disabled={true}/>
+         <RoundButton
+            fa="fa-balance-scale"
+            text="Budget"
+            disabled={true}
+            size='large'
+         />
+         <RoundButton
+            fa="fa-bank"
+            text="Investments"
+            disabled={true}
+            size='large'
+          />
+         <RoundButton
+            fa="fa-pie-chart"
+            text="Reports"
+            disabled={true}
+            size='large'
+         />
+
          <h3>Favorite reports</h3>
-         <RoundButton fa="fa-line-chart" text="Custom 1" disabled={true}/>
-         <RoundButton fa="fa-area-chart" text="Custom 2" disabled={true}/>
+
+         <RoundButton
+            fa="fa-line-chart"
+            text="Custom 1"
+            disabled={true}
+            size='large'
+          />
+         <RoundButton
+            fa="fa-area-chart"
+            text="Custom 2"
+            disabled={true}
+            size='large'
+         />
       </div>
    );
 }

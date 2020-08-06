@@ -28,3 +28,19 @@
    flex: 1 1;
 }
 
+.col1 { grid-column-end: span 1; }
+.col2 { grid-column-end: span 2; }
+.col3 { grid-column-end: span 4; }
+.col4 { grid-column-end: span 4; }
+
+.row1 { grid-row-end: span 1; }
+.row2 { grid-row-end: span 2; }
+.row3 { grid-row-end: span 3; }
+.row4 { grid-row-end: span 4; }
+
+.panel .settingsMenu {
+   position: relative;
+   cursor: pointer;
+}
+.panel .settings {
+}

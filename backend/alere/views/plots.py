@@ -2,9 +2,10 @@ from .json import JSONView
 from typing import List, Union
 from .kmm import kmm, do_query
 from .kmymoney import ACCOUNT_TYPE
+from typing import List
 
 
-class PlotData:
+class PlotDataItem:
     def __init__(self, name, value):
         self.name = name
         self.value = value
@@ -16,6 +17,24 @@ class PlotData:
         return {
             "name": self.name,
             "value": self.value,
+        }
+
+class PlotData:
+    def __init__(
+            self,
+            mindate: str,
+            maxdate: str,
+            items: List[PlotDataItem]
+        ):
+        self.items = items
+        self.mindate = mindate
+        self.maxdate = maxdate
+
+    def to_json(self):
+        return {
+            "items": self.items,
+            "mindate": self.mindate,
+            "maxdate": self.maxdate,
         }
 
 
@@ -53,13 +72,17 @@ class CategoryPlotView(JSONView):
                 # "maxdate": maxdate,
             }
         )
-        result = [
-            PlotData(
-                name=row.category,
-                value=round(
-                    row.value if is_expenses else -row.value,
-                    2))
-            for row in do_query(query, params)
-        ]
-        result.sort(key=lambda d: -d.value)
+        result = PlotData(
+            mindate=mindate,
+            maxdate=maxdate or "",
+            items=[
+                PlotDataItem(
+                    name=row.category,
+                    value=round(
+                        row.value if is_expenses else -row.value,
+                        2))
+                for row in do_query(query, params)
+            ]
+        )
+        result.items.sort(key=lambda d: -d.value)  # order in the legend
         return result

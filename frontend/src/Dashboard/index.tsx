@@ -18,25 +18,46 @@ const radar_data = [
   { subject: 'cashflow', percent: 90, fullMark: 100, },
 ];
 
+const byCategorySettings = () => {
+   return (
+      <div>
+      expenses
+      </div>
+   );
+}
+
 
 interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = p => {
+   const mindate = "2020-01-01";
+   const maxdate = "";
    return (
       <div className="dashboard">
-         <Panel className="col2 row2" header="Networth" />
+         <Panel cols={2} rows={2} header="Networth" />
 
-         <Panel className="col2" header="Expenses">
-            <PiePlot expenses={true} />
+         <Panel
+            cols={2}
+            header={`Expenses from ${mindate || 'now'} to ${maxdate || 'now'}`}
+            settings={byCategorySettings}
+         >
+            <PiePlot expenses={true} mindate={mindate} maxdate={maxdate} />
          </Panel>
 
-         <Panel className="col2" header="Income">
-            <PiePlot expenses={false} />
+         <Panel
+            cols={2}
+            header={`Income from ${mindate || 'now'} to ${maxdate || 'now'}`}
+            settings={byCategorySettings}
+         >
+            <PiePlot expenses={false} mindate={mindate} maxdate={maxdate} />
          </Panel>
 
-         <Panel className=""     header="Upcoming transactions" />
-         <Panel className="col2" header="Cashflow quadrant">
+         <Panel header="Upcoming transactions" />
+         <Panel
+            cols={2}
+            header="Cashflow quadrant"
+         >
             <AutoSizer>
                {
                   ({width, height}) => (
@@ -65,7 +86,7 @@ const Dashboard: React.FC<DashboardProps> = p => {
                }
             </AutoSizer>
          </Panel>
-         <Panel className=""     header="Notes" />
+         <Panel header="Notes" />
       </div>
    );
 }

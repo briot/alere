@@ -30,19 +30,32 @@
    overflow: hidden;
 }
 
+.roundButton.large {
+   --rb-width: 3rem;
+   --rb-height: 3rem;
+}
+.roundButton.normal {
+   --rb-width: 2.5rem;
+   --rb-height: 2.5rem;
+}
+.roundButton.small {
+   --rb-width: 2rem;
+   --rb-height: 2rem;
+}
+.roundButton.tiny {
+   --rb-width: 1rem;
+   --rb-height: 1rem;
+}
+
 .roundButton span:first-child {
    background: var(--tool-background-on-page);
    border-width: 1px;
    border-radius: 50%;
-   width: 3rem;
-   height: 3rem;
    margin: 5px 10px 5px 5px;
+   width: var(--rb-width);
+   height: var(--rb-height);
 
    display: flex;          /* center text inside */
    align-items: center;
    justify-content: center;
-}
-.roundButton.small span:first-child {
-   width: 2rem;
-   height: 2rem;
 }

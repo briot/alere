@@ -1,5 +1,7 @@
 .ledger {
    grid-area: main;
+}
+.ledger .content {
    display: flex;
    flex-flow: column nowrap;
 
