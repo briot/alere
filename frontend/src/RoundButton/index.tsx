@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Link } from "react-router-dom";
 import './RoundButton.css';
 
 interface RoundButtonProps {
@@ -45,13 +46,13 @@ const RoundButton: React.FC<RoundButtonProps> = p => {
             {children}
          </div>
       ) : (
-         <a
-            href={p.url || '#a'}
+         <Link
+            to={p.url || '#a'}
             className={c}
             title={p.title}
          >
             {children}
-         </a>
+         </Link>
       )
    );
 }

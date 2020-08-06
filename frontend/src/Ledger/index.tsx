@@ -1,6 +1,7 @@
 import React from 'react';
 import { VariableSizeList, ListChildComponentProps } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
+import Panel from 'Panel';
 import { amountForAccount, firstSplitForAccount,
          AccountId, Split, Transaction } from 'Transaction';
 import Numeric from 'Numeric';
@@ -544,15 +545,27 @@ const setupLogicalRows = (
 
 interface LedgerProps {
    accountId: AccountId;
-   transactions: Transaction[];
 }
 
 const Ledger: React.FC<LedgerProps> = p => {
    const { accounts } = useAccounts();
    const [ rowState, setRowState ] = React.useState<RowStateProps>({});
+   const [transactions, setTransactions] = React.useState<Transaction[]>([]);
    const { prefs } = usePrefs();
    const opt = prefs.ledgers;
    const list = React.useRef<VariableSizeList>(null);
+
+   React.useEffect(
+      () => {
+         const dofetch = async () => {
+            const resp = await window.fetch(`/api/ledger/${p.accountId}`);
+            const data = await resp.json();
+            setTransactions(data);
+         }
+         dofetch();
+      },
+      [p.accountId]
+   );
 
    const account = accounts.get_account(p.accountId);
 
@@ -563,7 +576,7 @@ const Ledger: React.FC<LedgerProps> = p => {
    React.useLayoutEffect(
       () => {
          setRowState(setupLogicalRows(
-            p.transactions,
+            transactions,
             opt.trans_mode, opt.split_mode,
             opt.defaultExpand,
             p.accountId));
@@ -571,7 +584,7 @@ const Ledger: React.FC<LedgerProps> = p => {
             list.current!.resetAfterIndex(0);
          }
       },
-      [p.transactions, p.accountId, opt.split_mode, opt.trans_mode,
+      [transactions, p.accountId, opt.split_mode, opt.trans_mode,
        opt.defaultExpand]
    );
 
@@ -591,7 +604,7 @@ const Ledger: React.FC<LedgerProps> = p => {
 
    const [future, present, reconciled, cleared, selected] = React.useMemo(
       () => {
-         const future = p.transactions[p.transactions.length - 1]?.balance;
+         const future = transactions[transactions.length - 1]?.balance;
 
          const now = new Date();
          const y = ('0' + now.getFullYear()).slice(-4);
@@ -612,8 +625,8 @@ const Ledger: React.FC<LedgerProps> = p => {
             }
          }
 
-         for (let j = p.transactions.length - 1; j >= 0; j--) {
-            const t = p.transactions[j];
+         for (let j = transactions.length - 1; j >= 0; j--) {
+            const t = transactions[j];
             if (present === undefined && t.date <= formatted) {
                present = t.balance;
             }
@@ -622,12 +635,12 @@ const Ledger: React.FC<LedgerProps> = p => {
 
          return [future, present, reconciled, cleared, selected];
       },
-      [p.transactions, p.accountId]
+      [transactions, p.accountId]
    );
 
    const Row = React.useCallback(
       (r: ListChildComponentProps) => {
-         const t = p.transactions[r.index];
+         const t = transactions[r.index];
          delete r.style['width'];   // set in the CSS
          return (
             <TransactionRow
@@ -641,32 +654,32 @@ const Ledger: React.FC<LedgerProps> = p => {
             />
          );
       },
-      [p.transactions, setTransactionExpanded, rowState, accounts,
+      [transactions, setTransactionExpanded, rowState, accounts,
        p.accountId, opt ]
    );
 
    const getTransactionHeight = React.useCallback(
       (index: number) => {
-         const t = p.transactions[index];
+         const t = transactions[index];
          const d = rowState[t?.id];
          return ROW_HEIGHT * (
             1
             + noteRowsCount(t, opt.trans_mode, d?.expanded)
             + splitRowsCount(t, opt.split_mode, d?.expanded, p.accountId));
       },
-      [rowState, p.transactions, opt.trans_mode, p.accountId,
+      [rowState, transactions, opt.trans_mode, p.accountId,
        opt.split_mode]
    );
 
    const getTransactionKey = (index: number) => {
-      return p.transactions[index].id;
+      return transactions[index].id;
    }
 
-   if (!account) { // || Object.keys(rowState).length !== p.transactions.length) {
+   if (!account) { // || Object.keys(rowState).length !== transactions.length) {
       return <div>Loading...</div>
    }
 
-   const className = 'panel ledger'
+   const className = 'ledger'
       + (opt.borders ? ' borders' : '')
       // no background necessary if we are only ever going to display one line
       // per transaction
@@ -677,7 +690,7 @@ const Ledger: React.FC<LedgerProps> = p => {
         );
 
    return (
-      <div id='main' className={className} >
+      <Panel className={className} >
          <div className="thead">
             <TR>
                <TH kind='date' sortable={true}>Date</TH>
@@ -700,7 +713,7 @@ const Ledger: React.FC<LedgerProps> = p => {
                         ref={list}
                         height={height}
                         width={width}
-                        itemCount={p.transactions.length}
+                        itemCount={transactions.length}
                         itemSize={getTransactionHeight}
                         itemKey={getTransactionKey}
                      >
@@ -760,7 +773,7 @@ const Ledger: React.FC<LedgerProps> = p => {
                }
             </TR>
          </div>
-      </div>
+      </Panel>
    );
 }
 

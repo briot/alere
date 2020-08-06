@@ -12,17 +12,17 @@ const RightSideBar: React.FC<RightSideBarProps> = p => {
          <AccountSummary
             name="Socgen commun"
             amount={2300.12}
-            logoUrl="societe-generale.png"
+            logoUrl="/societe-generale.png"
          />
          <AccountSummary
             name="Boursorama commun"
             amount={3300.12}
-            logoUrl="boursorama.svg"
+            logoUrl="/boursorama.svg"
          />
          <AccountSummary
             name="Banque Postale"
             amount={-300.12}
-            logoUrl="banque-postale.svg"
+            logoUrl="/banque-postale.svg"
          />
       </div>
    );
