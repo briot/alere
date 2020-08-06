@@ -11,6 +11,7 @@
    max-width: 300px;
 
    color: var(--panel-fg);
+   z-index: 1;
 }
 
 #rsidebar h3 {

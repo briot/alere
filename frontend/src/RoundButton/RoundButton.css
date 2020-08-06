@@ -6,6 +6,7 @@
    align-items: center;        /* align children vertically */
    justify-content: space-between;
    outline: none;
+   color: var(--button-fg);
 }
 
 .roundButton.selected span:first-child {
@@ -16,7 +17,7 @@
 }
 
 .roundButton.disabled {
-   color: var(--gray-300);
+   color: var(--button-disabled-fg);
 }
 
 /* the text. This rule must come first, in case we show no text */
