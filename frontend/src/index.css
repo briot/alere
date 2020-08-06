@@ -31,6 +31,7 @@
 #old{
    --page-background: #0c2531;
    --panel-background: #0c2531;
+   --panel-fg: white;
    --background-summary-popup: rgba(0,0,0,0.9);
    --text-color: white;
    --summary-background: rgba(255,255,255,0.2);
@@ -51,9 +52,11 @@
 #app.dark {
    --page-background: var(--gray-700);
    --panel-background: var(--gray-800);
-   --panel-fg: white;
+   --panel-fg: var(--gray-100);
    --background-summary-popup: rgba(0,0,0,0.9);
    --text-color: #333;
+   --button-fg: var(--panel-fg);
+   --button-disabled-fg: var(--gray-700);
    --summary-background: rgba(255,255,255,0.2);
    --table-color: #b1afaf;
    --table-hover-background: var(--gray-700);
@@ -65,8 +68,9 @@
    --color-on-grey: var(--fg-100);  /* text color on --grey background */
    --focus-color: var(--color-100);
 
-   --neumorph-dark: var(--shadow-color);
-   --neumorph-light: rgba(0,0,0,.6);
+   --neumorph-light: rgba(58,58,58,.7);
+   --neumorph-dark: rgba(0,0,0,.7);
+   --neumorph-bg: rgba(58,58,58,.9);
 
    --toolbar-background: none;
    --toolbar-background2: none;
@@ -91,6 +95,8 @@
    --panel-fg: #222;
    --background-summary-popup: rgba(0,0,0,0.9);
    --text-color: #333;
+   --button-fg: var(--panel-fg);
+   --button-disabled-fg: var(--gray-300);
    --summary-background: rgba(255,255,255,0.2);
    --table-color: #b1afaf;
    --table-hover-background: var(--gray-200);
@@ -107,7 +113,7 @@
 
    --neumorph-light: rgba(255,255,255,0.5);
    --neumorph-dark: rgba(70,70,70,.12);
-   --neumorph-bg: rgba(233,236,239,.9);  /* --gray-200, transparent */
+   --neumorph-bg: rgba(233,236,239,.9);
 
    --expand-arrow-color: var(--gray-400);
 
