@@ -7,17 +7,15 @@
    color: var(--panel-fg);
    border-radius: 10px;
    box-shadow: 3px 3px 4px 0 var(--shadow-color);
-      /*-100vw 0 0 200vw rgba(0,0,0,.4);*/
    padding: 10px;
+   transition: transform 0.2s;
 }
 
 .settings.closed {
    transform: scale(0);
-   transition: transform 0.3s;
 }
 .settings.opened {
    transform: scale(1);
-   transition: transform 0.3s;
 }
 
 .settings form fieldset {

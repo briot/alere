@@ -53,7 +53,6 @@ a {
    box-shadow:
        -6px -6px 10px 0 var(--neumorph-light),
        6px 6px 10px 0 var(--neumorph-dark);
-   transition: box-shadow 0.2s;
 }
 .disabled .morph:hover {
    box-shadow:
@@ -64,9 +63,9 @@ a {
    box-shadow:
        -6px -6px 10px 0 var(--neumorph-light),
        6px 6px 10px 0 var(--neumorph-dark),
-       inset -2px -2px 8px 0 var(--neumorph-light),
-       inset 2px 2px 8px 0 var(--neumorph-dark);
-   transition: box-shadow 0.2s;
+       inset -6px -6px 8px 0 var(--neumorph-light),
+       inset 6px 6px 8px 0 var(--neumorph-dark);
+   transition: box-shadow 0.1s;
 }
 .selected .morph {
    box-shadow:
@@ -74,14 +73,6 @@ a {
        6px 6px 10px 0 var(--neumorph-dark),
        inset -6px -6px 10px 0 var(--neumorph-light),
        inset 6px 6px 10px 0 var(--neumorph-dark);
-}
-
-.panel {
-   background: var(--panel-background);
-   color: var(--panel-fg);
-   box-shadow: 6px 6px 10px 0 var(--shadow-color);
-   border-radius: .5em;
-   z-index: 1;
 }
 
 .bg {

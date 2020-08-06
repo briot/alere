@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { BrowserRouter } from "react-router-dom";
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
@@ -8,11 +9,13 @@ import { PrefProvider } from 'services/usePrefs';
 
 ReactDOM.render(
   <React.StrictMode>
-      <PrefProvider>
-         <AccountsProvider>
-            <App />
-         </AccountsProvider>
-      </PrefProvider>
+      <BrowserRouter>
+         <PrefProvider>
+            <AccountsProvider>
+               <App />
+            </AccountsProvider>
+         </PrefProvider>
+      </BrowserRouter>
   </React.StrictMode>,
   document.getElementById('root')
 );

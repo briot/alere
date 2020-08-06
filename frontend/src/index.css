@@ -18,6 +18,8 @@
    --gray-900: #212529;
 
    --gray-400-50p: rgba(206,212,212,50%);
+   --gray-400-70p: rgba(206,212,212,70%);
+   --gray-400-90p: rgba(206,212,212,90%);
 
    --font-size: 16px;
    --font-size-sidebar: 15px;
@@ -96,7 +98,7 @@
    --background-summary-popup: rgba(0,0,0,0.9);
    --text-color: #333;
    --button-fg: var(--panel-fg);
-   --button-disabled-fg: var(--gray-300);
+   --button-disabled-fg: var(--gray-400);
    --summary-background: rgba(255,255,255,0.2);
    --table-color: #b1afaf;
    --table-hover-background: var(--gray-200);

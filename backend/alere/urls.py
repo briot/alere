@@ -8,6 +8,7 @@ import os
 
 from .views.accounts import AccountList
 from .views.ledger import LedgerView
+from .views.plots import CategoryPlotView
 
 
 STATIC_ROOT = (
@@ -30,6 +31,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/account/list', AccountList.as_view()),
     path('api/ledger/<str:id>', LedgerView.as_view()),
+    path('api/plots/category/<str:expenses>', CategoryPlotView.as_view()),
 
     # re_path(r'^.*$', static),
 ]
