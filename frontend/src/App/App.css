@@ -19,13 +19,6 @@
    column-gap: var(--col-gap);
    row-gap: var(--row-gap);
    justify-items: stretch;
-
-/*
-   background-image: url('./coins.jpg');
-   background-repeat: no-repeat;
-   background-position: right bottom;
-   background-size: 300px auto;
-*/
 }
 
 h1 {
@@ -81,13 +74,22 @@ a {
    right: 0;
    width: 100%;
    height: 100%;
-   filter: drop-shadow(-6px -6px 15px var(--neumorph-light));
    z-index: 0;
-   pointer-events: none;
 }
-.bg > div {
+.bg.circle {
+   pointer-events: none;
+   filter: drop-shadow(-6px -6px 15px var(--neumorph-light));
+}
+.bg.circle > div {
    clip-path: circle(20% at 100% 100%);
    background: var(--page-background); /* var(--shadow-color); */
    width: 100%;
    height: 100%;
+}
+.bg.coins {
+   background-image: url('./coins2.png');
+   background-repeat: no-repeat;
+   background-position: right bottom;
+   background-size: auto 50%;
+   opacity: 20%;
 }
