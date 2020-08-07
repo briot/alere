@@ -10,16 +10,15 @@
 .numeric.negative {
    color: red;
 }
-.numeric.EUR:before {
-   /*content: '\f153';
-   font: normal normal normal 14px/1 FontAwesome;
-   */
-   content: '\20ac';
-   margin-right: 4px;
+.numeric:after {
+   content: '';
+   margin-left: 6px;
 }
-.numeric.USD:before {
+.numeric.EUR:after {
+   content: '\20ac';
+}
+.numeric.USD:after {
    content: '\f155';
    font: normal normal normal 14px/1 FontAwesome;
-   margin-right: 4px;
 }
 

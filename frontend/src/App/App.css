@@ -37,7 +37,10 @@ select:focus {
 
 a {
    color: inherit;
-   text-decoration: underline rgb(150,150,150);
+   text-decoration: none;
+}
+a:hover {
+   text-decoration: underline;
 }
 
 .morph {

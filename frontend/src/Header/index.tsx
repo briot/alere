@@ -5,14 +5,14 @@ import Settings from 'Settings';
 
 
 interface HeaderProps {
-   title: string;
+   title: string|undefined;
 }
 
 const Header: React.FC<HeaderProps> = p => {
    return (
       <div id='header'>
          <div className='title'>
-             {p.title}
+             {p.title || ''}
          </div>
          <div className='group'>
             <RoundButton
