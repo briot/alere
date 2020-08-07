@@ -94,6 +94,13 @@ const Settings: React.FC<SettingsProps> = p => {
       event.stopPropagation();
    }
 
+   const changeCurrency = (event: React.ChangeEvent<HTMLSelectElement>) => {
+      updatePrefs({
+         currencyId: event.target.value,
+      });
+      event.stopPropagation();
+   }
+
    return (
       <>
          <RoundButton
@@ -117,6 +124,18 @@ const Settings: React.FC<SettingsProps> = p => {
                          onChange={changeDark}
                          text="Dark mode"
                      />
+
+                     <div className="option">
+                        <label htmlFor="currency">Display Currency</label>
+                        <select
+                           id="currency"
+                           onChange={changeCurrency}
+                           value={prefs.currencyId}
+                        >
+                            <Option text="EUR" value="EUR" />
+                            <Option text="USD" value="USD" />
+                        </select>
+                     </div>
 
                   </fieldset>
 

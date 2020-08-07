@@ -5,6 +5,7 @@ export interface Account {
    id: AccountId;
    name: string;
    favorite: boolean;
+   currencyId: string;
 }
 
 export class AccountList {
@@ -23,6 +24,10 @@ export class AccountList {
 
    get_account(id: AccountId): Account|undefined {
       return this.accounts.get(id);
+   }
+
+   currencyId(id: AccountId): string {
+      return this.get_account(id)?.currencyId || '';
    }
 
    name(id: AccountId): string {

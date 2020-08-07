@@ -4,6 +4,7 @@
 
    display: flex;
    flex-flow: column nowrap;
+   z-index: 1;
 }
 
 #lsidebar h3 {

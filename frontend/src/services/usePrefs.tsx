@@ -25,10 +25,12 @@ export interface LedgerPrefs {
 
 export interface Preferences {
    dark_mode: boolean;
+   currencyId: string;
    ledgers: LedgerPrefs;
 }
 
 const defaultPref: Preferences = {
+   currencyId: "EUR",
    dark_mode: true,
    ledgers: {
       trans_mode: TransactionMode.ONE_LINE,
@@ -73,7 +75,10 @@ export const PrefProvider: React.FC<{}> = p => {
    React.useEffect(
       () => {
          try {
-            const p = JSON.parse(localStorage.getItem(KEY) || '');
+            const p = {
+               ...defaultPref,
+               ...JSON.parse(localStorage.getItem(KEY) || ''),
+            };
             window.console.log('loaded preferences:', p);
             setPrefs(p);
          } catch(e) {

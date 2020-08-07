@@ -3,7 +3,8 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
          Tooltip } from 'recharts';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Panel from 'Panel';
-import PiePlot from 'Plots';
+import Plots from 'Plots';
+import Networth from 'NetWorth';
 import './Dashboard.css';
 
 const radar_data = [
@@ -41,14 +42,24 @@ const Dashboard: React.FC<DashboardProps> = p => {
    const maxdate = "";
    return (
       <div className="dashboard">
-         <Panel cols={2} rows={2} header="Networth" />
+         <Panel
+            cols={2}
+            rows={2}
+            header="Net Worth"
+         >
+            <Networth showShares={false} showPrice={false} />
+         </Panel>
 
          <Panel
             cols={2}
             header={`Expenses from ${mindate || 'now'} to ${maxdate || 'now'}`}
             settings={byCategorySettings}
          >
-            <PiePlot expenses={true} mindate={mindate} maxdate={maxdate} />
+            <Plots.PiePlot
+               expenses={true}
+               mindate={mindate}
+               maxdate={maxdate}
+            />
          </Panel>
 
          <Panel
@@ -56,7 +67,11 @@ const Dashboard: React.FC<DashboardProps> = p => {
             header={`Income from ${mindate || 'now'} to ${maxdate || 'now'}`}
             settings={byCategorySettings}
          >
-            <PiePlot expenses={false} mindate={mindate} maxdate={maxdate} />
+            <Plots.PiePlot
+               expenses={false}
+               mindate={mindate}
+               maxdate={maxdate}
+            />
          </Panel>
 
          <Panel header="Upcoming transactions" />

@@ -82,7 +82,7 @@ a {
 }
 .bg.circle > div {
    clip-path: circle(20% at 100% 100%);
-   background: var(--page-background); /* var(--shadow-color); */
+   background: var(--page-background);
    width: 100%;
    height: 100%;
 }

@@ -2,6 +2,7 @@ import pandas as pd
 
 
 class ACCOUNT_TYPE:
+    ASSET = '9'
     INCOME = '12'
     EXPENSE = '13'
     STOCK = '15'
@@ -9,6 +10,10 @@ class ACCOUNT_TYPE:
 
 
 DEFAULT_CURRENCY = 'EUR'   # ??? should be computed from FileInfo.baseCurrency
+
+ARMAGEDDON = '9000-01-01'  # use this date to get all data
+
+ARMAGEDDON_FOR_QUERY = '9000-01-02'  # internal value
 
 
 class KMyMoney:
@@ -141,7 +146,7 @@ class KMyMoney:
        SELECT kmmPrices.*,
           {self._to_float('price')} as computedPrice,
           (
-             SELECT COALESCE(MIN(priceDate), '9000-01-01')
+             SELECT COALESCE(MIN(priceDate), '{ARMAGEDDON_FOR_QUERY}')
              FROM kmmPrices m
              WHERE kmmPrices.fromId = m.fromId
                AND m.priceDate > kmmPrices.priceDate
