@@ -24,11 +24,12 @@ const App: React.FC<{}> = () => {
 
          <Switch>
              <Route path="/dashboard">
+                <div className="bg coins" />
                 <Header title="Overview" />
                 <Dashboard />
              </Route>
              <Route path="/ledger/:id">
-                <div className="bg"><div /></div>
+                <div className="bg circle"><div /></div>
                 <Header title={accounts.name(accountId)} />
                 <Ledger accountId={accountId} />
              </Route>

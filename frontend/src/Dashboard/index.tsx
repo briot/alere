@@ -22,6 +22,12 @@ const byCategorySettings = () => {
    return (
       <div>
       expenses
+
+      number of columns
+
+      number of rows
+
+      time range
       </div>
    );
 }
