@@ -68,12 +68,13 @@ a {
        inset 6px 6px 10px 0 var(--neumorph-dark);
 }
 
+/*
 .bg {
    position: absolute;
    bottom: 0;
    right: 0;
-   width: 100%;
-   height: 100%;
+   left: 0;
+   top: 0;
    z-index: 0;
 }
 .bg.circle {
@@ -86,10 +87,10 @@ a {
    width: 100%;
    height: 100%;
 }
-.bg.coins {
+*/
+#app {
    background-image: url('./coins2.png');
    background-repeat: no-repeat;
    background-position: right bottom;
    background-size: auto 50%;
-   opacity: 20%;
 }
