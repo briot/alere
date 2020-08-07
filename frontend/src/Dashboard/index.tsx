@@ -35,11 +35,20 @@ const byCategorySettings = () => {
 
 
 interface DashboardProps {
+   setHeader?: (title: string|undefined) => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = p => {
+   const { setHeader } = p;
+
    const mindate = "2020-01-01";
    const maxdate = "";
+
+   React.useEffect(
+      () => setHeader?.('Overview'),
+      [setHeader]
+   );
+
    return (
       <div className="dashboard">
          <Panel

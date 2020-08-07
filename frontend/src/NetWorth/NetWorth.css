@@ -13,7 +13,7 @@
    justify-content: space-between;
 }
 .networth .row span {
-   margin: 0 10px;
+   padding: 0 2px 0 10px;
 
    overflow: hidden;
    text-overflow: ellipsis;
@@ -23,7 +23,8 @@
    flex: 1 1;
 }
 .networth .row span:not(:first-child) {
-   flex: 0 0 90px;
+   flex: 0 0 110px;
+   text-align: right;
 }
 
 .networth .tbody {
@@ -32,4 +33,5 @@
 .networth .tfoot {
    flex: 0;
    font-weight: bold;
+   margin-right: var(--scrollbar-width);
 }

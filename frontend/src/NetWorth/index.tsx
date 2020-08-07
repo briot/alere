@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Link } from 'react-router-dom';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import Numeric from 'Numeric';
 import AutoSizer from 'react-virtualized-auto-sizer';
@@ -65,7 +66,11 @@ const Networth: React.FC<NetworthProps> = p => {
          const r = data[q.index];
          return (
             <div style={q.style} className="row" >
-               <span>{accounts.name(r.accountId)}</span>
+               <span>
+                  <Link to={`/ledger/${r.accountId}`}>
+                     {accounts.name(r.accountId)}
+                  </Link>
+               </span>
                {
                   p.showShares &&
                   <span>
