@@ -6,11 +6,17 @@ const GROUP_SEP = ' ';
 
 interface NumericProps {
    currency?: string;
-   amount: number;
+   amount: number|undefined;
    precision?: number;
 }
 
 const Numeric: React.FC<NumericProps> = p => {
+   if (p.amount === undefined || p.amount === null || isNaN(p.amount)) {
+      return (
+         <span className='numeric'>-</span>
+      );
+   }
+
    const className = 'numeric '
       + (p.currency ?? '');
    const val = p.amount.toFixed(p.precision ?? 2);
