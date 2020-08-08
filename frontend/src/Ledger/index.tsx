@@ -224,13 +224,17 @@ const FirstRow: React.FC<FirstRowProps> = p => {
       <TR>
          <TD kind='date'>{t.date}</TD>
          <TD kind='num' className='numeric'>{s.checknum}</TD>
-         <TD kind='payee'><Link to='#a'>{t.payee}</Link></TD>
+         <TD kind='payee'>
+            <Link to={`/payee/${t.payee}`}>{t.payee}</Link>
+         </TD>
          <TD kind='transfer'>
             {
                s.account === SPLIT_ID
                ? SPLIT
                : s.account !== p.accountId
-               ? <Link to='#a'>{p.accounts.name(s.account)}</Link>
+               ? <Link to={`/ledger/${s.account}`}>
+                    {p.accounts.name(s.account)}
+                 </Link>
                : p.accounts.name(s.account)
             }
          </TD>
@@ -290,7 +294,9 @@ const SplitRow: React.FC<SplitRowProps> = p => {
          <TD kind='transfer'>
             {
                s.account !== p.accountId
-               ? <Link to='#a'>{p.accounts.name(s.account)}</Link>
+               ? <Link to={`/ledger/${s.account}`}>
+                    {p.accounts.name(s.account)}
+                 </Link>
                : p.accounts.name(s.account)
             }
          </TD>
@@ -353,7 +359,7 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
                                  <span>{ s.amount >= 0 ? ' - ' : ' + ' }</span>
                                  <Numeric amount={Math.abs(s.amount)} />
                                  (
-                                 <Link to='#a'>
+                                 <Link to={`/ledger/${s.account}`}>
                                     {p.accounts.name(s.account)}
                                  </Link>
                                  )
