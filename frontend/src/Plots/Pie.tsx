@@ -1,14 +1,20 @@
 import * as React from 'react';
 import * as d3ScaleChromatic from 'd3-scale-chromatic';
+import { Link } from 'react-router-dom';
 import { Legend, PieChart, PieLabelRenderProps,
          Pie, Cell, Tooltip, TooltipProps } from 'recharts';
+import { AccountId } from 'Transaction';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
+import useAccounts from 'services/useAccounts';
 import './Pie.css';
 
+const NAME_KEY = "nam";
+
 interface DataItemType {
-   name: string;
+   accountId: AccountId;
    value: number;
+   [NAME_KEY]?: string;   // computed automatically
 }
 interface DataType {
    items:   DataItemType[];
@@ -53,7 +59,11 @@ const CustomTooltip = (p: TooltipProps & {data: DataType} ) => {
    return p.active
      ? (
        <div className="customTooltip" >
-           <div>{label}</div>
+           <div>
+              <Link to={`/ledger/${pay.payload.accountId}`}>
+                 {label}
+              </Link>
+           </div>
            <div>
               <Numeric amount={value} />
            </div>
@@ -74,6 +84,7 @@ interface PiePlotProps {
 
 const PiePlot: React.FC<PiePlotProps> = p => {
    const [data, setData] = React.useState(noData);
+   const { accounts } = useAccounts();
 
    React.useEffect(
       () => {
@@ -85,6 +96,8 @@ const PiePlot: React.FC<PiePlotProps> = p => {
             );
             const d: DataType = await resp.json();
 
+            d.items.forEach(a => a[NAME_KEY] = accounts.name(a.accountId));
+
             // Filter out negative data, which we cannot show in a pie graph
             setData({
                items: d.items.filter(v => v.value > 0),
@@ -94,8 +107,17 @@ const PiePlot: React.FC<PiePlotProps> = p => {
          }
          dofetch();
       },
-      [p.expenses, p.mindate, p.maxdate]
+      [p.expenses, p.mindate, p.maxdate, accounts]
    );
+
+   const legendItem = (value: any, entry: any, index?: number) =>
+      index === undefined
+         ? <span>{value}</span>
+         : (
+           <Link to={`/ledger/${data.items[index].accountId}`} >
+               {value}
+           </Link>
+         );
 
    const color = p.expenses
       ? (index: number) => d3ScaleChromatic.interpolateTurbo(
@@ -110,6 +132,7 @@ const PiePlot: React.FC<PiePlotProps> = p => {
                <PieChart width={width} height={height} className="piechart">
                  <Legend
                     align="right"
+                    formatter={legendItem}
                     layout="vertical"
                     verticalAlign="middle"
                  />
@@ -126,6 +149,7 @@ const PiePlot: React.FC<PiePlotProps> = p => {
                    outerRadius="80%"
                    fill="#8884d8"
                    dataKey="value"
+                   nameKey={NAME_KEY}
                  >
                    {
                      data.items.map((entry, index) =>

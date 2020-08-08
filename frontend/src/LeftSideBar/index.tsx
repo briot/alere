@@ -44,6 +44,12 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
             size='large'
           />
          <RoundButton
+            fa="fa-user"
+            text="Payees"
+            disabled={true}
+            size='large'
+          />
+         <RoundButton
             fa="fa-pie-chart"
             text="Reports"
             disabled={true}

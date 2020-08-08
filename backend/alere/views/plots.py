@@ -6,16 +6,16 @@ from typing import List
 
 
 class PlotDataItem:
-    def __init__(self, name, value):
-        self.name = name
+    def __init__(self, accountId, value):
+        self.accountId = accountId
         self.value = value
 
     def __repr__(self):
-        return f"""<Data {self.name} {self.value}"""
+        return f"""<Data {self.accountId} {self.value}"""
 
     def to_json(self):
         return {
-            "name": self.name,
+            "accountId": self.accountId,
             "value": self.value,
         }
 
@@ -53,7 +53,7 @@ class CategoryPlotView(JSONView):
 
         query, params = (f"""
             SELECT
-               destAccount.accountName as category,
+               destAccount.id as category,
                SUM({kmm._to_float('destS.value')}) as value
             FROM
                kmmSplits destS
@@ -77,7 +77,7 @@ class CategoryPlotView(JSONView):
             maxdate=maxdate or "",
             items=[
                 PlotDataItem(
-                    name=row.category,
+                    accountId=row.category,
                     value=round(
                         row.value if is_expenses else -row.value,
                         2))
