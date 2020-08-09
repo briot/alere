@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
+import { RelativeDate, toDate } from 'Dates';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import Numeric from 'Numeric';
 import AutoSizer from 'react-virtualized-auto-sizer';
@@ -10,15 +11,14 @@ import "./NetWorth.css";
 
 interface NetworthLine {
    accountId: AccountId;
-   shares: number;
-   date: string;
-   price: number|undefined;
+   shares: number[];
+   price: (number|undefined)[];
 }
 type Networth = NetworthLine[];
 
 
 interface NetworthProps {
-   date?: string;
+   dates: RelativeDate[];
    showPrice?: boolean;
    showShares?: boolean;
 }
@@ -28,14 +28,26 @@ const Networth: React.FC<NetworthProps> = p => {
    const { accounts } = useAccounts();
    const { prefs } = usePrefs();
 
-   const totalShares = React.useMemo(
-      () => data.reduce((t, d) => t + d.shares, 0),
-      [data]
+   const dates = React.useMemo(
+      () => p.dates.map(toDate),
+      [p.dates]
    );
+
+   const totalShares = React.useMemo(
+      () => p.dates.flatMap(
+         (d, idx) => data.reduce((t, d) => t + d.shares[idx], 0)
+      ),
+      [p.dates, data]
+   );
+
    const total = React.useMemo(
-      () => data.reduce((t, d) =>
-         t + d.shares * (d.price ?? NaN), 0),
-      [data]
+      () => p.dates.flatMap(
+         (d, idx) =>
+            data
+             .filter(d => d.price[idx])
+             .reduce((t, d) => t + d.shares[idx] * d.price[idx]!, 0),
+      ),
+      [p.dates, data]
    );
 
    React.useEffect(
@@ -44,7 +56,7 @@ const Networth: React.FC<NetworthProps> = p => {
             const resp = await window.fetch(
                `/api/plots/networth`
                + `?currency=${prefs.currencyId}`
-               + `&date=${p.date || ''}`
+               + `&dates=${dates.join(',')}`
             );
             const d: Networth = await resp.json()
             d.sort((d1, d2) =>
@@ -54,7 +66,7 @@ const Networth: React.FC<NetworthProps> = p => {
          }
          doFetch();
       },
-      [accounts, prefs.currencyId, p.date]
+      [accounts, prefs.currencyId, dates]
    );
 
    const getKey = (index: number) => {
@@ -65,44 +77,81 @@ const Networth: React.FC<NetworthProps> = p => {
       (q: ListChildComponentProps) => {
          const r = data[q.index];
          return (
-            <div style={q.style} className="row" >
-               <span>
+            <div style={q.style} className="row" key={r.accountId} >
+               <span title={accounts.name(r.accountId)}>
                   <Link to={`/ledger/${r.accountId}`}>
                      {accounts.name(r.accountId)}
                   </Link>
                </span>
                {
-                  p.showShares &&
-                  <span>
-                     <Numeric
-                        amount={r.shares}
-                        currency={accounts.currencyId(r.accountId)}
-                     />
-                  </span>
+                  dates.map((d, idx) => (
+                     <React.Fragment key={d}>
+                     {
+                        p.showShares &&
+                        <span>
+                           <Numeric
+                              amount={r.shares[idx]}
+                              currency={accounts.currencyId(r.accountId)}
+                           />
+                        </span>
+                     }
+                     {
+                        p.showPrice &&
+                        <span>
+                           <Numeric
+                              amount={r.price[idx]}
+                              currency={prefs.currencyId}
+                           />
+                        </span>
+                     }
+                     <span>
+                        <Numeric
+                           amount={r.shares[idx] * (r.price[idx] ?? NaN)}
+                           currency={prefs.currencyId}
+                        />
+                     </span>
+                  </React.Fragment>
+                  ))
                }
-               {
-                  p.showPrice &&
-                  <span>
-                     <Numeric
-                        amount={r.price}
-                        currency={prefs.currencyId}
-                     />
-                  </span>
-               }
-               <span>
-                  <Numeric
-                     amount={r.shares * (r.price ?? NaN)}
-                     currency={prefs.currencyId}
-                  />
-               </span>
             </div>
          );
       },
-      [data, accounts, p.showPrice, p.showShares, prefs.currencyId]
+      [data, accounts, p.showPrice, p.showShares, prefs.currencyId,
+       dates]
    );
 
    return (
       <div className="networth">
+         <div className="thead">
+            <div className="row">
+               <span></span>
+               {
+                  dates.map(d =>
+                     <span
+                        className={`span${1 + (p.showShares ? 1 : 0) + (p.showPrice ? 1 : 0)}`}
+                        key={d}
+                     >
+                        {d}
+                     </span>)
+               }
+            </div>
+            <div className="row">
+               <span>Account</span>
+               {
+                  p.dates.map((d, idx) => (
+                     <React.Fragment key={d}>
+                        {
+                           p.showShares && <span>Shares</span>
+                        }
+                        {
+                           p.showPrice && <span>Price</span>
+                        }
+                        <span>Value</span>
+                     </React.Fragment>
+                  ))
+               }
+            </div>
+         </div>
          <div className="tbody">
             <AutoSizer>
                {
@@ -120,26 +169,34 @@ const Networth: React.FC<NetworthProps> = p => {
                }
             </AutoSizer>
          </div>
-         <div className="tfoot row" >
-            <span>Total</span>
-            {
-               p.showShares &&
-               <span>
-                  <Numeric
-                     amount={totalShares}
-                  />
-               </span>
-            }
-            {
-               p.showPrice &&
-               <span />
-            }
-            <span>
-               <Numeric
-                  amount={total}
-                  currency={prefs.currencyId}
-               />
-            </span>
+         <div className="tfoot" >
+            <div className="row">
+               <span>Total</span>
+               {
+                  p.dates.map((d, idx) => (
+                     <React.Fragment key={d}>
+                        {
+                           p.showShares &&
+                           <span>
+                              <Numeric
+                                 amount={totalShares[idx]}
+                              />
+                           </span>
+                        }
+                        {
+                           p.showPrice &&
+                           <span />
+                        }
+                        <span>
+                           <Numeric
+                              amount={total[idx]}
+                              currency={prefs.currencyId}
+                           />
+                        </span>
+                     </React.Fragment>
+                  ))
+               }
+            </div>
          </div>
       </div>
    );

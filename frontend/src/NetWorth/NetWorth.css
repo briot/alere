@@ -13,25 +13,44 @@
    justify-content: space-between;
 }
 .networth .row span {
-   padding: 0 2px 0 10px;
-
    overflow: hidden;
    text-overflow: ellipsis;
    white-space: nowrap;
+}
+.networth .thead .row span {
+   white-space: wrap;
 }
 .networth .row span:first-child {
    flex: 1 1;
 }
 .networth .row span:not(:first-child) {
-   flex: 0 0 110px;
+   --col-width: 110px;
+   flex: 0 0 var(--col-width);
+   text-align: center;
+}
+.networth .row span:not(:first-child).span3 {
+   flex-basis: calc( var(--col-width) * 3 );
+   text-align: center;
+}
+.networth .row span:not(:first-child).span2 {
+   flex-basis: calc( var(--col-width) * 2 );
+   text-align: center;
+}
+.networth .tfoot .row span:not(:first-child),
+.networth .tbody .row span:not(:first-child) {
    text-align: right;
 }
+
 
 .networth .tbody {
    flex: 1 1;
 }
+.networth .thead,
 .networth .tfoot {
    flex: 0;
    font-weight: bold;
+
+   /*
    margin-right: var(--scrollbar-width);
+   */
 }
