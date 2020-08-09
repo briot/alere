@@ -4,10 +4,12 @@ import { Link } from 'react-router-dom';
 import { Legend, PieChart, PieLabelRenderProps,
          Pie, Cell, Tooltip, TooltipProps } from 'recharts';
 import { AccountId } from 'Transaction';
+import { RelativeDate, toDate } from 'Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
 import useAccounts from 'services/useAccounts';
-import './Pie.css';
+import usePrefs from 'services/usePrefs';
+import './CategoryPie.css';
 
 const NAME_KEY = "nam";
 
@@ -21,7 +23,7 @@ interface DataType {
    mindate: string;
    maxdate: string;
 }
-const noData: DataType = {items: [], mindate: '', maxdate: ''};
+const noData: DataType = {items: [], mindate: 'today', maxdate: 'today'};
 
 const RADIAN = Math.PI / 180;
 
@@ -78,21 +80,24 @@ const CustomTooltip = (p: TooltipProps & {data: DataType} ) => {
 
 interface PiePlotProps {
    expenses: boolean;
-   mindate?: string;
-   maxdate?: string;
+   mindate: RelativeDate;
+   maxdate: RelativeDate;
 }
 
-const PiePlot: React.FC<PiePlotProps> = p => {
+const CategoryPie: React.FC<PiePlotProps> = p => {
    const [data, setData] = React.useState(noData);
    const { accounts } = useAccounts();
+   const { prefs } = usePrefs();
+   const mindate = toDate(p.mindate);
+   const maxdate = toDate(p.maxdate);
 
    React.useEffect(
       () => {
          const dofetch = async () => {
             const resp = await window.fetch(
                `/api/plots/category/${p.expenses ? 'expenses' : 'income'}`
-               + `?mindate=${p.mindate || ''}`
-               + `&maxdate=${p.maxdate || ''}`
+               + `?mindate=${mindate}`
+               + `&maxdate=${maxdate}`
             );
             const d: DataType = await resp.json();
 
@@ -107,7 +112,7 @@ const PiePlot: React.FC<PiePlotProps> = p => {
          }
          dofetch();
       },
-      [p.expenses, p.mindate, p.maxdate, accounts]
+      [p.expenses, mindate, maxdate, accounts]
    );
 
    const legendItem = (value: any, entry: any, index?: number) =>
@@ -115,7 +120,12 @@ const PiePlot: React.FC<PiePlotProps> = p => {
          ? <span>{value}</span>
          : (
            <Link to={`/ledger/${data.items[index].accountId}`} >
-               {value}
+               {value} (
+                  <Numeric
+                     amount={data.items[index].value}
+                     currency={prefs.currencyId}
+                  />
+               )
            </Link>
          );
 
@@ -165,4 +175,4 @@ const PiePlot: React.FC<PiePlotProps> = p => {
       </AutoSizer>
    );
 }
-export default PiePlot;
+export default CategoryPie;

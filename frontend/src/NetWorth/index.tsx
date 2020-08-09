@@ -124,7 +124,7 @@ const Networth: React.FC<NetworthProps> = p => {
       <div className="networth">
          <div className="thead">
             <div className="row">
-               <span></span>
+               <span>Account</span>
                {
                   dates.map(d =>
                      <span
@@ -135,22 +135,24 @@ const Networth: React.FC<NetworthProps> = p => {
                      </span>)
                }
             </div>
-            <div className="row">
-               <span>Account</span>
-               {
-                  p.dates.map((d, idx) => (
-                     <React.Fragment key={d}>
-                        {
-                           p.showShares && <span>Shares</span>
-                        }
-                        {
-                           p.showPrice && <span>Price</span>
-                        }
-                        <span>Value</span>
-                     </React.Fragment>
-                  ))
-               }
-            </div>
+            {
+               (p.showShares || p.showPrice) &&
+               <div className="row">
+                  {
+                     p.dates.map((d, idx) => (
+                        <React.Fragment key={d}>
+                           {
+                              p.showShares && <span>Shares</span>
+                           }
+                           {
+                              p.showPrice && <span>Price</span>
+                           }
+                           <span>Value</span>
+                        </React.Fragment>
+                     ))
+                  }
+               </div>
+            }
          </div>
          <div className="tbody">
             <AutoSizer>

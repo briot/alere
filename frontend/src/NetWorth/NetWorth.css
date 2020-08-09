@@ -26,15 +26,13 @@
 .networth .row span:not(:first-child) {
    --col-width: 110px;
    flex: 0 0 var(--col-width);
-   text-align: center;
+   text-align: right;
 }
 .networth .row span:not(:first-child).span3 {
    flex-basis: calc( var(--col-width) * 3 );
-   text-align: center;
 }
 .networth .row span:not(:first-child).span2 {
    flex-basis: calc( var(--col-width) * 2 );
-   text-align: center;
 }
 .networth .tfoot .row span:not(:first-child),
 .networth .tbody .row span:not(:first-child) {
