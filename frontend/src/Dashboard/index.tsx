@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { RelativeDate, toDate } from 'Dates';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
          Tooltip } from 'recharts';
 import AutoSizer from 'react-virtualized-auto-sizer';
@@ -33,6 +34,27 @@ const byCategorySettings = () => {
    );
 }
 
+interface CategoryPiePanelProps {
+   expenses: boolean;
+   mindate: RelativeDate;
+   maxdate: RelativeDate;
+}
+const CategoryPiePanel: React.FC<CategoryPiePanelProps> = p => {
+   return (
+      <Panel
+         cols={2}
+         header={`${p.expenses ? 'Expenses' : 'Income'} from ${toDate(p.mindate)} to ${toDate(p.maxdate)}`}
+         settings={byCategorySettings}
+      >
+         <Plots.CategoryPie
+            expenses={p.expenses}
+            mindate={p.mindate}
+            maxdate={p.maxdate}
+         />
+      </Panel>
+   );
+}
+
 
 interface DashboardProps {
    setHeader?: (title: string|undefined) => void;
@@ -40,9 +62,6 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = p => {
    const { setHeader } = p;
-
-   const mindate = "2020-01-01";
-   const maxdate = "";
 
    React.useEffect(
       () => setHeader?.('Overview'),
@@ -63,29 +82,17 @@ const Dashboard: React.FC<DashboardProps> = p => {
             />
          </Panel>
 
-         <Panel
-            cols={2}
-            header={`Expenses from ${mindate || 'now'} to ${maxdate || 'now'}`}
-            settings={byCategorySettings}
-         >
-            <Plots.PiePlot
-               expenses={true}
-               mindate={mindate}
-               maxdate={maxdate}
-            />
-         </Panel>
+         <CategoryPiePanel
+            expenses={true}
+            mindate="start of year"
+            maxdate="today"
+         />
 
-         <Panel
-            cols={2}
-            header={`Income from ${mindate || 'now'} to ${maxdate || 'now'}`}
-            settings={byCategorySettings}
-         >
-            <Plots.PiePlot
-               expenses={false}
-               mindate={mindate}
-               maxdate={maxdate}
-            />
-         </Panel>
+         <CategoryPiePanel
+            expenses={false}
+            mindate="start of year"
+            maxdate="today"
+         />
 
          <Panel header="Upcoming transactions" />
          <Panel
