@@ -56,7 +56,11 @@ const Dashboard: React.FC<DashboardProps> = p => {
             rows={2}
             header="Net Worth"
          >
-            <Networth showShares={false} showPrice={false} />
+            <Networth
+                showShares={false}
+                showPrice={false}
+                dates={["today", "end of prev year", "end of prev prev year"]}
+            />
          </Panel>
 
          <Panel
