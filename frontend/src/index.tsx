@@ -6,14 +6,17 @@ import App from './App';
 import * as serviceWorker from './serviceWorker';
 import { AccountsProvider } from 'services/useAccounts';
 import { PrefProvider } from 'services/usePrefs';
+import { HistProvider } from 'services/useHistory';
 
 ReactDOM.render(
   <React.StrictMode>
       <BrowserRouter>
          <PrefProvider>
-            <AccountsProvider>
-               <App />
-            </AccountsProvider>
+            <HistProvider>
+               <AccountsProvider>
+                  <App />
+               </AccountsProvider>
+            </HistProvider>
          </PrefProvider>
       </BrowserRouter>
   </React.StrictMode>,
