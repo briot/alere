@@ -45,8 +45,8 @@ class CategoryPlotView(JSONView):
 
         accounts = None
         currency = "EUR"
-        maxdate = None
-        mindate = "2020-01-01"
+        maxdate = params.get('maxdate')[0]
+        mindate = params.get('mindate')[0]
 
         q = kmm._query_detailed_splits(
             accounts=accounts, currency=currency, maxdate=maxdate)

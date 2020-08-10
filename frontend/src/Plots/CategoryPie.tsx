@@ -1,12 +1,12 @@
 import * as React from 'react';
 import * as d3ScaleChromatic from 'd3-scale-chromatic';
-import { Link } from 'react-router-dom';
 import { Legend, PieChart, PieLabelRenderProps,
          Pie, Cell, Tooltip, TooltipProps } from 'recharts';
 import { AccountId } from 'Transaction';
 import { RelativeDate, toDate } from 'Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
+import Account from 'Account';
 import useAccounts from 'services/useAccounts';
 import usePrefs from 'services/usePrefs';
 import './CategoryPie.css';
@@ -55,17 +55,12 @@ const CustomTooltip = (p: TooltipProps & {data: DataType} ) => {
    if (!pay) {
       return null;
    }
-   const label = pay.name;
    const value = pay.value as number;
    const total = p.data.items.reduce((t, d) => t + d.value, 0);
    return p.active
      ? (
        <div className="customTooltip" >
-           <div>
-              <Link to={`/ledger/${pay.payload.accountId}`}>
-                 {label}
-              </Link>
-           </div>
+           <Account id={pay.payload.accountId} />
            <div>
               <Numeric amount={value} />
            </div>
@@ -119,14 +114,15 @@ const CategoryPie: React.FC<PiePlotProps> = p => {
       index === undefined
          ? <span>{value}</span>
          : (
-           <Link to={`/ledger/${data.items[index].accountId}`} >
-               {value} (
+           <span>
+              <Account id={data.items[index].accountId} />
+              &nbsp;(
                   <Numeric
                      amount={data.items[index].value}
                      currency={prefs.currencyId}
                   />
                )
-           </Link>
+           </span>
          );
 
    const color = p.expenses

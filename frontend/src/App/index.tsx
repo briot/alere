@@ -21,11 +21,11 @@ const App: React.FC<{}> = () => {
          <RightSideBar />
 
          <Switch>
-             <Route path="/dashboard">
-                <Dashboard setHeader={setHeader} />
-             </Route>
              <Route path="/ledger/:accountId">
                 <Ledger setHeader={setHeader} />
+             </Route>
+             <Route>
+                <Dashboard setHeader={setHeader} />
              </Route>
          </Switch>
 

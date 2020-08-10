@@ -12,11 +12,6 @@
    flex-flow: row nowrap;
    justify-content: space-between;
 }
-.networth .row span {
-   overflow: hidden;
-   text-overflow: ellipsis;
-   white-space: nowrap;
-}
 .networth .thead .row span {
    white-space: wrap;
 }

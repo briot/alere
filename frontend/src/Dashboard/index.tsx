@@ -78,7 +78,7 @@ const Dashboard: React.FC<DashboardProps> = p => {
             <Networth
                 showShares={false}
                 showPrice={false}
-                dates={["today", "end of prev year", "end of prev prev year"]}
+                dates={["today", "end of last month", "end of prev year"]}
             />
          </Panel>
 
@@ -127,7 +127,7 @@ const Dashboard: React.FC<DashboardProps> = p => {
                }
             </AutoSizer>
          </Panel>
-         <Panel header="Notes" />
+         <Panel header="Profit and Loss" />
       </div>
    );
 }
