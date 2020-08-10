@@ -9,6 +9,7 @@ import { amountForAccount, firstSplitForAccount,
          AccountId, Split, Transaction } from 'Transaction';
 import Numeric from 'Numeric';
 import useAccounts from 'services/useAccounts';
+import useHistory from 'services/useHistory';
 import usePrefs, { LedgerPrefs, SplitMode,
    TransactionMode } from 'services/usePrefs';
 import './Ledger.css';
@@ -544,6 +545,7 @@ const Ledger: React.FC<LedgerProps> = p => {
    const { setHeader } = p;
    const { accounts } = useAccounts();
    const { accountId } = useParams();
+   const { pushAccount } = useHistory();
    const [ rowState, setRowState ] = React.useState<RowStateProps>({});
    const [transactions, setTransactions] = React.useState<Transaction[]>([]);
    const { prefs } = usePrefs();
@@ -558,8 +560,9 @@ const Ledger: React.FC<LedgerProps> = p => {
             setTransactions(data);
          }
          dofetch();
+         pushAccount(accountId);
       },
-      [accountId]
+      [accountId, pushAccount]
    );
 
    const name = accounts.name(accountId);

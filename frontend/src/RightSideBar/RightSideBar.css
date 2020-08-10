@@ -8,9 +8,10 @@
    gap: 6px;
 
    margin-right: 10px;
-   max-width: 300px;
+   max-width: 200px;
 
    color: var(--panel-fg);
+   font-size: var(--font-size-sidebar);
 }
 
 #rsidebar h3 {
@@ -18,5 +19,8 @@
    white-space: nowrap;
    text-overflow: ellipsis;
    overflow: hidden;
-   margin: 0 0 16px 0;
+   margin: 20px 0 16px 0;
+}
+#rsidebar h3:first-child {
+   margin-top: 0;
 }

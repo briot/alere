@@ -30,6 +30,9 @@ const RoundButton: React.FC<RoundButtonProps> = p => {
          p.text &&
          <span>{p.text}</span>
       }
+      {
+         p.children
+      }
       </>
    );
 
@@ -45,7 +48,8 @@ const RoundButton: React.FC<RoundButtonProps> = p => {
          >
             {children}
          </div>
-      ) : (
+      ) : p.url
+      ? (
          <Link
             to={p.url || '#a'}
             className={c}
@@ -53,6 +57,10 @@ const RoundButton: React.FC<RoundButtonProps> = p => {
          >
             {children}
          </Link>
+      ) : (
+         <div className={c} title={p.title}>
+            {children}
+         </div>
       )
    );
 }

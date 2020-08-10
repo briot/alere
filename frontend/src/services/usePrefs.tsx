@@ -50,7 +50,7 @@ const noContext: PrefContext = {
    updatePrefs: () => {},
 };
 
-const PrefContext = React.createContext(noContext);
+const ReactPrefContext = React.createContext(noContext);
 const KEY = "alerePrefs";
 
 export const PrefProvider: React.FC<{}> = p => {
@@ -88,11 +88,11 @@ export const PrefProvider: React.FC<{}> = p => {
    );
 
    return (
-      <PrefContext.Provider value={data}>
+      <ReactPrefContext.Provider value={data}>
          {p.children}
-      </PrefContext.Provider>
+      </ReactPrefContext.Provider>
    );
 };
 
-const usePrefs = () => React.useContext(PrefContext);
+const usePrefs = () => React.useContext(ReactPrefContext);
 export default usePrefs;

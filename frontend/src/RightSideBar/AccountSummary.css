@@ -2,8 +2,6 @@
    --summary-bg: var(--tool-background);
    --summary-bg2: var(--tool-background2);
    --tl-radius: 10px;
-
-   font-size: var(--font-size-sidebar);
 }
 .accountSummary .icon {
    border-radius: 50%;
