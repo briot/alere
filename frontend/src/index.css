@@ -30,35 +30,13 @@
    --table-horiz-border-width: 0px;
    --header-tool-height: 40px;
 }
-#old{
-   --page-background: #0c2531;
-   --panel-background: #0c2531;
-   --panel-fg: white;
-   --background-summary-popup: rgba(0,0,0,0.9);
-   --text-color: white;
-   --summary-background: rgba(255,255,255,0.2);
-   --table-color: #b1afaf;
-   --table-hover-background: rgba(100,100,100,0.2);
-   --table-row-first-background: rgb(48,85,106); /* for "main" rows */
-   --table-row-double-background: rgb(34,58,72); /* for "double line" rows */
-   --table-row-details-background: none;
-   --transparent: rgba(0,0,0,.0);
-   --grey: #999;
-   --color-on-grey: black;  /* text color on --grey background */
-   --focus-color: #087cb5;
-   --tool-color: white;
-   --tool-border: #444;
-   --tool-background: #497c9b;   /* #087cb5;*/
-   --tool-background2: #195977;
-}
 #app.dark {
    --page-background: var(--gray-700);
    --panel-background: var(--gray-800);
    --panel-fg: var(--gray-100);
    --background-summary-popup: rgba(0,0,0,0.9);
-   --text-color: #333;
    --button-fg: var(--panel-fg);
-   --button-disabled-fg: var(--gray-700);
+   --button-disabled-fg: var(--gray-600);
    --summary-background: rgba(255,255,255,0.2);
    --table-color: #b1afaf;
    --table-hover-background: var(--gray-700);
@@ -96,7 +74,6 @@
    --panel-background: #f6f6f6;
    --panel-fg: #222;
    --background-summary-popup: rgba(0,0,0,0.9);
-   --text-color: #333;
    --button-fg: var(--panel-fg);
    --button-disabled-fg: var(--gray-400);
    --summary-background: rgba(255,255,255,0.2);
@@ -145,4 +122,3 @@ body {
 
   font-size: var(--font-size);
 }
-
