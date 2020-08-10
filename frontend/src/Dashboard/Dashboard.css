@@ -2,11 +2,14 @@
    grid-area: main;
 
    display: grid;
-   grid-template-columns: repeat(4, minmax(200px, 1fr));
-   grid-template-rows: repeat(auto-fill, 1fr);
-   gap: 20px;
+   /* 300px is so that we have at most 4 columns */
+   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+   grid-auto-flow: row;  /* dense */
+
+   /* grid-template-rows: repeat(auto-fill, 1fr); */
+   grid-gap: 20px;
    justify-items: stretch;
 
    font-size: 0.8rem;
-}
 
+}

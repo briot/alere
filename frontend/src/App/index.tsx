@@ -15,7 +15,6 @@ const App: React.FC<{}> = () => {
 
    return (
      <div id="app" className={prefs.dark_mode ? 'dark' : 'light' }>
-         <div className="headerbg" />
          <Header title={header} />
          <LeftSideBar />
          <RightSideBar />

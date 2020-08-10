@@ -5,6 +5,7 @@
    border: 1px solid var(--shadow-color);
    /* border-radius: .5em; */
    padding: 5px 10px;
+   min-height: 240px;
 
    display: flex;
    flex-flow: column nowrap;
@@ -26,17 +27,20 @@
 
 .panel > .content {
    flex: 1 1;
+
+   display: flex;
+   flex-flow: column nowrap;
 }
 
-.col1 { grid-column-end: span 1; }
-.col2 { grid-column-end: span 2; }
-.col3 { grid-column-end: span 4; }
-.col4 { grid-column-end: span 4; }
+.col1 { grid-column: span 1; }
+.col2 { grid-column: span 2; }
+.col3 { grid-column: span 4; }
+.col4 { grid-column: span 4; }
 
-.row1 { grid-row-end: span 1; }
-.row2 { grid-row-end: span 2; }
-.row3 { grid-row-end: span 3; }
-.row4 { grid-row-end: span 4; }
+.row1 { grid-row: span 1; }
+.row2 { grid-row: span 2; }
+.row3 { grid-row: span 3; }
+.row4 { grid-row: span 4; }
 
 .panel .settingsMenu {
    position: relative;

@@ -95,6 +95,7 @@ const Dashboard: React.FC<DashboardProps> = p => {
          />
 
          <Panel header="Upcoming transactions" />
+
          <Panel
             cols={2}
             header="Cashflow quadrant"
