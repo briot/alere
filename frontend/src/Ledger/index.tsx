@@ -4,10 +4,11 @@ import { VariableSizeList, ListChildComponentProps } from 'react-window';
 import { toDate } from 'Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Panel from 'Panel';
+import Account from 'Account';
 import { amountForAccount, firstSplitForAccount,
          AccountId, Split, Transaction } from 'Transaction';
 import Numeric from 'Numeric';
-import useAccounts, { AccountList } from 'services/useAccounts';
+import useAccounts from 'services/useAccounts';
 import usePrefs, { LedgerPrefs, SplitMode,
    TransactionMode } from 'services/usePrefs';
 import './Ledger.css';
@@ -183,7 +184,6 @@ const TR: React.FC<TRProps> = p => {
 interface FirstRowProps {
    transaction: Transaction;
    accountId: AccountId;
-   accounts: AccountList;
    prefs: LedgerPrefs;
    expanded?: boolean;
 }
@@ -232,11 +232,7 @@ const FirstRow: React.FC<FirstRowProps> = p => {
             {
                s.account === SPLIT_ID
                ? SPLIT
-               : s.account !== p.accountId
-               ? <Link to={`/ledger/${s.account}`}>
-                    {p.accounts.name(s.account)}
-                 </Link>
-               : p.accounts.name(s.account)
+               : <Account id={s.account} noLinkIf={p.accountId} />
             }
          </TD>
          <TD kind='reconcile'>{s.reconcile}</TD>
@@ -282,7 +278,6 @@ const NotesRow: React.FC<NotesRowProps> = p => {
 interface SplitRowProps {
    split: Split;
    accountId: AccountId;
-   accounts: AccountList;
    prefs: LedgerPrefs;
 }
 const SplitRow: React.FC<SplitRowProps> = p => {
@@ -293,13 +288,7 @@ const SplitRow: React.FC<SplitRowProps> = p => {
          <TD kind='num' className='numeric'>{s.checknum}</TD>
          <TD kind='notes'>{s.memo}</TD>
          <TD kind='transfer'>
-            {
-               s.account !== p.accountId
-               ? <Link to={`/ledger/${s.account}`}>
-                    {p.accounts.name(s.account)}
-                 </Link>
-               : p.accounts.name(s.account)
-            }
+            <Account id={s.account} noLinkIf={p.accountId} />
          </TD>
          <TD kind='reconcile'>{s.reconcile}</TD>
          {
@@ -317,7 +306,6 @@ const SplitRow: React.FC<SplitRowProps> = p => {
 interface TransactionRowProps {
    transaction: Transaction;
    accountId: AccountId;
-   accounts: AccountList;
    prefs: LedgerPrefs;
    style?: React.CSSProperties;
    expanded: undefined|boolean;
@@ -360,9 +348,7 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
                                  <span>{ s.amount >= 0 ? ' - ' : ' + ' }</span>
                                  <Numeric amount={Math.abs(s.amount)} />
                                  (
-                                 <Link to={`/ledger/${s.account}`}>
-                                    {p.accounts.name(s.account)}
-                                 </Link>
+                                    <Account id={s.account} />
                                  )
                               </span> : null
                            )
@@ -386,7 +372,6 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
                split={s}
                prefs={p.prefs}
                accountId={p.accountId}
-               accounts={p.accounts}
             />
          ));
       }
@@ -402,7 +387,6 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
             transaction={t}
             prefs={p.prefs}
             accountId={p.accountId}
-            accounts={p.accounts}
             expanded={p.expanded}
           />
          {
@@ -420,7 +404,6 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
 
 interface EditingRowProps {
    accountId: AccountId;
-   accounts: AccountList;
 }
 
 const EditingRow: React.FC<EditingRowProps> = p => {
@@ -453,7 +436,7 @@ const EditingRow: React.FC<EditingRowProps> = p => {
                <input placeholder="notes" tabIndex={4} />
             </TD>
             <TD kind='transfer'>
-               {p.accounts.name(p.accountId)}
+               <Account id={p.accountId} noLinkIf={p.accountId} />
             </TD>
             <TD kind='reconcile'>
                <select>
@@ -579,7 +562,6 @@ const Ledger: React.FC<LedgerProps> = p => {
       [accountId]
    );
 
-   const account = accounts.get_account(accountId);
    const name = accounts.name(accountId);
 
    React.useEffect(
@@ -660,15 +642,13 @@ const Ledger: React.FC<LedgerProps> = p => {
                style={r.style}
                transaction={t}
                accountId={accountId}
-               accounts={accounts}
                prefs={opt}
                expanded={rowState[t.id]?.expanded}
                setExpanded={setTransactionExpanded}
             />
          );
       },
-      [transactions, setTransactionExpanded, rowState, accounts,
-       accountId, opt ]
+      [transactions, setTransactionExpanded, rowState, accountId, opt ]
    );
 
    const getTransactionHeight = React.useCallback(
@@ -686,10 +666,6 @@ const Ledger: React.FC<LedgerProps> = p => {
 
    const getTransactionKey = (index: number) => {
       return transactions[index].id;
-   }
-
-   if (!account) { // || Object.keys(rowState).length !== transactions.length) {
-      return <div>Loading...</div>
    }
 
    const className = 'ledger'
@@ -739,7 +715,7 @@ const Ledger: React.FC<LedgerProps> = p => {
 
          {
             false &&
-            <EditingRow accountId={accountId} accounts={accounts} />
+            <EditingRow accountId={accountId} />
          }
 
          <div className="tfoot">

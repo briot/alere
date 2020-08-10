@@ -1,0 +1,8 @@
+.account.closed {
+   text-decoration: line-through;
+}
+.account {
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+}

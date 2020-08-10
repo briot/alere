@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { Link } from 'react-router-dom';
 import { RelativeDate, toDate } from 'Dates';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import Numeric from 'Numeric';
 import AutoSizer from 'react-virtualized-auto-sizer';
+import Account from 'Account';
 import { AccountId } from 'Transaction';
 import useAccounts from 'services/useAccounts';
 import usePrefs from 'services/usePrefs';
@@ -21,12 +21,17 @@ interface NetworthProps {
    dates: RelativeDate[];
    showPrice?: boolean;
    showShares?: boolean;
+
+   threshold?: number;
+   // Only show account if at least one of the value columns is above this
+   // threshold (absolute value).
 }
 
 const Networth: React.FC<NetworthProps> = p => {
    const [data, setData] = React.useState<Networth>([]);
    const { accounts } = useAccounts();
    const { prefs } = usePrefs();
+   const threshold = p.threshold === undefined ? 0.01 : p.threshold;
 
    const dates = React.useMemo(
       () => p.dates.map(toDate),
@@ -58,15 +63,33 @@ const Networth: React.FC<NetworthProps> = p => {
                + `?currency=${prefs.currencyId}`
                + `&dates=${dates.join(',')}`
             );
-            const d: Networth = await resp.json()
+            let d: Networth = await resp.json()
+
+            // Remove lines with only 0 values
+            if (threshold !== 0) {
+               d = d.filter(a => {
+                  let hasNonZero = false;
+                  dates.forEach((when, idx) => {
+                     if (Math.abs(a.shares[idx] * (a.price[idx] ?? NaN))
+                         > threshold
+                        ) {
+                        hasNonZero = true;
+                     }
+                  });
+                  return hasNonZero;
+               });
+            }
+
+            // Sort alphabetically
             d.sort((d1, d2) =>
                accounts.name(d1.accountId)
                   .localeCompare(accounts.name(d2.accountId)));
+
             setData(d);
          }
          doFetch();
       },
-      [accounts, prefs.currencyId, dates]
+      [accounts, prefs.currencyId, dates, threshold]
    );
 
    const getKey = (index: number) => {
@@ -78,11 +101,7 @@ const Networth: React.FC<NetworthProps> = p => {
          const r = data[q.index];
          return (
             <div style={q.style} className="row" key={r.accountId} >
-               <span title={accounts.name(r.accountId)}>
-                  <Link to={`/ledger/${r.accountId}`}>
-                     {accounts.name(r.accountId)}
-                  </Link>
-               </span>
+               <Account id={r.accountId} />
                {
                   dates.map((d, idx) => (
                      <React.Fragment key={d}>

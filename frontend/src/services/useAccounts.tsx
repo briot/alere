@@ -6,6 +6,12 @@ export interface Account {
    name: string;
    favorite: boolean;
    currencyId: string;
+   accountType: string;
+   closed: boolean;
+   iban: string;
+   parent: AccountId;
+   lastReconciled: string;
+   forOpeningBalances: boolean;
 }
 
 export class AccountList {
@@ -22,21 +28,26 @@ export class AccountList {
       acc.forEach(a => this.accounts.set(a.id, a));
    }
 
-   get_account(id: AccountId): Account|undefined {
+   getAccount(id: AccountId): Account|undefined {
       return this.accounts.get(id);
    }
 
    currencyId(id: AccountId): string {
-      return this.get_account(id)?.currencyId || '';
+      return this.getAccount(id)?.currencyId || '';
+   }
+
+   fullName(acc: Account): string {
+      const parent = acc.parent ? this.getAccount(acc.parent) : undefined;
+
+      // skip the top-level accounts ('Asset', 'Income',...)
+      const pname = parent && parent.parent? this.fullName(parent) : undefined;
+
+      return pname ? `${pname}:${acc.name}` : acc.name;
    }
 
    name(id: AccountId): string {
-      return (this.get_account(id)?.name || `account ${id}`)
-         .replace('Asset:', '')
-         .replace('Liability:', '')
-         .replace('Income:', '')
-         .replace('Expense:', '')
-         .replace('Equity:', '');
+      const acc = this.getAccount(id);
+      return acc ? this.fullName(acc) : `account ${id}`;
    }
 }
 
