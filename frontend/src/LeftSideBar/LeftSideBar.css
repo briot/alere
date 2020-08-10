@@ -3,7 +3,7 @@
    margin-left: 10px;
 
    display: flex;
-   flex-flow: column nowrap;
+   flex-flow: column nowrap;  /* desktop */
 }
 
 #lsidebar h3 {
@@ -13,3 +13,16 @@
    overflow: hidden;
    color: var(--tool-color);
 }
+
+@media only screen and (max-width: 1024px) {
+   #lsidebar {
+      flex-flow: row wrap;  /* tablet */
+   }
+   #lsidebar .roundButton span:last-child {
+      display: none;  /* hide text */
+   }
+   #lsidebar h3 {
+      display: none;
+   }
+}
+

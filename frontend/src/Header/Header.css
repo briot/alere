@@ -1,9 +1,3 @@
-.headerbg {
-   background: var(--panel-background);
-   grid-area: 1 / 1 / 2 / 4;
-   border-bottom: 1px solid var(--shadow-color);
-}
-
 #header {
    grid-area: header;
 
