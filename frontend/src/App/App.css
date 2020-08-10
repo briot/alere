@@ -2,7 +2,7 @@
    --row-gap: 15px;
    --col-gap: 25px;
    background: var(--page-background);
-   color: var(--text-color);
+   color: var(--panel-fg);
    min-width: 100vw;
    min-height: 100vh;
 
@@ -42,6 +42,10 @@ h1 {
 
 .italic {
    font-style: italic;
+}
+
+text {
+   fill: var(--panel-fg);
 }
 
 input:focus,

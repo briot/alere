@@ -20,7 +20,12 @@
 .settings form fieldset {
    border: 0;
    padding: 10px;
+   margin-bottom: 30px;
 }
+.settings form fieldset:last-child {
+   margin-bottom: 0;
+}
+
 .settings form legend {
    font-weight: bold;
    text-decoration: underline;
