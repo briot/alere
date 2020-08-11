@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { RelativeDate, toDate } from 'Dates';
+import { RelativeDate, dateToString } from 'Dates';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import Numeric from 'Numeric';
 import AutoSizer from 'react-virtualized-auto-sizer';
@@ -17,7 +17,7 @@ interface NetworthLine {
 type Networth = NetworthLine[];
 
 
-interface NetworthProps {
+export interface NetworthProps {
    dates: RelativeDate[];
    showPrice?: boolean;
    showShares?: boolean;
@@ -34,7 +34,7 @@ const Networth: React.FC<NetworthProps> = p => {
    const threshold = p.threshold === undefined ? 0.01 : p.threshold;
 
    const dates = React.useMemo(
-      () => p.dates.map(toDate),
+      () => p.dates.map(dateToString),
       [p.dates]
    );
 

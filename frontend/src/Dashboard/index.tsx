@@ -1,11 +1,10 @@
 import * as React from 'react';
-import { RelativeDate, toDate } from 'Dates';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
          Tooltip } from 'recharts';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Panel from 'Panel';
-import Plots from 'Plots';
-import Networth from 'NetWorth';
+import IncomeExpenses, { IncomeExpensesProps } from 'Dashboard/IncomeExpenses';
+import NetworthPanel, { NetworthPanelProps } from 'Dashboard/NetworthPanel';
 import './Dashboard.css';
 
 const radar_data = [
@@ -20,41 +19,6 @@ const radar_data = [
   { subject: 'cashflow', percent: 90, fullMark: 100, },
 ];
 
-const byCategorySettings = () => {
-   return (
-      <div>
-      expenses
-
-      number of columns
-
-      number of rows
-
-      time range
-      </div>
-   );
-}
-
-interface CategoryPiePanelProps {
-   expenses: boolean;
-   mindate: RelativeDate;
-   maxdate: RelativeDate;
-}
-const CategoryPiePanel: React.FC<CategoryPiePanelProps> = p => {
-   return (
-      <Panel
-         cols={2}
-         header={`${p.expenses ? 'Expenses' : 'Income'} from ${toDate(p.mindate)} to ${toDate(p.maxdate)}`}
-         settings={byCategorySettings}
-      >
-         <Plots.CategoryPie
-            expenses={p.expenses}
-            mindate={p.mindate}
-            maxdate={p.maxdate}
-         />
-      </Panel>
-   );
-}
-
 
 interface DashboardProps {
    setHeader?: (title: string|undefined) => void;
@@ -68,32 +32,31 @@ const Dashboard: React.FC<DashboardProps> = p => {
       [setHeader]
    );
 
+   const [ panel1, setPanel1 ] = React.useState<IncomeExpensesProps>({
+      rowspan: 1,
+      colspan: 2,
+      expenses: true,
+      range: "current year",
+   });
+   const [ panel2, setPanel2 ] = React.useState<IncomeExpensesProps>({
+      rowspan: 1,
+      colspan: 2,
+      expenses: false,
+      range: "current year",
+   });
+   const [ panel3, setPanel3 ] = React.useState<NetworthPanelProps>({
+      rowspan: 2,
+      colspan: 2,
+      showShares: false,
+      showPrice: false,
+      dates: ["today", "end of last month", "end of last year"],
+   });
+
    return (
       <div className="dashboard">
-         <Panel
-            cols={2}
-            rows={2}
-            header="Net Worth"
-         >
-            <Networth
-                showShares={false}
-                showPrice={false}
-                dates={["today", "end of last month", "end of prev year"]}
-            />
-         </Panel>
-
-         <CategoryPiePanel
-            expenses={true}
-            mindate="start of year"
-            maxdate="today"
-         />
-
-         <CategoryPiePanel
-            expenses={false}
-            mindate="start of year"
-            maxdate="today"
-         />
-
+         <NetworthPanel  data={panel3} setData={setPanel3} />
+         <IncomeExpenses data={panel1} setData={setPanel1} />
+         <IncomeExpenses data={panel2} setData={setPanel2} />
          <Panel header="Upcoming transactions" />
 
          <Panel

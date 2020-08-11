@@ -60,11 +60,13 @@ class CategoryPlotView(JSONView):
                JOIN kmmAccounts destAccount
                   ON (destS.accountId = destAccount.id)
             WHERE destS.postDate >= :mindate
+              AND destS.postDate <= :maxdate
               AND destAccount.accountType = :categoryType
             GROUP BY category
             """,
             {
                 "mindate": mindate,
+                "maxdate": maxdate,
                 "categoryType":
                     ACCOUNT_TYPE.EXPENSE
                     if is_expenses

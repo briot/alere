@@ -1,0 +1,32 @@
+form fieldset {
+   border: 0;
+   padding: 10px;
+   margin-bottom: 30px;
+}
+form fieldset:last-child {
+   margin-bottom: 0;
+}
+
+form legend {
+   font-weight: bold;
+   text-decoration: underline;
+}
+
+form .field label {
+   display: block;
+   font-weight: bold;
+   white-space: nowrap;
+   text-align: left;
+   margin: 15px 0 6px 0;
+   font-size: 0.8rem;
+}
+form select {
+   width: 100%;
+}
+form .button label {
+   font-weight: normal;
+   margin: 0;
+}
+form .button.disabled label {
+   color: var(--gray-400);
+}
