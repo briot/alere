@@ -1,41 +1,8 @@
 import * as React from 'react';
 import usePrefs, { SplitMode, TransactionMode } from 'services/usePrefs';
 import RoundButton from 'RoundButton';
+import { Checkbox, Option, Select } from 'Form';
 import "./Settings.css";
-
-interface CheckboxProps {
-   checked: boolean;
-   disabled?: boolean;
-   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
-   text?: string;
-}
-const Checkbox: React.FC<CheckboxProps> = p => {
-   return (
-      <div className={`button option ${p.disabled ? 'disabled' : ''}`}>
-         <label>
-            <input
-               checked={p.checked}
-               disabled={p.disabled}
-               onChange={p.onChange}
-               type="checkbox"
-            />
-            {p.text}
-         </label>
-      </div>
-   );
-}
-
-
-interface OptionProps {
-   text?: string;
-   value?: string|number;
-}
-
-const Option: React.FC<OptionProps> = p => {
-   return (
-      <option value={p.value}>{p.text}</option>
-   );
-}
 
 interface SettingsProps {
 }
@@ -49,57 +16,21 @@ const Settings: React.FC<SettingsProps> = p => {
       []
    );
 
-   const changeTrans = (event: React.ChangeEvent<HTMLSelectElement>) => {
-      updatePrefs({
-         ledgers: {...prefs.ledgers,
-                   trans_mode: parseInt(event.target.value, 10)},
-      });
-      event.stopPropagation();
-   }
-
-   const changeSplit = (event: React.ChangeEvent<HTMLSelectElement>) => {
-      updatePrefs({
-         ledgers: {...prefs.ledgers,
-                   split_mode: parseInt(event.target.value, 10)},
-      });
-      event.stopPropagation();
-   }
-
-   const changeBorders = (event: React.ChangeEvent<HTMLInputElement>) => {
-      updatePrefs({
-         ledgers: {...prefs.ledgers,
-                   borders: event.target.checked},
-      });
-      event.stopPropagation();
-   }
-
-   const changeDark = (event: React.ChangeEvent<HTMLInputElement>) => {
-      updatePrefs({ dark_mode: event.target.checked });
-      event.stopPropagation();
-   }
-
-   const changeExpand = (event: React.ChangeEvent<HTMLInputElement>) => {
-      updatePrefs({
-         ledgers: {...prefs.ledgers,
-                   defaultExpand: event.target.checked},
-      });
-      event.stopPropagation();
-   }
-
-   const changeValueColumn = (event: React.ChangeEvent<HTMLInputElement>) => {
-      updatePrefs({
-         ledgers: {...prefs.ledgers,
-                   valueColumn: event.target.checked},
-      });
-      event.stopPropagation();
-   }
-
-   const changeCurrency = (event: React.ChangeEvent<HTMLSelectElement>) => {
-      updatePrefs({
-         currencyId: event.target.value,
-      });
-      event.stopPropagation();
-   }
+   const changeTrans = (trans_mode: string) =>
+      updatePrefs({ ledgers: {...prefs.ledgers,
+                              trans_mode: parseInt(trans_mode, 10)}});
+   const changeSplit = (split_mode: string) =>
+      updatePrefs({ ledgers: {...prefs.ledgers,
+                              split_mode: parseInt(split_mode, 10)}});
+   const changeBorders = (borders: boolean) =>
+      updatePrefs({ledgers: {...prefs.ledgers, borders}});
+   const changeDark = (dark_mode: boolean) => updatePrefs({ dark_mode });
+   const changeExpand = (defaultExpand: boolean) =>
+      updatePrefs({ ledgers: {...prefs.ledgers, defaultExpand}});
+   const changeValueColumn = (valueColumn: boolean) =>
+      updatePrefs({ledgers: {...prefs.ledgers, valueColumn}});
+   const changeCurrency = (currencyId: string) =>
+      updatePrefs({ currencyId });
 
    return (
       <>
@@ -125,17 +56,14 @@ const Settings: React.FC<SettingsProps> = p => {
                          text="Dark mode"
                      />
 
-                     <div className="option">
-                        <label htmlFor="currency">Display Currency</label>
-                        <select
-                           id="currency"
-                           onChange={changeCurrency}
-                           value={prefs.currencyId}
-                        >
-                            <Option text="EUR" value="EUR" />
-                            <Option text="USD" value="USD" />
-                        </select>
-                     </div>
+                     <Select
+                         text="Display Currency"
+                         onChange={changeCurrency}
+                         value={prefs.currencyId}
+                     >
+                        <Option text="EUR" value="EUR" />
+                        <Option text="USD" value="USD" />
+                     </Select>
 
                   </fieldset>
 
@@ -172,68 +100,60 @@ const Settings: React.FC<SettingsProps> = p => {
                          text="Expand rows by default"
                      />
 
-                     <div className="option">
-                        <label htmlFor="transmode">Memos</label>
-                        <select
-                           id="transmode"
-                           onChange={changeTrans}
-                           value={prefs.ledgers.trans_mode}
-                        >
-                            <Option
-                                text="Hide memos"
-                                value={TransactionMode.ONE_LINE}
-                            />
-                            <Option
-                                text="Show memos if not empty"
-                                value={TransactionMode.AUTO}
-                            />
-                            <Option
-                                text="Show memos always"
-                                value={TransactionMode.TWO_LINES}
-                            />
-                        </select>
-                     </div>
+                     <Select
+                         text="Memos"
+                         onChange={changeTrans}
+                         value={prefs.ledgers.trans_mode}
+                     >
+                         <Option
+                             text="Hide memos"
+                             value={TransactionMode.ONE_LINE}
+                         />
+                         <Option
+                             text="Show memos if not empty"
+                             value={TransactionMode.AUTO}
+                         />
+                         <Option
+                             text="Show memos always"
+                             value={TransactionMode.TWO_LINES}
+                         />
+                     </Select>
 
-                     <div className="option">
-                        <label htmlFor="splitmode">Splits</label>
-                        <select
-                            id="splitmode"
-                            onChange={changeSplit}
-                            value={prefs.ledgers.split_mode}
-                        >
-                            <Option
-                                text="Never show splits"
-                                value={SplitMode.HIDE}
-                            />
-                            <Option
-                                text="Show summary"
-                                value={SplitMode.SUMMARY}
-                            />
-                            <Option
-                                text="Show if more than two accounts"
-                                value={SplitMode.COLLAPSED}
-                            />
-                            <Option
-                                text="Show multiple rows, no duplicate for current"
-                                value={SplitMode.OTHERS}
-                            />
-                            <Option
-                                text="Show multiple rows"
-                                value={SplitMode.MULTILINE}
-                            />
-                        </select>
-                     </div>
+                     <Select
+                         text="Splits"
+                         onChange={changeSplit}
+                         value={prefs.ledgers.split_mode}
+                     >
+                         <Option
+                             text="Never show splits"
+                             value={SplitMode.HIDE}
+                         />
+                         <Option
+                             text="Show summary"
+                             value={SplitMode.SUMMARY}
+                         />
+                         <Option
+                             text="Show if more than two accounts"
+                             value={SplitMode.COLLAPSED}
+                         />
+                         <Option
+                             text="Show multiple rows, no duplicate for current"
+                             value={SplitMode.OTHERS}
+                         />
+                         <Option
+                             text="Show multiple rows"
+                             value={SplitMode.MULTILINE}
+                         />
+                     </Select>
 
-                     <div className="option">
-                        <label htmlFor="editing">Editing</label>
-                        <select
-                            disabled={true}
-                            id="editing"
-                        >
-                            <option>Inline</option>
-                            <option>Separate window</option>
-                        </select>
-                     </div>
+                     <Select
+                         text="Editing"
+                         disabled={true}
+                         value="inline"
+                     >
+                         <option>Inline</option>
+                         <option>Separate window</option>
+                     </Select>
                   </fieldset>
                </form>
             }

@@ -17,36 +17,3 @@
    transform: scale(1);
 }
 
-.settings form fieldset {
-   border: 0;
-   padding: 10px;
-   margin-bottom: 30px;
-}
-.settings form fieldset:last-child {
-   margin-bottom: 0;
-}
-
-.settings form legend {
-   font-weight: bold;
-   text-decoration: underline;
-}
-
-.settings .option label {
-   display: block;
-   font-weight: bold;
-   white-space: nowrap;
-   text-align: left;
-   margin: 15px 0 6px 0;
-   font-size: 0.8rem;
-}
-.settings select {
-   width: 100%;
-}
-.settings .button label {
-   font-weight: normal;
-   margin: 0;
-}
-.settings .button.disabled label {
-   color: var(--gray-400);
-}
-

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { VariableSizeList, ListChildComponentProps } from 'react-window';
-import { toDate } from 'Dates';
+import { dateToString } from 'Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Panel from 'Panel';
 import Account from 'Account';
@@ -608,7 +608,7 @@ const Ledger: React.FC<LedgerProps> = p => {
    const [future, present, reconciled, cleared, selected] = React.useMemo(
       () => {
          const future = transactions[transactions.length - 1]?.balance;
-         const formatted = toDate("today");
+         const formatted = dateToString("today");
 
          let present: undefined|number;
          let reconciled: number = 0;

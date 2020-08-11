@@ -3,7 +3,7 @@ import * as d3ScaleChromatic from 'd3-scale-chromatic';
 import { Legend, PieChart, PieLabelRenderProps,
          Pie, Cell, Tooltip, TooltipProps } from 'recharts';
 import { AccountId } from 'Transaction';
-import { RelativeDate, toDate } from 'Dates';
+import { DateRange, rangeToHttp } from 'Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
 import Account from 'Account';
@@ -73,26 +73,22 @@ const CustomTooltip = (p: TooltipProps & {data: DataType} ) => {
 };
 
 
-interface PiePlotProps {
+export interface PiePlotProps {
    expenses: boolean;
-   mindate: RelativeDate;
-   maxdate: RelativeDate;
+   range: DateRange;
 }
 
 const CategoryPie: React.FC<PiePlotProps> = p => {
    const [data, setData] = React.useState(noData);
    const { accounts } = useAccounts();
    const { prefs } = usePrefs();
-   const mindate = toDate(p.mindate);
-   const maxdate = toDate(p.maxdate);
 
    React.useEffect(
       () => {
          const dofetch = async () => {
             const resp = await window.fetch(
                `/api/plots/category/${p.expenses ? 'expenses' : 'income'}`
-               + `?mindate=${mindate}`
-               + `&maxdate=${maxdate}`
+               + `?${rangeToHttp(p.range)}`
             );
             const d: DataType = await resp.json();
 
@@ -107,7 +103,7 @@ const CategoryPie: React.FC<PiePlotProps> = p => {
          }
          dofetch();
       },
-      [p.expenses, mindate, maxdate, accounts]
+      [p.expenses, p.range, accounts]
    );
 
    const legendItem = (value: any, entry: any, index?: number) =>
