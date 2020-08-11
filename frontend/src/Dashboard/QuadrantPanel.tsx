@@ -56,10 +56,6 @@ export interface QuadrantPanelProps extends QuadrantProps, BaseProps {
    type: "quadrant";
 }
 
-export const isQuadrant = (p: BaseProps): p is QuadrantPanelProps => {
-   return p.type === "quadrant";
-}
-
 const QuadrantPanel: React.FC<DashboardPanelProps<QuadrantPanelProps>> = p => {
    return (
       <Panel
@@ -70,4 +66,12 @@ const QuadrantPanel: React.FC<DashboardPanelProps<QuadrantPanelProps>> = p => {
       </Panel>
    );
 }
-export default QuadrantPanel;
+
+export const getQuadrantPanel = (
+   d: BaseProps, s: (p: Partial<BaseProps>)=>void
+) => {
+   return d.type === "quadrant"
+      ? <QuadrantPanel data={d as QuadrantPanelProps} setData={s} />
+      : null;
+}
+

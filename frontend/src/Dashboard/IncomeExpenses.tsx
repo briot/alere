@@ -10,10 +10,6 @@ export interface IncomeExpensesProps extends PiePlotProps, BaseProps {
    type: 'incomeexpenses';
 }
 
-export const isIncomeExpense = (p: BaseProps): p is IncomeExpensesProps => {
-   return p.type === "incomeexpenses";
-}
-
 const IncomeExpenses: React.FC<DashboardPanelProps<IncomeExpensesProps>> = p => {
    const { setData } = p;
    const settings = React.useCallback(
@@ -63,4 +59,12 @@ const IncomeExpenses: React.FC<DashboardPanelProps<IncomeExpensesProps>> = p => 
       </Panel>
    );
 }
-export default IncomeExpenses;
+
+export const getIncomeExpenses = (
+   d: BaseProps, s: (p: Partial<BaseProps>)=>void
+) => {
+   return d.type === "incomeexpenses"
+      ? <IncomeExpenses data={d as IncomeExpensesProps} setData={s} />
+      : null;
+}
+

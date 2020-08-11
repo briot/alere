@@ -6,9 +6,6 @@ import Panel from 'Panel';
 export interface NetworthPanelProps extends BaseProps, NetworthProps {
    type: 'networth';
 }
-export const isNetworth = (p: BaseProps): p is NetworthPanelProps => {
-   return p.type === "networth";
-}
 
 const NetworthPanel: React.FC<DashboardPanelProps<NetworthPanelProps>> = p => {
    return (
@@ -21,4 +18,12 @@ const NetworthPanel: React.FC<DashboardPanelProps<NetworthPanelProps>> = p => {
       </Panel>
    );
 }
-export default NetworthPanel;
+
+export const getNetworthPanel = (
+   d: BaseProps, s: (p: Partial<BaseProps>)=>void
+) => {
+   return d.type === "networth"
+      ? <NetworthPanel data={d as NetworthPanelProps} setData={s} />
+      : null;
+}
+
