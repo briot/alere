@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { BaseProps } from 'Dashboard/Panels';
 import Panel from 'Panel';
-import IncomeExpenses, {
-   isIncomeExpense, IncomeExpensesProps } from 'Dashboard/IncomeExpenses';
-import NetworthPanel, {
-   isNetworth, NetworthPanelProps } from 'Dashboard/NetworthPanel';
-import QuadrantPanel, {
-   isQuadrant, QuadrantPanelProps } from 'Dashboard/QuadrantPanel';
+import {
+   getIncomeExpenses, IncomeExpensesProps } from 'Dashboard/IncomeExpenses';
+import {
+   getNetworthPanel, NetworthPanelProps } from 'Dashboard/NetworthPanel';
+import {
+   getQuadrantPanel, QuadrantPanelProps } from 'Dashboard/QuadrantPanel';
 import './Dashboard.css';
 
 interface PanelProps {
@@ -28,15 +28,10 @@ const DashboardPanel: React.FC<PanelProps> = p => {
    );
 
    const p2 = p.panels[p.index];
-   if (isIncomeExpense(p2)) {
-      return <IncomeExpenses data={p2} setData={localChange} />
-   } else if (isNetworth(p2)) {
-      return <NetworthPanel data={p2} setData={localChange} />
-   } else if (isQuadrant(p2)) {
-      return <QuadrantPanel data={p2} setData={localChange} />
-   } else {
-      return <Panel header={p2.type}>Not available</Panel>
-   }
+   return getIncomeExpenses(p2, localChange) ||
+          getNetworthPanel(p2, localChange) ||
+          getQuadrantPanel(p2, localChange) ||
+          <Panel header={p2.type}>Not available</Panel>;
 }
 
 
