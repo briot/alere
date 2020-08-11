@@ -45,9 +45,10 @@ const Dashboard: React.FC<DashboardProps> = p => {
          type: 'networth',
          rowspan: 2,
          colspan: 2,
+         showValue: true,
          showShares: false,
          showPrice: false,
-         dates: ["today", "end of last month", "end of last year"],
+         dates: ["today", "end of last month"],
       } as NetworthPanelProps,
       {
          type: 'incomeexpenses',
