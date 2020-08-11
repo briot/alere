@@ -1,22 +1,28 @@
 import * as React from 'react';
 import { Select, Option } from 'Form';
 
+export type PanelTypes =
+   'incomeexpenses' |
+   'networth' |
+   'quadrant' |
+   'upcoming' |
+   'p&l'
+   ;
+
 export interface BaseProps {
+   type: Readonly<PanelTypes>;
    rowspan: number;
    colspan: number;
 }
 
 export interface DashboardPanelProps<T extends BaseProps> {
    data: T;
-   setData: (p: (old: T) => T) => void;
+   setData: (p: Partial<T | BaseProps>) => void;
 }
 
 export const BasePropEditor = <T extends BaseProps> (p: DashboardPanelProps<T>) => {
-   const { setData } = p;
-   const changeRows = (a: string) =>
-      setData(old => ({...old, rowspan: parseInt(a, 10)}));
-   const changeCols = (a: string) =>
-      setData(old => ({...old, colspan: parseInt(a, 10)}));
+   const changeRows = (a: string) => p.setData({rowspan: parseInt(a, 10)});
+   const changeCols = (a: string) => p.setData({colspan: parseInt(a, 10)});
 
    return (
       <fieldset>

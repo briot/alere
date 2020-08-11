@@ -7,16 +7,19 @@ import { Checkbox } from 'Form';
 import Panel from 'Panel';
 
 export interface IncomeExpensesProps extends PiePlotProps, BaseProps {
+   type: 'incomeexpenses';
+}
+
+export const isIncomeExpense = (p: BaseProps): p is IncomeExpensesProps => {
+   return p.type === "incomeexpenses";
 }
 
 const IncomeExpenses: React.FC<DashboardPanelProps<IncomeExpensesProps>> = p => {
    const { setData } = p;
    const settings = React.useCallback(
       () => {
-         const changeExp = (expenses: boolean) =>
-            setData(old => ({ ...old, expenses }));
-         const changeRange = (range: DateRange) =>
-            setData(old => ({ ...old, range }));
+         const changeExp   = (expenses: boolean) => setData({ expenses });
+         const changeRange = (range: DateRange) => setData({ range });
 
          return (
             <form>
