@@ -19,11 +19,8 @@ const IncomeExpenses: React.FC<DashboardPanelProps<IncomeExpensesProps>> = p => 
 
          return (
             <form>
-               {
-                  <BasePropEditor data={p.data} setData={setData} />
-               }
                <fieldset>
-                  <legend>Profit and Loss</legend>
+                  <legend>Income and Expenses</legend>
 
                   <Checkbox
                      checked={p.data.expenses}
@@ -36,13 +33,8 @@ const IncomeExpenses: React.FC<DashboardPanelProps<IncomeExpensesProps>> = p => 
                      value={p.data.range}
                      onChange={changeRange}
                   />
-
-                  {/*
-               number of columns
-               number of rows
-                  */}
-
                </fieldset>
+               <BasePropEditor data={p.data} setData={setData} />
             </form>
       )},
       [p.data, setData]

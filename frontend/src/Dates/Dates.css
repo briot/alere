@@ -1,0 +1,7 @@
+ .multidate .row {
+    display: flex;
+    flex-flow: row nowrap;
+}
+.multidate .row button {
+   flex: 0 0 30px;
+}

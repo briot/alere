@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Option, Select } from 'Form';
+import './Dates.css';
 
 export type RelativeDate =
    "today"                 |
@@ -152,7 +153,7 @@ export const rangeDisplay = (name: DateRange): string => {
    return `from ${dateToString(r[0])} to ${dateToString(r[1])}`;
 }
 
-const DateOption = (p: {text: string, value: DateRange}) =>
+const DateRangeOption = (p: {text: string, value: DateRange}) =>
    <Option text={p.text} value={p.value} />
 
 interface DateRangePickerProps {
@@ -173,16 +174,110 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = p => {
          text={p.text}
          value={p.value}
       >
-         <DateOption text="1 day"         value="1day" />
-         <DateOption text="1 month"       value="1month" />
-         <DateOption text="3 months"      value="3months" />
-         <DateOption text="12 months"     value="12months" />
-         <DateOption text="Last month"    value="last month" />
-         <DateOption text="Current month" value="current month" />
-         <DateOption text="Month so far"  value="month so far" />
-         <DateOption text="Last year"     value="last year" />
-         <DateOption text="Current year"  value="current year" />
-         <DateOption text="All dates"     value="forever" />
+         <DateRangeOption text="1 day"         value="1day" />
+         <DateRangeOption text="1 month"       value="1month" />
+         <DateRangeOption text="3 months"      value="3months" />
+         <DateRangeOption text="12 months"     value="12months" />
+         <DateRangeOption text="Last month"    value="last month" />
+         <DateRangeOption text="Current month" value="current month" />
+         <DateRangeOption text="Month so far"  value="month so far" />
+         <DateRangeOption text="Last year"     value="last year" />
+         <DateRangeOption text="Current year"  value="current year" />
+         <DateRangeOption text="All dates"     value="forever" />
       </Select>
+   );
+}
+
+const DateOption = (p: {text: string, value: RelativeDate}) =>
+   <Option text={p.text} value={p.value} />
+
+interface RelativeDatePickerProps {
+   onChange?: (val: RelativeDate) => void;
+   text: string;
+   value: RelativeDate;
+}
+export const RelativeDatePicker: React.FC<RelativeDatePickerProps> = p => {
+   const { onChange } = p;
+   const localChange = React.useCallback(
+      (val: string) => onChange?.(val as RelativeDate),
+      [onChange]
+   );
+
+   return (
+      <Select
+         onChange={localChange}
+         text={p.text}
+         value={p.value}
+      >
+         <DateOption text="today"                value="today" />
+         <DateOption text="1 month ago"          value="1 month ago" />
+         <DateOption text="2 months ago"         value="2 months ago" />
+         <DateOption text="3 months ago"         value="3 months ago" />
+         <DateOption text="12 months ago"        value="12 months ago" />
+         <DateOption text="start of month"       value="start of month" />
+         <DateOption text="end of month"         value="end of month" />
+         <DateOption text="start of last month"  value="start of last month" />
+         <DateOption text="end of last month"    value="end of last month" />
+         <DateOption text="start of year"        value="start of year" />
+         <DateOption text="start of last year"   value="start of last year" />
+         <DateOption text="end of last year"     value="end of last year" />
+         <DateOption text="end of year before last" value="end of prev prev year" />
+         <DateOption text="earliest date"        value="epoch" />
+         <DateOption text="future"               value="armageddon" />
+      </Select>
+   );
+}
+
+
+interface MultiDatePickerProps {
+   onChange: (val: RelativeDate[]) => void;
+   text: string;
+   value: RelativeDate[];
+}
+export const MultiDatePicker: React.FC<MultiDatePickerProps> = p => {
+   const { onChange } = p;
+
+   const appendDate = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+      onChange([...p.value, "today"]);
+      event.preventDefault();
+   };
+
+   const EditItem = (p2: {idx: number}) => {
+      const changeDate = (d: RelativeDate) => {
+         onChange([...p.value.slice(0, p2.idx),
+                   d,
+                   ...p.value.slice(p2.idx + 1)]);
+      };
+      const removeDate = () => {
+         onChange([...p.value.slice(0, p2.idx),
+                   ...p.value.slice(p2.idx + 1)]);
+      };
+
+      return (
+         <div className="row">
+            <button
+               className="fa fa-remove"
+               onClick={removeDate}
+            />
+            <RelativeDatePicker
+               onChange={changeDate}
+               text=""
+               value={p.value[p2.idx]}
+            />
+         </div>
+      );
+   }
+
+   return (
+      <div className="field multidate">
+         <label>{p.text}</label>
+         {
+            p.value.map((d, i) => <EditItem idx={i} key={i} />)
+         }
+         <button
+             className="fa fa-plus"
+             onClick={appendDate}
+         />
+      </div>
    );
 }

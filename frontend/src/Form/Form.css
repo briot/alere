@@ -14,14 +14,13 @@ form legend {
 
 form .field label {
    display: block;
-   font-weight: bold;
    white-space: nowrap;
    text-align: left;
    margin: 15px 0 6px 0;
-   font-size: 0.8rem;
 }
 form select {
    width: 100%;
+   font-size: 0.8rem;
 }
 form .button label {
    font-weight: normal;

@@ -19,6 +19,7 @@ type Networth = NetworthLine[];
 
 export interface NetworthProps {
    dates: RelativeDate[];
+   showValue?: boolean;
    showPrice?: boolean;
    showShares?: boolean;
 
@@ -104,7 +105,7 @@ const Networth: React.FC<NetworthProps> = p => {
                <Account id={r.accountId} />
                {
                   dates.map((d, idx) => (
-                     <React.Fragment key={d}>
+                     <React.Fragment key={idx}>
                      {
                         p.showShares &&
                         <span>
@@ -123,12 +124,15 @@ const Networth: React.FC<NetworthProps> = p => {
                            />
                         </span>
                      }
-                     <span>
-                        <Numeric
-                           amount={r.shares[idx] * (r.price[idx] ?? NaN)}
-                           currency={prefs.currencyId}
-                        />
-                     </span>
+                     {
+                        p.showValue &&
+                        <span>
+                           <Numeric
+                              amount={r.shares[idx] * (r.price[idx] ?? NaN)}
+                              currency={prefs.currencyId}
+                           />
+                        </span>
+                     }
                   </React.Fragment>
                   ))
                }
@@ -136,8 +140,12 @@ const Networth: React.FC<NetworthProps> = p => {
          );
       },
       [data, accounts, p.showPrice, p.showShares, prefs.currencyId,
-       dates]
+       p.showValue, dates]
    );
+
+   const span = (p.showValue ? 1 : 0)
+      + (p.showShares ? 1 : 0)
+      + (p.showPrice ? 1 : 0);
 
    return (
       <div className="networth">
@@ -145,11 +153,8 @@ const Networth: React.FC<NetworthProps> = p => {
             <div className="row">
                <span>Account</span>
                {
-                  dates.map(d =>
-                     <span
-                        className={`span${1 + (p.showShares ? 1 : 0) + (p.showPrice ? 1 : 0)}`}
-                        key={d}
-                     >
+                  dates.map((d, idx) =>
+                     <span className={`span${span}`} key={idx} >
                         {d}
                      </span>)
                }
@@ -157,16 +162,19 @@ const Networth: React.FC<NetworthProps> = p => {
             {
                (p.showShares || p.showPrice) &&
                <div className="row">
+                  <span />
                   {
                      p.dates.map((d, idx) => (
-                        <React.Fragment key={d}>
+                        <React.Fragment key={idx}>
                            {
                               p.showShares && <span>Shares</span>
                            }
                            {
                               p.showPrice && <span>Price</span>
                            }
-                           <span>Value</span>
+                           {
+                              p.showValue && <span>Value</span>
+                           }
                         </React.Fragment>
                      ))
                   }
@@ -195,7 +203,7 @@ const Networth: React.FC<NetworthProps> = p => {
                <span>Total</span>
                {
                   p.dates.map((d, idx) => (
-                     <React.Fragment key={d}>
+                     <React.Fragment key={idx}>
                         {
                            p.showShares &&
                            <span>
@@ -208,12 +216,15 @@ const Networth: React.FC<NetworthProps> = p => {
                            p.showPrice &&
                            <span />
                         }
-                        <span>
-                           <Numeric
-                              amount={total[idx]}
-                              currency={prefs.currencyId}
-                           />
-                        </span>
+                        {
+                           p.showValue &&
+                           <span>
+                              <Numeric
+                                 amount={total[idx]}
+                                 currency={prefs.currencyId}
+                              />
+                           </span>
+                        }
                      </React.Fragment>
                   ))
                }

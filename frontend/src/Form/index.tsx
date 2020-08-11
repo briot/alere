@@ -2,7 +2,7 @@ import * as React from 'react';
 import "./Form.css";
 
 interface CheckboxProps {
-   checked: boolean;
+   checked: boolean|undefined;
    disabled?: boolean;
    onChange?: (val: boolean) => void;
    text?: string;
@@ -63,7 +63,10 @@ export const Select = <T extends string|number> (p: SelectProps<T>) => {
    );
    return (
       <div className="field">
-         <label htmlFor={p.text}>{p.text}</label>
+         {
+            p.text &&
+            <label htmlFor={p.text}>{p.text}</label>
+         }
          <select
             disabled={p.disabled}
             id={p.text}
