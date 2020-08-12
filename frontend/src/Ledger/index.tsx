@@ -538,7 +538,7 @@ const setupLogicalRows = (
  */
 
 interface LedgerProps {
-   setHeader?: (title: string|undefined) => void;
+   setHeader: (title: string|undefined) => void;
 }
 
 const Ledger: React.FC<LedgerProps> = p => {

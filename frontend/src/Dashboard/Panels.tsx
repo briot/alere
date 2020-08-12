@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Select, Option } from 'Form';
+import { SetHeaderProps } from 'Panel';
 
 export type PanelTypes =
    'incomeexpenses' |
@@ -9,18 +10,32 @@ export type PanelTypes =
    'p&l'
    ;
 
+/**
+ * Properties for a dashboard panel, as saved in local storage
+ */
 export interface BaseProps {
    type: Readonly<PanelTypes>;
    rowspan: number;
    colspan: number;
 }
 
-export interface DashboardPanelProps<T extends BaseProps> {
+/**
+ * Properties for the settings editor of a dashboard panel
+ */
+export interface SettingsProps<T extends BaseProps> {
    data: T;
    setData: (p: Partial<T | BaseProps>) => void;
 }
 
-export const BasePropEditor = <T extends BaseProps> (p: DashboardPanelProps<T>) => {
+export interface DashboardModule<T extends BaseProps> {
+   Settings?: React.FC<SettingsProps<T>>;
+   // A function that returns one or more <fieldset> to configure the module.
+   // It receives the current properties of the module
+
+   Content: React.FC<T & SetHeaderProps>;
+}
+
+export const BasePropEditor = <T extends BaseProps> (p: SettingsProps<T>) => {
    const changeRows = (a: string) => p.setData({rowspan: parseInt(a, 10)});
    const changeCols = (a: string) => p.setData({colspan: parseInt(a, 10)});
 

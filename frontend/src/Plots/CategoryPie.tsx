@@ -3,7 +3,8 @@ import * as d3ScaleChromatic from 'd3-scale-chromatic';
 import { Legend, PieChart, PieLabelRenderProps,
          Pie, Cell, Tooltip, TooltipProps } from 'recharts';
 import { AccountId } from 'Transaction';
-import { DateRange, rangeToHttp } from 'Dates';
+import { DateRange, rangeDisplay, rangeToHttp } from 'Dates';
+import { SetHeaderProps } from 'Panel';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
 import Account from 'Account';
@@ -78,7 +79,8 @@ export interface PiePlotProps {
    range: DateRange;
 }
 
-const CategoryPie: React.FC<PiePlotProps> = p => {
+const CategoryPie: React.FC<PiePlotProps & SetHeaderProps> = p => {
+   const { setHeader } = p;
    const [data, setData] = React.useState(noData);
    const { accounts } = useAccounts();
    const { prefs } = usePrefs();
@@ -126,6 +128,13 @@ const CategoryPie: React.FC<PiePlotProps> = p => {
          (data.items.length - index) / data.items.length)
       : (index: number) => d3ScaleChromatic.interpolateTurbo(
          (index + 1) / data.items.length)
+
+   React.useEffect(
+      () => setHeader?.(
+         `${p.expenses ? 'Expenses' : 'Income'} ${rangeDisplay(p.range)}`
+      ),
+      [setHeader, p.expenses, p.range]
+   );
 
    return (
       <AutoSizer>

@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { BaseProps, DashboardPanelProps } from 'Dashboard/Panels';
-import Panel from 'Panel';
+import { BaseProps, DashboardModule } from 'Dashboard/Panels';
+import { SetHeaderProps } from 'Panel';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
          Tooltip } from 'recharts';
 import AutoSizer from 'react-virtualized-auto-sizer';
@@ -20,7 +20,13 @@ const radar_data = [
 interface QuadrantProps {
 }
 
-const Quadrant: React.FC<QuadrantProps> = p => {
+const Quadrant: React.FC<QuadrantProps & SetHeaderProps> = p => {
+   const { setHeader } = p;
+   React.useEffect(
+      () => setHeader?.('Cashflow quadrant'),
+      [setHeader],
+   );
+
    return (
       <AutoSizer>
          {
@@ -56,22 +62,8 @@ export interface QuadrantPanelProps extends QuadrantProps, BaseProps {
    type: "quadrant";
 }
 
-const QuadrantPanel: React.FC<DashboardPanelProps<QuadrantPanelProps>> = p => {
-   return (
-      <Panel
-         cols={2}
-         header="Cashflow quadrant"
-      >
-         <Quadrant {...p.data} />
-      </Panel>
-   );
+const QuadrantModule: DashboardModule<QuadrantPanelProps> = {
+   Settings: undefined,
+   Content: Quadrant,
 }
-
-export const getQuadrantPanel = (
-   d: BaseProps, s: (p: Partial<BaseProps>)=>void
-) => {
-   return d.type === "quadrant"
-      ? <QuadrantPanel data={d as QuadrantPanelProps} setData={s} />
-      : null;
-}
-
+export default QuadrantModule;
