@@ -8,6 +8,7 @@
    box-shadow: 3px 3px 4px 0 var(--shadow-color);
    padding: 10px;
    transition: transform 0.2s;
+   font-size: 0.8rem;
 }
 
 .settings.closed {

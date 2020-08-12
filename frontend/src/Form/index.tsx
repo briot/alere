@@ -18,7 +18,7 @@ export const Checkbox: React.FC<CheckboxProps> = p => {
    );
 
    return (
-      <div className={`button option ${p.disabled ? 'disabled' : ''}`}>
+      <div className={`checkbox option ${p.disabled ? 'disabled' : ''}`}>
          <label>
             <input
                checked={p.checked}
@@ -62,10 +62,10 @@ export const Select = <T extends string|number> (p: SelectProps<T>) => {
       [onChange],
    );
    return (
-      <div className="field">
+      <div className="select">
          {
             p.text &&
-            <label htmlFor={p.text}>{p.text}</label>
+            <label htmlFor={p.text}>{p.text}: </label>
          }
          <select
             disabled={p.disabled}

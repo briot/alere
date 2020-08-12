@@ -137,11 +137,11 @@ const Settings: React.FC<SettingsProps> = p => {
                              value={SplitMode.COLLAPSED}
                          />
                          <Option
-                             text="Show multiple rows, no duplicate for current"
+                             text="Multiple rows, no duplicate"
                              value={SplitMode.OTHERS}
                          />
                          <Option
-                             text="Show multiple rows"
+                             text="Multiple rows"
                              value={SplitMode.MULTILINE}
                          />
                      </Select>
