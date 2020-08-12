@@ -29,16 +29,16 @@ export const firstSplitForAccount = (
    account: AccountId|undefined,
 ) =>
    account === undefined
-      ? t.splits[0] : t.splits.filter(s => s.account === account)[0];
+      ? t.splits.filter(s => s.amount > 0)[0]
+      : t.splits.filter(s => s.account === account)[0];
 
 /**
  * Compute what the transaction amount is, for the given account.
  * This is the sum of the splits that apply to this account.
  */
 export const amountForAccount = (t: Transaction, account: AccountId|undefined) =>
-    t.splits.reduce(
-       (acc, s) =>
-          (account === undefined || s.account === account)
-          ? acc + s.amount : acc,
-       0
-    );
+   // When no account is specified, the total sum is null by construction. So
+   // we only sum positive ones to get useful feedback
+   account === undefined
+      ? t.splits.filter(s => s.amount > 0).reduce((a, s) => a + s.amount, 0)
+      : t.splits.reduce((a, s) => s.account === account ? a + s.amount : a, 0);
