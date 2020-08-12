@@ -140,7 +140,10 @@ const rangeToDate = (name: DateRange): [RelativeDate, RelativeDate] => {
    }
 }
 
-export const rangeToHttp = (name: DateRange): string => {
+export const rangeToHttp = (name: DateRange|undefined): string => {
+   if (!name) {
+      return '';
+   }
    const r = rangeToDate(name);
    return `mindate=${dateToString(r[0])}&maxdate=${dateToString(r[1])}`;
 }
