@@ -4,6 +4,7 @@ import IncomeExpensesModule, { IncomeExpensesProps } from 'Dashboard/IncomeExpen
 import NetworthModule, { NetworthPanelProps } from 'Dashboard/NetworthPanel';
 import QuadrantModule, { QuadrantPanelProps } from 'Dashboard/QuadrantPanel';
 import LedgerModule, { LedgerPanelProps } from 'Dashboard/LedgerPanel';
+import { SplitMode, TransactionMode } from 'services/usePrefs';
 
 export const DASHBOARD_MODULES: {[name: string]: DashboardModule<any>} = {
    "incomeexpenses": IncomeExpensesModule,
@@ -43,7 +44,13 @@ const defaultDashboard: BaseProps[] = [
    } as QuadrantPanelProps,
    {
       type: 'ledger',
-      accountId: 'A000106',
+      accountId: undefined, // 'A000106',
+      range: 'current month',
+      trans_mode: TransactionMode.ONE_LINE,
+      split_mode: SplitMode.MULTILINE,
+      borders: false,
+      defaultExpand: true,
+      valueColumn: true,
       rowspan: 2,
       colspan: 2,
    } as LedgerPanelProps,

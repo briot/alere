@@ -50,6 +50,22 @@ class Transaction:
 class LedgerView(JSONView):
 
     def get_json(self, params, id: str):
+        accounts = id
+        maxdate = params.get('maxdate', [None])[0]
+        mindate = params.get('mindate', [None])[0]
+
+        if id:
+            # ??? Basic security, very wrong
+            if ';' in id:
+               return None
+            accounts = id.split(',')
+            if len(accounts) < 1:
+                accounts = id
+
+        check_date = ''
+        if maxdate:
+            check_date = "AND s.postDate <= :maxdate"
+
         # ??? Should use kmm._query_detailed_splits
         query = (f"""
         SELECT
@@ -76,16 +92,26 @@ class LedgerView(JSONView):
            t.id IN (
                SELECT DISTINCT s2.transactionId
                FROM kmmSplits s2
-               WHERE s2.accountId = :account
-           )
+               WHERE TRUE {kmm._test_accounts('s2', accounts)}
+           ) {check_date}
         ORDER BY transactionDate, transactionId
         """)
+
+        params = {
+            'account': id,
+            'maxdate': maxdate,
+        }
 
         balance = 0.0
         result = []
         current = None
 
-        for row in do_query(query, {'account': id}):
+        for row in do_query(query, params):
+            # We can only skip now, because early rows are needed to compute
+            # the balance
+            if mindate and row.date < mindate:
+                continue
+
             if row.accountId == id:
                 # ??? need to handle shares * price
                 balance += row.value

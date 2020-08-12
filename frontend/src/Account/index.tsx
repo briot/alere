@@ -6,7 +6,7 @@ import "./Account.css";
 
 interface AccountProps {
    id: AccountId;
-   noLinkIf?: AccountId;
+   noLinkIf?: AccountId|undefined;
 }
 const Account: React.FC<AccountProps> = p => {
    const { accounts } = useAccounts();
