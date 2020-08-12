@@ -21,6 +21,8 @@ export interface LedgerPrefs {
    borders: boolean;
    defaultExpand: boolean;
    valueColumn: boolean;
+   hideBalance: boolean;
+   hideReconcile: boolean;
 }
 
 export interface Preferences {
@@ -38,6 +40,8 @@ const defaultPref: Preferences = {
       borders: false,
       defaultExpand: true,
       valueColumn: false,
+      hideBalance: false,
+      hideReconcile: false,
    },
 }
 

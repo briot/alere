@@ -236,13 +236,19 @@ const FirstRow: React.FC<FirstRowProps> = p => {
                : <Account id={s.account} noLinkIf={p.accountId} />
             }
          </TD>
-         <TD kind='reconcile'>{s.reconcile}</TD>
+         {
+            !p.prefs.hideReconcile &&
+            <TD kind='reconcile'>{s.reconcile}</TD>
+         }
          {
             amountColumns(s, p.prefs.valueColumn)
          }
-         <TD kind='amount'>
-            <Numeric amount={t.balance} />
-         </TD>
+         {
+            !p.prefs.hideBalance &&
+            <TD kind='amount'>
+               <Numeric amount={t.balance} />
+            </TD>
+         }
       </TR>
    );
 }
@@ -263,11 +269,17 @@ const NotesRow: React.FC<NotesRowProps> = p => {
          <TD kind="num"></TD>
          <TD kind="notes">{p.transaction.memo}</TD>
          <TD kind="transfer" />
-         <TD kind="reconcile" />
+         {
+            !p.prefs.hideReconcile &&
+            <TD kind="reconcile" />
+         }
          {
             amountColumnsNotes(p.prefs.valueColumn)
          }
-         <TD kind="amount" />
+         {
+            !p.prefs.hideBalance &&
+            <TD kind="amount" />
+         }
       </TR>
    );
 }
@@ -291,11 +303,17 @@ const SplitRow: React.FC<SplitRowProps> = p => {
          <TD kind='transfer'>
             <Account id={s.account} noLinkIf={p.accountId} />
          </TD>
-         <TD kind='reconcile'>{s.reconcile}</TD>
+         {
+            !p.prefs.hideReconcile &&
+            <TD kind='reconcile'>{s.reconcile}</TD>
+         }
          {
             amountColumns(s, p.prefs.valueColumn)
          }
-         <TD kind='amount' />
+         {
+            !p.prefs.hideBalance &&
+            <TD kind='amount' />
+         }
       </TR>
    );
 }
@@ -545,6 +563,8 @@ export interface LedgerProps {
    borders: boolean;
    defaultExpand: boolean;
    valueColumn: boolean;
+   hideBalance: boolean;
+   hideReconcile: boolean;
 }
 
 const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
@@ -699,11 +719,17 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
                <TH kind='num' className="numeric" sortable={true}>Num</TH>
                <TH kind='payee' sortable={true}>Payee/Memos</TH>
                <TH kind='transfer' sortable={true}>From/To</TH>
-               <TH kind='reconcile'>R</TH>
+               {
+                  !p.hideReconcile &&
+                  <TH kind='reconcile'>R</TH>
+               }
                {
                   amountColumnsHeaders(p.valueColumn)
                }
-               <TH kind='amount' >Balance</TH>
+               {
+                  !p.hideBalance &&
+                  <TH kind='amount' >Balance</TH>
+               }
             </TR>
          </div>
 
@@ -790,6 +816,7 @@ export const LedgerPage: React.FC<LedgerPageProps> = p => {
          <Ledger
             setHeader={p.setHeader}
             accountId={accountId}
+            hideBalance={false}
             {...prefs.ledgers}
          />
       </Panel>

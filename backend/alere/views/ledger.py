@@ -98,7 +98,6 @@ class LedgerView(JSONView):
         """)
 
         params = {
-            'account': id,
             'maxdate': maxdate,
         }
 
