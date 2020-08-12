@@ -3,11 +3,13 @@ import { BaseProps, DashboardModule } from 'Dashboard/Panels';
 import IncomeExpensesModule, { IncomeExpensesProps } from 'Dashboard/IncomeExpenses';
 import NetworthModule, { NetworthPanelProps } from 'Dashboard/NetworthPanel';
 import QuadrantModule, { QuadrantPanelProps } from 'Dashboard/QuadrantPanel';
+import LedgerModule, { LedgerPanelProps } from 'Dashboard/LedgerPanel';
 
 export const DASHBOARD_MODULES: {[name: string]: DashboardModule<any>} = {
    "incomeexpenses": IncomeExpensesModule,
    "networth": NetworthModule,
    "quadrant": QuadrantModule,
+   "ledger": LedgerModule,
 };
 
 const defaultDashboard: BaseProps[] = [
@@ -35,15 +37,21 @@ const defaultDashboard: BaseProps[] = [
       range: "current year",
    } as IncomeExpensesProps,
    {
-      type: 'upcoming',
-      rowspan: 1,
-      colspan: 1,
-   },
-   {
       type: 'quadrant',
       rowspan: 1,
       colspan: 2,
    } as QuadrantPanelProps,
+   {
+      type: 'ledger',
+      accountId: 'A000106',
+      rowspan: 2,
+      colspan: 2,
+   } as LedgerPanelProps,
+   {
+      type: 'upcoming',
+      rowspan: 1,
+      colspan: 1,
+   },
    {
       type: 'p&l',
       rowspan: 1,

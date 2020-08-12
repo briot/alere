@@ -537,14 +537,14 @@ const setupLogicalRows = (
  * The full ledger
  */
 
-interface LedgerProps {
+export interface LedgerProps {
    setHeader: (title: string|undefined) => void;
+   accountId: AccountId;
 }
 
 const Ledger: React.FC<LedgerProps> = p => {
    const { setHeader } = p;
    const { accounts } = useAccounts();
-   const { accountId } = useParams();
    const { pushAccount } = useHistory();
    const [ rowState, setRowState ] = React.useState<RowStateProps>({});
    const [transactions, setTransactions] = React.useState<Transaction[]>([]);
@@ -555,26 +555,30 @@ const Ledger: React.FC<LedgerProps> = p => {
    React.useEffect(
       () => {
          const dofetch = async () => {
-            const resp = await window.fetch(`/api/ledger/${accountId}`);
+            const resp = await window.fetch(`/api/ledger/${p.accountId}`);
             const data = await resp.json();
             setTransactions(data);
          }
          dofetch();
-         pushAccount(accountId);
       },
-      [accountId, pushAccount]
+      [p.accountId]
    );
 
-   const name = accounts.name(accountId);
+   React.useEffect(
+      () => {
+         if (p.accountId) {
+            pushAccount(p.accountId);
+         }
+      },
+      [p.accountId, pushAccount]
+   );
+
+   const name = accounts.name(p.accountId);
 
    React.useEffect(
       () => setHeader?.(name),
       [name, setHeader]
    );
-
-   //  window.console.log('Render ledger', account,
-   //     p.transactions.length,
-   //     Object.keys(rowState).length);
 
    React.useLayoutEffect(
       () => {
@@ -582,12 +586,12 @@ const Ledger: React.FC<LedgerProps> = p => {
             transactions,
             opt.trans_mode, opt.split_mode,
             opt.defaultExpand,
-            accountId));
+            p.accountId));
          if (list.current) {
             list.current!.resetAfterIndex(0);
          }
       },
-      [transactions, accountId, opt.split_mode, opt.trans_mode,
+      [transactions, p.accountId, opt.split_mode, opt.trans_mode,
        opt.defaultExpand]
    );
 
@@ -628,12 +632,12 @@ const Ledger: React.FC<LedgerProps> = p => {
             if (present === undefined && t.date <= formatted) {
                present = t.balance;
             }
-            t.splits.filter(s => s.account === accountId).forEach(addSplit);
+            t.splits.filter(s => s.account === p.accountId).forEach(addSplit);
          }
 
          return [future, present, reconciled, cleared, selected];
       },
-      [transactions, accountId]
+      [transactions, p.accountId]
    );
 
    const Row = React.useCallback(
@@ -644,14 +648,14 @@ const Ledger: React.FC<LedgerProps> = p => {
             <TransactionRow
                style={r.style}
                transaction={t}
-               accountId={accountId}
+               accountId={p.accountId}
                prefs={opt}
                expanded={rowState[t.id]?.expanded}
                setExpanded={setTransactionExpanded}
             />
          );
       },
-      [transactions, setTransactionExpanded, rowState, accountId, opt ]
+      [transactions, setTransactionExpanded, rowState, p.accountId, opt ]
    );
 
    const getTransactionHeight = React.useCallback(
@@ -661,9 +665,9 @@ const Ledger: React.FC<LedgerProps> = p => {
          return ROW_HEIGHT * (
             1
             + noteRowsCount(t, opt.trans_mode, d?.expanded)
-            + splitRowsCount(t, opt.split_mode, d?.expanded, accountId));
+            + splitRowsCount(t, opt.split_mode, d?.expanded, p.accountId));
       },
-      [rowState, transactions, opt.trans_mode, accountId,
+      [rowState, transactions, opt.trans_mode, p.accountId,
        opt.split_mode]
    );
 
@@ -682,7 +686,7 @@ const Ledger: React.FC<LedgerProps> = p => {
         );
 
    return (
-      <Panel className={className} >
+      <div className={className} >
          <div className="thead">
             <TR>
                <TH kind='date' sortable={true}>Date</TH>
@@ -718,7 +722,7 @@ const Ledger: React.FC<LedgerProps> = p => {
 
          {
             false &&
-            <EditingRow accountId={accountId} />
+            <EditingRow accountId={p.accountId} />
          }
 
          <div className="tfoot">
@@ -765,6 +769,18 @@ const Ledger: React.FC<LedgerProps> = p => {
                }
             </TR>
          </div>
+      </div>
+   );
+}
+
+interface LedgerPageProps {
+   setHeader: (title: string|undefined) => void;
+}
+export const LedgerPage: React.FC<LedgerPageProps> = p => {
+   const { accountId } = useParams();
+   return (
+      <Panel className="main-area" >
+         <Ledger setHeader={p.setHeader} accountId={accountId} />
       </Panel>
    );
 }

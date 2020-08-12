@@ -32,6 +32,10 @@
    }
 }
 
+.main-area {
+   grid-area: main;
+}
+
 h1 {
    font-size: 1.5em;
 }
