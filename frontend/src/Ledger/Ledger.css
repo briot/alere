@@ -1,5 +1,8 @@
 .ledger {
-   grid-area: main;
+   flex: 1 1;  /* ledger itself occupies as much space as possible */
+
+   display: flex;
+   flex-flow: column nowrap;
 }
 .ledger .content {
    display: flex;
@@ -22,6 +25,7 @@
    border-width: var(--table-horiz-border-width) var(--table-vert-border-width);
    padding: 3px 2px;
    overflow: hidden;  /* obey column sizes */
+   min-width: 20px;
 
    white-space: nowrap;  /* lines should always use constant height */
    text-overflow: ellipsis;
@@ -240,6 +244,10 @@
 .ledger .amount {
    flex: 0 0 7rem;
    text-align: right;
+}
+.ledger .payee,
+.ledger .transfer {
+   min-width: 150px;
 }
 
 /*

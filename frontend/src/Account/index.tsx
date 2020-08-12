@@ -12,7 +12,6 @@ const Account: React.FC<AccountProps> = p => {
    const { accounts } = useAccounts();
    const acc = accounts.getAccount(p.id)!;
    const name = accounts.name(p.id);
-
    return (
       <span title={name} className={`account ${acc?.closed ? 'closed' : ''}`}>
          {

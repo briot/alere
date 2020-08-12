@@ -7,7 +7,8 @@ export type PanelTypes =
    'networth' |
    'quadrant' |
    'upcoming' |
-   'p&l'
+   'p&l'      |
+   'ledger'
    ;
 
 /**
