@@ -20,6 +20,7 @@ export class AccountList {
    static async fetch() {
       const resp = await window.fetch('/api/account/list');
       const acc: Account[] = await resp.json();
+      window.console.log(acc);  // MANU
       return new AccountList(acc);
    }
 
@@ -34,6 +35,11 @@ export class AccountList {
 
    currencyId(id: AccountId): string {
       return this.getAccount(id)?.currencyId || '';
+   }
+
+   isIncomeExpense(id: AccountId): boolean {
+      const ty = this.getAccount(id)?.accountType;
+      return ty === "Income" || ty === "Expense";
    }
 
    fullName(acc: Account): string {

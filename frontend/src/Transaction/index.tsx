@@ -1,3 +1,5 @@
+import { AccountList } from 'services/useAccounts';
+
 export type AccountId = string|number;
 export type TransactionId = string;
 
@@ -22,23 +24,25 @@ export interface Transaction {
 }
 
 /**
- * Return the first split that applies to the given account
+ * All splits involving an income or expense account
  */
-export const firstSplitForAccount = (
-   t: Transaction,
-   account: AccountId|undefined,
-) =>
-   account === undefined
-      ? t.splits.filter(s => s.amount > 0)[0]
-      : t.splits.filter(s => s.account === account)[0];
+export const incomeExpenseSplits = (t: Transaction, accounts: AccountList) =>
+   t.splits.filter(s => accounts.isIncomeExpense(s.account));
+
+export const amountIncomeExpense = (t: Transaction, accounts: AccountList) =>
+   incomeExpenseSplits(t, accounts).reduce((a, s) => a - s.amount, 0);
+
+/**
+ * All splits related to a specific account
+ */
+export const splitsForAccount = (t: Transaction, account: AccountId) =>
+   t.splits.filter(s => s.account === account);
 
 /**
  * Compute what the transaction amount is, for the given account.
  * This is the sum of the splits that apply to this account.
  */
-export const amountForAccount = (t: Transaction, account: AccountId|undefined) =>
+export const amountForAccount = (t: Transaction, account: AccountId) =>
    // When no account is specified, the total sum is null by construction. So
    // we only sum positive ones to get useful feedback
-   account === undefined
-      ? t.splits.filter(s => s.amount > 0).reduce((a, s) => a + s.amount, 0)
-      : t.splits.reduce((a, s) => s.account === account ? a + s.amount : a, 0);
+   splitsForAccount(t, account).reduce((a, s) => a + s.amount, 0);
