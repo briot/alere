@@ -2,6 +2,14 @@ import * as React from 'react';
 import RoundButton from 'RoundButton';
 import './Panel.css';
 
+/**
+ * Passed to any widget that can be displayed in a panel. The widget can call
+ * setHeader to change either the page's header, or a panel's header,...
+ */
+export interface SetHeaderProps {
+   setHeader?: (title: string|undefined) => void;
+}
+
 interface PanelProps {
    header?: string;
    className?: string;

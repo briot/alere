@@ -1,62 +1,36 @@
 import * as React from 'react';
-import { DateRangePicker, DateRange, rangeDisplay } from 'Dates';
+import { DateRangePicker, DateRange } from 'Dates';
 import CategoryPie, { PiePlotProps } from 'Plots/CategoryPie';
-import { BaseProps, DashboardPanelProps,
-         BasePropEditor } from 'Dashboard/Panels';
+import { BaseProps, SettingsProps, DashboardModule
+         } from 'Dashboard/Panels';
 import { Checkbox } from 'Form';
-import Panel from 'Panel';
 
 export interface IncomeExpensesProps extends PiePlotProps, BaseProps {
    type: 'incomeexpenses';
 }
 
-const IncomeExpenses: React.FC<DashboardPanelProps<IncomeExpensesProps>> = p => {
-   const { setData } = p;
-   const settings = React.useCallback(
-      () => {
-         const changeExp   = (expenses: boolean) => setData({ expenses });
-         const changeRange = (range: DateRange) => setData({ range });
-
-         return (
-            <form>
-               <fieldset>
-                  <legend>Income and Expenses</legend>
-
-                  <Checkbox
-                     checked={p.data.expenses}
-                     onChange={changeExp}
-                     text="Show expenses"
-                  />
-
-                  <DateRangePicker
-                     text="Time period"
-                     value={p.data.range}
-                     onChange={changeRange}
-                  />
-               </fieldset>
-               <BasePropEditor data={p.data} setData={setData} />
-            </form>
-      )},
-      [p.data, setData]
-   );
-
+const Settings: React.FC<SettingsProps<IncomeExpensesProps>> = p => {
+   const changeExp   = (expenses: boolean) => p.setData({ expenses });
+   const changeRange = (range: DateRange) => p.setData({ range });
    return (
-      <Panel
-         rows={p.data.rowspan}
-         cols={p.data.colspan}
-         header={`${p.data.expenses ? 'Expenses' : 'Income'} ${rangeDisplay(p.data.range)}`}
-         settings={settings}
-      >
-         <CategoryPie {...p.data} />
-      </Panel>
+      <fieldset>
+         <legend>Income and Expenses</legend>
+         <Checkbox
+            checked={p.data.expenses}
+            onChange={changeExp}
+            text="Show expenses"
+         />
+         <DateRangePicker
+            text="Time period"
+            value={p.data.range}
+            onChange={changeRange}
+         />
+      </fieldset>
    );
 }
 
-export const getIncomeExpenses = (
-   d: BaseProps, s: (p: Partial<BaseProps>)=>void
-) => {
-   return d.type === "incomeexpenses"
-      ? <IncomeExpenses data={d as IncomeExpensesProps} setData={s} />
-      : null;
+const IncomeExpensesModule: DashboardModule<IncomeExpensesProps> = {
+   Settings,
+   Content: CategoryPie,
 }
-
+export default IncomeExpensesModule;

@@ -1,8 +1,14 @@
 import * as React from 'react';
-import { BaseProps } from 'Dashboard/Panels';
-import { IncomeExpensesProps } from 'Dashboard/IncomeExpenses';
-import { NetworthPanelProps } from 'Dashboard/NetworthPanel';
-import { QuadrantPanelProps } from 'Dashboard/QuadrantPanel';
+import { BaseProps, DashboardModule } from 'Dashboard/Panels';
+import IncomeExpensesModule, { IncomeExpensesProps } from 'Dashboard/IncomeExpenses';
+import NetworthModule, { NetworthPanelProps } from 'Dashboard/NetworthPanel';
+import QuadrantModule, { QuadrantPanelProps } from 'Dashboard/QuadrantPanel';
+
+export const DASHBOARD_MODULES: {[name: string]: DashboardModule<any>} = {
+   "incomeexpenses": IncomeExpensesModule,
+   "networth": NetworthModule,
+   "quadrant": QuadrantModule,
+};
 
 const defaultDashboard: BaseProps[] = [
    {
@@ -36,7 +42,7 @@ const defaultDashboard: BaseProps[] = [
    {
       type: 'quadrant',
       rowspan: 1,
-      colspan: 1,
+      colspan: 2,
    } as QuadrantPanelProps,
    {
       type: 'p&l',
@@ -55,7 +61,7 @@ interface DashboardType {
  */
 const useDashboard = (name: string): DashboardType => {
    const [panels, setPanels] = React.useState<BaseProps[]>(defaultDashboard);
-   const KEY = `dash-${name}`;
+   const KEY = `alere-dash-${name}`;
 
    // On startup, load preferences from local storage
    React.useEffect(

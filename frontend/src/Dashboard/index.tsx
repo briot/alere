@@ -1,11 +1,19 @@
 import * as React from 'react';
-import { BaseProps } from 'Dashboard/Panels';
-import Panel from 'Panel';
-import { getIncomeExpenses } from 'Dashboard/IncomeExpenses';
-import { getNetworthPanel } from 'Dashboard/NetworthPanel';
-import { getQuadrantPanel } from 'Dashboard/QuadrantPanel';
-import useDashboard from 'services/useDashboard';
+import { BaseProps, BasePropEditor, DashboardModule } from 'Dashboard/Panels';
+import Panel, { SetHeaderProps } from 'Panel';
+import useDashboard, { DASHBOARD_MODULES } from 'services/useDashboard';
 import './Dashboard.css';
+
+const NotAvailableModule: DashboardModule<BaseProps> = {
+   Content: (p: BaseProps & SetHeaderProps) => {
+      const { setHeader } = p;
+      React.useEffect(
+         () => setHeader?.(p.type),
+         [setHeader, p.type]
+      );
+      return <span>Not available</span>
+   }
+};
 
 interface PanelProps {
    panels: BaseProps[];
@@ -13,8 +21,12 @@ interface PanelProps {
    index: number;
 }
 
-const DashboardPanel: React.FC<PanelProps> = p => {
+const DashboardPanel: React.FC<PanelProps> = React.memo(p => {
+   const [header, setHeader] = React.useState("");
    const { setPanels } = p;
+   const p2 = p.panels[p.index];
+   const m = DASHBOARD_MODULES[p2.type] || NotAvailableModule;
+
    const localChange = React.useCallback(
       (a: Partial<BaseProps>) =>
          setPanels(old => {
@@ -25,19 +37,36 @@ const DashboardPanel: React.FC<PanelProps> = p => {
       [setPanels, p.index]
    );
 
-   const p2 = p.panels[p.index];
-   return getIncomeExpenses(p2, localChange) ||
-          getNetworthPanel(p2, localChange) ||
-          getQuadrantPanel(p2, localChange) ||
-          <Panel header={p2.type}>Not available</Panel>;
-}
+   const settings = React.useCallback(
+      () => (
+         <form>
+            {
+               m.Settings &&
+               <m.Settings
+                  data={p2 as any}
+                  setData={localChange}
+               />
+            }
+            <BasePropEditor data={p2} setData={localChange} />
+         </form>
+      ),
+      [p2, localChange, m]
+   );
+
+   return (
+      <Panel
+         rows={p2.rowspan}
+         cols={p2.colspan}
+         header={header}
+         settings={settings}
+      >
+         <m.Content {...p2 as any} setHeader={setHeader} />
+      </Panel>
+   );
+});
 
 
-interface DashboardProps {
-   setHeader?: (title: string|undefined) => void;
-}
-
-const Dashboard: React.FC<DashboardProps> = p => {
+const Dashboard: React.FC<SetHeaderProps> = p => {
    const { panels, setPanels } = useDashboard('main');
    const { setHeader } = p;
 

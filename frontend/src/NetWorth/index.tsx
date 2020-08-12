@@ -5,6 +5,7 @@ import Numeric from 'Numeric';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Account from 'Account';
 import { AccountId } from 'Transaction';
+import { SetHeaderProps } from 'Panel';
 import useAccounts from 'services/useAccounts';
 import usePrefs from 'services/usePrefs';
 import "./NetWorth.css";
@@ -28,7 +29,8 @@ export interface NetworthProps {
    // threshold (absolute value).
 }
 
-const Networth: React.FC<NetworthProps> = p => {
+const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
+   const { setHeader } = p;
    const [data, setData] = React.useState<Networth>([]);
    const { accounts } = useAccounts();
    const { prefs } = usePrefs();
@@ -54,6 +56,11 @@ const Networth: React.FC<NetworthProps> = p => {
              .reduce((t, d) => t + d.shares[idx] * d.price[idx]!, 0),
       ),
       [p.dates, data]
+   );
+
+   React.useEffect(
+      () => setHeader?.('Net worth'),
+      [setHeader]
    );
 
    React.useEffect(
