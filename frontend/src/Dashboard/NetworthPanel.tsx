@@ -32,7 +32,7 @@ const Settings: React.FC<SettingsProps<NetworthPanelProps>> = p => {
             text="Show shares"
          />
          <MultiDatePicker
-            text="dates"
+            text="Columns"
             value={p.data.dates}
             onChange={changedates}
          />

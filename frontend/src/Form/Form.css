@@ -1,31 +1,52 @@
+form {
+   --vert-spacing: 5px;
+}
+
 form fieldset {
    border: 0;
+   border-top: 1px solid var(--gray-400);
    padding: 10px;
-   margin-bottom: 30px;
+   margin-bottom: 10px;
 }
 form fieldset:last-child {
    margin-bottom: 0;
 }
-
 form legend {
    font-weight: bold;
-   text-decoration: underline;
+   margin: 0 0 0 -10px;
+   padding: 0 10px 0 0;
 }
 
-form .field label {
-   display: block;
+form .select {
+   display: flex;
+   flex-flow: row nowrap;
+   align-items: center;
+   margin: var(--vert-spacing) 0;
+}
+form .select label {
+   flex: 0 0 min-content;
    white-space: nowrap;
    text-align: left;
-   margin: 15px 0 6px 0;
+   margin-right: 10px;
 }
-form select {
-   width: 100%;
+form .select select {
+   flex: 1 1;
    font-size: 0.8rem;
 }
-form .button label {
+form .select option {
+   overflow: hidden;
+}
+
+form .checkbox {
+   margin: var(--vert-spacing) 0;
+}
+form .checkbox label {
    font-weight: normal;
    margin: 0;
 }
-form .button.disabled label {
+form .checkbox input {
+   margin: 0 5px 0 0;
+}
+form .checkbox.disabled label {
    color: var(--gray-400);
 }

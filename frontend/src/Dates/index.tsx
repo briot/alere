@@ -270,14 +270,16 @@ export const MultiDatePicker: React.FC<MultiDatePickerProps> = p => {
 
    return (
       <div className="field multidate">
-         <label>{p.text}</label>
+         <label>{p.text}: </label>
          {
             p.value.map((d, i) => <EditItem idx={i} key={i} />)
          }
-         <button
-             className="fa fa-plus"
-             onClick={appendDate}
-         />
+         <div className="row">
+            <button
+                className="fa fa-plus"
+                onClick={appendDate}
+            />
+         </div>
       </div>
    );
 }
