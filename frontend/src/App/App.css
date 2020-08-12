@@ -24,11 +24,7 @@
 @media only screen and (min-width: 1025px) {
    #app {
       grid-template-columns: auto 1fr auto;
-      /*
-      grid-template-rows: var(--header-tool-height) calc(100vh - var(--header-tool-height) - var(--footer-height) - 2 * var(--row-gap)) var(--footer-height);
-      */
       grid-template-rows: auto 1fr auto;
-
       grid-template-areas:
          "lheader header rheader"
          "lsidebar main rsidebar"
@@ -44,9 +40,10 @@ h1 {
    font-style: italic;
 }
 
-text {
+/*text {
    fill: var(--panel-fg);
 }
+*/
 
 input:focus,
 button:focus,
