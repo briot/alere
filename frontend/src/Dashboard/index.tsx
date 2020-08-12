@@ -1,12 +1,10 @@
 import * as React from 'react';
 import { BaseProps } from 'Dashboard/Panels';
 import Panel from 'Panel';
-import {
-   getIncomeExpenses, IncomeExpensesProps } from 'Dashboard/IncomeExpenses';
-import {
-   getNetworthPanel, NetworthPanelProps } from 'Dashboard/NetworthPanel';
-import {
-   getQuadrantPanel, QuadrantPanelProps } from 'Dashboard/QuadrantPanel';
+import { getIncomeExpenses } from 'Dashboard/IncomeExpenses';
+import { getNetworthPanel } from 'Dashboard/NetworthPanel';
+import { getQuadrantPanel } from 'Dashboard/QuadrantPanel';
+import useDashboard from 'services/useDashboard';
 import './Dashboard.css';
 
 interface PanelProps {
@@ -40,47 +38,7 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = p => {
-   const [ panels, setPanels ] = React.useState<BaseProps[]>([
-      {
-         type: 'networth',
-         rowspan: 2,
-         colspan: 2,
-         showValue: true,
-         showShares: false,
-         showPrice: false,
-         dates: ["today", "end of last month"],
-      } as NetworthPanelProps,
-      {
-         type: 'incomeexpenses',
-         rowspan: 1,
-         colspan: 2,
-         expenses: true,
-         range: "current year",
-      } as IncomeExpensesProps,
-      {
-         type: 'incomeexpenses',
-         rowspan: 1,
-         colspan: 2,
-         expenses: false,
-         range: "current year",
-      } as IncomeExpensesProps,
-      {
-         type: 'upcoming',
-         rowspan: 1,
-         colspan: 1,
-      },
-      {
-         type: 'quadrant',
-         rowspan: 1,
-         colspan: 1,
-      } as QuadrantPanelProps,
-      {
-         type: 'p&l',
-         rowspan: 1,
-         colspan: 1,
-      },
-   ]);
-
+   const { panels, setPanels } = useDashboard('main');
    const { setHeader } = p;
 
    React.useEffect(
