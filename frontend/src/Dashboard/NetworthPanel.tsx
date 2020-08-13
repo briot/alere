@@ -8,7 +8,7 @@ export interface NetworthPanelProps extends BaseProps, NetworthProps {
    type: 'networth';
 }
 
-const Settings: React.FC<SettingsProps<NetworthPanelProps>> = p => {
+const Settings: React.FC<NetworthProps & SettingsProps<NetworthProps>> = p => {
    const changeValue = (showValue: boolean) => p.setData({ showValue });
    const changePrice = (showPrice: boolean) => p.setData({ showPrice });
    const changeShares = (showShares: boolean) => p.setData({ showShares });
@@ -17,23 +17,23 @@ const Settings: React.FC<SettingsProps<NetworthPanelProps>> = p => {
       <fieldset>
          <legend>Networth</legend>
          <Checkbox
-            checked={p.data.showValue}
+            checked={p.showValue}
             onChange={changeValue}
             text="Show values"
          />
          <Checkbox
-            checked={p.data.showPrice}
+            checked={p.showPrice}
             onChange={changePrice}
             text="Show prices"
          />
          <Checkbox
-            checked={p.data.showShares}
+            checked={p.showShares}
             onChange={changeShares}
             text="Show shares"
          />
          <MultiDatePicker
             text="Columns"
-            value={p.data.dates}
+            value={p.dates}
             onChange={changedates}
          />
       </fieldset>

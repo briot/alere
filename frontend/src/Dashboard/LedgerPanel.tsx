@@ -9,7 +9,7 @@ export interface LedgerPanelProps extends LedgerProps, BaseProps {
    type: 'ledger';
 }
 
-const Settings: React.FC<SettingsProps<LedgerPanelProps>> = p => {
+const Settings: React.FC<LedgerProps & SettingsProps<LedgerProps>> = p => {
    const changeRange = (range: DateRange) => p.setData({ range });
    const changeTrans = (trans_mode: string) =>
       p.setData({ trans_mode: parseInt(trans_mode, 10) });
@@ -24,21 +24,21 @@ const Settings: React.FC<SettingsProps<LedgerPanelProps>> = p => {
          <legend>Ledger</legend>
          <DateRangePicker
             text="Time period"
-            value={p.data.range || 'forever'}
+            value={p.range || 'forever'}
             onChange={changeRange}
          />
          <Checkbox
-             checked={p.data.borders}
+             checked={p.borders}
              onChange={changeBorders}
              text="Show borders"
          />
          <Checkbox
-             checked={p.data.valueColumn}
+             checked={p.valueColumn}
              onChange={changeValueColumn}
              text="Deposit and paiements in same column"
          />
          <Checkbox
-             checked={p.data.defaultExpand}
+             checked={p.defaultExpand}
              onChange={changeExpand}
              text="Expand rows by default"
          />
@@ -46,7 +46,7 @@ const Settings: React.FC<SettingsProps<LedgerPanelProps>> = p => {
          <Select
              text="Memos"
              onChange={changeTrans}
-             value={p.data.trans_mode}
+             value={p.trans_mode}
          >
              <Option
                  text="Hide memos"
@@ -65,7 +65,7 @@ const Settings: React.FC<SettingsProps<LedgerPanelProps>> = p => {
          <Select
              text="Splits"
              onChange={changeSplit}
-             value={p.data.split_mode}
+             value={p.split_mode}
          >
              <Option
                  text="Never show splits"
