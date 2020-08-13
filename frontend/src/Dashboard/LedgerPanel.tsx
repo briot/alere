@@ -4,13 +4,16 @@ import { SplitMode, TransactionMode } from 'services/usePrefs';
 import { Checkbox, Select, Option } from 'Form';
 import { DateRange, DateRangePicker } from 'Dates';
 import { BaseProps, SettingsProps, DashboardModule } from 'Dashboard/Panels';
+import { LedgerPrefs } from 'services/usePrefs';
 
 export interface LedgerPanelProps extends LedgerProps, BaseProps {
    type: 'ledger';
 }
 
-const Settings: React.FC<LedgerProps & SettingsProps<LedgerProps>> = p => {
-   const changeRange = (range: DateRange) => p.setData({ range });
+export const LedgerPrefsSettings:
+   React.FC<LedgerPrefs & SettingsProps<LedgerPrefs>>
+= p => {
+
    const changeTrans = (trans_mode: string) =>
       p.setData({ trans_mode: parseInt(trans_mode, 10) });
    const changeSplit = (split_mode: string) =>
@@ -22,11 +25,6 @@ const Settings: React.FC<LedgerProps & SettingsProps<LedgerProps>> = p => {
    return (
       <fieldset>
          <legend>Ledger</legend>
-         <DateRangePicker
-            text="Time period"
-            value={p.range || 'forever'}
-            onChange={changeRange}
-         />
          <Checkbox
              checked={p.borders}
              onChange={changeBorders}
@@ -89,6 +87,20 @@ const Settings: React.FC<LedgerProps & SettingsProps<LedgerProps>> = p => {
              />
          </Select>
 
+         { /*
+         <div className="option">
+            <label htmlFor="ledgermode">Show details</label>
+            <select
+                disabled={true}
+                id="ledgermode"
+            >
+                <option>Collapse splits</option>
+                <option>Expand current split</option>
+                <option>Expand all splits</option>
+            </select>
+         </div>
+         */ }
+
          <Select
              text="Editing"
              disabled={true}
@@ -97,12 +109,31 @@ const Settings: React.FC<LedgerProps & SettingsProps<LedgerProps>> = p => {
              <option>Inline</option>
              <option>Separate window</option>
          </Select>
+
+         {p.children}
       </fieldset>
+   );
+
+}
+
+export const LedgerSettings: React.FC<LedgerProps & SettingsProps<LedgerProps>>
+= p => {
+   const changeRange = (range: DateRange) => p.setData({ range });
+   return (
+      <>
+         <LedgerPrefsSettings {...p} >
+            <DateRangePicker
+               text="Time period"
+               value={p.range || 'forever'}
+               onChange={changeRange}
+            />
+         </LedgerPrefsSettings>
+      </>
    );
 }
 
 const LedgerModule: DashboardModule<LedgerPanelProps> = {
-   Settings,
+   Settings: LedgerSettings,
    Content: Ledger,
 }
 export default LedgerModule;
