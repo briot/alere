@@ -43,11 +43,11 @@ const DashboardPanel: React.FC<PanelProps> = React.memo(p => {
             {
                m.Settings &&
                <m.Settings
-                  data={p2 as any}
+                  {...p2 }
                   setData={localChange}
                />
             }
-            <BasePropEditor data={p2} setData={localChange} />
+            <BasePropEditor {...p2} setData={localChange} />
          </form>
       ),
       [p2, localChange, m]

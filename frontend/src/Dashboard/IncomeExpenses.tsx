@@ -8,20 +8,20 @@ export interface IncomeExpensesProps extends PiePlotProps, BaseProps {
    type: 'incomeexpenses';
 }
 
-const Settings: React.FC<SettingsProps<IncomeExpensesProps>> = p => {
+const Settings: React.FC<PiePlotProps & SettingsProps<PiePlotProps>> = p => {
    const changeExp   = (expenses: boolean) => p.setData({ expenses });
    const changeRange = (range: DateRange) => p.setData({ range });
    return (
       <fieldset>
          <legend>Income and Expenses</legend>
          <Checkbox
-            checked={p.data.expenses}
+            checked={p.expenses}
             onChange={changeExp}
             text="Show expenses"
          />
          <DateRangePicker
             text="Time period"
-            value={p.data.range}
+            value={p.range}
             onChange={changeRange}
          />
       </fieldset>

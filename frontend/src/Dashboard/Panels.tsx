@@ -23,20 +23,19 @@ export interface BaseProps {
 /**
  * Properties for the settings editor of a dashboard panel
  */
-export interface SettingsProps<T extends BaseProps> {
-   data: T;
-   setData: (p: Partial<T | BaseProps>) => void;
+export interface SettingsProps<T extends {}> {
+   setData: (p: Partial<T>) => void;
 }
 
 export interface DashboardModule<T extends BaseProps> {
-   Settings?: React.FC<SettingsProps<T>>;
+   Settings?: React.FC<T & SettingsProps<T>>;
    // A function that returns one or more <fieldset> to configure the module.
    // It receives the current properties of the module
 
    Content: React.FC<T & SetHeaderProps>;
 }
 
-export const BasePropEditor = <T extends BaseProps> (p: SettingsProps<T>) => {
+export const BasePropEditor = (p: BaseProps & SettingsProps<BaseProps>) => {
    const changeRows = (a: string) => p.setData({rowspan: parseInt(a, 10)});
    const changeCols = (a: string) => p.setData({colspan: parseInt(a, 10)});
 
@@ -46,7 +45,7 @@ export const BasePropEditor = <T extends BaseProps> (p: SettingsProps<T>) => {
 
          <Select
             text="Number of rows"
-            value={p.data.rowspan}
+            value={p.rowspan}
             onChange={changeRows}
          >
             <Option text="one row"     value="1" />
@@ -57,7 +56,7 @@ export const BasePropEditor = <T extends BaseProps> (p: SettingsProps<T>) => {
 
          <Select
             text="Number of columns"
-            value={p.data.colspan}
+            value={p.colspan}
             onChange={changeCols}
          >
             <Option text="one column"     value="1" />
