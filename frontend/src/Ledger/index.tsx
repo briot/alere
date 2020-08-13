@@ -570,16 +570,9 @@ const setupLogicalRows = (
  * The full ledger, for a panel
  */
 
-export interface LedgerProps {
+export interface LedgerProps extends LedgerPrefs {
    accountId: AccountId|undefined;  // undefined, to show all accounts
    range?: DateRange|undefined;      // undefined, to see forever
-   trans_mode: TransactionMode;
-   split_mode: SplitMode;
-   borders: boolean;
-   defaultExpand: boolean;
-   valueColumn: boolean;
-   hideBalance: boolean;
-   hideReconcile: boolean;
 }
 
 const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
