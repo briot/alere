@@ -4,6 +4,7 @@ import './Dates.css';
 
 export type RelativeDate =
    "today"                 |
+   "tomorrow"              |
    "1 month ago"           |
    "2 months ago"          |
    "3 months ago"          |
@@ -47,6 +48,10 @@ const addMonth = (d: Date, months: number) => {
    d.setMonth(d.getMonth() + months);
 }
 
+const addDay = (d: Date, days: number) => {
+   d.setDate(d.getDate() + days);
+}
+
 /**
  * Modifies d in place to set the last day of the year, n years ago
  */
@@ -73,6 +78,7 @@ export const dateToString = (when: RelativeDate): string => {
 
    switch (when) {
       case "today":               break;
+      case "tomorrow":            addDay(d, 1);         break;
       case "start of month":      startOfMonth(d, 0);   break;
       case "end of month":        endOfMonth(d, 0);     break;
       case "start of last month": startOfMonth(d, -1);  break;
@@ -121,7 +127,8 @@ export type DateRange =
    'last month'    |
    'current year'  |
    'last year'     |
-   'forever'
+   'forever'       |
+   'future'
    ;
 
 const rangeToDate = (name: DateRange): [RelativeDate, RelativeDate] => {
@@ -136,6 +143,7 @@ const rangeToDate = (name: DateRange): [RelativeDate, RelativeDate] => {
       case 'current year':  return ['start of year', 'today'];
       case 'last year':     return ['start of last year', 'end of last year'];
       case 'forever':       return ['epoch', 'armageddon'];
+      case 'future':        return ['tomorrow', 'armageddon'];
       default:              return ['today', 'today'];
    }
 }
@@ -151,6 +159,8 @@ export const rangeToHttp = (name: DateRange|undefined): string => {
 export const rangeDisplay = (name: DateRange): string => {
    if (name === 'forever') {
       return 'for all dates';
+   } else if (name === "future") {
+      return ", upcoming";
    }
    const r = rangeToDate(name);
    return `from ${dateToString(r[0])} to ${dateToString(r[1])}`;
@@ -187,6 +197,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = p => {
          <DateRangeOption text="Last year"     value="last year" />
          <DateRangeOption text="Current year"  value="current year" />
          <DateRangeOption text="All dates"     value="forever" />
+         <DateRangeOption text="In the future" value="future" />
       </Select>
    );
 }

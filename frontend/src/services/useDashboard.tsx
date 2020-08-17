@@ -44,8 +44,8 @@ const defaultDashboard: BaseProps[] = [
    } as QuadrantPanelProps,
    {
       type: 'ledger',
-      accountId: undefined,
-      range: 'current month',
+      accountIds: undefined,
+      range: 'future',
       trans_mode: TransactionMode.ONE_LINE,
       split_mode: SplitMode.COLLAPSED,
       borders: false,
