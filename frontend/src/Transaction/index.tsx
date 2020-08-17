@@ -3,6 +3,8 @@ import { AccountList } from 'services/useAccounts';
 export type AccountId = string|number;
 export type TransactionId = string;
 
+export type AccountIdList = AccountId[];
+
 export interface Split {
    account: AccountId;
    reconcile?: string;
@@ -35,14 +37,14 @@ export const amountIncomeExpense = (t: Transaction, accounts: AccountList) =>
 /**
  * All splits related to a specific account
  */
-export const splitsForAccount = (t: Transaction, account: AccountId) =>
-   t.splits.filter(s => s.account === account);
+export const splitsForAccounts = (t: Transaction, accounts: AccountIdList) =>
+   t.splits.filter(s => accounts.includes(s.account));
 
 /**
  * Compute what the transaction amount is, for the given account.
  * This is the sum of the splits that apply to this account.
  */
-export const amountForAccount = (t: Transaction, account: AccountId) =>
+export const amountForAccounts = (t: Transaction, accounts: AccountIdList) =>
    // When no account is specified, the total sum is null by construction. So
    // we only sum positive ones to get useful feedback
-   splitsForAccount(t, account).reduce((a, s) => a + s.amount, 0);
+   splitsForAccounts(t, accounts).reduce((a, s) => a + s.amount, 0);
