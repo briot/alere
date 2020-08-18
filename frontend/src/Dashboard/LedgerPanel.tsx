@@ -6,6 +6,7 @@ import { Checkbox, Select, Option } from 'Form';
 import { DateRange, DateRangePicker } from 'Dates';
 import { BaseProps, SettingsProps, DashboardModule } from 'Dashboard/Panels';
 import { LedgerPrefs } from 'services/usePrefs';
+import { SelectMultiAccount } from 'Account';
 
 export interface LedgerPanelProps extends LedgerProps, BaseProps {
    type: 'ledger';
@@ -120,7 +121,8 @@ export const LedgerPrefsSettings:
 const Settings: React.FC<LedgerProps & SettingsProps<LedgerProps>>
 = p => {
    const changeRange = (range: DateRange) => p.setData({ range });
-   const changeAccount = (a: AccountIdList) => p.setData({ accountIds: a });
+   const changeAccount =
+      (a: AccountIdList | undefined) => p.setData({ accountIds: a });
    return (
       <>
          <LedgerPrefsSettings {...p} >
@@ -129,13 +131,11 @@ const Settings: React.FC<LedgerProps & SettingsProps<LedgerProps>>
                value={p.range || 'forever'}
                onChange={changeRange}
             />
-      {/*
             <SelectMultiAccount
                text="Accounts"
-               value={p.accountId}
+               value={p.accountIds}
                onChange={changeAccount}
             />
-            */}
          </LedgerPrefsSettings>
       </>
    );

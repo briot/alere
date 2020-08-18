@@ -6,6 +6,7 @@ interface CheckboxProps {
    disabled?: boolean;
    onChange?: (val: boolean) => void;
    text?: string;
+   style?: React.CSSProperties;
 }
 export const Checkbox: React.FC<CheckboxProps> = p => {
    const { onChange } = p;
@@ -18,7 +19,10 @@ export const Checkbox: React.FC<CheckboxProps> = p => {
    );
 
    return (
-      <div className={`checkbox option ${p.disabled ? 'disabled' : ''}`}>
+      <div
+         className={`checkbox option ${p.disabled ? 'disabled' : ''}`}
+         style={p.style}
+      >
          <label>
             <input
                checked={p.checked}

@@ -197,7 +197,8 @@ const FirstRow: React.FC<FirstRowProps> = p => {
    let s: Split = {
       account: SPLIT_ID,
       reconcile: '',
-      amount: p.accountIds === undefined
+      amount:
+         (p.accountIds === undefined || p.accountIds.length > 1)
          ? amountIncomeExpense(t, p.accounts)
          : amountForAccounts(t, p.accountIds),
    };
@@ -208,7 +209,8 @@ const FirstRow: React.FC<FirstRowProps> = p => {
       case SplitMode.SUMMARY:
          if (t.splits.length < 3) {
             // Find the split for the account itself, to get balance
-            const splits = p.accountIds === undefined
+            const splits =
+               (p.accountIds === undefined || p.accountIds.length > 1)
                ? incomeExpenseSplits(t, p.accounts)[0]
                : splitsForAccounts(t, p.accountIds)[0];
             const s2 = {...splits};
@@ -368,7 +370,8 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
 
       switch (p.prefs.split_mode) {
          case SplitMode.SUMMARY:
-            const amount = p.accountIds === undefined
+            const amount =
+                (p.accountIds === undefined || p.accountIds.length > 1)
                 ? amountIncomeExpense(t, p.accounts)
                 : amountForAccounts(t, p.accountIds);
             if (t.splits.length > 2) {
@@ -584,7 +587,6 @@ export interface LedgerProps extends LedgerPrefs {
 const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
    const { setHeader } = p;
    const { accounts } = useAccounts();
-   const { pushAccount } = useHistory();
    const [ rowState, setRowState ] = React.useState<RowStateProps>({});
    const [transactions, setTransactions] = React.useState<Transaction[]>([]);
    const list = React.useRef<VariableSizeList>(null);
@@ -600,7 +602,7 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
             );
             const data: Transaction[] = await resp.json();
 
-            if (p.accountIds === undefined) {
+            if (p.accountIds === undefined || p.accountIds.length > 1) {
                // remove internal transfers
                setTransactions(data.filter(t =>
                   incomeExpenseSplits(t, accounts).length > 0));
@@ -611,15 +613,6 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
          dofetch();
       },
       [p.accountIds, p.range, accounts]
-   );
-
-   React.useEffect(
-      () => {
-         if (p.accountIds && p.accountIds.length === 1) {
-            pushAccount(p.accountIds[0]);
-         }
-      },
-      [p.accountIds, pushAccount]
    );
 
    React.useEffect(
@@ -846,6 +839,13 @@ interface LedgerPageProps {
 export const LedgerPage: React.FC<LedgerPageProps> = p => {
    const { accountId } = useParams();
    const { prefs } = usePrefs();
+   const { pushAccount } = useHistory();
+
+   React.useEffect(
+      () => pushAccount(accountId),
+      [accountId, pushAccount]
+   );
+
    return (
       <Panel className="main-area" >
          <Ledger

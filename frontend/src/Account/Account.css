@@ -6,3 +6,9 @@
    text-overflow: ellipsis;
    white-space: nowrap;
 }
+
+.multiAccountSelect div {
+   min-height: 200px;
+   background: var(--input-background);
+   white-space: nowrap;
+}
