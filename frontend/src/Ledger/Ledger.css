@@ -119,6 +119,7 @@
 }
 .ledger .thead .tr:hover .th.sortable:after {
    content: "\f0dc" !important;
+   position: absolute;  /* do not impact the rest of the layout */
 }
 .ledger .thead .tr .th.sorted-down:after {
    content: "\f0dd";

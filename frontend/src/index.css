@@ -86,6 +86,7 @@
    --grey: var(--gray-300);
    --color-on-grey: var(--fg-100);  /* text color on --grey background */
    --focus-color: var(--color-100);
+   --input-background: white;
 
    --toolbar-background: none;
    --toolbar-background2: none;
