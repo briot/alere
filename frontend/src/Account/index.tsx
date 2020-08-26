@@ -35,7 +35,7 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
          if (checked) {
             if (!cp.includes(r.id)) {
                if (cp.length === tree.length - 1) {
-                  p.onChange(undefined);
+                  p.onChange(undefined);  // shortcut for all accounts
                } else {
                   p.onChange([...cp, r.id]);
                }
