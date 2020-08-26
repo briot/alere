@@ -46,9 +46,10 @@ export const Input: React.FC<InputProps> = p => {
 
 interface ButtonProps extends SharedInputProps {
    primary?: boolean;
+   className?: string;
 }
 export const Button: React.FC<ButtonProps> = p => {
-   const c = `button${p.disabled ? ' disabled' : ''}${p.primary ? ' primary' : ''}`;
+   const c = `button ${p.className || ''}${p.disabled ? ' disabled' : ''}${p.primary ? ' primary' : ''}`;
    return (
       <button
          className={c}

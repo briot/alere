@@ -17,17 +17,17 @@ button.primary,
    border: 1px solid var(--input-primary-border);
    color: var(--input-primary-foreground);
 }
-form .disabled button:hover {
+.disabled button:hover {
    filter: brightness(100%); /* keep normal background */
 }
 button:hover {
    filter: brightness(var(--input-brightness-hover));
 }
-form .disabled,
-form .disabled input,
-form .disabled button,
-form .disabled select {
-   color: var(--input-disabled-fg) !important;
+.disabled,
+.disabled input,
+.disabled button,
+.disabled select {
+   filter: brightness(80%);
 }
 
 input[type=text],
@@ -113,11 +113,8 @@ form .checkbox > input:active {
     border: 2px solid var(--input-primary-background); 
 }
 
-form button {
+button {
    font-size: 1rem;
    min-width: 10ch;
    border-radius: 0.5em;
-}
-form button + button {
-   margin-left: 30px;
 }

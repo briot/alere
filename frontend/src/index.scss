@@ -77,7 +77,6 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --font-size-sidebar: 15px;
    --font-size-tool: 13px;
    --scrollbar-width: 15px;  /* for webkit + chrome */
-   --tool-border-radius: 1rem;
    --table-vert-border-width: 0px;
    --table-horiz-border-width: 0px;
    --header-tool-height: 40px;
@@ -101,11 +100,8 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --table-row-first-background: none;
    --table-row-details-background: none;
    --table-row-details-fg: var(--gray-600);
-   --grey: var(--gray-300);
-   --color-on-grey: var(--fg-100);  /* text color on --grey background */
    --focus-color: var(--color-500);
 
-   --input-disabled-fg: var(--gray-500);
    --input-background: var(--gray-700);
    --input-foreground: var(--gray-fg-700);
    --input-border: var(--gray-800);
@@ -119,16 +115,12 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --neumorph-selected-dark: rgba(40,40,40,.2);
    --neumorph-fg: var(--color-300);  // foreground in roundbuttons
 
-   --toolbar-background: none;
-   --toolbar-background2: none;
-
    --expand-arrow-color: var(--gray-700);
 
    --shadow-color: var(--gray-900-80p);
 
-   --tool-color: var(--panel-fg);
-   --tool-background: var(--page-background);
-   --tool-border: none;
+   --tool-color: var(--fg-gray-800);
+   --tool-background: var(--gray-800);
 
    --scrollbar-fg: var(--color-200);
    --scrollbar-bg: var(--panel-background);
@@ -138,19 +130,17 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
 .lightpalette {
    --page-background: var(--gray-100);
    --panel-background: #f0f0f0;
-   --panel-fg: var(-fg-gray-200);
+   --panel-fg: var(-fg-gray-100);
    --background-summary-popup: rgba(0,0,0,0.9);
    --summary-background: rgba(255,255,255,0.2);
+   --focus-color: var(--color-500);
+
    --table-color: #b1afaf;
    --table-hover-background: var(--gray-200);
    --table-row-first-background: none;
    --table-row-details-background: none;
    --table-row-details-fg: var(--gray-500);
-   --grey: var(--gray-300);
-   --color-on-grey: var(--fg-100);  /* text color on --grey background */
-   --focus-color: var(--color-500);
 
-   --input-disabled-fg: var(--gray-600);
    --input-background: white;
    --input-foreground: var(--white-fg);
    --input-border: var(--gray-100);
@@ -158,9 +148,6 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --input-primary-foreground: var(--fg-color-500);
    --input-primary-border: var(--color-600);
    --input-brightness-hover: 85%;
-
-   --toolbar-background: none;
-   --toolbar-background2: none;
 
    --neumorph-light: rgba(255,255,255,0.5);
    --neumorph-dark: rgba(70,70,70,.12);
@@ -171,9 +158,8 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
 
    --shadow-color: var(--neumorph-dark);
 
-   --tool-color: var(--gray-700);
+   --tool-color: var(--fg-gray-200);
    --tool-background: var(--gray-200);
-   --tool-border: none;
 
    --scrollbar-fg: var(--color-200);
    --scrollbar-bg: var(--panel-background);
