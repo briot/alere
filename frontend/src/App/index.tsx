@@ -6,6 +6,7 @@ import LeftSideBar from 'LeftSideBar';
 import RightSideBar from 'RightSideBar';
 import { LedgerPage } from 'Ledger';
 import usePrefs from 'services/usePrefs';
+import StyleGuide from 'StyleGuide';
 import './App.css';
 import "font-awesome/css/font-awesome.min.css";
 
@@ -14,21 +15,27 @@ const App: React.FC<{}> = () => {
    const [header, setHeader] = React.useState<string|undefined>('');
 
    return (
-     <div id="app" className={prefs.dark_mode ? 'dark' : 'light' }>
-         <Header title={header} />
-         <LeftSideBar />
-         <RightSideBar />
+      <Switch>
+         <Route path="/styleguide">
+             <StyleGuide />
+         </Route>
+         <Route>
+            <div id="app" className={prefs.dark_mode ? 'page darkpalette' : 'page lightpalette' }>
+               <Header title={header} />
+               <LeftSideBar />
+               <RightSideBar />
 
-         <Switch>
-             <Route path="/ledger/:accountId">
-                <LedgerPage setHeader={setHeader} />
-             </Route>
-             <Route>
-                <Dashboard setHeader={setHeader} />
-             </Route>
-         </Switch>
-
-     </div>
+               <Switch>
+                   <Route path="/ledger/:accountId">
+                      <LedgerPage setHeader={setHeader} />
+                   </Route>
+                   <Route>
+                      <Dashboard setHeader={setHeader} />
+                   </Route>
+               </Switch>
+            </div>
+         </Route>
+      </Switch>
    );
 }
 
