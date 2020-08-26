@@ -17,6 +17,8 @@ interface NetworthLine {
 }
 type Networth = NetworthLine[];
 
+const NW_LINE_HEIGHT = 25;  // sync with var(--nw-line-height)
+
 
 export interface NetworthProps {
    dates: RelativeDate[];
@@ -196,7 +198,7 @@ const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
                         width={width}
                         height={height}
                         itemCount={data.length}
-                        itemSize={20}
+                        itemSize={NW_LINE_HEIGHT}
                         itemKey={getKey}
                      >
                         {getRow}

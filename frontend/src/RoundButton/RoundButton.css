@@ -13,7 +13,8 @@
    color: var(--neumorph-fg);
 }
 .roundButton.selected span:last-child {
-   font-weight: bold;
+   color: var(--neumorph-fg);
+   Afont-weight: bold;
 }
 
 /* the text. This rule must come first, in case we show no text */
