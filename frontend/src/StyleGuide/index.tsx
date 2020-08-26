@@ -40,6 +40,8 @@ const StyleContent: React.FC<{}> = p => {
                   <Button text="danger" danger={true} />
                   <Button text="disabled" disabled={true} />
                   <Button text="disabled" disabled={true} primary={true}/>
+                  <Button text="neumorphism" className="morph"/>
+                  <Button text="neumorph disabled" className="morph" disabled={true}/>
                </div>
             </fieldset>
          </form>
@@ -67,19 +69,40 @@ const StyleContent: React.FC<{}> = p => {
                <RoundButton fa="fa-book" size="small"  selected={true} text="Small" />
                <RoundButton fa="fa-book" size="tiny"   selected={true} text="Tiny" />
             </div>
-            <div className="wrappedRow">
-               <Button text="label" className="morph"/>
-               <Button text="primary" className="morph" primary={true} />
-               <Button text="disabled" className="morph" disabled={true} />
-               <Button text="disabled" className="morph" primary={true} disabled={true}/>
-            </div>
          </>
+      );
+   }
+
+   const text = () => {
+      return (
+         <div>
+            <p>
+Sussex result matter any end see. It speedily me addition weddings vicinity in
+pleasure. Happiness commanded an conveying breakfast in.  Regard her say
+warmly elinor. Him these are visit front end for seven walls. Money eat scale
+now ask law learn. Side its they just any upon see last. He prepared no
+shutters perceive do greatest. Ye at unpleasant solicitude in companions
+interested.
+            </p>
+            <p lang="it">
+Sussex result matter any end see. It speedily me addition weddings vicinity in
+pleasure. Happiness commanded an conveying breakfast in.  Regard her say
+warmly elinor. Him these are visit front end for seven walls. Money eat scale
+now ask law learn. Side its they just any upon see last. He prepared no
+shutters perceive do greatest. Ye at unpleasant solicitude in companions
+interested.
+            </p>
+            <h1>H1 title</h1>
+            <h2>H2 title</h2>
+            <h3>H3 title</h3>
+            <h4>H4 title</h4>
+         </div>
       );
    }
 
    return (
       <>
-         <h1>Palette</h1>
+         <h4>Palette</h4>
          <div className="palette">
             <span className="color100">color-100</span>
             <span className="color200">color-200</span>
@@ -114,7 +137,7 @@ const StyleContent: React.FC<{}> = p => {
             <span className="invalid900">invalid-900</span>
          </div>
 
-         <h1>Forms</h1>
+         <h4>Forms</h4>
          <div className="twocolumn">
             <div className="panel">
                {form()}
@@ -124,13 +147,23 @@ const StyleContent: React.FC<{}> = p => {
             </div>
          </div>
 
-         <h1>Round buttons</h1>
+         <h4>Round buttons</h4>
          <div className="twocolumn">
             <div className="panel">
                {roundbutton()}
             </div>
             <div>
                {roundbutton()}
+            </div>
+         </div>
+
+         <h4>Text</h4>
+         <div className="twocolumn">
+            <div className="panel">
+               {text()}
+            </div>
+            <div>
+               {text()}
             </div>
          </div>
       </>
