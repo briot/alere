@@ -33,9 +33,12 @@ const StyleContent: React.FC<{}> = p => {
                </Select>
                <Input placeholder="placeholder" text="input" />
                <Input placeholder="placeholder" disabled={true} text="disabled"/>
-               <Button text="label" />
-               <Button text="primary" primary={true} />
-               <Button text="disabled" disabled={true} />
+               <div className="wrappedRow">
+                  <Button text="label" />
+                  <Button text="primary" primary={true} />
+                  <Button text="disabled" disabled={true} />
+                  <Button text="disabled" disabled={true} primary={true}/>
+               </div>
             </fieldset>
          </form>
       );
@@ -44,23 +47,29 @@ const StyleContent: React.FC<{}> = p => {
    const roundbutton = () => {
       return (
          <>
-            <div className="palette">
+            <div className="wrappedRow">
                <RoundButton fa="fa-book" size="large"  text="Large" url="#"/>
                <RoundButton fa="fa-book" size="normal" text="Normal" url="#"/>
                <RoundButton fa="fa-book" size="small"  text="Small" url="#"/>
                <RoundButton fa="fa-book" size="tiny"   text="Tiny" url="#"/>
             </div>
-            <div className="palette">
+            <div className="wrappedRow">
                <RoundButton fa="fa-book" size="large"  disabled={true} text="Large" />
                <RoundButton fa="fa-book" size="normal" disabled={true} text="Normal" />
                <RoundButton fa="fa-book" size="small"  disabled={true} text="Small" />
                <RoundButton fa="fa-book" size="tiny"   disabled={true} text="Tiny" />
             </div>
-            <div className="palette">
+            <div className="wrappedRow">
                <RoundButton fa="fa-book" size="large"  selected={true} text="Large" />
                <RoundButton fa="fa-book" size="normal" selected={true} text="Normal" />
                <RoundButton fa="fa-book" size="small"  selected={true} text="Small" />
                <RoundButton fa="fa-book" size="tiny"   selected={true} text="Tiny" />
+            </div>
+            <div className="wrappedRow">
+               <Button text="label" className="morph"/>
+               <Button text="primary" className="morph" primary={true} />
+               <Button text="disabled" className="morph" disabled={true} />
+               <Button text="disabled" className="morph" primary={true} disabled={true}/>
             </div>
          </>
       );

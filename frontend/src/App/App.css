@@ -67,12 +67,13 @@ a:hover {
 }
 
 .morph {
-   background: inherit !important;
-   border-color: var(--neumorph-bg);
+   background: inherit;
+   border-width: 0;
    box-shadow:
        -6px -6px 10px 0 var(--neumorph-light),
        6px 6px 10px 0 var(--neumorph-dark);
 }
+.disabled.morph:hover,
 .disabled .morph:hover {
    box-shadow:
        -6px -6px 10px 0 var(--neumorph-light),
