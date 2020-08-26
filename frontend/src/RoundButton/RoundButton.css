@@ -16,10 +16,6 @@
    font-weight: bold;
 }
 
-.roundButton.disabled {
-   color: var(--input-disabled-fg);
-}
-
 /* the text. This rule must come first, in case we show no text */
 .roundButton span:last-child {
    flex: 1 1;
