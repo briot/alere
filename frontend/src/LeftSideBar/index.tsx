@@ -13,7 +13,8 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
       <div id='lsidebar'>
          <RoundButton
             fa="fa-tachometer"
-            selected={location.pathname.startsWith('/dashboard')}
+            selected={location.pathname.startsWith('/dashboard') ||
+                      location.pathname === '/'}
             size='large'
             text="Overview"
             url="/dashboard"
