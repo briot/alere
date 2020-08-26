@@ -1,7 +1,71 @@
 import * as React from 'react';
+import { Button, Checkbox, Input, Select, Option } from 'Form';
+import RoundButton from 'RoundButton';
 import './StyleGuide.css';
 
 const StyleContent: React.FC<{}> = p => {
+   const form = () => {
+      return (
+         <form onSubmit={(e) => e.preventDefault()}>
+            <fieldset>
+               <legend>Fieldset</legend>
+               <div className="twocolumn">
+                  <div>
+                     <Checkbox checked={true} text='label' />
+                     <Checkbox checked={false} text='unchecked' />
+                  </div>
+                  <div>
+                     <Checkbox checked={true} text='disabled' disabled={true} />
+                     <Checkbox
+                        checked={true}
+                        text='indeterminate'
+                        indeterminate={true}
+                     />
+                  </div>
+               </div>
+               <Select text="label" value="1">
+                  <Option text="choice1" value="1" />
+                  <Option text="choice2" value="2" />
+               </Select>
+               <Select text="disabled" disabled={true} value="1">
+                  <Option text="choice1" value="1" />
+                  <Option text="choice2" value="2" />
+               </Select>
+               <Input placeholder="placeholder" text="input" />
+               <Input placeholder="placeholder" disabled={true} text="disabled"/>
+               <Button text="label" />
+               <Button text="primary" primary={true} />
+               <Button text="disabled" disabled={true} />
+            </fieldset>
+         </form>
+      );
+   }
+
+   const roundbutton = () => {
+      return (
+         <>
+            <div className="palette">
+               <RoundButton fa="fa-book" size="large"  text="Large" url="#"/>
+               <RoundButton fa="fa-book" size="normal" text="Normal" url="#"/>
+               <RoundButton fa="fa-book" size="small"  text="Small" url="#"/>
+               <RoundButton fa="fa-book" size="tiny"   text="Tiny" url="#"/>
+            </div>
+            <div className="palette">
+               <RoundButton fa="fa-book" size="large"  disabled={true} text="Large" />
+               <RoundButton fa="fa-book" size="normal" disabled={true} text="Normal" />
+               <RoundButton fa="fa-book" size="small"  disabled={true} text="Small" />
+               <RoundButton fa="fa-book" size="tiny"   disabled={true} text="Tiny" />
+            </div>
+            <div className="palette">
+               <RoundButton fa="fa-book" size="large"  selected={true} text="Large" />
+               <RoundButton fa="fa-book" size="normal" selected={true} text="Normal" />
+               <RoundButton fa="fa-book" size="small"  selected={true} text="Small" />
+               <RoundButton fa="fa-book" size="tiny"   selected={true} text="Tiny" />
+            </div>
+         </>
+      );
+   }
+
    return (
       <>
          <h1>Palette</h1>
@@ -26,6 +90,26 @@ const StyleContent: React.FC<{}> = p => {
             <span className="gray700">gray-700</span>
             <span className="gray800">gray-800</span>
             <span className="gray900">gray-900</span>
+         </div>
+
+         <h1>Forms</h1>
+         <div className="twocolumn">
+            <div className="panel">
+               {form()}
+            </div>
+            <div style={{marginTop: 20}} >
+               {form()}
+            </div>
+         </div>
+
+         <h1>Round buttons</h1>
+         <div className="twocolumn">
+            <div className="panel">
+               {roundbutton()}
+            </div>
+            <div>
+               {roundbutton()}
+            </div>
          </div>
       </>
    );

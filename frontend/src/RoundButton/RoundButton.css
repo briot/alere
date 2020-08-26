@@ -6,18 +6,18 @@
    align-items: center;        /* align children vertically */
    justify-content: space-between;
    outline: none;
-   color: var(--button-fg);
+   color: var(--input-foreground);
 }
 
 .roundButton.selected span:first-child {
-   color: var(--color-500);
+   color: var(--neumorph-fg);
 }
 .roundButton.selected span:last-child {
    font-weight: bold;
 }
 
 .roundButton.disabled {
-   color: var(--button-disabled-fg);
+   color: var(--input-disabled-fg);
 }
 
 /* the text. This rule must come first, in case we show no text */
@@ -28,6 +28,10 @@
    white-space: nowrap;
    text-overflow: ellipsis;
    overflow: hidden;
+}
+
+a.roundButton:hover {
+   text-decoration: none;
 }
 
 .roundButton.large {

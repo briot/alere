@@ -69,7 +69,7 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
                      width={width}
                      height={height}
                      itemCount={filteredTree.length}
-                     itemSize={20}
+                     itemSize={25}
                      itemKey={getKey}
                   >
                      {getRow}

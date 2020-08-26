@@ -1,12 +1,46 @@
 form {
-   --vert-spacing: 5px;
+   --vert-spacing: .5em;
+}
+
+input,
+button,
+select {
+   background-color: var(--input-background);
+   border: 1px solid var(--input-border);
+   color: var(--input-foreground);
+   padding: 0.25em;
+}
+.primary input,
+button.primary,
+.primary select {
+   background-color: var(--input-primary-background);
+   border: 1px solid var(--input-primary-border);
+   color: var(--input-primary-foreground);
+}
+form .disabled button:hover {
+   filter: brightness(100%); /* keep normal background */
+}
+button:hover {
+   filter: brightness(var(--input-brightness-hover));
+}
+form .disabled,
+form .disabled input,
+form .disabled button,
+form .disabled select {
+   color: var(--input-disabled-fg) !important;
+}
+
+input[type=text],
+select {
+   flex: 1 1;
+   font-size: 0.8rem;
 }
 
 form fieldset {
    border: 0;
    border-top: 1px solid var(--gray-400);
    padding: 10px;
-   margin-bottom: 10px;
+   margin-bottom: calc(2 * var(--vert-spacing));
 }
 form fieldset:last-child {
    margin-bottom: 0;
@@ -17,36 +51,73 @@ form legend {
    padding: 0 10px 0 0;
 }
 
-form .select {
+form label {
+   display: block;   /* one field per line */
+   margin: var(--vert-spacing) 0;
+   white-space: nowrap;
+   text-align: left;
+   font-weight: normal;
+
+   /* center text with input field */
    display: flex;
    flex-flow: row nowrap;
    align-items: center;
-   margin: var(--vert-spacing) 0;
 }
-form .select label {
-   flex: 0 0 min-content;
-   white-space: nowrap;
-   text-align: left;
-   margin-right: 10px;
+form label > span {
+   margin-right: 10px;   /* space between text and input field */
+   min-width: 100px;     /* basic alignment of labels and fields */
 }
-form .select select {
-   flex: 1 1;
-   font-size: 0.8rem;
-}
+
 form .select option {
    overflow: hidden;
 }
 
 form .checkbox {
-   margin: var(--vert-spacing) 0;
-}
-form .checkbox label {
-   font-weight: normal;
-   margin: 0;
+   position: relative;   /* for positioning of span:before */
 }
 form .checkbox input {
    margin: 0 5px 0 0;
+
+   /* replace default appearance, since we cannot control colors there */
+   -webkit-appearance: none;
+   -moz-appearance: none;
+   appearance: none;
+   height: 1.8em;
+   width: 1.8em;
+   border: 1px solid var(--input-primary-background);
+   border-radius: 0.5em;
+   cursor: pointer;
 }
-form .checkbox.disabled label {
-   color: var(--gray-400);
+form .checkbox > input:indeterminate,
+form .checkbox > input:checked {
+    border: 1px solid var(--input-primary-background);
+    background-color: var(--input-primary-background);
+}
+form .checkbox > input:indeterminate + span::before,
+form .checkbox > input:checked + span::before {
+    display: block;
+    text-align: center;
+    color: var(--input-primary-foreground);
+    position: absolute;
+    left: 0.3rem;
+    top: 50%;
+    transform: translateY(-50%);
+}
+form .checkbox > input:checked + span::before {
+    content: '\2713';
+}
+form .checkbox > input:indeterminate + span::before {
+    content: '-';
+}
+form .checkbox > input:active {
+    border: 2px solid var(--input-primary-background); 
+}
+
+form button {
+   font-size: 1rem;
+   min-width: 10ch;
+   border-radius: 0.5em;
+}
+form button + button {
+   margin-left: 30px;
 }

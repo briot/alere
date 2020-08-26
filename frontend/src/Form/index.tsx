@@ -1,12 +1,69 @@
 import * as React from 'react';
 import "./Form.css";
 
-interface CheckboxProps {
-   checked: boolean|undefined;
+interface SharedInputProps {
    disabled?: boolean;
-   onChange?: (val: boolean) => void;
    text?: string;
    style?: React.CSSProperties;
+}
+
+const SharedInput: React.FC<
+   SharedInputProps & {textAfter?: boolean, className?: string}
+> = p => {
+   return (
+      <label
+         className={`${p.className || ''}${p.disabled ? ' disabled' : ''}`}
+         style={p.style}
+      >
+         {
+            !p.textAfter && p.text && <span>{p.text}:</span>
+         }
+         {p.children}
+         {
+            p.textAfter && p.text && <span>{p.text}</span>
+         }
+      </label>
+   );
+}
+
+interface InputProps extends SharedInputProps {
+   placeholder?: string;
+   type?: 'text';
+   value?: string;
+}
+export const Input: React.FC<InputProps> = p => {
+   return (
+      <SharedInput className="input" {...p}>
+         <input
+            disabled={p.disabled}
+            placeholder={p.placeholder}
+            type={p.type || 'text'}
+            value={p.value}
+         />
+      </SharedInput>
+   );
+}
+
+interface ButtonProps extends SharedInputProps {
+   primary?: boolean;
+}
+export const Button: React.FC<ButtonProps> = p => {
+   const c = `button${p.disabled ? ' disabled' : ''}${p.primary ? ' primary' : ''}`;
+   return (
+      <button
+         className={c}
+         disabled={p.disabled}
+         style={p.style}
+      >
+         {p.text}
+      </button>
+   );
+}
+
+
+interface CheckboxProps extends SharedInputProps {
+   checked: boolean|undefined;
+   onChange?: (val: boolean) => void;
    indeterminate?: boolean;
 }
 export const Checkbox: React.FC<CheckboxProps> = p => {
@@ -29,21 +86,15 @@ export const Checkbox: React.FC<CheckboxProps> = p => {
    );
 
    return (
-      <div
-         className={`checkbox option ${p.disabled ? 'disabled' : ''}`}
-         style={p.style}
-      >
-         <label>
-            <input
-               checked={p.checked}
-               disabled={p.disabled}
-               ref={indetSetter}
-               onChange={localChange}
-               type="checkbox"
-            />
-            {p.text}
-         </label>
-      </div>
+      <SharedInput className="checkbox" textAfter={true} {...p}>
+         <input
+            checked={p.checked}
+            disabled={p.disabled}
+            ref={indetSetter}
+            onChange={localChange}
+            type="checkbox"
+         />
+      </SharedInput>
    );
 }
 
@@ -59,10 +110,8 @@ export const Option = <T extends string|number> (p: OptionProps<T>) => {
 }
 
 
-interface SelectProps<T> {
-   disabled?: boolean;
+interface SelectProps<T> extends SharedInputProps {
    onChange?: (val: string) => void;
-   text: string;
    value: T;
    children?: React.ReactNode|React.ReactNode[];
 }
@@ -77,19 +126,14 @@ export const Select = <T extends string|number> (p: SelectProps<T>) => {
       [onChange],
    );
    return (
-      <div className="select">
-         {
-            p.text &&
-            <label htmlFor={p.text}>{p.text}: </label>
-         }
+      <SharedInput className="select" {...p} >
          <select
             disabled={p.disabled}
-            id={p.text}
             onChange={localChange}
             value={p.value}
          >
              {p.children}
          </select>
-      </div>
+      </SharedInput>
    );
 }

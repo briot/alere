@@ -83,7 +83,7 @@ a:hover {
        -6px -6px 10px 0 var(--neumorph-light),
        6px 6px 10px 0 var(--neumorph-dark),
        inset -6px -6px 8px 0 var(--neumorph-light),
-       inset 6px 6px 8px 0 var(--neumorph-dark);
+       inset 6px 6px 8px 0 var(--neumorph-selected-dark);
    transition: box-shadow 0.1s;
 }
 .selected .morph {
@@ -91,7 +91,7 @@ a:hover {
        -6px -6px 10px 0 var(--neumorph-light),
        6px 6px 10px 0 var(--neumorph-dark),
        inset -6px -6px 10px 0 var(--neumorph-light),
-       inset 6px 6px 10px 0 var(--neumorph-dark);
+       inset 6px 6px 10px 0 var(--neumorph-selected-dark);
 }
 
 /*
