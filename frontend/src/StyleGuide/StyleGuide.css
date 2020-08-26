@@ -1,0 +1,42 @@
+.styleguide {
+   width: 100vw;
+   height: 100vh;
+   background: black;
+
+   display: flex;
+   flex-flow: row nowrap;
+   align-items: stretch;
+   gap: 20px;
+}
+.styleguide > div {
+   flex: 1 1;
+}
+.styleguide .palette {
+   display: flex;
+   flex-flow: row nowrap;
+   gap: 5px;
+   height: 40px;
+}
+.styleguide .palette span {
+   flex: 1 1;
+   display: flex;
+   align-items: center;
+}
+.styleguide .color100 { background: var(--color-100); color: var(--fg-100); }
+.styleguide .color200 { background: var(--color-200); color: var(--fg-200); }
+.styleguide .color300 { background: var(--color-300); color: var(--fg-300); }
+.styleguide .color400 { background: var(--color-400); color: var(--fg-400); }
+.styleguide .color500 { background: var(--color-500); color: var(--fg-500); }
+.styleguide .color600 { background: var(--color-600); color: var(--fg-600); }
+.styleguide .color700 { background: var(--color-700); color: var(--fg-700); }
+.styleguide .color800 { background: var(--color-800); color: var(--fg-800); }
+.styleguide .color900 { background: var(--color-900); color: var(--fg-900);}
+.styleguide .gray100  { background: var(--gray-100);  }
+.styleguide .gray200  { background: var(--gray-200);  }
+.styleguide .gray300  { background: var(--gray-300);  }
+.styleguide .gray400  { background: var(--gray-400);  }
+.styleguide .gray500  { background: var(--gray-500);  }
+.styleguide .gray600  { background: var(--gray-600);  }
+.styleguide .gray700  { background: var(--gray-700);  }
+.styleguide .gray800  { background: var(--gray-800);  }
+.styleguide .gray900  { background: var(--gray-900);  }
