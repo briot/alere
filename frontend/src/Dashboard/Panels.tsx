@@ -44,7 +44,7 @@ export const BasePropEditor = (p: BaseProps & SettingsProps<BaseProps>) => {
          <legend>Layout</legend>
 
          <Select
-            text="Number of rows"
+            text="Rows"
             value={p.rowspan}
             onChange={changeRows}
          >
@@ -55,7 +55,7 @@ export const BasePropEditor = (p: BaseProps & SettingsProps<BaseProps>) => {
          </Select>
 
          <Select
-            text="Number of columns"
+            text="Columns"
             value={p.colspan}
             onChange={changeCols}
          >

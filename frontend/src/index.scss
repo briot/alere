@@ -1,0 +1,190 @@
+/* base colors, from bootstrap:
+ * https://v5.getbootstrap.com/docs/5.0/customize/color/
+ */
+$blue:     #0d6efd !default;
+$indigo:   #6610f2 !default;
+$purple:   #6f42c1 !default;
+$pink:     #d63384 !default;
+$red:      #dc3545 !default;
+$orange:   #fd7e14 !default;
+$yellow:   #ffc107 !default;
+$green:    #198754 !default;
+$teal:     #20c997 !default;
+$cyan:     #0dcaf0 !default;
+
+$theme-color-interval: 8% !default;  /* how different are shades of a color */
+
+@function tint-color($color, $level) {
+  @return mix(white, $color, $level * $theme-color-interval);
+}
+@function shade-color($color, $level) {
+  @return mix(black, $color, $level * $theme-color-interval);
+}
+@function black-or-white($color) {
+   // Compute brightness: see
+   // https://www.smashingmagazine.com/2020/07/css-techniques-legibility/
+   $brightness: red($color) * 0.299 + green($color) * 0.587 + blue($color) * 0.114;
+   @if $brightness >= 128 {
+      @return "var(--gray-900)";
+   } @else {
+      @return white;
+   }
+}
+
+@mixin generate-color-vars($key, $base) {
+   $v-100: tint-color($base, 8) !default;
+   $v-200: tint-color($base, 6) !default;
+   $v-300: tint-color($base, 4) !default;
+   $v-400: tint-color($base, 2) !default;
+   $v-600: shade-color($base, 2) !default;
+   $v-700: shade-color($base, 4) !default;
+   $v-800: shade-color($base, 6) !default;
+   $v-900: shade-color($base, 8) !default;
+   --#{$key}-100: #{$v-100};
+   --#{$key}-200: #{$v-200};
+   --#{$key}-300: #{$v-300};
+   --#{$key}-400: #{$v-400};
+   --#{$key}-400-80p: #{rgba($v-400, 0.8)};
+   --#{$key}-500: #{$base};
+   --#{$key}-600: #{$v-600};
+   --#{$key}-700: #{$v-700};
+   --#{$key}-800: #{$v-800};
+   --#{$key}-900: #{$v-900};
+   --#{$key}-900-80p: #{rgba($v-900, 0.8)};
+   --fg-#{$key}-100: #{black-or-white($v-100)};
+   --fg-#{$key}-200: #{black-or-white($v-200)};
+   --fg-#{$key}-300: #{black-or-white($v-300)};
+   --fg-#{$key}-400: #{black-or-white($v-400)};
+   --fg-#{$key}-500: #{black-or-white($base)};
+   --fg-#{$key}-600: #{black-or-white($v-600)};
+   --fg-#{$key}-700: #{black-or-white($v-700)};
+   --fg-#{$key}-800: #{black-or-white($v-800)};
+   --fg-#{$key}-900: #{black-or-white($v-900)};
+}
+
+/**
+ * Define the application color palette. These are all the colors we can use
+ * in the application.
+ * See https://www.smashingmagazine.com/2020/08/application-color-schemes-css-custom-properties/
+ */
+
+:root {
+   @include generate-color-vars(color, $blue);
+   @include generate-color-vars(gray, #adb5bd);
+   white-fg: #{black-or-white(white)};  // foreground to use on top of white
+
+   --font-size: 16px;
+   --font-size-sidebar: 15px;
+   --font-size-tool: 13px;
+   --scrollbar-width: 15px;  /* for webkit + chrome */
+   --tool-border-radius: 1rem;
+   --table-vert-border-width: 0px;
+   --table-horiz-border-width: 0px;
+   --header-tool-height: 40px;
+}
+
+/**
+ * Define functional colors.
+ * At this level, we do not worry about the value of the colors, but about
+ * their functions.
+ */
+
+
+.darkpalette {
+   --page-background: var(--gray-800);
+   --panel-background: var(--gray-900);
+   --panel-fg: var(--fg-gray-700);
+   --background-summary-popup: rgba(0,0,0,0.9);
+   --summary-background: rgba(255,255,255,0.2);
+   --table-color: #b1afaf;
+   --table-hover-background: var(--gray-700);
+   --table-row-first-background: none;
+   --table-row-details-background: none;
+   --table-row-details-fg: var(--gray-600);
+   --grey: var(--gray-300);
+   --color-on-grey: var(--fg-100);  /* text color on --grey background */
+   --focus-color: var(--color-500);
+
+   --input-disabled-fg: var(--gray-500);
+   --input-background: var(--gray-700);
+   --input-foreground: var(--gray-fg-700);
+   --input-border: var(--gray-800);
+   --input-primary-background: var(--color-500);
+   --input-primary-foreground: var(--fg-color-500);
+   --input-primary-border: var(--color-600);
+   --input-brightness-hover: 115%;
+
+   --neumorph-light: rgba(78,78,78,.6);
+   --neumorph-dark: rgba(0,0,0,.2);
+   --neumorph-selected-dark: rgba(40,40,40,.2);
+   --neumorph-fg: var(--color-300);  // foreground in roundbuttons
+
+   --toolbar-background: none;
+   --toolbar-background2: none;
+
+   --expand-arrow-color: var(--gray-700);
+
+   --shadow-color: var(--gray-900-80p);
+
+   --tool-color: var(--panel-fg);
+   --tool-background: var(--page-background);
+   --tool-border: none;
+
+   --scrollbar-fg: var(--color-200);
+   --scrollbar-bg: var(--panel-background);
+   --scrollbar-border: none;
+
+}
+.lightpalette {
+   --page-background: var(--gray-100);
+   --panel-background: #f0f0f0;
+   --panel-fg: var(-fg-gray-200);
+   --background-summary-popup: rgba(0,0,0,0.9);
+   --summary-background: rgba(255,255,255,0.2);
+   --table-color: #b1afaf;
+   --table-hover-background: var(--gray-200);
+   --table-row-first-background: none;
+   --table-row-details-background: none;
+   --table-row-details-fg: var(--gray-500);
+   --grey: var(--gray-300);
+   --color-on-grey: var(--fg-100);  /* text color on --grey background */
+   --focus-color: var(--color-500);
+
+   --input-disabled-fg: var(--gray-600);
+   --input-background: white;
+   --input-foreground: var(--white-fg);
+   --input-border: var(--gray-100);
+   --input-primary-background: var(--color-500);
+   --input-primary-foreground: var(--fg-color-500);
+   --input-primary-border: var(--color-600);
+   --input-brightness-hover: 85%;
+
+   --toolbar-background: none;
+   --toolbar-background2: none;
+
+   --neumorph-light: rgba(255,255,255,0.5);
+   --neumorph-dark: rgba(70,70,70,.12);
+   --neumorph-selected-dark: rgba(120,120,120,.12);
+   --neumorph-fg: var(--color-500);  // foreground in roundbuttons
+
+   --expand-arrow-color: var(--gray-400);
+
+   --shadow-color: var(--neumorph-dark);
+
+   --tool-color: var(--gray-700);
+   --tool-background: var(--gray-200);
+   --tool-border: none;
+
+   --scrollbar-fg: var(--color-200);
+   --scrollbar-bg: var(--panel-background);
+   --scrollbar-border: none;
+}
+
+body {
+  margin: 0;
+  font-family: sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  font-size: var(--font-size);
+}
