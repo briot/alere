@@ -28,6 +28,7 @@ const SharedInput: React.FC<
 
 interface InputProps extends SharedInputProps {
    placeholder?: string;
+   required?: boolean;
    type?: 'text';
    value?: string;
 }
@@ -37,6 +38,7 @@ export const Input: React.FC<InputProps> = p => {
          <input
             disabled={p.disabled}
             placeholder={p.placeholder}
+            required={p.required}
             type={p.type || 'text'}
             value={p.value}
          />
@@ -46,10 +48,11 @@ export const Input: React.FC<InputProps> = p => {
 
 interface ButtonProps extends SharedInputProps {
    primary?: boolean;
+   danger?: boolean;
    className?: string;
 }
 export const Button: React.FC<ButtonProps> = p => {
-   const c = `button ${p.className || ''}${p.disabled ? ' disabled' : ''}${p.primary ? ' primary' : ''}`;
+   const c = `button ${p.className || ''}${p.disabled ? ' disabled' : ''}${p.primary ? ' primary' : ''}${p.danger ? ' danger' : ''}`;
    return (
       <button
          className={c}
@@ -66,6 +69,7 @@ interface CheckboxProps extends SharedInputProps {
    checked: boolean|undefined;
    onChange?: (val: boolean) => void;
    indeterminate?: boolean;
+   required?: boolean;
 }
 export const Checkbox: React.FC<CheckboxProps> = p => {
    const { onChange } = p;
@@ -92,6 +96,7 @@ export const Checkbox: React.FC<CheckboxProps> = p => {
             checked={p.checked}
             disabled={p.disabled}
             ref={indetSetter}
+            required={p.required}
             onChange={localChange}
             type="checkbox"
          />
@@ -115,6 +120,7 @@ interface SelectProps<T> extends SharedInputProps {
    onChange?: (val: string) => void;
    value: T;
    children?: React.ReactNode|React.ReactNode[];
+   required?: boolean;
 }
 
 export const Select = <T extends string|number> (p: SelectProps<T>) => {
@@ -131,6 +137,7 @@ export const Select = <T extends string|number> (p: SelectProps<T>) => {
          <select
             disabled={p.disabled}
             onChange={localChange}
+            required={p.required}
             value={p.value}
          >
              {p.children}

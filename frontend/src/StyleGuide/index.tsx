@@ -33,9 +33,11 @@ const StyleContent: React.FC<{}> = p => {
                </Select>
                <Input placeholder="placeholder" text="input" />
                <Input placeholder="placeholder" disabled={true} text="disabled"/>
+               <Input required={true} text="invalid" placeholder="required"/>
                <div className="wrappedRow">
                   <Button text="label" />
                   <Button text="primary" primary={true} />
+                  <Button text="danger" danger={true} />
                   <Button text="disabled" disabled={true} />
                   <Button text="disabled" disabled={true} primary={true}/>
                </div>
@@ -99,6 +101,17 @@ const StyleContent: React.FC<{}> = p => {
             <span className="gray700">gray-700</span>
             <span className="gray800">gray-800</span>
             <span className="gray900">gray-900</span>
+         </div>
+         <div className="palette">
+            <span className="invalid100">invalid-100</span>
+            <span className="invalid200">invalid-200</span>
+            <span className="invalid300">invalid-300</span>
+            <span className="invalid400">invalid-400</span>
+            <span className="invalid500">invalid-500</span>
+            <span className="invalid600">invalid-600</span>
+            <span className="invalid700">invalid-700</span>
+            <span className="invalid800">invalid-800</span>
+            <span className="invalid900">invalid-900</span>
          </div>
 
          <h1>Forms</h1>
