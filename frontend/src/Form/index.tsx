@@ -7,6 +7,7 @@ interface CheckboxProps {
    onChange?: (val: boolean) => void;
    text?: string;
    style?: React.CSSProperties;
+   indeterminate?: boolean;
 }
 export const Checkbox: React.FC<CheckboxProps> = p => {
    const { onChange } = p;
@@ -18,6 +19,15 @@ export const Checkbox: React.FC<CheckboxProps> = p => {
       [onChange]
    );
 
+   const indetSetter = React.useCallback(
+      el => {
+         if (el) {
+           el.indeterminate = p.indeterminate;
+         }
+      },
+      [p.indeterminate]
+   );
+
    return (
       <div
          className={`checkbox option ${p.disabled ? 'disabled' : ''}`}
@@ -27,6 +37,7 @@ export const Checkbox: React.FC<CheckboxProps> = p => {
             <input
                checked={p.checked}
                disabled={p.disabled}
+               ref={indetSetter}
                onChange={localChange}
                type="checkbox"
             />

@@ -449,7 +449,7 @@ interface EditingRowProps {
    accountId: AccountId;
 }
 
-const EditingRow: React.FC<EditingRowProps> = p => {
+export const EditingRow: React.FC<EditingRowProps> = p => {
    return (
       <div className="trgroup">
          <TR editable={true} >
