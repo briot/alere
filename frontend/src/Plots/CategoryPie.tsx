@@ -2,19 +2,19 @@ import * as React from 'react';
 import * as d3ScaleChromatic from 'd3-scale-chromatic';
 import { Legend, PieChart, PieLabelRenderProps,
          Pie, Cell, Tooltip, TooltipProps } from 'recharts';
-import { AccountId } from 'Transaction';
 import { DateRange, rangeDisplay, rangeToHttp } from 'Dates';
 import { SetHeaderProps } from 'Panel';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
-import Account from 'Account';
-import useAccounts from 'services/useAccounts';
+import AccountName from 'Account';
+import useAccounts, { AccountId, Account } from 'services/useAccounts';
 import usePrefs from 'services/usePrefs';
 import './CategoryPie.css';
 
 const NAME_KEY = "nam";
 
 interface DataItemType {
+   account: Account | undefined;
    accountId: AccountId;
    value: number;
    [NAME_KEY]?: string;   // computed automatically
@@ -61,9 +61,16 @@ const CustomTooltip = (p: TooltipProps & {data: DataType} ) => {
    return p.active
      ? (
        <div className="customTooltip" >
-           <Account id={pay.payload.accountId} />
+           <AccountName
+              id={pay.payload.account.id}
+              account={pay.payload.account}
+           />
            <div>
-              <Numeric amount={value} />
+              <Numeric
+                 amount={value}
+                 precision={pay.payload.account.pricePrecision}
+                 currency={pay.payload.account.currencySymbol}
+              />
            </div>
            <div className="numeric">
               {(value / total * 100).toFixed(2)}
@@ -94,7 +101,10 @@ const CategoryPie: React.FC<PiePlotProps & SetHeaderProps> = p => {
             );
             const d: DataType = await resp.json();
 
-            d.items.forEach(a => a[NAME_KEY] = accounts.name(a.accountId));
+            d.items.forEach(a => {
+               a.account = accounts.getAccount(a.accountId);
+               a[NAME_KEY] = a.account?.name;
+            });
 
             // Filter out negative data, which we cannot show in a pie graph
             setData({
@@ -113,7 +123,10 @@ const CategoryPie: React.FC<PiePlotProps & SetHeaderProps> = p => {
          ? <span>{value}</span>
          : (
            <span>
-              <Account id={data.items[index].accountId} />
+              <AccountName
+                  id={data.items[index].accountId}
+                  account={data.items[index].account}
+              />
               &nbsp;(
                   <Numeric
                      amount={data.items[index].value}

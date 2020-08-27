@@ -3,14 +3,14 @@ import { RelativeDate, dateToString } from 'Dates';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import Numeric from 'Numeric';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import Account from 'Account';
-import { AccountId } from 'Transaction';
+import AccountName from 'Account';
 import { SetHeaderProps } from 'Panel';
-import useAccounts from 'services/useAccounts';
+import useAccounts, { Account, AccountId } from 'services/useAccounts';
 import usePrefs from 'services/usePrefs';
 import "./NetWorth.css";
 
 interface NetworthLine {
+   account: Account | undefined;
    accountId: AccountId;
    shares: number[];
    price: (number|undefined)[];
@@ -74,6 +74,9 @@ const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
                + `&dates=${dates.join(',')}`
             );
             let d: Networth = await resp.json()
+            d.forEach(n =>
+               n.account = accounts.getAccount(n.accountId)
+            );
 
             // Remove lines with only 0 values
             if (threshold !== 0) {
@@ -91,9 +94,13 @@ const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
             }
 
             // Sort alphabetically
-            d.sort((d1, d2) =>
-               accounts.name(d1.accountId)
-                  .localeCompare(accounts.name(d2.accountId)));
+            d.sort((a, b) =>
+               a.account
+                  ? b.account
+                     ? a.account.name.localeCompare(b.account.name)
+                     : 1
+                  : -1
+            );
 
             setData(d);
          }
@@ -111,7 +118,10 @@ const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
          const r = data[q.index];
          return (
             <div style={q.style} className="row" key={r.accountId} >
-               <Account id={r.accountId} />
+               <AccountName
+                   id={r.accountId}
+                   account={r.account}
+               />
                {
                   dates.map((d, idx) => (
                      <React.Fragment key={idx}>
@@ -120,7 +130,7 @@ const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
                         <span>
                            <Numeric
                               amount={r.shares[idx]}
-                              currency={accounts.currencyId(r.accountId)}
+                              precision={r.account?.sharesPrecision}
                            />
                         </span>
                      }
@@ -129,7 +139,8 @@ const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
                         <span>
                            <Numeric
                               amount={r.price[idx]}
-                              currency={prefs.currencyId}
+                              currency={prefs.currencyId
+                                  || r.account?.currencySymbol}
                            />
                         </span>
                      }
@@ -138,7 +149,8 @@ const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
                         <span>
                            <Numeric
                               amount={r.shares[idx] * (r.price[idx] ?? NaN)}
-                              currency={prefs.currencyId}
+                              currency={prefs.currencyId
+                                  || r.account?.currencySymbol}
                            />
                         </span>
                      }
@@ -148,8 +160,7 @@ const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
             </div>
          );
       },
-      [data, accounts, p.showPrice, p.showShares, prefs.currencyId,
-       p.showValue, dates]
+      [data, p.showPrice, p.showShares, p.showValue, dates, prefs.currencyId]
    );
 
    const span = (p.showValue ? 1 : 0)

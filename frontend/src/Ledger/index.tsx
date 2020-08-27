@@ -4,13 +4,12 @@ import { VariableSizeList, ListChildComponentProps } from 'react-window';
 import { DateRange, dateToString, rangeDisplay, rangeToHttp } from 'Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Panel, { SetHeaderProps } from 'Panel';
-import Account from 'Account';
+import AccountName from 'Account';
 import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
-         incomeExpenseSplits, AccountIdList, AccountId,
-         sharesForAccounts,
+         incomeExpenseSplits, sharesForAccounts,
          splitsNotForAccounts, Split, Transaction } from 'Transaction';
 import Numeric from 'Numeric';
-import useAccounts, { AccountList } from 'services/useAccounts';
+import useAccounts, { Account, AccountId } from 'services/useAccounts';
 import useHistory from 'services/useHistory';
 import usePrefs, { LedgerPrefs, SplitMode,
    TransactionMode } from 'services/usePrefs';
@@ -25,7 +24,7 @@ const splitRowsCount = (
    t: Transaction,
    split_mode: SplitMode,
    expanded: boolean | undefined,
-   accountIds: AccountIdList | undefined,
+   accounts: Account[] | undefined,
 ): number => {
    if (!expanded) {
       return 0;
@@ -36,9 +35,9 @@ const splitRowsCount = (
       case SplitMode.MULTILINE:
          return t.splits.length;
       case SplitMode.OTHERS:
-         const d = accountIds === undefined
+         const d = accounts === undefined
             ? t.splits.length
-            : splitsNotForAccounts(t, accountIds).length;
+            : splitsNotForAccounts(t, accounts).length;
          return d > 1 ? d : 0;
       case SplitMode.SUMMARY:
          return (t.splits.length > 2) ? 1 : 0;
@@ -130,45 +129,44 @@ const amountColumnsNotes = (
  * The column(s) to use for stock accounts
  */
 
-const showStockColumns = (
-   accounts: AccountList, accountIds: AccountIdList | undefined
-) =>
-   accountIds !== undefined
-   && accountIds.length === 1
-   && accounts.isStock(accountIds[0]);
-
 const stockColumnsHeader = (
-   accounts: AccountList,
-   accountIds: AccountIdList | undefined,
+   account: Account | undefined, // set only when showing for a single account
 ) => {
-   return !showStockColumns(accounts, accountIds)
-      ? null
-      : (
+   return account?.isStock()
+      ? (
          <>
             <TH kind="shares" sortable={true}>Shares</TH>
             <TH kind="shares" title="Balance of shares">SBalance</TH>
          </>
-      );
+      ) : null;
 }
 
 const stockColumns = (
-   accounts: AccountList,
-   accountIds: AccountIdList | undefined,
+   account: Account | undefined, // set only when showing for a single account
    t: Transaction|undefined,
    s: Split,
    force?: boolean,
 ) => {
-   return !showStockColumns(accounts, accountIds)
-      ? null
-      : (
-         <>
-            <TD kind="shares">
-               {force || !s.account || accounts.isStock(s.account)
-                ? s.shares : undefined}
-            </TD>
-            <TD kind="shares">{t?.balanceShares}</TD>
-         </>
-      );
+   if (! account?.isStock()) {
+      return null;
+   }
+
+   return (
+      <>
+         <TD kind="shares">
+             <Numeric
+                amount={s.shares}
+                precision={account?.sharesPrecision}
+             />
+         </TD>
+         <TD kind="shares">
+            <Numeric
+                amount={t?.balanceShares}
+                precision={account?.sharesPrecision}
+            />
+         </TD>
+      </>
+   );
 }
 
 
@@ -239,27 +237,28 @@ const TR: React.FC<TRProps> = p => {
 
 interface FirstRowProps {
    transaction: Transaction;
-   accounts: AccountList;
-   accountIds: AccountIdList|undefined;
+   accounts: Account[]|undefined;
    prefs: LedgerPrefs;
    expanded?: boolean;
 }
 const FirstRow: React.FC<FirstRowProps> = p => {
    const t = p.transaction;
-   const sa = p.accountIds ? splitsForAccounts(t, p.accountIds) : undefined;
+   const sa = p.accounts ? splitsForAccounts(t, p.accounts) : undefined;
    let s: Split = {
-      account: SPLIT_ID,
+      accountId: SPLIT_ID,
+      account: undefined,
       reconcile: '',
       payee: sa?.filter(s => s.payee).reduce((a, s) => a + s.payee, ''),
       shares:
-         (p.accountIds === undefined || p.accountIds.length > 1)
+         (p.accounts === undefined || p.accounts.length > 1)
          ? undefined
-         : sharesForAccounts(t, p.accountIds) || undefined,
+         : sharesForAccounts(t, p.accounts) || undefined,
       amount:
-         (p.accountIds === undefined || p.accountIds.length > 1)
-         ? amountIncomeExpense(t, p.accounts)
-         : amountForAccounts(t, p.accountIds),
+         (p.accounts === undefined || p.accounts.length > 1)
+         ? amountIncomeExpense(t)
+         : amountForAccounts(t, p.accounts),
    };
+
    switch (p.prefs.split_mode) {
       case SplitMode.HIDE:
       case SplitMode.COLLAPSED:
@@ -267,36 +266,34 @@ const FirstRow: React.FC<FirstRowProps> = p => {
          if (t.splits.length < 3) {
             // Find the split for the account itself, to get balance
             const splits =
-               (p.accountIds === undefined || p.accountIds.length > 1)
-               ? incomeExpenseSplits(t, p.accounts)[0]
+               (p.accounts === undefined || p.accounts.length > 1)
+               ? incomeExpenseSplits(t)[0]
                : sa![0];
             const s2 = {...splits};
 
             // Find the split not for the account, to get the target account
             for (const s3 of t.splits) {
-               if (p.accountIds === undefined
-                   && p.accounts.isIncomeExpense(s3.account)
-               ) {
+               if (p.accounts === undefined) {
+                  if (s3.account?.isIncomeExpense()) {
+                     s2.accountId = s3.accountId;
+                     s2.account = s3.account;
+                     break;
+                  }
+               } else if (s3.account && !p.accounts.includes(s3.account)) {
                   s2.account = s3.account;
-                  break;
-               } else if (p.accountIds !== undefined &&
-                          !p.accountIds.includes(s3.account)
-               ) {
-                  s2.account = s3.account;
+                  s2.accountId = s3.accountId;
                   break;
                }
             }
 
-            //  s = {...s, account: s2.account, };
             s = {...s2, amount: s.amount, shares: s.shares};
          }
          break;
       case SplitMode.OTHERS:
-         if (p.accountIds !== undefined) {
-            const d = splitsNotForAccounts(t, p.accountIds)
+         if (p.accounts !== undefined) {
+            const d = splitsNotForAccounts(t, p.accounts)
             if (d.length <= 1) {
-               //  s = {...d[0], amount: s.amount, shares: s.shares};
-               s = {...s, account: d[0].account};
+               s = {...s, account: d[0].account, accountId: d[0].accountId};
             }
          }
          break;
@@ -313,9 +310,13 @@ const FirstRow: React.FC<FirstRowProps> = p => {
          </TD>
          <TD kind='transfer'>
             {
-               s.account === SPLIT_ID
+               s.accountId === SPLIT_ID
                ? SPLIT
-               : <Account id={s.account} noLinkIf={p.accountIds} />
+               : <AccountName
+                    id={s.accountId}
+                    account={s.account}
+                    noLinkIf={p.accounts}
+                 />
             }
          </TD>
          {
@@ -326,7 +327,9 @@ const FirstRow: React.FC<FirstRowProps> = p => {
             amountColumns(s, p.prefs.valueColumn)
          }
          {
-            stockColumns(p.accounts, p.accountIds, t, s, true)
+            stockColumns(
+               p.accounts && p.accounts.length === 1 ? p.accounts[0] : undefined,
+               t, s, true)
          }
          {
             !p.prefs.hideBalance &&
@@ -375,8 +378,7 @@ const NotesRow: React.FC<NotesRowProps> = p => {
 
 interface SplitRowProps {
    split: Split;
-   accounts: AccountList;
-   accountIds: AccountIdList|undefined;
+   accounts: Account[]|undefined;
    prefs: LedgerPrefs;
 }
 const SplitRow: React.FC<SplitRowProps> = p => {
@@ -387,7 +389,11 @@ const SplitRow: React.FC<SplitRowProps> = p => {
          <TD kind='num' className='numeric'>{s.checknum}</TD>
          <TD kind='notes'>{`${s.memo || ''}${s.payee || ''}`}</TD>
          <TD kind='transfer'>
-            <Account id={s.account} noLinkIf={p.accountIds} />
+            <AccountName
+               id={s.accountId}
+               account={s.account}
+               noLinkIf={p.accounts}
+            />
          </TD>
          {
             !p.prefs.hideReconcile &&
@@ -397,7 +403,10 @@ const SplitRow: React.FC<SplitRowProps> = p => {
             amountColumns(s, p.prefs.valueColumn)
          }
          {
-            stockColumns(p.accounts, p.accountIds, undefined, s)
+            stockColumns(
+               p.accounts && p.accounts.length === 1 ? p.accounts[0] : undefined,
+               undefined,
+               s)
          }
          {
             !p.prefs.hideBalance &&
@@ -413,8 +422,7 @@ const SplitRow: React.FC<SplitRowProps> = p => {
 
 interface TransactionRowProps {
    transaction: Transaction;
-   accounts: AccountList;
-   accountIds: AccountIdList|undefined;
+   accounts: Account[]|undefined;
    prefs: LedgerPrefs;
    style?: React.CSSProperties;
    expanded: undefined|boolean;
@@ -438,15 +446,15 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
        : 'expandable collapsed'
    );
 
-   if (splitRowsCount(t, p.prefs.split_mode, p.expanded, p.accountIds) > 0) {
+   if (splitRowsCount(t, p.prefs.split_mode, p.expanded, p.accounts) > 0) {
       let filterSplits: undefined|Split[];
 
       switch (p.prefs.split_mode) {
          case SplitMode.SUMMARY:
             const amount =
-                (p.accountIds === undefined || p.accountIds.length > 1)
-                ? amountIncomeExpense(t, p.accounts)
-                : amountForAccounts(t, p.accountIds);
+                (p.accounts === undefined || p.accounts.length > 1)
+                ? amountIncomeExpense(t)
+                : amountForAccounts(t, p.accounts);
             if (t.splits.length > 2) {
                lines = (
                   <TR partial={true}>
@@ -455,13 +463,17 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
                         &nbsp;=&nbsp;
                         {
                            t.splits.map((s, index) =>
-                              (p.accountIds === undefined
-                                 || !p.accountIds.includes(s.account)
+                              (p.accounts === undefined
+                                 || !s.account
+                                 || !p.accounts.includes(s.account)
                               ) ? <span key={index}>
                                  <span>{ s.amount >= 0 ? ' - ' : ' + ' }</span>
                                  <Numeric amount={Math.abs(s.amount)} />
                                  (
-                                    <Account id={s.account} />
+                                    <AccountName
+                                        id={s.accountId}
+                                        account={s.account}
+                                    />
                                  )
                               </span> : null
                            )
@@ -472,9 +484,9 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
             }
             break;
          case SplitMode.OTHERS:
-            filterSplits = p.accountIds === undefined
+            filterSplits = p.accounts === undefined
                 ? t.splits
-                : splitsNotForAccounts(t, p.accountIds);
+                : splitsNotForAccounts(t, p.accounts);
             break;
          default:
             filterSplits = t.splits;
@@ -487,7 +499,6 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
                split={s}
                prefs={p.prefs}
                accounts={p.accounts}
-               accountIds={p.accountIds}
             />
          ));
       }
@@ -503,7 +514,6 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
             transaction={t}
             prefs={p.prefs}
             accounts={p.accounts}
-            accountIds={p.accountIds}
             expanded={p.expanded}
           />
          {
@@ -521,6 +531,7 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
 
 interface EditingRowProps {
    accountId: AccountId;
+   account: Account;
 }
 
 export const EditingRow: React.FC<EditingRowProps> = p => {
@@ -553,7 +564,11 @@ export const EditingRow: React.FC<EditingRowProps> = p => {
                <input placeholder="notes" tabIndex={4} />
             </TD>
             <TD kind='transfer'>
-               <Account id={p.accountId} noLinkIf={[p.accountId]} />
+               <AccountName
+                  id={p.accountId}
+                  account={p.account}
+                  noLinkIf={[p.account]}
+               />
             </TD>
             <TD kind='reconcile'>
                <select>
@@ -632,13 +647,13 @@ const setupLogicalRows = (
    trans_mode: TransactionMode,
    split_mode: SplitMode,
    defaultExpand: boolean,
-   accountIds: AccountIdList|undefined,
+   accounts: Account[]|undefined,
 ) => {
    const r: RowStateProps = {};
 
    transactions.forEach(t => {
       const rows =
-         splitRowsCount(t, split_mode, true, accountIds)
+         splitRowsCount(t, split_mode, true, accounts)
          + noteRowsCount(t, trans_mode, true);
 
       r[t.id] = {
@@ -654,7 +669,7 @@ const setupLogicalRows = (
  */
 
 export interface LedgerProps extends LedgerPrefs {
-   accountIds: AccountIdList | undefined;  // undefined for all accounts
+   accountIds: AccountId[] | undefined;  // undefined for all accounts
    range?: DateRange|undefined;      // undefined, to see forever
 }
 
@@ -664,6 +679,15 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
    const [ rowState, setRowState ] = React.useState<RowStateProps>({});
    const [transactions, setTransactions] = React.useState<Transaction[]>([]);
    const list = React.useRef<VariableSizeList>(null);
+   const allAcc = React.useMemo(
+      () => p.accountIds
+         ? p.accountIds
+            .map(a => accounts.getAccount(a))
+            .filter(a => a !== undefined)
+         : undefined,
+      [p.accountIds, accounts]
+   );
+   const allAccounts = allAcc as Account[] | undefined;
 
    React.useEffect(
       () => {
@@ -671,35 +695,42 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
             const resp = await window.fetch(
                '/api/ledger/'
                + (p.accountIds === undefined
-                   ? '' : p.accountIds.join(','))
+                   ? ''
+                   : p.accountIds.join(','))
                + `?${rangeToHttp(p.range)}`
             );
             const data: Transaction[] = await resp.json();
 
+            data.forEach(t =>
+               t.splits.forEach(s =>
+                  s.account = accounts.getAccount(s.accountId)
+               )
+            );
+
             if (p.accountIds === undefined || p.accountIds.length > 1) {
                // remove internal transfers
                setTransactions(data.filter(t =>
-                  incomeExpenseSplits(t, accounts).length > 0));
+                  incomeExpenseSplits(t).length > 0));
             } else {
                setTransactions(data);
             }
          }
          dofetch();
       },
-      [p.accountIds, p.range, accounts]
+      [accounts, p.accountIds, p.range]
    );
 
    React.useEffect(
       () => {
-         const name = p.accountIds === undefined
+         const name = allAccounts === undefined
             ? 'All accounts'
-            : p.accountIds.length === 1
-            ? accounts.name(p.accountIds[0])
+            : allAccounts.length === 1
+            ? allAccounts[0]?.name
             : 'Multiple accounts';
          const dates = p.range ? rangeDisplay(p.range) : '';
          setHeader?.(`${name} ${dates}`);
       },
-      [p.accountIds, accounts, setHeader, p.range]
+      [allAccounts, setHeader, p.range]
    );
 
    React.useLayoutEffect(
@@ -708,13 +739,12 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
             transactions,
             p.trans_mode, p.split_mode,
             p.defaultExpand,
-            p.accountIds));
+            allAccounts));
          if (list.current) {
             list.current!.resetAfterIndex(0);
          }
       },
-      [transactions, p.accountIds, p.split_mode, p.trans_mode,
-       p.defaultExpand]
+      [transactions, allAccounts, p.split_mode, p.trans_mode, p.defaultExpand]
    );
 
    const setTransactionExpanded = React.useCallback(
@@ -754,16 +784,16 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
             if (present === undefined && t.date <= formatted) {
                present = t.balance;
             }
-            if (p.accountIds === undefined) {
+            if (allAccounts === undefined) {
                t.splits.forEach(addSplit);
             } else {
-               splitsForAccounts(t, p.accountIds).forEach(addSplit);
+               splitsForAccounts(t, allAccounts).forEach(addSplit);
             }
          }
 
          return [future, present, reconciled, cleared, selected];
       },
-      [transactions, p.accountIds]
+      [transactions, allAccounts]
    );
 
    const Row = React.useCallback(
@@ -774,15 +804,14 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
             <TransactionRow
                style={r.style}
                transaction={t}
-               accounts={accounts}
-               accountIds={p.accountIds}
+               accounts={allAccounts}
                prefs={p}
                expanded={rowState[t.id]?.expanded}
                setExpanded={setTransactionExpanded}
             />
          );
       },
-      [transactions, setTransactionExpanded, rowState, p, accounts ]
+      [transactions, setTransactionExpanded, rowState, p, allAccounts]
    );
 
    const getTransactionHeight = React.useCallback(
@@ -792,10 +821,9 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
          return ROW_HEIGHT * (
             1
             + noteRowsCount(t, p.trans_mode, d?.expanded)
-            + splitRowsCount(t, p.split_mode, d?.expanded, p.accountIds));
+            + splitRowsCount(t, p.split_mode, d?.expanded, allAccounts));
       },
-      [rowState, transactions, p.trans_mode, p.accountIds,
-       p.split_mode]
+      [rowState, transactions, p.trans_mode, allAccounts, p.split_mode]
    );
 
    const getTransactionKey = (index: number) => {
@@ -828,7 +856,11 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
                   amountColumnsHeaders(p.valueColumn)
                }
                {
-                  stockColumnsHeader(accounts, p.accountIds)
+                  stockColumnsHeader(
+                     allAccounts !== undefined && allAccounts.length === 1
+                     ? allAccounts[0]
+                     : undefined
+                  )
                }
                {
                   !p.hideBalance &&

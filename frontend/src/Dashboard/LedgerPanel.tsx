@@ -1,12 +1,13 @@
 import * as React from 'react';
 import Ledger, { LedgerProps } from 'Ledger';
-import { AccountIdList } from 'Transaction';
 import { SplitMode, TransactionMode } from 'services/usePrefs';
 import { Checkbox, Select, Option } from 'Form';
 import { DateRange, DateRangePicker } from 'Dates';
 import { BaseProps, SettingsProps, DashboardModule } from 'Dashboard/Panels';
 import { LedgerPrefs } from 'services/usePrefs';
+import { Account } from 'services/useAccounts';
 import { SelectMultiAccount } from 'Account';
+import useAccounts from 'services/useAccounts';
 
 export interface LedgerPanelProps extends LedgerProps, BaseProps {
    type: 'ledger';
@@ -120,9 +121,19 @@ export const LedgerPrefsSettings:
 
 const Settings: React.FC<LedgerProps & SettingsProps<LedgerProps>>
 = p => {
+   const { accounts } = useAccounts();
    const changeRange = (range: DateRange) => p.setData({ range });
    const changeAccount =
-      (a: AccountIdList | undefined) => p.setData({ accountIds: a });
+      (a: Account[] | undefined) => p.setData({
+         accountIds: a ? a.map(b => b.id) : undefined,
+      });
+   const allAccounts =
+      p.accountIds
+      ? p.accountIds
+         .map(a => accounts.getAccount(a))
+         .filter(a => a !== undefined)
+      : undefined;
+
    return (
       <>
          <LedgerPrefsSettings {...p} >
@@ -133,7 +144,7 @@ const Settings: React.FC<LedgerProps & SettingsProps<LedgerProps>>
             />
             <SelectMultiAccount
                text="Accounts"
-               value={p.accountIds}
+               value={allAccounts as Account[]|undefined}
                onChange={changeAccount}
             />
          </LedgerPrefsSettings>

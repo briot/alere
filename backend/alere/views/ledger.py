@@ -4,10 +4,10 @@ from .kmm import kmm, do_query
 
 class Split:
     def __init__(
-            self, account: Union[int, str], amount: int,
+            self, accountId: Union[int, str], amount: int,
             shares: int, reconcile='n', payee='',
             currency='', memo='', checknum=None):
-        self.account = account
+        self.accountId = accountId
         self.amount = amount
         self.reconcile = reconcile
         self.currency = currency
@@ -18,7 +18,7 @@ class Split:
 
     def to_json(self):
         return {
-            "account": self.account,
+            "accountId": self.accountId,
             "amount": self.amount,
             "reconcile": self.reconcile,
             "currency": self.currency,
@@ -138,7 +138,7 @@ class LedgerView(JSONView):
                 )
 
             current.splits.append(Split(
-                account=row.accountId,
+                accountId=row.accountId,
                 amount=row.value,
                 reconcile=row.reconcile,
                 shares=row.shares,

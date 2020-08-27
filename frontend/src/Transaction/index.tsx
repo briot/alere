@@ -1,12 +1,9 @@
-import { AccountList } from 'services/useAccounts';
+import { Account, AccountId } from 'services/useAccounts';
 
-export type AccountId = string|number;
 export type TransactionId = string;
 
-export type AccountIdList = AccountId[];
-
 export interface Split {
-   account: AccountId;
+   accountId: AccountId;
    reconcile?: string;
    amount: number;
    shares?: number;  //  for stock accounts
@@ -14,6 +11,8 @@ export interface Split {
    currency?: string;
    memo?: string;
    checknum?: string;
+
+   account: Account|undefined;   // not sent via JSON
 }
 
 export interface Transaction {
@@ -30,29 +29,30 @@ export interface Transaction {
 /**
  * All splits involving an income or expense account
  */
-export const incomeExpenseSplits = (t: Transaction, accounts: AccountList) =>
-   t.splits.filter(s => accounts.isIncomeExpense(s.account));
+export const incomeExpenseSplits = (t: Transaction) =>
+   t.splits.filter(s => s.account?.isIncomeExpense());
 
-export const amountIncomeExpense = (t: Transaction, accounts: AccountList) =>
-   incomeExpenseSplits(t, accounts).reduce((a, s) => a - s.amount, 0);
+export const amountIncomeExpense = (t: Transaction) =>
+   incomeExpenseSplits(t).reduce((a, s) => a - s.amount, 0);
 
 /**
  * All splits related to a specific account
  */
-export const splitsForAccounts = (t: Transaction, accounts: AccountIdList) =>
-   t.splits.filter(s => accounts.includes(s.account));
-export const splitsNotForAccounts = (t: Transaction, accounts: AccountIdList) =>
-   t.splits.filter(s => !accounts.includes(s.account));
+export const splitsForAccounts = (t: Transaction, accounts: Account[]) =>
+   t.splits.filter(s => s.account && accounts.includes(s.account));
+
+export const splitsNotForAccounts = (t: Transaction, accounts: Account[]) =>
+   t.splits.filter(s => s.account && !accounts.includes(s.account));
 
 /**
  * Compute what the transaction amount is, for the given account.
  * This is the sum of the splits that apply to this account.
  */
-export const amountForAccounts = (t: Transaction, accounts: AccountIdList) =>
+export const amountForAccounts = (t: Transaction, accounts: Account[]) =>
    // When no account is specified, the total sum is null by construction. So
    // we only sum positive ones to get useful feedback
    splitsForAccounts(t, accounts).reduce((a, s) => a + s.amount, 0);
 
-export const sharesForAccounts = (t: Transaction, accounts: AccountIdList) =>
+export const sharesForAccounts = (t: Transaction, accounts: Account[]) =>
    splitsForAccounts(t, accounts)
    .reduce((a, s) => s.shares ? a + s.shares : a, 0);

@@ -1,21 +1,87 @@
 import * as React from 'react';
-import { AccountId } from 'Transaction';
 
-export interface Account {
+export type AccountId = string|number;
+
+interface AccountJSON {
    id: AccountId;
    name: string;
    favorite: boolean;
    currencyId: string;
+   currencySymbol: string;
    accountType: string;
    closed: boolean;
    iban: string;
    parent: AccountId;
    lastReconciled: string;
    forOpeningBalances: boolean;
+   pricePrecision: number;
+   sharesPrecision: number;
 }
 
+export class Account {
+   readonly id: AccountId;
+   readonly name: string;
+   readonly favorite: boolean;
+   readonly currencyId: string;
+   readonly currencySymbol: string;
+   readonly closed: boolean;
+   readonly iban: string;
+   readonly lastReconciled: string;
+   readonly forOpeningBalances: boolean;
+   readonly pricePrecision: number;
+   readonly sharesPrecision: number;
+   parent: Account | undefined;
+   children: Account[] = [];
+
+   private accountType: string;
+
+   constructor(d: AccountJSON) {
+      this.id = d.id;
+      this.name = d.name;
+      this.favorite = d.favorite;
+      this.currencyId = d.currencyId;
+      this.currencySymbol = d.currencySymbol;
+      this.accountType = d.accountType;
+      this.closed = d.closed;
+      this.iban = d.iban;
+      this.lastReconciled = d.lastReconciled;
+      this.forOpeningBalances = d.forOpeningBalances;
+      this.pricePrecision = d.pricePrecision;
+      this.sharesPrecision = d.sharesPrecision;
+   }
+
+   isStock(): boolean {
+      return this.accountType === "Stock";
+   }
+
+   isIncomeExpense(): boolean {
+      return this.accountType === "Income" || this.accountType === "Expense";
+   }
+
+   /**
+    * Fully qualified name of the account
+    */
+   fullName(): string {
+      // skip the top-level accounts ('Asset', 'Income',...)
+      const pname = this.parent && this.parent.parent
+         ? this.parent.fullName()
+         : undefined;
+      return pname ? `${pname}:${this.name}` : this.name;
+   }
+
+   setParent(parent: Account|undefined) {
+      this.parent = parent;
+   }
+
+   addChild(child: Account) {
+      this.children.push(child);
+   }
+
+}
+
+
 export interface AccountTreeNode {
-   id: AccountId;
+   account: Account;
    level: number;  // 0 for root, 1 for direct children, ...
 }
 
@@ -25,39 +91,41 @@ export class AccountList {
 
    static async fetch() {
       const resp = await window.fetch('/api/account/list');
-      const acc: Account[] = await resp.json();
-      window.console.log(acc);  // MANU
+      const acc: AccountJSON[] = await resp.json();
       return new AccountList(acc);
    }
 
-   constructor(acc: Account[]) {
+   constructor(acc: AccountJSON[]) {
       this.accounts = new Map();
-      acc.forEach(a => this.accounts.set(a.id, a));
+      acc.forEach(a => this.accounts.set(a.id, new Account(a)));
 
-      const children: Map<AccountId, AccountId[]> = new Map();
-      const roots: AccountId[] = [];
-      acc.forEach(a => children.set(a.id, []));
+      const roots: Account[] = [];
       acc.forEach(a => {
+         const c = this.accounts.get(a.id)!;
          if (a.parent) {
-            children.get(a.parent)!.push(a.id);
+            const p = this.accounts.get(a.parent);
+            c.setParent(p);
+            p?.addChild(c);
          } else {
-            roots.push(a.id);
+            roots.push(c);
          }
       });
 
-      const cmpNode = (n1: AccountId, n2: AccountId) =>
-         this.accounts.get(n1)!.name
-         .localeCompare(this.accounts.get(n2)!.name);
+      // Sort the children accounts by alphabetical order
+      const cmpAcc = (n1: Account, n2: Account) =>
+         n1.name.localeCompare(n2.name);
+      this.accounts.forEach(a => a.children.sort(cmpAcc));
 
-      children.forEach(n => n.sort(cmpNode));
-      roots.sort(cmpNode);
+      // Sort the root accounts by alphabetical order
+      roots.sort(cmpAcc);
 
+      // Flatten the account tree
       this.tree = [];
-      const add = (id: AccountId, level: number) => {
-         this.tree.push({ id, level });
-         children.get(id)!.forEach(id => add(id, level + 1));
+      const add = (account: Account, level: number) => {
+         this.tree.push({ account, level });
+         account.children.forEach(a => add(a, level + 1));
       }
-      roots.forEach(id => add(id, 0));
+      roots.forEach(a => add(a, 0));
    }
 
    getAccount(id: AccountId): Account|undefined {
@@ -72,37 +140,9 @@ export class AccountList {
       return this.tree;
    }
 
-   currencyId(id: AccountId): string {
-      return this.getAccount(id)?.currencyId || '';
-   }
-
-   isStock(id: AccountId): boolean {
-      const ty = this.getAccount(id)?.accountType;
-      return ty === "Stock";
-   }
-
-   isIncomeExpense(id: AccountId): boolean {
-      const ty = this.getAccount(id)?.accountType;
-      return ty === "Income" || ty === "Expense";
-   }
-
-   fullName(acc: Account): string {
-      const parent = acc.parent ? this.getAccount(acc.parent) : undefined;
-
-      // skip the top-level accounts ('Asset', 'Income',...)
-      const pname = parent && parent.parent? this.fullName(parent) : undefined;
-
-      return pname ? `${pname}:${acc.name}` : acc.name;
-   }
-
-   shortName(id: AccountId): string {
-      const acc = this.getAccount(id);
-      return acc ? acc.name : `account ${id}`;
-   }
-
    name(id: AccountId): string {
       const acc = this.getAccount(id);
-      return acc ? this.fullName(acc) : `account ${id}`;
+      return acc ? acc.fullName() : `account ${id}`;
    }
 }
 
