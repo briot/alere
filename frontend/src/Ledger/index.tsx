@@ -35,9 +35,10 @@ const splitRowsCount = (
       case SplitMode.MULTILINE:
          return t.splits.length;
       case SplitMode.OTHERS:
-         return accountIds === undefined
+         const d = accountIds === undefined
             ? t.splits.length
             : splitsNotForAccounts(t, accountIds).length;
+         return d > 1 ? d : 0;
       case SplitMode.SUMMARY:
          return (t.splits.length > 2) ? 1 : 0;
       default:
@@ -133,12 +134,16 @@ interface THProps {
    asc?: boolean; // if sorted (not undefined), whether ascending or descending
    kind?: string;
    className?: string;
+   title?: string;
 }
 const TH: React.FC<THProps> = p => {
    const sortClass = p.sortable ? 'sortable' : '';
    const ascClass = p.asc === undefined ? '' : p.asc ? 'sort-up' : 'sort-down';
    return (
-       <span className={`th ${p.kind || ''} ${sortClass} ${ascClass} ${p.className || ''}`}>
+       <span
+          className={`th ${p.kind || ''} ${sortClass} ${ascClass} ${p.className || ''}`}
+          title={p.title}
+       >
           {p.children}
        </span>
    );
@@ -234,6 +239,13 @@ const FirstRow: React.FC<FirstRowProps> = p => {
          }
          break;
       case SplitMode.OTHERS:
+         if (p.accountIds !== undefined) {
+            const d =  splitsNotForAccounts(t, p.accountIds)
+            if (d.length <= 1) {
+               s = {...d[0], amount: s.amount};
+            }
+         }
+         break;
       case SplitMode.MULTILINE:
          break;
    }
