@@ -247,6 +247,10 @@
    flex: 0 1 7rem;
    text-align: right;
 }
+.ledger .shares {
+   flex: 0 1 5rem;
+   text-align: right;
+}
 .ledger .payee,
 .ledger .transfer {
    min-width: 150px;

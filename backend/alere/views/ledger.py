@@ -4,13 +4,16 @@ from .kmm import kmm, do_query
 
 class Split:
     def __init__(
-            self, account: Union[int, str], amount: int, reconcile='n',
+            self, account: Union[int, str], amount: int,
+            shares: int, reconcile='n', payee='',
             currency='', memo='', checknum=None):
         self.account = account
         self.amount = amount
         self.reconcile = reconcile
         self.currency = currency
         self.memo = memo
+        self.shares = shares
+        self.payee = payee
         self.checknum = checknum
 
     def to_json(self):
@@ -20,28 +23,31 @@ class Split:
             "reconcile": self.reconcile,
             "currency": self.currency,
             "memo": self.memo,
+            "shares": self.shares,
+            "payee": self.payee,
             "checknum": self.checknum,
         }
 
 
 class Transaction:
     def __init__(
-            self, id: Union[int, str], date, balance: int,
+            self, id: Union[int, str], date,
+            balance: int,
+            balanceShares: int,
             splits: List[Split],
-            payee='',
             memo=''):
         self.id = id
         self.date = date
-        self.payee = payee
         self.balance = balance
+        self.balanceShares = balanceShares
         self.splits = splits
         self.memo = memo
 
     def to_json(self):
         return {"id": self.id,
                 "date": self.date,
-                "payee": self.payee,
                 "balance": self.balance,
+                "balanceShares": self.balanceShares,
                 "splits": self.splits,
                 "memo": self.memo
                }
@@ -70,7 +76,7 @@ class LedgerView(JSONView):
         query = (f"""
         SELECT
            t.id as transactionId,
-           payee.name as payee,
+           COALESCE (payee.name, s.action) as payee,
            (CASE s.reconcileFlag
                WHEN '2' then 'R'
                WHEN '1' then 'C'
@@ -102,6 +108,7 @@ class LedgerView(JSONView):
         }
 
         balance = 0.0
+        balanceShares = 0.0
         result = []
         current = None
 
@@ -114,6 +121,7 @@ class LedgerView(JSONView):
             if row.accountId == id:
                 # ??? need to handle shares * price
                 balance += row.value
+                balanceShares += row.shares
 
             if current is not None and row.transactionId != current.id:
                 result.append(current)
@@ -123,8 +131,8 @@ class LedgerView(JSONView):
                 current = Transaction(
                     id=row.transactionId,
                     date=row.transactionDate,
-                    payee=row.payee,
                     balance=balance,
+                    balanceShares=balanceShares,
                     memo=row.transactionMemo,
                     splits=[]
                 )
@@ -133,10 +141,20 @@ class LedgerView(JSONView):
                 account=row.accountId,
                 amount=row.value,
                 reconcile=row.reconcile,
+                shares=row.shares,
+
+                # workaround issue in kmymoney, which always uses "BUY" for
+                # action even though it was a SELL
+                payee=
+                  ("Sell"
+                   if row.payee == "Buy" and row.shares < 0
+                   else row.payee),
+
                 memo=row.memo,
                 checknum=row.checkNumber,
             ))
             current.balance = balance
+            current.balanceShares = balanceShares
 
         if current is not None:
             result.append(current)

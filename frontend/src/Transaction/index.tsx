@@ -9,6 +9,8 @@ export interface Split {
    account: AccountId;
    reconcile?: string;
    amount: number;
+   shares?: number;  //  for stock accounts
+   payee?: string;
    currency?: string;
    memo?: string;
    checknum?: string;
@@ -17,8 +19,8 @@ export interface Split {
 export interface Transaction {
    id: TransactionId;
    date: string;
-   payee?: string;
    balance: number;  // balance after the transaction
+   balanceShares?: number;  //  for stock accounts
    splits: Split[];  // at least one (there are two in the database, but here
                      // we might be seeing a partial view specific to one
                      // account only).
@@ -50,3 +52,7 @@ export const amountForAccounts = (t: Transaction, accounts: AccountIdList) =>
    // When no account is specified, the total sum is null by construction. So
    // we only sum positive ones to get useful feedback
    splitsForAccounts(t, accounts).reduce((a, s) => a + s.amount, 0);
+
+export const sharesForAccounts = (t: Transaction, accounts: AccountIdList) =>
+   splitsForAccounts(t, accounts)
+   .reduce((a, s) => s.shares ? a + s.shares : a, 0);
