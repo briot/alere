@@ -39,6 +39,8 @@ export const amountIncomeExpense = (t: Transaction, accounts: AccountList) =>
  */
 export const splitsForAccounts = (t: Transaction, accounts: AccountIdList) =>
    t.splits.filter(s => accounts.includes(s.account));
+export const splitsNotForAccounts = (t: Transaction, accounts: AccountIdList) =>
+   t.splits.filter(s => !accounts.includes(s.account));
 
 /**
  * Compute what the transaction amount is, for the given account.

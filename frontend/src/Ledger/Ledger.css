@@ -1,4 +1,6 @@
 .ledger {
+   --row-height: 25px;  /* must match ROW_HEIGHT in javascript */
+
    flex: 1 1;  /* ledger itself occupies as much space as possible */
 
    display: flex;
@@ -8,7 +10,6 @@
    display: flex;
    flex-flow: column nowrap;
 
-   --row-height: 25px;  /* must match ROW_HEIGHT in javascript */
 }
 
 .ledger .tr {

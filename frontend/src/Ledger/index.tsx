@@ -7,7 +7,7 @@ import Panel, { SetHeaderProps } from 'Panel';
 import Account from 'Account';
 import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
          incomeExpenseSplits, AccountIdList, AccountId,
-         Split, Transaction } from 'Transaction';
+         splitsNotForAccounts, Split, Transaction } from 'Transaction';
 import Numeric from 'Numeric';
 import useAccounts, { AccountList } from 'services/useAccounts';
 import useHistory from 'services/useHistory';
@@ -37,7 +37,7 @@ const splitRowsCount = (
       case SplitMode.OTHERS:
          return accountIds === undefined
             ? t.splits.length
-            : splitsForAccounts(t, accountIds).length;
+            : splitsNotForAccounts(t, accountIds).length;
       case SplitMode.SUMMARY:
          return (t.splits.length > 2) ? 1 : 0;
       default:
@@ -401,7 +401,7 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
          case SplitMode.OTHERS:
             filterSplits = p.accountIds === undefined
                 ? t.splits
-                : splitsForAccounts(t, p.accountIds);
+                : splitsNotForAccounts(t, p.accountIds);
             break;
          default:
             filterSplits = t.splits;

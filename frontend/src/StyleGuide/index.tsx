@@ -79,18 +79,12 @@ const StyleContent: React.FC<{}> = p => {
             <p>
 Sussex result matter any end see. It speedily me addition weddings vicinity in
 pleasure. Happiness commanded an conveying breakfast in.  Regard her say
-warmly elinor. Him these are visit front end for seven walls. Money eat scale
-now ask law learn. Side its they just any upon see last. He prepared no
-shutters perceive do greatest. Ye at unpleasant solicitude in companions
-interested.
+warmly elinor.
             </p>
             <p lang="it">
 Sussex result matter any end see. It speedily me addition weddings vicinity in
 pleasure. Happiness commanded an conveying breakfast in.  Regard her say
-warmly elinor. Him these are visit front end for seven walls. Money eat scale
-now ask law learn. Side its they just any upon see last. He prepared no
-shutters perceive do greatest. Ye at unpleasant solicitude in companions
-interested.
+warmly elinor.
             </p>
             <h1>H1 title</h1>
             <h2>H2 title</h2>
