@@ -7,6 +7,7 @@ import Panel, { SetHeaderProps } from 'Panel';
 import Account from 'Account';
 import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
          incomeExpenseSplits, AccountIdList, AccountId,
+         sharesForAccounts,
          splitsNotForAccounts, Split, Transaction } from 'Transaction';
 import Numeric from 'Numeric';
 import useAccounts, { AccountList } from 'services/useAccounts';
@@ -126,6 +127,52 @@ const amountColumnsNotes = (
 }
 
 /**
+ * The column(s) to use for stock accounts
+ */
+
+const showStockColumns = (
+   accounts: AccountList, accountIds: AccountIdList | undefined
+) =>
+   accountIds !== undefined
+   && accountIds.length === 1
+   && accounts.isStock(accountIds[0]);
+
+const stockColumnsHeader = (
+   accounts: AccountList,
+   accountIds: AccountIdList | undefined,
+) => {
+   return !showStockColumns(accounts, accountIds)
+      ? null
+      : (
+         <>
+            <TH kind="shares" sortable={true}>Shares</TH>
+            <TH kind="shares" title="Balance of shares">SBalance</TH>
+         </>
+      );
+}
+
+const stockColumns = (
+   accounts: AccountList,
+   accountIds: AccountIdList | undefined,
+   t: Transaction|undefined,
+   s: Split,
+   force?: boolean,
+) => {
+   return !showStockColumns(accounts, accountIds)
+      ? null
+      : (
+         <>
+            <TD kind="shares">
+               {force || !s.account || accounts.isStock(s.account)
+                ? s.shares : undefined}
+            </TD>
+            <TD kind="shares">{t?.balanceShares}</TD>
+         </>
+      );
+}
+
+
+/**
  * A header cell
  */
 
@@ -199,15 +246,20 @@ interface FirstRowProps {
 }
 const FirstRow: React.FC<FirstRowProps> = p => {
    const t = p.transaction;
+   const sa = p.accountIds ? splitsForAccounts(t, p.accountIds) : undefined;
    let s: Split = {
       account: SPLIT_ID,
       reconcile: '',
+      payee: sa?.filter(s => s.payee).reduce((a, s) => a + s.payee, ''),
+      shares:
+         (p.accountIds === undefined || p.accountIds.length > 1)
+         ? undefined
+         : sharesForAccounts(t, p.accountIds) || undefined,
       amount:
          (p.accountIds === undefined || p.accountIds.length > 1)
          ? amountIncomeExpense(t, p.accounts)
          : amountForAccounts(t, p.accountIds),
    };
-
    switch (p.prefs.split_mode) {
       case SplitMode.HIDE:
       case SplitMode.COLLAPSED:
@@ -217,7 +269,7 @@ const FirstRow: React.FC<FirstRowProps> = p => {
             const splits =
                (p.accountIds === undefined || p.accountIds.length > 1)
                ? incomeExpenseSplits(t, p.accounts)[0]
-               : splitsForAccounts(t, p.accountIds)[0];
+               : sa![0];
             const s2 = {...splits};
 
             // Find the split not for the account, to get the target account
@@ -235,14 +287,16 @@ const FirstRow: React.FC<FirstRowProps> = p => {
                }
             }
 
-            s = {...s2, amount: s.amount};
+            //  s = {...s, account: s2.account, };
+            s = {...s2, amount: s.amount, shares: s.shares};
          }
          break;
       case SplitMode.OTHERS:
          if (p.accountIds !== undefined) {
-            const d =  splitsNotForAccounts(t, p.accountIds)
+            const d = splitsNotForAccounts(t, p.accountIds)
             if (d.length <= 1) {
-               s = {...d[0], amount: s.amount};
+               //  s = {...d[0], amount: s.amount, shares: s.shares};
+               s = {...s, account: d[0].account};
             }
          }
          break;
@@ -255,7 +309,7 @@ const FirstRow: React.FC<FirstRowProps> = p => {
          <TD kind='date'>{t.date}</TD>
          <TD kind='num' className='numeric'>{s.checknum}</TD>
          <TD kind='payee'>
-            <Link to={`/payee/${t.payee}`}>{t.payee}</Link>
+            <Link to={`/payee/${s.payee}`}>{s.payee}</Link>
          </TD>
          <TD kind='transfer'>
             {
@@ -270,6 +324,9 @@ const FirstRow: React.FC<FirstRowProps> = p => {
          }
          {
             amountColumns(s, p.prefs.valueColumn)
+         }
+         {
+            stockColumns(p.accounts, p.accountIds, t, s, true)
          }
          {
             !p.prefs.hideBalance &&
@@ -318,6 +375,7 @@ const NotesRow: React.FC<NotesRowProps> = p => {
 
 interface SplitRowProps {
    split: Split;
+   accounts: AccountList;
    accountIds: AccountIdList|undefined;
    prefs: LedgerPrefs;
 }
@@ -327,7 +385,7 @@ const SplitRow: React.FC<SplitRowProps> = p => {
       <TR>
          <TD kind='date' />
          <TD kind='num' className='numeric'>{s.checknum}</TD>
-         <TD kind='notes'>{s.memo}</TD>
+         <TD kind='notes'>{`${s.memo || ''}${s.payee || ''}`}</TD>
          <TD kind='transfer'>
             <Account id={s.account} noLinkIf={p.accountIds} />
          </TD>
@@ -337,6 +395,9 @@ const SplitRow: React.FC<SplitRowProps> = p => {
          }
          {
             amountColumns(s, p.prefs.valueColumn)
+         }
+         {
+            stockColumns(p.accounts, p.accountIds, undefined, s)
          }
          {
             !p.prefs.hideBalance &&
@@ -425,6 +486,7 @@ const TransactionRow: React.FC<TransactionRowProps> = p => {
                key={`${t.id} ${sid}`}
                split={s}
                prefs={p.prefs}
+               accounts={p.accounts}
                accountIds={p.accountIds}
             />
          ));
@@ -764,6 +826,9 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
                }
                {
                   amountColumnsHeaders(p.valueColumn)
+               }
+               {
+                  stockColumnsHeader(accounts, p.accountIds)
                }
                {
                   !p.hideBalance &&
