@@ -5,7 +5,7 @@ from .kmm import kmm, do_query
 class Split:
     def __init__(
             self, accountId: Union[int, str], amount: int,
-            shares: int, reconcile='n', payee='',
+            shares: int, price: float, reconcile='n', payee='',
             currency='', memo='', checknum=None):
         self.accountId = accountId
         self.amount = amount
@@ -14,6 +14,7 @@ class Split:
         self.memo = memo
         self.shares = shares
         self.payee = payee
+        self.price = price
         self.checknum = checknum
 
     def to_json(self):
@@ -25,6 +26,7 @@ class Split:
             "memo": self.memo,
             "shares": self.shares,
             "payee": self.payee,
+            "price": self.price,
             "checknum": self.checknum,
         }
 
@@ -142,6 +144,10 @@ class LedgerView(JSONView):
                 amount=row.value,
                 reconcile=row.reconcile,
                 shares=row.shares,
+                price=
+                   float(row.price)
+                   if row.price
+                   else None,
 
                 # workaround issue in kmymoney, which always uses "BUY" for
                 # action even though it was a SELL

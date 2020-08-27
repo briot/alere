@@ -9,6 +9,7 @@ export interface Split {
    shares?: number;  //  for stock accounts
    payee?: string;
    currency?: string;
+   price?: number;
    memo?: string;
    checknum?: string;
 
@@ -56,3 +57,7 @@ export const amountForAccounts = (t: Transaction, accounts: Account[]) =>
 export const sharesForAccounts = (t: Transaction, accounts: Account[]) =>
    splitsForAccounts(t, accounts)
    .reduce((a, s) => s.shares ? a + s.shares : a, 0);
+
+export const priceForAccounts = (t: Transaction, accounts: Account[]) =>
+   splitsForAccounts(t, accounts)
+   .reduce((a, s) => s.price ? a + s.price : a, 0);
