@@ -6,7 +6,7 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import Panel, { SetHeaderProps } from 'Panel';
 import AccountName from 'Account';
 import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
-         incomeExpenseSplits, sharesForAccounts,
+         incomeExpenseSplits, sharesForAccounts, priceForAccounts,
          splitsNotForAccounts, Split, Transaction } from 'Transaction';
 import Numeric from 'Numeric';
 import useAccounts, { Account, AccountId } from 'services/useAccounts';
@@ -136,6 +136,7 @@ const stockColumnsHeader = (
       ? (
          <>
             <TH kind="shares" sortable={true}>Shares</TH>
+            <TH kind="amount" sortable={true}>Price</TH>
             <TH kind="shares" title="Balance of shares">SBalance</TH>
          </>
       ) : null;
@@ -157,6 +158,12 @@ const stockColumns = (
              <Numeric
                 amount={s.shares}
                 precision={account?.sharesPrecision}
+             />
+         </TD>
+         <TD kind="amount">
+             <Numeric
+                amount={s.price}
+                precision={account?.pricePrecision}
              />
          </TD>
          <TD kind="shares">
@@ -249,6 +256,10 @@ const FirstRow: React.FC<FirstRowProps> = p => {
       account: undefined,
       reconcile: '',
       payee: sa?.filter(s => s.payee).reduce((a, s) => a + s.payee, ''),
+      price:
+         (p.accounts === undefined || p.accounts.length > 1)
+         ? undefined
+         : priceForAccounts(t, p.accounts) || undefined,
       shares:
          (p.accounts === undefined || p.accounts.length > 1)
          ? undefined
@@ -286,14 +297,16 @@ const FirstRow: React.FC<FirstRowProps> = p => {
                }
             }
 
-            s = {...s2, amount: s.amount, shares: s.shares};
+            s = {...s2, amount: s.amount, shares: s.shares, price: s.price};
          }
          break;
       case SplitMode.OTHERS:
          if (p.accounts !== undefined) {
             const d = splitsNotForAccounts(t, p.accounts)
-            if (d.length <= 1) {
-               s = {...s, account: d[0].account, accountId: d[0].accountId};
+            if (d.length === 1) {
+               s = {...s,
+                    account: d[0].account,
+                    accountId: d[0].accountId};
             }
          }
          break;
@@ -689,25 +702,20 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
    );
    const allAccounts = allAcc as Account[] | undefined;
 
+   const idsForQuery = p.accountIds === undefined
+      ? ''
+      : p.accountIds.sort().join(',');
+   const queryKeepIE = p.accountIds === undefined || p.accountIds.length > 1;
+
    React.useEffect(
       () => {
          const dofetch = async () => {
             const resp = await window.fetch(
-               '/api/ledger/'
-               + (p.accountIds === undefined
-                   ? ''
-                   : p.accountIds.join(','))
-               + `?${rangeToHttp(p.range)}`
+               `/api/ledger/${idsForQuery}?${rangeToHttp(p.range)}`
             );
             const data: Transaction[] = await resp.json();
 
-            data.forEach(t =>
-               t.splits.forEach(s =>
-                  s.account = accounts.getAccount(s.accountId)
-               )
-            );
-
-            if (p.accountIds === undefined || p.accountIds.length > 1) {
+            if (queryKeepIE) {
                // remove internal transfers
                setTransactions(data.filter(t =>
                   incomeExpenseSplits(t).length > 0));
@@ -717,8 +725,20 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
          }
          dofetch();
       },
-      [accounts, p.accountIds, p.range]
+      [idsForQuery, p.range, queryKeepIE]
    );
+
+   React.useEffect(
+      () => {
+         transactions.forEach(t =>
+            t.splits.forEach(s =>
+               s.account = accounts.getAccount(s.accountId)
+            )
+         );
+      },
+      [transactions, accounts]
+   );
+
 
    React.useEffect(
       () => {
