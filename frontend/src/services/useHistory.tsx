@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { AccountId } from 'Transaction';
+import { AccountId } from 'services/useAccounts';
 
 interface HistoryLine {
-   accountId : AccountId;
+   accountId: AccountId;
 }
 
 type History = HistoryLine[];
@@ -21,10 +21,11 @@ const KEY = "alereHist";
 
 export const HistProvider: React.FC<{}> = p => {
    const [hist, setHist] = React.useState<History>([]);
+
    const pushAccount = React.useCallback(
       (id: AccountId) => {
          setHist(old => {
-            const v = [{accountId: id},
+            const v = [{accountId: id },
                        ...old.filter(h => h.accountId !== id)];
             localStorage.setItem(KEY, JSON.stringify(v));
             window.console.log('update history');

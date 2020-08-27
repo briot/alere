@@ -1,16 +1,15 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { AccountIdList, AccountId } from 'Transaction';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import useAccounts from 'services/useAccounts';
+import useAccounts, { Account, AccountId } from 'services/useAccounts';
 import { Checkbox } from 'Form';
 import "./Account.css";
 
 interface MultiAccountSelectProps {
    text: string;
-   value: AccountIdList | undefined;
-   onChange: (ids: AccountIdList | undefined) => void;
+   value: Account[] | undefined;
+   onChange: (ids: Account[] | undefined) => void;
    showStock?: boolean;
 }
 export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
@@ -21,27 +20,27 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
       () =>
          p.showStock
          ? tree
-         : tree.filter(n => !accounts.isStock(n.id)),
-      [accounts, tree, p.showStock]
+         : tree.filter(a => !a.account.isStock()),
+      [tree, p.showStock]
    );
 
-   const getKey = (index: number) => filteredTree[index].id;
+   const getKey = (index: number) => filteredTree[index].account.id;
    const getRow = (q: ListChildComponentProps) => {
       const r = filteredTree[q.index];
       const localChange = (checked: boolean) => {
          const cp = p.value
             ? [...p.value]
-            : tree.map(n => n.id);
+            : tree.map(a => a.account);
          if (checked) {
-            if (!cp.includes(r.id)) {
+            if (!cp.includes(r.account)) {
                if (cp.length === tree.length - 1) {
                   p.onChange(undefined);  // shortcut for all accounts
                } else {
-                  p.onChange([...cp, r.id]);
+                  p.onChange([...cp, r.account]);
                }
             }
          } else {
-            cp.splice(cp.indexOf(r.id), 1);
+            cp.splice(cp.indexOf(r.account), 1);
             p.onChange(cp);
          }
       };
@@ -49,8 +48,8 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
       return (
          <Checkbox
             style={{ ...q.style, marginLeft: r.level * 20 }}
-            text={accounts.shortName(r.id)}
-            checked={!p.value || p.value.includes(r.id)}
+            text={r.account.name}
+            checked={!p.value || p.value.includes(r.account)}
             onChange={localChange}
          />
       )
@@ -83,20 +82,24 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
 
 interface AccountProps {
    id: AccountId;
-   noLinkIf?: AccountIdList|undefined;
+   account: Account|undefined;
+   noLinkIf?: Account[]|undefined;
 }
-const Account: React.FC<AccountProps> = p => {
-   const { accounts } = useAccounts();
-   const acc = accounts.getAccount(p.id)!;
-   const name = accounts.name(p.id);
+const AccountName: React.FC<AccountProps> = p => {
+   const name = p.account ? p.account.name : `account ${p.id}`;
    return (
-      <span title={name} className={`account ${acc?.closed ? 'closed' : ''}`}>
+      <span
+         title={name}
+         className={`account ${p.account?.closed ? 'closed' : ''}`}
+      >
          {
-            p.noLinkIf === undefined || !p.noLinkIf.includes(p.id)
+            p.noLinkIf === undefined
+            || p.account === undefined
+            || !p.noLinkIf.includes(p.account)
             ? (<Link to={`/ledger/${p.id}`}>{name}</Link>)
             : name
          }
       </span>
    );
 }
-export default Account;
+export default AccountName;

@@ -1,7 +1,8 @@
 import React from 'react';
-import Account from 'Account';
+import AccountName from 'Account';
 import useHistory from 'services/useHistory';
 import RoundButton from 'RoundButton';
+import useAccounts from 'services/useAccounts';
 import './RightSideBar.css';
 
 interface RightSideBarProps {
@@ -9,6 +10,7 @@ interface RightSideBarProps {
 
 const RightSideBar: React.FC<RightSideBarProps> = p => {
    const { hist } = useHistory();
+   const { accounts } = useAccounts();
 
    return (
       <div id='rsidebar'>
@@ -21,7 +23,10 @@ const RightSideBar: React.FC<RightSideBarProps> = p => {
                   key={h.accountId}
                   size="tiny"
                >
-                  <Account id={h.accountId} />
+                  <AccountName
+                     id={h.accountId}
+                     account={accounts.getAccount(h.accountId)}
+                  />
                </RoundButton>
             )
          }

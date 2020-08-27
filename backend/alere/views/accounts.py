@@ -1,5 +1,6 @@
 from .json import JSONView
 from .kmm import kmm, do_query
+import math
 import typing
 
 
@@ -11,8 +12,11 @@ class Account:
             accountType: str,
             name: str,
             currencyId: str,
+            currencySymbol: str,
             lastReconciled: str,
-            favorite=False
+            sharesPrecision: int,
+            pricePrecision: int,
+            favorite=False,
         ):
 
         self.name = name
@@ -25,6 +29,9 @@ class Account:
         self.parent = parent
         self.lastReconciled = lastReconciled
         self.forOpeningBalances = False
+        self.sharesPrecision = sharesPrecision
+        self.pricePrecision = pricePrecision
+        self.currencySymbol = currencySymbol
 
     def to_json(self):
         return {
@@ -32,12 +39,15 @@ class Account:
             "name": self.name,
             "favorite": self.favorite,
             "currencyId": self.currencyId,
+            "currencySymbol": self.currencySymbol,
             "accountType": self.accountType,
             "closed": self.closed,
             "iban": self.iban,
             "parent": self.parent,
             "lastReconciled": self.lastReconciled,
             "forOpeningBalances": self.forOpeningBalances,
+            "sharesPrecision": self.sharesPrecision,
+            "pricePrecision": self.pricePrecision,
         }
 
 
@@ -51,8 +61,21 @@ class AccountList(JSONView):
            kmmAccounts.parentId as parent,
            kmmAccounts.lastReconciled,
            kmmAccounts.accountTypeString as accountType,
-           kmmAccounts.currencyId
+           kmmAccounts.currencyId,
+           kmmCurrencies.symbolString,
+           COALESCE
+              (kmmSecurities.smallestAccountFraction,
+               kmmCurrencies.smallestAccountFraction
+              ) as sharesPrecision,
+           COALESCE
+              (kmmSecurities.pricePrecision,
+               kmmCurrencies.pricePrecision
+              ) as pricePrecision
         FROM kmmAccounts
+           LEFT JOIN kmmSecurities
+              ON (kmmAccounts.currencyId = kmmSecurities.id)
+           LEFT JOIN kmmCurrencies
+              ON (kmmAccounts.currencyId = kmmCurrencies.ISOcode)
         """
 
         accounts = {}
@@ -64,6 +87,12 @@ class AccountList(JSONView):
                 lastReconciled=a.lastReconciled,
                 accountType=a.accountType,
                 currencyId=a.currencyId,
+                currencySymbol=
+                   a.symbolString.strip()
+                   if a.symbolString
+                   else "",
+                pricePrecision=int(a.pricePrecision),
+                sharesPrecision=int(math.log10(float(a.sharesPrecision))),
                 favorite=False)
 
         query = f"""

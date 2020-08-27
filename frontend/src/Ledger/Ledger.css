@@ -235,6 +235,7 @@
    font-family: "minion pro", "myriad pro", "tahoma";
    font-variant-numeric: oldstyle-nums tabular-nums;
    font-variant-numeric: lining-nums tabular-nums;
+   font-size-adjust: 0.438;
 }
 .ledger .num {
    flex: 0 1 5rem;
