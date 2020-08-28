@@ -720,30 +720,30 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
                `/api/ledger/${idsForQuery}?${rangeToHttp(p.range)}`
             );
             const data: Transaction[] = await resp.json();
-
-            if (queryKeepIE) {
-               // remove internal transfers
-               setBaseTrans(data.filter(t => incomeExpenseSplits(t).length > 0));
-            } else {
-               setBaseTrans(data);
-            }
+            setBaseTrans(data);
          }
          dofetch();
       },
-      [idsForQuery, p.range, queryKeepIE]
+      [idsForQuery, p.range]
    );
 
    const transactions: Transaction[] = React.useMemo(
       () => {
-         const trans = [...baseTrans]
+         let trans = [...baseTrans]
          trans.forEach(t =>
             t.splits.forEach(s =>
                s.account = accounts.getAccount(s.accountId)
             )
          );
+
+         if (queryKeepIE) {
+            // remove internal transfers
+            trans = trans.filter(t => incomeExpenseSplits(t).length > 0);
+         }
+
          return trans;
       },
-      [accounts, baseTrans]
+      [accounts, baseTrans, queryKeepIE]
    );
 
    React.useEffect(
@@ -856,7 +856,7 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
       return transactions[index].id;
    }
 
-   const className = 'ledger'
+   const className = 'ledger table'
       + (p.borders ? ' borders' : '')
       // no background necessary if we are only ever going to display one line
       // per transaction
