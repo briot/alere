@@ -136,7 +136,13 @@ const stockColumnsHeader = (
       ? (
          <>
             <TH kind="shares" sortable={true}>Shares</TH>
-            <TH kind="amount" sortable={true}>Price</TH>
+            <TH
+               kind="amount"
+               title="Price of one share at the time of the transaction"
+               sortable={true}
+            >
+               Price
+            </TH>
             <TH kind="shares" title="Balance of shares">SBalance</TH>
          </>
       ) : null;
@@ -690,7 +696,7 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
    const { setHeader } = p;
    const { accounts } = useAccounts();
    const [ rowState, setRowState ] = React.useState<RowStateProps>({});
-   const [transactions, setTransactions] = React.useState<Transaction[]>([]);
+   const [baseTrans, setBaseTrans] = React.useState<Transaction[]>([]);
    const list = React.useRef<VariableSizeList>(null);
    const allAcc = React.useMemo(
       () => p.accountIds
@@ -717,10 +723,9 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
 
             if (queryKeepIE) {
                // remove internal transfers
-               setTransactions(data.filter(t =>
-                  incomeExpenseSplits(t).length > 0));
+               setBaseTrans(data.filter(t => incomeExpenseSplits(t).length > 0));
             } else {
-               setTransactions(data);
+               setBaseTrans(data);
             }
          }
          dofetch();
@@ -728,17 +733,18 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
       [idsForQuery, p.range, queryKeepIE]
    );
 
-   React.useEffect(
+   const transactions: Transaction[] = React.useMemo(
       () => {
-         transactions.forEach(t =>
+         const trans = [...baseTrans]
+         trans.forEach(t =>
             t.splits.forEach(s =>
                s.account = accounts.getAccount(s.accountId)
             )
          );
+         return trans;
       },
-      [transactions, accounts]
+      [accounts, baseTrans]
    );
-
 
    React.useEffect(
       () => {
@@ -987,4 +993,4 @@ export const LedgerPage: React.FC<LedgerPageProps> = p => {
    );
 }
 
-export default Ledger;
+export default React.memo(Ledger);

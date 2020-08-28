@@ -20,7 +20,16 @@ const ReactHistContext = React.createContext(noContext);
 const KEY = "alereHist";
 
 export const HistProvider: React.FC<{}> = p => {
-   const [hist, setHist] = React.useState<History>([]);
+   const [hist, setHist] = React.useState<History>(
+      () => {
+         // On startup, load preferences from local storage
+         try {
+            return [...JSON.parse(localStorage.getItem(KEY) || '')];
+         } catch(e) {
+            return [];
+         }
+      }
+   );
 
    const pushAccount = React.useCallback(
       (id: AccountId) => {
@@ -38,21 +47,6 @@ export const HistProvider: React.FC<{}> = p => {
    const data = React.useMemo(
       () => ({ hist, pushAccount }),
       [hist, pushAccount]
-   );
-
-   // On startup, load preferences from local storage
-   React.useLayoutEffect(
-      () => {
-         try {
-            const p = [
-               ...JSON.parse(localStorage.getItem(KEY) || ''),
-            ];
-            window.console.log('loaded history:', p);
-            setHist(p);
-         } catch(e) {
-         }
-      },
-      []
    );
 
    return (

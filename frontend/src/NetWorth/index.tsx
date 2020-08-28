@@ -33,7 +33,7 @@ export interface NetworthProps {
 
 const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
    const { setHeader } = p;
-   const [data, setData] = React.useState<Networth>([]);
+   const [baseData, setBaseData] = React.useState<Networth>([]);
    const { accounts } = useAccounts();
    const { prefs } = usePrefs();
    const threshold = p.threshold === undefined ? 0.01 : p.threshold;
@@ -41,6 +41,57 @@ const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
    const dates = React.useMemo(
       () => p.dates.map(dateToString),
       [p.dates]
+   );
+
+   React.useEffect(
+      () => {
+         const doFetch = async () => {
+            const resp = await window.fetch(
+               `/api/plots/networth`
+               + `?currency=${prefs.currencyId}`
+               + `&dates=${dates.join(',')}`
+            );
+            const d: Networth = await resp.json()
+            setBaseData(d);
+         }
+         doFetch();
+      },
+      [prefs.currencyId, dates]
+   );
+
+   const data: Networth = React.useMemo(
+      () => {
+         let d = [...baseData];
+         d.forEach(n =>
+            n.account = accounts.getAccount(n.accountId)
+         );
+
+         // Remove lines with only 0 values
+         if (threshold !== 0) {
+            d = d.filter(a => {
+               let hasNonZero = false;
+               dates.forEach((when, idx) => {
+                  if (Math.abs(a.shares[idx] * (a.price[idx] ?? NaN))
+                      > threshold
+                     ) {
+                     hasNonZero = true;
+                  }
+               });
+               return hasNonZero;
+            });
+         }
+
+         // Sort alphabetically
+         d.sort((a, b) =>
+            a.account
+               ? b.account
+                  ? a.account.name.localeCompare(b.account.name)
+                  : 1
+               : -1
+         );
+         return d;
+      },
+      [accounts, threshold, dates, baseData]
    );
 
    const totalShares = React.useMemo(
@@ -63,50 +114,6 @@ const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
    React.useEffect(
       () => setHeader?.('Net worth'),
       [setHeader]
-   );
-
-   React.useEffect(
-      () => {
-         const doFetch = async () => {
-            const resp = await window.fetch(
-               `/api/plots/networth`
-               + `?currency=${prefs.currencyId}`
-               + `&dates=${dates.join(',')}`
-            );
-            let d: Networth = await resp.json()
-            d.forEach(n =>
-               n.account = accounts.getAccount(n.accountId)
-            );
-
-            // Remove lines with only 0 values
-            if (threshold !== 0) {
-               d = d.filter(a => {
-                  let hasNonZero = false;
-                  dates.forEach((when, idx) => {
-                     if (Math.abs(a.shares[idx] * (a.price[idx] ?? NaN))
-                         > threshold
-                        ) {
-                        hasNonZero = true;
-                     }
-                  });
-                  return hasNonZero;
-               });
-            }
-
-            // Sort alphabetically
-            d.sort((a, b) =>
-               a.account
-                  ? b.account
-                     ? a.account.name.localeCompare(b.account.name)
-                     : 1
-                  : -1
-            );
-
-            setData(d);
-         }
-         doFetch();
-      },
-      [accounts, prefs.currencyId, dates, threshold]
    );
 
    const getKey = (index: number) => {
