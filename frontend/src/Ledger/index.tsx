@@ -13,6 +13,7 @@ import useAccounts, { Account, AccountId } from 'services/useAccounts';
 import useHistory from 'services/useHistory';
 import usePrefs, { LedgerPrefs, SplitMode,
    TransactionMode } from 'services/usePrefs';
+import PriceHistory from 'PriceHistory';
 import './Ledger.css';
 
 const SPLIT = '--split--';
@@ -903,8 +904,11 @@ interface LedgerPageProps {
 }
 export const LedgerPage: React.FC<LedgerPageProps> = p => {
    const { accountId } = useParams();
+   const { accounts } = useAccounts();
    const { prefs } = usePrefs();
    const { pushAccount } = useHistory();
+
+   const account = accounts.getAccount(accountId);
 
    React.useEffect(
       () => pushAccount(accountId),
@@ -913,6 +917,12 @@ export const LedgerPage: React.FC<LedgerPageProps> = p => {
 
    return (
       <Panel className="main-area" >
+         {
+            account?.isStock() &&
+            <PriceHistory
+               account={account}
+            />
+         }
          <Ledger
             setHeader={p.setHeader}
             accountIds={[accountId]}

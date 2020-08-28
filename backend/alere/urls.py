@@ -10,6 +10,7 @@ from .views.accounts import AccountList
 from .views.ledger import LedgerView
 from .views.networth import NetworthView
 from .views.plots import CategoryPlotView
+from .views.prices import PriceHistory
 
 
 STATIC_ROOT = (
@@ -32,6 +33,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/account/list', AccountList.as_view()),
     path('api/ledger/<str:id>', LedgerView.as_view()),
+    path('api/prices/<str:accountId>', PriceHistory.as_view()),
     re_path('api/ledger/(<str:id>)?', LedgerView.as_view()),
     path('api/plots/category/<str:expenses>', CategoryPlotView.as_view()),
     path('api/plots/networth', NetworthView.as_view()),
