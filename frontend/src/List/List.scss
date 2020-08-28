@@ -1,0 +1,222 @@
+.table {
+   --row-height: 25px;  /* must match ROW_HEIGHT in javascript */
+   --th-padding-top: 3px;
+
+   display: flex;
+   flex-flow: column nowrap;
+   width: 100%;
+   height: 100%;
+
+   .tr {
+      display: flex;
+      flex-flow: row nowrap;
+      width: 100%;         /* All rows use the full width */
+      line-height: var(--row-height);
+      height: var(--row-height);
+   }
+   .th,
+   .td {
+      display: inline-block;
+      flex: 1 1;
+      border-style: solid;
+      border-color: var(--table-color);
+      border-width: var(--table-horiz-border-width) var(--table-vert-border-width);
+      padding: var(--th-padding-top) 2px;
+      overflow: hidden;  /* obey column sizes */
+      min-width: 20px;
+      white-space: nowrap;  /* lines should always use constant height */
+      text-overflow: ellipsis;
+      text-align: left;     // Default alignment
+   }
+   .th {
+      font-weight: bold;
+   }
+   .thead .tr {
+      border-bottom: 1px solid var(--table-color);
+   }
+   .tfoot .tr {
+      border-top: 1px solid var(--table-color);
+   }
+
+   /**
+    * Show borders
+    */
+   &.borders {
+      .td, .th {
+         border: 1px solid var(--gray-100);
+      }
+      .trgroup {
+         border: 1px solid var(--gray-400);
+      }
+   }
+
+   /**
+    * Rows can have a background color: the first row in a group is displayed
+    * differently from other rows.
+    */
+   &.background {
+      .trgroup .tr:first-child {
+         background: var(--table-row-first-background);
+      }
+      .trgroup .tr:not(:first-child) {
+         background: var(--table-row-details-background);
+      }
+   }
+
+   /**
+    * Expandable rows
+    */
+   &.expandableRows {
+      .trgroup.expandable::before {
+         --size: 20px;
+         font: normal normal normal 14px/1 FontAwesome;
+         text-rendering: auto;
+         width: var(--size);
+         margin-left: -20px;
+         font-size: 25px;
+         -webkit-font-smoothing: antialiased;
+         -moz-osx-font-smoothing: grayscale;
+         display: inline-block;
+         cursor: pointer;
+         float: left;
+         color: var(--expand-arrow-color);
+      }
+      .trgroup.collapsed {
+         .tr:not(:first-child) .th,
+         .tr:not(:first-child) .td {
+            transition: height 0.2s, padding 0.2s;
+            height: 0;
+            padding: 0 0;
+         }
+         &::before {
+            content: "\f0da";
+            transform: rotateZ(0) translate(25%,0%);
+            transition: transform 0.2s;
+         }
+      }
+      .trgroup.expanded {
+         .tr:not(:first-child) .th,
+         .tr:not(:first-child) .td {
+            transition: height 0.2s, padding 0.2s;
+         }
+         &::before {
+            content: "\f0da";
+            transform: rotateZ(90deg) translate(25%,0%);
+            transition: transform 0.2s;
+         }
+      }
+      .tbody .trgroup,
+      .thead,
+      .tfoot {
+         --padding-left: 20px;
+         // Leave space on the sides of the table for the expansion arrows
+         padding-left: var(--padding-left);
+      }
+      .tbody .trgroup {
+         width: calc(100% - var(--padding-left));
+      }
+   }
+
+   /**
+    * Highlight row under the mouse cursor. Rows can be grouped so that they
+    * are all highlighted when the mouse is over any of them, used for split
+    * transactions.
+    */
+   .tbody .trgroup:hover .tr,
+   .tbody .tr:hover {
+      background: var(--table-hover-background);
+   }
+
+   /**
+    * A row can have all its cells right-aligned (i.e. not in the usual
+    * columns)
+    */
+   .tr.right-aligned {
+      justify-content: flex-end;
+
+      .th, .td {
+         flex: 0 0 auto;
+         white-space: nowrap;
+      }
+      .th + .th, .td + .td {
+         // do not use flex's gap, because we also have an invisible item for
+         // the scrollbar's width.
+         margin-left: 20px;  // space between items
+      }
+   }
+
+   /**
+    * Show sorting icons
+    */
+   .thead {
+      .th.sorted-down:after,
+      .th.sorted-up:after,
+      .tr:hover .th.sortable:after {
+         display: inline-block;
+         font: normal normal normal 14px/1 FontAwesome;
+         text-rendering: auto;
+         margin-left: 5px;
+         -webkit-font-smoothing: antialiased;
+         -moz-osx-font-smoothing: grayscale;
+      }
+      .th.sortable {
+         cursor: pointer;  /* indicate that we can sort by clicking */
+      }
+      .tr:hover .th.sortable:after {
+         content: "\f0dc" !important;
+         position: absolute;  /* do not impact the rest of the layout */
+         padding-top: var(--th-padding-top);
+      }
+      .th.sorted-down:after {
+         content: "\f0dd";
+      }
+      .th.sorted-up:after {
+         content: "\f0de";
+      }
+   }
+}
+
+/**
+ * Always display the scrollbar: otherwise it ends up resizing the width of
+ * tbody when it appears, and the header's width is no longer in sync. We
+ * style it to make it less like a gray block though, using either standard
+ * CSS (firefox), or -webkit specific ones (Chrome + Safari)
+ *    https://alligator.io/css/css-scrollbars/
+ */
+.table .thead .tr:after,
+.table .tfoot .tr:after {
+   width: var(--scrollbar-width);
+   content: '';
+}
+.table .thead .tr.right-aligned:after,
+.table .tfoot .tr.right-aligned:after {
+   content: none;
+   width: 0;
+}
+
+.table .tbody {
+   flex: 1 1;  /* needed for proper sizing of the react-window */
+}
+.table .tbody > div {
+   /* overflow-y: scroll;   /* Show scrollbar always */
+   scrollbar-color: var(--scrollbar-fg) var(--scrollbar-bg);  /* firefox */
+}
+.table .tbody > div::-webkit-scrollbar {
+   width: auto;
+}
+.table .tbody > div::-webkit-scrollbar-track {
+   background: var(--scrollbar-bg);
+}
+.table .tbody > div::-webkit-scrollbar-thumb {
+   background-color: var(--scrollbar-fg);
+   border-radius: 20px;
+   border: 3px solid var(--scrollbar-border);
+}
+
+/* Warning for inconsistent data */
+.table .td.warn:before {
+   content: '\f06a';
+   font: normal normal normal 14px/1 FontAwesome;
+   margin-right: 2px;
+   color: #f2e154;
+}

@@ -1,218 +1,9 @@
 .ledger {
-   --row-height: 25px;  /* must match ROW_HEIGHT in javascript */
-
    flex: 1 1;  /* ledger itself occupies as much space as possible */
-
-   display: flex;
-   flex-flow: column nowrap;
-}
-.ledger .content {
-   display: flex;
-   flex-flow: column nowrap;
-
 }
 
-.ledger .tr {
-   display: flex;
-   width: 100%;         /* All rows use the full width */
-   height: var(--row-height);
-}
-.ledger .th,
-.ledger .td {
-   display: inline-block;
-   flex: 1 1;
-   border-style: solid;
-   border-color: var(--table-color);
-   border-width: var(--table-horiz-border-width) var(--table-vert-border-width);
-   padding: 3px 2px;
-   overflow: hidden;  /* obey column sizes */
-   min-width: 20px;
-
-   white-space: nowrap;  /* lines should always use constant height */
-   text-overflow: ellipsis;
-}
-.ledger .th {
-   font-weight: bold;
-}
-.ledger .td {
-   text-align: left;  /* default alignment */
-}
-.ledger .thead .tr .th {
-   border-bottom: 1px solid var(--table-color);
-   cursor: pointer;  /* indicate that we can sort by clicking */
-}
-.ledger .tfoot .tr {
-   border-top: 1px solid var(--table-color);
-}
-.ledger .tfoot .tr .td,
-.ledger .tfoot .tr .th {
-   margin-left: 20px;  /* space between items */
-}
 .ledger a {
    text-decoration: none;
-}
-
-/* split transaction details */
-.ledger .tr:not(:first-child) .td {
-   color: var(--table-row-details-fg);
-   font-style: italic;
-}
-.ledger .tr:not(:first-child) .numeric {
-   font-size: 0.8rem;
-}
-
-/**
- * Show borders
- */
-
-.ledger.borders .td,
-.ledger.borders .th {
-   border: 1px solid var(--gray-100);
-}
-.ledger.borders .trgroup {
-   border: 1px solid var(--gray-400);
-}
-
-
-/**
- * Always display the scrollbar: otherwise it ends up resizing the width of
- * tbody when it appears, and the header's width is no longer in sync. We
- * style it to make it less like a gray block though, using either standard
- * CSS (firefox), or -webkit specific ones (Chrome + Safari)
- *    https://alligator.io/css/css-scrollbars/
- */
-.ledger .thead .tr:after,
-.ledger .tfoot .tr:after {
-   width: var(--scrollbar-width);
-   content: '';
-}
-.ledger .tbody {
-   flex: 1 1;  /* needed for proper sizing of the react-window */
-}
-.ledger .tbody > div {
-   /* overflow-y: scroll;   /* Show scrollbar always */
-   scrollbar-color: var(--scrollbar-fg) var(--scrollbar-bg);  /* firefox */
-}
-.ledger .tbody > div::-webkit-scrollbar {
-   width: auto;
-}
-.ledger .tbody > div::-webkit-scrollbar-track {
-   background: var(--scrollbar-bg);
-}
-.ledger .tbody > div::-webkit-scrollbar-thumb {
-   background-color: var(--scrollbar-fg);
-   border-radius: 20px;
-   border: 3px solid var(--scrollbar-border);
-}
-
-/**
- * Show sorting icons
- */
-.ledger .thead .tr .th.sorted-down:after,
-.ledger .thead .tr .th.sorted-up:after,
-.ledger .thead .tr:hover .th.sortable:after {
-   display: inline-block;
-   font: normal normal normal 14px/1 FontAwesome;
-   text-rendering: auto;
-   margin-left: 5px;
-   -webkit-font-smoothing: antialiased;
-   -moz-osx-font-smoothing: grayscale;
-}
-.ledger .thead .tr:hover .th.sortable:after {
-   content: "\f0dc" !important;
-   position: absolute;  /* do not impact the rest of the layout */
-}
-.ledger .thead .tr .th.sorted-down:after {
-   content: "\f0dd";
-}
-.ledger .thead .tr .th.sorted-up:after {
-   content: "\f0de";
-}
-
-/**
- * Expandable rows
- */
-.ledger .trgroup.expandable::before {
-   --size: 20px;
-
-   font: normal normal normal 14px/1 FontAwesome;
-   text-rendering: auto;
-   width: var(--size);
-   margin-left: -20px;
-   font-size: 25px;
-   -webkit-font-smoothing: antialiased;
-   -moz-osx-font-smoothing: grayscale;
-   display: inline-block;
-   cursor: pointer;
-   float: left;
-   color: var(--expand-arrow-color);
-}
-.ledger .trgroup.collapsed::before {
-   content: "\f0da";
-   transform: rotateZ(0) translate(25%,0%);
-   transition: transform 0.2s;
-}
-.ledger .trgroup.expanded::before {
-   content: "\f0da";
-   transform: rotateZ(90deg) translate(25%,0%);
-   transition: transform 0.2s;
-}
-.ledger .trgroup.collapsed .tr:not(:first-child) .th,
-.ledger .trgroup.collapsed .tr:not(:first-child) .td {
-   transition: height 0.2s, padding 0.2s;
-   height: 0;
-   padding: 0 0;
-}
-.ledger .trgroup.expanded .tr:not(:first-child) .th,
-.ledger .trgroup.expanded .tr:not(:first-child) .td {
-   transition: height 0.2s, padding 0.2s;
-}
-.ledger .tbody .trgroup,
-.ledger .thead,
-.ledger .tfoot {
-   --padding-left: 20px;
-
-   /* Leave space on the sides of the table for the expansion arrows */
-   padding-left: var(--padding-left);
-}
-.ledger .tbody .trgroup {
-   width: calc(100% - var(--padding-left));
-}
-
-/**
- * Rows can have a background color
- */
-.ledger.background .trgroup .tr:first-child {
-   background: var(--table-row-first-background);
-}
-.ledger.background .trgroup .tr:not(:first-child) {
-   background: var(--table-row-details-background);
-}
-
-/* A row can have all its cells right-aligned (i.e. not in the usual columns) */
-.ledger .tr.right-aligned {
-   justify-content: flex-end;
-}
-.ledger .tr.right-aligned .th,
-.ledger .tr.right-aligned .td {
-   flex: 0 0 auto;
-   white-space: nowrap;
-}
-
-/* Highlight row under the mouse cursor. Rows can be grouped so that they are
- * all highlighted when the mouse is over any of them, used for split
- * transactions. */
-.ledger .tbody .trgroup:hover .tr,
-.ledger .tbody .tr:hover {
-   background: var(--table-hover-background);
-}
-
-/* Warning for inconsistent data */
-.ledger .td.warn:before {
-   content: '\f06a';
-   font: normal normal normal 14px/1 FontAwesome;
-   margin-right: 2px;
-   color: #f2e154;
 }
 
 /* Editing */
@@ -226,6 +17,14 @@
    appearance: none;
 }
 
+/* split transaction details */
+.ledger .tr:not(:first-child) .td {
+   color: var(--table-row-details-fg);
+   font-style: italic;
+}
+.ledger .tr:not(:first-child) .numeric {
+   font-size: 0.8rem;
+}
 
 /**
  * Column-specific settings
