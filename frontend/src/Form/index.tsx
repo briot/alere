@@ -50,6 +50,7 @@ interface ButtonProps extends SharedInputProps {
    primary?: boolean;
    danger?: boolean;
    className?: string;
+   onClick?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
 }
 export const Button: React.FC<ButtonProps> = p => {
    const c = `button ${p.className || ''}${p.disabled ? ' disabled' : ''}${p.primary ? ' primary' : ''}${p.danger ? ' danger' : ''}`;
@@ -58,6 +59,7 @@ export const Button: React.FC<ButtonProps> = p => {
          className={c}
          disabled={p.disabled}
          style={p.style}
+         onClick={p.onClick}
       >
          {p.text}
       </button>
