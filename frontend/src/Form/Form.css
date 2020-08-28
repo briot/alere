@@ -115,5 +115,6 @@ form .checkbox > input:active {
 button {
    font-size: 1rem;
    min-width: 10ch;
+   min-height: 1em;
    border-radius: 0.5em;
 }

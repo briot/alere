@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Option, Select } from 'Form';
+import RoundButton from 'RoundButton';
 import './Dates.css';
 
 export type RelativeDate =
@@ -251,9 +252,8 @@ interface MultiDatePickerProps {
 export const MultiDatePicker: React.FC<MultiDatePickerProps> = p => {
    const { onChange } = p;
 
-   const appendDate = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+   const appendDate = () => {
       onChange([...p.value, "today"]);
-      event.preventDefault();
    };
 
    const EditItem = (p2: {idx: number}) => {
@@ -269,14 +269,15 @@ export const MultiDatePicker: React.FC<MultiDatePickerProps> = p => {
 
       return (
          <div className="row">
-            <button
-               className="fa fa-remove"
-               onClick={removeDate}
-            />
             <RelativeDatePicker
                onChange={changeDate}
                text=""
                value={p.value[p2.idx]}
+            />
+            <RoundButton
+               fa="fa-remove"
+               size="tiny"
+               onClick={removeDate}
             />
          </div>
       );
@@ -289,8 +290,9 @@ export const MultiDatePicker: React.FC<MultiDatePickerProps> = p => {
             p.value.map((d, i) => <EditItem idx={i} key={i} />)
          }
          <div className="row">
-            <button
-                className="fa fa-plus"
+            <RoundButton
+                fa="fa-plus"
+                size="small"
                 onClick={appendDate}
             />
          </div>
