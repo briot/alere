@@ -77,19 +77,9 @@ interface DashboardType {
  * Load and return the contents of the dashboard with the given name
  */
 const useDashboard = (name: string): DashboardType => {
-   const [panels, setPanels] = React.useState<BaseProps[]>(defaultDashboard);
    const KEY = `alere-dash-${name}`;
-
-   // On startup, load preferences from local storage
-   React.useEffect(
-      () => {
-         try {
-            const p = JSON.parse(localStorage.getItem(KEY) || '');
-            setPanels(p);
-         } catch(e) {
-         }
-      },
-      [KEY]
+   const [panels, setPanels] = React.useState<BaseProps[]>(
+      () => JSON.parse(localStorage.getItem(KEY) || '') || defaultDashboard,
    );
 
    // Save dashboards when they change

@@ -62,7 +62,7 @@ const CustomTooltip = (p: TooltipProps & {data: DataType} ) => {
      ? (
        <div className="customTooltip" >
            <AccountName
-              id={pay.payload.account.id}
+              id={pay.payload.accountId}
               account={pay.payload.account}
            />
            <div>
@@ -88,7 +88,7 @@ export interface PiePlotProps {
 
 const CategoryPie: React.FC<PiePlotProps & SetHeaderProps> = p => {
    const { setHeader } = p;
-   const [data, setData] = React.useState(noData);
+   const [baseData, setBaseData] = React.useState(noData);
    const { accounts } = useAccounts();
    const { prefs } = usePrefs();
 
@@ -101,13 +101,8 @@ const CategoryPie: React.FC<PiePlotProps & SetHeaderProps> = p => {
             );
             const d: DataType = await resp.json();
 
-            d.items.forEach(a => {
-               a.account = accounts.getAccount(a.accountId);
-               a[NAME_KEY] = a.account?.name;
-            });
-
             // Filter out negative data, which we cannot show in a pie graph
-            setData({
+            setBaseData({
                items: d.items.filter(v => v.value > 0),
                mindate: d.mindate,
                maxdate: d.maxdate,
@@ -115,7 +110,19 @@ const CategoryPie: React.FC<PiePlotProps & SetHeaderProps> = p => {
          }
          dofetch();
       },
-      [p.expenses, p.range, accounts]
+      [p.expenses, p.range]
+   );
+
+   const data: DataType = React.useMemo(
+      () => {
+         const d = {...baseData};
+         d.items.forEach(a => {
+            a.account = accounts.getAccount(a.accountId);
+            a[NAME_KEY] = a.account?.name;
+         });
+         return d;
+      },
+      [accounts, baseData]
    );
 
    const legendItem = (value: any, entry: any, index?: number) =>
