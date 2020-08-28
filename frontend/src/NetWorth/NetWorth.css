@@ -1,52 +1,25 @@
 .networth {
-   --nw-line-height: 25px;
-
-   width: 100%;
-   height: 100%;
-   overflow: auto;
-   display: flex;
-   line-height: var(--nw-line-height);
-
-   flex-flow: column nowrap;
+   flex: 1 1;
 }
 
-.networth .row {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: space-between;
-}
-.networth .thead .row span {
+.networth .thead .tr span {
    white-space: wrap;
 }
-.networth .row span:first-child {
+.networth .tr span:first-child {
    flex: 1 0 150px;
 }
-.networth .row span:not(:first-child) {
+.networth .tr span:not(:first-child) {
    --col-width: 110px;
    flex: 0 0 var(--col-width);
    text-align: right;
 }
-.networth .row span:not(:first-child).span3 {
+.networth .tr span:not(:first-child).span3 {
    flex-basis: calc( var(--col-width) * 3 );
 }
-.networth .row span:not(:first-child).span2 {
+.networth .tr span:not(:first-child).span2 {
    flex-basis: calc( var(--col-width) * 2 );
 }
-.networth .tfoot .row span:not(:first-child),
-.networth .tbody .row span:not(:first-child) {
+.networth .tfoot .tr span:not(:first-child),
+.networth .tbody .tr span:not(:first-child) {
    text-align: right;
-}
-
-
-.networth .tbody {
-   flex: 1 1;
-}
-.networth .thead,
-.networth .tfoot {
-   flex: 0;
-   font-weight: bold;
-
-   /*
-   margin-right: var(--scrollbar-width);
-   */
 }

@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { RelativeDate, dateToString } from 'Dates';
-import { FixedSizeList, ListChildComponentProps } from 'react-window';
+import { ListChildComponentProps } from 'react-window';
 import Numeric from 'Numeric';
-import AutoSizer from 'react-virtualized-auto-sizer';
 import AccountName from 'Account';
 import { SetHeaderProps } from 'Panel';
 import useAccounts, { Account, AccountId } from 'services/useAccounts';
 import usePrefs from 'services/usePrefs';
+import Table from 'List';
 import "./NetWorth.css";
 
 interface NetworthLine {
@@ -124,7 +124,7 @@ const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
       (q: ListChildComponentProps) => {
          const r = data[q.index];
          return (
-            <div style={q.style} className="row" key={r.accountId} >
+            <div style={q.style} className="tr" key={r.accountId} >
                <AccountName
                    id={r.accountId}
                    account={r.account}
@@ -174,89 +174,80 @@ const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
       + (p.showShares ? 1 : 0)
       + (p.showPrice ? 1 : 0);
 
-   return (
-      <div className="networth">
-         <div className="thead">
-            <div className="row">
-               <span>Account</span>
-               {
-                  dates.map((d, idx) =>
-                     <span className={`span${span}`} key={idx} >
-                        {d}
-                     </span>)
-               }
-            </div>
+   const header = (
+      <>
+         <div className="tr">
+            <span className="th">Account</span>
             {
-               (p.showShares || p.showPrice) &&
-               <div className="row">
-                  <span />
-                  {
-                     p.dates.map((d, idx) => (
-                        <React.Fragment key={idx}>
-                           {
-                              p.showShares && <span>Shares</span>
-                           }
-                           {
-                              p.showPrice && <span>Price</span>
-                           }
-                           {
-                              p.showValue && <span>Value</span>
-                           }
-                        </React.Fragment>
-                     ))
-                  }
-               </div>
+               dates.map((d, idx) =>
+                  <span className={`th span${span}`} key={idx} >
+                     {d}
+                  </span>)
             }
          </div>
-         <div className="tbody">
-            <AutoSizer>
-               {
-                  ({ width, height }) => (
-                     <FixedSizeList
-                        width={width}
-                        height={height}
-                        itemCount={data.length}
-                        itemSize={NW_LINE_HEIGHT}
-                        itemKey={getKey}
-                     >
-                        {getRow}
-                     </FixedSizeList>
-                  )
-               }
-            </AutoSizer>
-         </div>
-         <div className="tfoot" >
-            <div className="row">
-               <span>Total</span>
+         {
+            (p.showShares || p.showPrice) &&
+            <div className="tr">
+               <span />
                {
                   p.dates.map((d, idx) => (
                      <React.Fragment key={idx}>
-                        {
-                           p.showShares &&
-                           <span>
-                              <Numeric
-                                 amount={totalShares[idx]}
-                              />
-                           </span>
-                        }
-                        {
-                           p.showPrice &&
-                           <span />
-                        }
-                        {
-                           p.showValue &&
-                           <span>
-                              <Numeric
-                                 amount={total[idx]}
-                                 currency={prefs.currencyId}
-                              />
-                           </span>
-                        }
+                        {p.showShares && <span className="th">Shares</span>}
+                        {p.showPrice && <span className="th">Price</span>}
+                        {p.showValue && <span className="th">Value</span>}
                      </React.Fragment>
                   ))
                }
             </div>
+         }
+      </>
+   );
+
+   const footer = (
+      <div className="tfoot" >
+         <div className="tr">
+            <span>Total</span>
+            {
+               p.dates.map((d, idx) => (
+                  <React.Fragment key={idx}>
+                     {
+                        p.showShares &&
+                        <span>
+                           <Numeric
+                              amount={totalShares[idx]}
+                           />
+                        </span>
+                     }
+                     {
+                        p.showPrice &&
+                        <span />
+                     }
+                     {
+                        p.showValue &&
+                        <span>
+                           <Numeric
+                              amount={total[idx]}
+                              currency={prefs.currencyId}
+                           />
+                        </span>
+                     }
+                  </React.Fragment>
+               ))
+            }
          </div>
+      </div>
+   );
+
+   return (
+      <div className="networth">
+         <Table.Table
+            itemCount={data.length}
+            itemSize={NW_LINE_HEIGHT}
+            itemKey={getKey}
+            getRow={getRow}
+            header={header}
+            footer={footer}
+         />
       </div>
    );
 }
