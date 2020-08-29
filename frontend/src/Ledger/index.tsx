@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { VariableSizeList, ListChildComponentProps } from 'react-window';
-import { DateRange, dateToString, rangeDisplay, rangeToHttp } from 'Dates';
+import { DateRange, dateToString, rangeDisplay } from 'Dates';
 import Table from 'List';
 import Panel, { SetHeaderProps } from 'Panel';
 import AccountName from 'Account';
@@ -11,6 +11,8 @@ import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
 import Numeric from 'Numeric';
 import useAccounts, { Account, AccountId } from 'services/useAccounts';
 import useHistory from 'services/useHistory';
+import useAccountIds from 'services/useAccountIds';
+import useTransactions from 'services/useTransactions';
 import usePrefs, { LedgerPrefs, SplitMode,
    TransactionMode } from 'services/usePrefs';
 import PriceHistory from 'PriceHistory';
@@ -627,75 +629,28 @@ const setupLogicalRows = (
  */
 
 export interface LedgerProps extends LedgerPrefs {
-   accountIds: AccountId[] | undefined;  // undefined for all accounts
-   range?: DateRange|undefined;      // undefined, to see forever
+   accounts: Account[] | undefined;  // undefined for all accounts
+   range?: DateRange|undefined   // undefined, to see forever
+   transactions: Transaction[];  // as downloaded from server, and after
+      // resolving Account fields
 }
 
 const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
    const { setHeader } = p;
-   const { accounts } = useAccounts();
    const [ rowState, setRowState ] = React.useState<RowStateProps>({});
-   const [baseTrans, setBaseTrans] = React.useState<Transaction[]>([]);
    const list = React.useRef<VariableSizeList>(null);
-   const allAcc = React.useMemo(
-      () => p.accountIds
-         ? p.accountIds
-            .map(a => accounts.getAccount(a))
-            .filter(a => a !== undefined)
-         : undefined,
-      [p.accountIds, accounts]
-   );
-   const allAccounts = allAcc as Account[] | undefined;
-
-   const idsForQuery = p.accountIds === undefined
-      ? ''
-      : p.accountIds.sort().join(',');
-   const queryKeepIE = p.accountIds === undefined || p.accountIds.length > 1;
 
    React.useEffect(
       () => {
-         const dofetch = async () => {
-            const resp = await window.fetch(
-               `/api/ledger/${idsForQuery}?${rangeToHttp(p.range)}`
-            );
-            const data: Transaction[] = await resp.json();
-            setBaseTrans(data);
-         }
-         dofetch();
-      },
-      [idsForQuery, p.range]
-   );
-
-   const transactions: Transaction[] = React.useMemo(
-      () => {
-         let trans = [...baseTrans]
-         trans.forEach(t =>
-            t.splits.forEach(s =>
-               s.account = accounts.getAccount(s.accountId)
-            )
-         );
-
-         if (queryKeepIE) {
-            // remove internal transfers
-            trans = trans.filter(t => incomeExpenseSplits(t).length > 0);
-         }
-
-         return trans;
-      },
-      [accounts, baseTrans, queryKeepIE]
-   );
-
-   React.useEffect(
-      () => {
-         const name = allAccounts === undefined
+         const name = p.accounts === undefined
             ? 'All accounts'
-            : allAccounts.length === 1
-            ? allAccounts[0]?.name
+            : p.accounts.length === 1
+            ? p.accounts[0]?.name
             : 'Multiple accounts';
          const dates = p.range ? rangeDisplay(p.range) : '';
          setHeader?.(`${name} ${dates}`);
       },
-      [allAccounts, setHeader, p.range]
+      [p.accounts, setHeader, p.range]
    );
 
    const resetAfterIndex = React.useCallback(
@@ -710,13 +665,13 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
    React.useLayoutEffect(
       () => {
          setRowState(setupLogicalRows(
-            transactions,
+            p.transactions,
             p.trans_mode, p.split_mode,
             p.defaultExpand,
-            allAccounts));
+            p.accounts));
          resetAfterIndex(0);
       },
-      [transactions, allAccounts, p.split_mode, p.trans_mode, p.defaultExpand,
+      [p.transactions, p.accounts, p.split_mode, p.trans_mode, p.defaultExpand,
        resetAfterIndex]
    );
 
@@ -733,7 +688,7 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
 
    const [future, present, reconciled, cleared, selected] = React.useMemo(
       () => {
-         const future = transactions[transactions.length - 1]?.balance;
+         const future = p.transactions[p.transactions.length - 1]?.balance;
          const formatted = dateToString("today");
 
          let present: undefined|number;
@@ -749,55 +704,53 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
             }
          }
 
-         for (let j = transactions.length - 1; j >= 0; j--) {
-            const t = transactions[j];
+         for (let j = p.transactions.length - 1; j >= 0; j--) {
+            const t = p.transactions[j];
             if (present === undefined && t.date <= formatted) {
                present = t.balance;
             }
-            if (allAccounts === undefined) {
+            if (p.accounts === undefined) {
                t.splits.forEach(addSplit);
             } else {
-               splitsForAccounts(t, allAccounts).forEach(addSplit);
+               splitsForAccounts(t, p.accounts).forEach(addSplit);
             }
          }
 
          return [future, present, reconciled, cleared, selected];
       },
-      [transactions, allAccounts]
+      [p.transactions, p.accounts]
    );
 
-   const Row = React.useCallback(
+   const Row =
       (r: ListChildComponentProps) => {
-         const t = transactions[r.index];
+         const t = p.transactions[r.index];
          delete r.style['width'];   // set in the CSS
          return (
             <TransactionRow
                style={r.style}
                transaction={t}
-               accounts={allAccounts}
+               accounts={p.accounts}
                prefs={p}
                expanded={rowState[t.id]?.expanded}
                setExpanded={setTransactionExpanded}
             />
          );
-      },
-      [transactions, setTransactionExpanded, rowState, p, allAccounts]
-   );
+      }
 
    const getTransactionHeight = React.useCallback(
       (index: number) => {
-         const t = transactions[index];
+         const t = p.transactions[index];
          const d = rowState[t?.id];
          return Table.ROW_HEIGHT * (
             1
             + noteRowsCount(t, p.trans_mode, d?.expanded)
-            + splitRowsCount(t, p.split_mode, d?.expanded, allAccounts));
+            + splitRowsCount(t, p.split_mode, d?.expanded, p.accounts));
       },
-      [rowState, transactions, p.trans_mode, allAccounts, p.split_mode]
+      [rowState, p.transactions, p.trans_mode, p.accounts, p.split_mode]
    );
 
    const getTransactionKey = (index: number) => {
-      return transactions[index].id;
+      return p.transactions[index].id;
    }
 
    const header = (
@@ -815,8 +768,8 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
          }
          {
             stockColumnsHeader(
-               allAccounts !== undefined && allAccounts.length === 1
-               ? allAccounts[0]
+               p.accounts !== undefined && p.accounts.length === 1
+               ? p.accounts[0]
                : undefined
             )
          }
@@ -883,7 +836,7 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
             expandableRows={p.split_mode !== SplitMode.HIDE}
             header={header}
             footer={footer}
-            itemCount={transactions.length}
+            itemCount={p.transactions.length}
             itemSize={getTransactionHeight}
             itemKey={getTransactionKey}
             getRow={Row}
@@ -899,6 +852,18 @@ const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
    );
 }
 
+export interface LedgerPanelProps extends LedgerPrefs {
+   accountIds: AccountId[] | undefined;  // undefined for all accounts
+   range?: DateRange|undefined   // undefined, to see forever
+}
+export const LedgerPanel: React.FC<LedgerPanelProps> = p => {
+   const accounts = useAccountIds(p.accountIds);
+   const transactions = useTransactions(p.accountIds, p.range);
+   return (
+      <Ledger {...p} accounts={accounts} transactions={transactions} />
+   );
+}
+
 interface LedgerPageProps {
    setHeader: (title: string|undefined) => void;
 }
@@ -909,27 +874,38 @@ export const LedgerPage: React.FC<LedgerPageProps> = p => {
    const { pushAccount } = useHistory();
 
    const account = accounts.getAccount(accountId);
+   const transactions = useTransactions([accountId]);
 
    React.useEffect(
       () => pushAccount(accountId),
       [accountId, pushAccount]
    );
 
+   if (!account) {
+      return <div>Unknown account</div>;
+   }
+
    return (
-      <Panel className="main-area" >
+      <div className="main-area" >
          {
             account?.isStock() &&
-            <PriceHistory
-               account={account}
-            />
+            <Panel header="Price history">
+               <PriceHistory
+                  account={account}
+                  transactions={transactions}
+               />
+            </Panel>
          }
-         <Ledger
-            setHeader={p.setHeader}
-            accountIds={[accountId]}
-            hideBalance={false}
-            {...prefs.ledgers}
-         />
-      </Panel>
+         <Panel className="ledger">
+            <Ledger
+               setHeader={p.setHeader}
+               accounts={[account]}
+               transactions={transactions}
+               hideBalance={false}
+               {...prefs.ledgers}
+            />
+         </Panel>
+      </div>
    );
 }
 
