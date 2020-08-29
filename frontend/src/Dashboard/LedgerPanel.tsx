@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Ledger, { LedgerProps } from 'Ledger';
+import { LedgerPanel, LedgerPanelProps } from 'Ledger';
 import { SplitMode, TransactionMode } from 'services/usePrefs';
 import { Checkbox, Select, Option } from 'Form';
 import { DateRange, DateRangePicker } from 'Dates';
@@ -9,7 +9,7 @@ import { Account } from 'services/useAccounts';
 import { SelectMultiAccount } from 'Account';
 import useAccounts from 'services/useAccounts';
 
-export interface LedgerPanelProps extends LedgerProps, BaseProps {
+export interface DashboardLedgerPanelProps extends LedgerPanelProps, BaseProps {
    type: 'ledger';
 }
 
@@ -119,7 +119,7 @@ export const LedgerPrefsSettings:
 
 }
 
-const Settings: React.FC<LedgerProps & SettingsProps<LedgerProps>>
+const Settings: React.FC<LedgerPanelProps & SettingsProps<LedgerPanelProps>>
 = p => {
    const { accounts } = useAccounts();
    const changeRange = (range: DateRange) => p.setData({ range });
@@ -152,8 +152,8 @@ const Settings: React.FC<LedgerProps & SettingsProps<LedgerProps>>
    );
 }
 
-const LedgerModule: DashboardModule<LedgerPanelProps> = {
+const LedgerModule: DashboardModule<DashboardLedgerPanelProps> = {
    Settings,
-   Content: Ledger,
+   Content: LedgerPanel,
 }
 export default LedgerModule;

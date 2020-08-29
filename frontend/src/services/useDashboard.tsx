@@ -3,7 +3,7 @@ import { BaseProps, DashboardModule } from 'Dashboard/Panels';
 import IncomeExpensesModule, { IncomeExpensesProps } from 'Dashboard/IncomeExpenses';
 import NetworthModule, { NetworthPanelProps } from 'Dashboard/NetworthPanel';
 import QuadrantModule, { QuadrantPanelProps } from 'Dashboard/QuadrantPanel';
-import LedgerModule, { LedgerPanelProps } from 'Dashboard/LedgerPanel';
+import LedgerModule, { DashboardLedgerPanelProps } from 'Dashboard/LedgerPanel';
 import { SplitMode, TransactionMode } from 'services/usePrefs';
 
 export const DASHBOARD_MODULES: {[name: string]: DashboardModule<any>} = {
@@ -55,7 +55,7 @@ const defaultDashboard: BaseProps[] = [
       hideReconcile: true,
       rowspan: 2,
       colspan: 2,
-   } as LedgerPanelProps,
+   } as DashboardLedgerPanelProps,
    {
       type: 'upcoming',
       rowspan: 1,

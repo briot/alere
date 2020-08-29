@@ -37,6 +37,10 @@
 
 .main-area {
    grid-area: main;
+
+   display: flex;
+   flex-flow: column nowrap;
+   gap: var(--row-gap);
 }
 
 .italic {
