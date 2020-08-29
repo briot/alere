@@ -201,7 +201,7 @@ const FirstRow: React.FC<FirstRowProps> = p => {
    let s: Split = {
       accountId: SPLIT_ID,
       account: undefined,
-      reconcile: '',
+      reconcile: sa ? sa[0].reconcile : 'n',
       payee: sa?.filter(s => s.payee).reduce((a, s) => a + s.payee, ''),
       price:
          (p.accounts === undefined || p.accounts.length > 1)
