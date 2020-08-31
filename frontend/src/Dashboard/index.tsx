@@ -1,88 +1,31 @@
 import * as React from 'react';
-import { BaseProps, BasePropEditor, DashboardModule } from 'Dashboard/Panels';
-import Panel, { SetHeaderProps } from 'Panel';
-import useDashboard, { DASHBOARD_MODULES } from 'services/useDashboard';
+import { SetHeaderProps } from 'Panel';
+import { BaseProps } from 'Dashboard/Module';
+import DashboardPanel from 'Dashboard/Panel';
+import useDashboard from 'services/useDashboard';
 import './Dashboard.css';
 
-const NotAvailableModule: DashboardModule<BaseProps> = {
-   Content: (p: BaseProps & SetHeaderProps) => {
-      const { setHeader } = p;
-      React.useEffect(
-         () => setHeader?.(p.type),
-         [setHeader, p.type]
-      );
-      return <span>Not available</span>
-   }
-};
-
-interface PanelProps {
+export interface DashboardProps extends SetHeaderProps {
    panels: BaseProps[];
-   setPanels: (p: (old: BaseProps[]) => BaseProps[]) => void;
-   index: number;
+   setPanels?: (p: (old: BaseProps[])=>BaseProps[]) => void;
+   header: string;
 }
-
-const DashboardPanel: React.FC<PanelProps> = React.memo(p => {
-   const [header, setHeader] = React.useState("");
-   const { setPanels } = p;
-   const p2 = p.panels[p.index];
-   const m = DASHBOARD_MODULES[p2.type] || NotAvailableModule;
-
-   const localChange = React.useCallback(
-      (a: Partial<BaseProps>) =>
-         setPanels(old => {
-            const n = [...old];
-            n[p.index] = {...n[p.index], ...a};
-            return n;
-         }),
-      [setPanels, p.index]
-   );
-
-   const settings = React.useCallback(
-      () => (
-         <form>
-            {
-               m.Settings &&
-               <m.Settings
-                  {...p2 }
-                  setData={localChange}
-               />
-            }
-            <BasePropEditor {...p2} setData={localChange} />
-         </form>
-      ),
-      [p2, localChange, m]
-   );
-
-   return (
-      <Panel
-         rows={p2.rowspan}
-         cols={p2.colspan}
-         header={header}
-         settings={settings}
-      >
-         <m.Content {...p2 as any} setHeader={setHeader} />
-      </Panel>
-   );
-});
-
-
-const Dashboard: React.FC<SetHeaderProps> = p => {
-   const { panels, setPanels } = useDashboard('main');
+export const Dashboard: React.FC<DashboardProps> = p => {
    const { setHeader } = p;
 
    React.useEffect(
-      () => setHeader?.('Overview'),
-      [setHeader]
+      () => setHeader?.(p.header),
+      [setHeader, p.header]
    );
 
    return (
       <div className="dashboard">
          {
-            panels.map((p2, idx) =>
+            p.panels.map((p2, idx) =>
                <DashboardPanel
                   key={idx}
-                  panels={panels}
-                  setPanels={setPanels}
+                  panels={p.panels}
+                  setPanels={p.setPanels}
                   index={idx} />
             )
          }
@@ -90,4 +33,16 @@ const Dashboard: React.FC<SetHeaderProps> = p => {
    );
 }
 
-export default Dashboard;
+export interface DashboardFromNameProps extends SetHeaderProps {
+   name: string;     // dashboard name
+}
+const DashboardFromName: React.FC<DashboardFromNameProps> = p => {
+   const { panels, setPanels } = useDashboard(p.name);
+   return <Dashboard
+      panels={panels}
+      setPanels={setPanels}
+      header={p.name}
+      setHeader={p.setHeader}
+   />;
+}
+export default DashboardFromName;

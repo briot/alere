@@ -67,3 +67,4 @@ export const BasePropEditor = (p: BaseProps & SettingsProps<BaseProps>) => {
       </fieldset>
    );
 }
+

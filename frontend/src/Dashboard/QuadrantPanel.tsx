@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { BaseProps, DashboardModule } from 'Dashboard/Panels';
+import { BaseProps, DashboardModule } from 'Dashboard/Module';
 import { SetHeaderProps } from 'Panel';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
          Tooltip } from 'recharts';

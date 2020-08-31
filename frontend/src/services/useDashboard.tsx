@@ -1,17 +1,32 @@
 import * as React from 'react';
-import { BaseProps, DashboardModule } from 'Dashboard/Panels';
+import { BaseProps, DashboardModule } from 'Dashboard/Module';
+import { SetHeaderProps } from 'Panel';
 import IncomeExpensesModule, { IncomeExpensesProps } from 'Dashboard/IncomeExpenses';
 import NetworthModule, { NetworthPanelProps } from 'Dashboard/NetworthPanel';
 import QuadrantModule, { QuadrantPanelProps } from 'Dashboard/QuadrantPanel';
 import LedgerModule, { DashboardLedgerPanelProps } from 'Dashboard/LedgerPanel';
 import { SplitMode, TransactionMode } from 'services/usePrefs';
 
-export const DASHBOARD_MODULES: {[name: string]: DashboardModule<any>} = {
+const NotAvailableModule: DashboardModule<BaseProps> = {
+   Content: (p: BaseProps & SetHeaderProps) => {
+      const { setHeader } = p;
+      React.useEffect(
+         () => setHeader?.(p.type),
+         [setHeader, p.type]
+      );
+      return <span>Not available</span>
+   }
+};
+
+const DASHBOARD_MODULES: {[name: string]: DashboardModule<any>} = {
    "incomeexpenses": IncomeExpensesModule,
    "networth": NetworthModule,
    "quadrant": QuadrantModule,
    "ledger": LedgerModule,
 };
+
+export const getModule = (name: string): DashboardModule<any> =>
+   DASHBOARD_MODULES[name] || NotAvailableModule;
 
 const defaultDashboard: BaseProps[] = [
    {
@@ -79,7 +94,7 @@ interface DashboardType {
 const useDashboard = (name: string): DashboardType => {
    const KEY = `alere-dash-${name}`;
    const [panels, setPanels] = React.useState<BaseProps[]>(
-      () => JSON.parse(localStorage.getItem(KEY) || '') || defaultDashboard,
+      () => JSON.parse(localStorage.getItem(KEY) || 'null') || defaultDashboard,
    );
 
    // Save dashboards when they change
