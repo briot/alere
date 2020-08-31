@@ -6,16 +6,6 @@
    font-variant-numeric: lining-nums tabular-nums;
    font-size-adjust: 0.438;
 
-   /*
-   .recharts-line-curve {
-      stroke: var(--color-500);
-   }
-   */
-
-   .recharts-cartesian-grid line {
-      stroke: var(--cartesian-grid);
-   }
-
    .recharts-cartesian-axis-ticks tspan {
       fill: var(--panel-fg);
    }
