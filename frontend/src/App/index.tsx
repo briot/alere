@@ -1,7 +1,7 @@
 import React from 'react';
 import { Route, Switch } from "react-router-dom";
 import Header from 'Header';
-import Dashboard from 'Dashboard';
+import DashboardFromName from 'Dashboard';
 import LeftSideBar from 'LeftSideBar';
 import RightSideBar from 'RightSideBar';
 import { LedgerPage } from 'Ledger';
@@ -30,7 +30,7 @@ const App: React.FC<{}> = () => {
                       <LedgerPage setHeader={setHeader} />
                    </Route>
                    <Route>
-                      <Dashboard setHeader={setHeader} />
+                      <DashboardFromName setHeader={setHeader} name='Overview' />
                    </Route>
                </Switch>
             </div>

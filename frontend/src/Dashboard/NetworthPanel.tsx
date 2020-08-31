@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Networth, { NetworthProps } from 'NetWorth';
 import { Checkbox } from 'Form';
-import { BaseProps, DashboardModule, SettingsProps } from 'Dashboard/Panels';
+import { BaseProps, DashboardModule, SettingsProps } from 'Dashboard/Module';
 import { RelativeDate, MultiDatePicker } from 'Dates';
 
 export interface NetworthPanelProps extends BaseProps, NetworthProps {

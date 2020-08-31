@@ -3,7 +3,7 @@ import { LedgerPanel, LedgerPanelProps } from 'Ledger';
 import { SplitMode, TransactionMode } from 'services/usePrefs';
 import { Checkbox, Select, Option } from 'Form';
 import { DateRange, DateRangePicker } from 'Dates';
-import { BaseProps, SettingsProps, DashboardModule } from 'Dashboard/Panels';
+import { BaseProps, SettingsProps, DashboardModule } from 'Dashboard/Module';
 import { LedgerPrefs } from 'services/usePrefs';
 import { Account } from 'services/useAccounts';
 import { SelectMultiAccount } from 'Account';

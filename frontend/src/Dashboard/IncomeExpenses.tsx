@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { DateRangePicker, DateRange } from 'Dates';
 import CategoryPie, { PiePlotProps } from 'Plots/CategoryPie';
-import { BaseProps, SettingsProps, DashboardModule } from 'Dashboard/Panels';
+import { BaseProps, SettingsProps, DashboardModule } from 'Dashboard/Module';
 import { Checkbox } from 'Form';
 
 export interface IncomeExpensesProps extends PiePlotProps, BaseProps {
