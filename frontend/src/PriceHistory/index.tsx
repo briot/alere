@@ -1,18 +1,13 @@
 import React from 'react';
 import { Account } from 'services/useAccounts';
 import * as d3TimeFormat from 'd3-time-format';
-import * as d3ScaleChromatic from 'd3-scale-chromatic';
-import { LineChart, XAxis, YAxis, CartesianGrid,
+import { ComposedChart, XAxis, YAxis, CartesianGrid, Area,
          Line, Tooltip, Legend } from 'recharts';
 import { Transaction } from 'Transaction';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import usePrefs from 'services/usePrefs';
+import useFetchPrices from 'services/useFetchPrices';
 import './PriceHistory.scss';
-
-interface Price {
-   date: string;
-   price: number;
-}
 
 interface Holding {
    date: number;
@@ -21,61 +16,66 @@ interface Holding {
    position: number;
 }
 
+
 interface PriceHistoryProps {
    account: Account;
    transactions: Transaction[];
+   hidePositions?: boolean;
+   hidePrices?: boolean;
+   hideHoldings?: boolean;
 }
 
 const PriceHistory: React.FC<PriceHistoryProps> = p => {
    const { prefs } = usePrefs();
+   const prices = useFetchPrices(p.account.id, prefs.currencyId);
    const [data, setData] = React.useState<Holding[]>([]);
 
    React.useEffect(
       () => {
-         const doFetch = async () => {
-            const resp = await window.fetch(
-               `/api/prices/${p.account.id}?currency=${prefs.currencyId}`
-            );
-            const d: Price[] = await resp.json();
+         const merged: Holding[] = [];
+         const merge = (d_idx: number, t_idx: number) => {
+            const pr = prices[d_idx];
+            const tr = p.transactions[t_idx];
+            const position = tr?.balanceShares ?? NaN
+            const price    = pr?.price ?? 0;
+            merged.push({
+               date: new Date((pr ?? tr).date).getTime(),
+               price,
+               position,
+               holding: position * price,
+            });
+         };
 
-            const merged: Holding[] = [];
-            const merge = (d_idx: number, t_idx: number) => {
-               const pr = d[d_idx];
-               const tr = p.transactions[t_idx];
-               const position = tr?.balanceShares ?? NaN
-               const price    = pr?.price ?? 0;
-               merged.push({
-                  date: new Date((pr ?? tr).date).getTime(),
-                  price,
-                  position,
-                  holding: position * price,
-               });
-            };
-
-            let d_idx = 0;
-            let t_idx = 0;
-            while (1) {
-               if (d_idx >= d.length) {
-                  if (t_idx >= p.transactions.length) {
-                     break;
-                  }
-                  merge(d_idx - 1, t_idx++);
-               } else if (t_idx >= p.transactions.length) {
-                  merge(d_idx++, t_idx - 1);
-               } else if (d[d_idx].date === p.transactions[t_idx].date) {
-                  merge(d_idx++, t_idx++);
-               } else if (d[d_idx].date < p.transactions[t_idx].date) {
-                  merge(d_idx++, t_idx - 1);
-               } else {
-                  merge(d_idx - 1, t_idx++);
+         let d_idx = 0;
+         let t_idx = 0;
+         while (1) {
+            if (d_idx >= prices.length) {
+               if (t_idx >= p.transactions.length) {
+                  break;
                }
+               merge(d_idx - 1, t_idx++);
+            } else if (t_idx >= p.transactions.length) {
+               merge(d_idx++, t_idx - 1);
+            } else if (prices[d_idx].date === p.transactions[t_idx].date) {
+               merge(d_idx++, t_idx++);
+            } else if (prices[d_idx].date < p.transactions[t_idx].date) {
+               merge(d_idx++, t_idx - 1);
+            } else {
+               merge(d_idx - 1, t_idx++);
             }
-            setData(merged);
          }
-         doFetch();
+         setData(merged);
       },
-      [p.account, prefs.currencyId, p.transactions]
+      [prices, p.transactions]
    );
+
+   const showPrices = prices.length > 0 && !p.hidePrices;
+   const showHoldings = prices.length > 0 && !p.hideHoldings;
+   const showPositions = !p.hidePositions;
+
+   if (!showPrices && !showHoldings && !showPositions) {
+      return null;
+   }
 
    const dateForm = d3TimeFormat.timeFormat("%Y-%m-%d");
    const labelForm = (d: number|string) =>
@@ -86,7 +86,7 @@ const PriceHistory: React.FC<PriceHistoryProps> = p => {
          <AutoSizer>
             {
                ({width, height}) => (
-                  <LineChart
+                  <ComposedChart
                      width={width}
                      height={height}
                      data={data}
@@ -98,45 +98,82 @@ const PriceHistory: React.FC<PriceHistoryProps> = p => {
                          type="number"
                          tickFormatter={dateForm}
                       />
-                     <YAxis
-                         yAxisId="left"
-                         domain={['dataMin', 'dataMax']}
-                         stroke={d3ScaleChromatic.schemeCategory10[0]}
+                     <CartesianGrid
+                         strokeDasharray="5 5"
+                         stroke="var(--cartesian-grid)"
                      />
-                     <YAxis
-                         yAxisId="right"
-                         orientation="right"
-                         stroke={d3ScaleChromatic.schemeCategory10[1]}
-                         domain={['dataMin', 'dataMax']}
-                     />
-                     <CartesianGrid strokeDasharray="5 5"/>
                      <Tooltip
                          labelFormatter={labelForm}
+                         contentStyle={{backgroundColor: "var(--panel-background)"}}
+
                      />
+
                      <Legend />
-                     <Line
-                         type="linear"
-                         dataKey="price"
-                         name="price"
-                         id="price"
-                         isAnimationActive={false}
-                         connectNulls={true}
-                         stroke={d3ScaleChromatic.schemeCategory10[0]}
-                         yAxisId="left"
-                         dot={false}
-                     />
-                     <Line
-                         type="linear"
-                         dataKey="holding"
-                         name="holdings"
-                         id="holdings"
-                         isAnimationActive={false}
-                         connectNulls={true}
-                         stroke={d3ScaleChromatic.schemeCategory10[1]}
-                         yAxisId="right"
-                         dot={false}
-                     />
-                  </LineChart>
+                     {
+                        showPositions &&
+                        <YAxis
+                            yAxisId="leftPos"
+                            hide={true}
+                        />
+                     }
+                     {
+                        showPositions &&
+                        <Area
+                            type="stepAfter"
+                            dataKey="position"
+                            legendType="square"
+                            fill="var(--area-chart-fill)"
+                            stroke="var(--area-chart-stroke)"
+                            isAnimationActive={false}
+                            yAxisId="leftPos"
+                        />
+                     }
+
+                     {
+                        showPrices &&
+                        <YAxis
+                            yAxisId="left"
+                            domain={['dataMin', 'dataMax']}
+                        />
+                     }
+                     {
+                        showPrices &&
+                        <Line
+                            type="linear"
+                            dataKey="price"
+                            name="price"
+                            id="price"
+                            isAnimationActive={false}
+                            connectNulls={true}
+                            stroke="var(--color-500)"
+                            yAxisId="left"
+                            dot={false}
+                        />
+                     }
+
+                     {
+                        showHoldings &&
+                        <YAxis
+                            yAxisId="right"
+                            orientation="right"
+                            domain={['dataMin', 'dataMax']}
+                        />
+                     }
+                     {
+                        showHoldings &&
+                        <Line
+                            type="linear"
+                            dataKey="holding"
+                            name="holdings"
+                            id="holdings"
+                            isAnimationActive={false}
+                            connectNulls={true}
+                            stroke="var(--color-900)"
+                            yAxisId="right"
+                            dot={false}
+                        />
+                     }
+                  </ComposedChart>
                )
             }
          </AutoSizer>
