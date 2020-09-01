@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { BaseProps, DashboardModule } from 'Dashboard/Module';
 import { SetHeaderProps } from 'Panel';
-import IncomeExpensesModule, { IncomeExpensesProps } from 'Dashboard/IncomeExpenses';
-import NetworthModule, { NetworthPanelProps } from 'Dashboard/NetworthPanel';
-import QuadrantModule, { QuadrantPanelProps } from 'Dashboard/QuadrantPanel';
-import LedgerModule, { DashboardLedgerPanelProps } from 'Dashboard/LedgerPanel';
-import { SplitMode, TransactionMode } from 'services/usePrefs';
+import IncomeExpensesModule from 'Dashboard/IncomeExpenses';
+import NetworthModule from 'Dashboard/NetworthPanel';
+import QuadrantModule from 'Dashboard/QuadrantPanel';
+import LedgerModule from 'Ledger/Panel';
+import PriceHistoryModule from 'PriceHistory/Module';
 
 const NotAvailableModule: DashboardModule<BaseProps> = {
    Content: (p: BaseProps & SetHeaderProps) => {
@@ -23,65 +23,11 @@ const DASHBOARD_MODULES: {[name: string]: DashboardModule<any>} = {
    "networth": NetworthModule,
    "quadrant": QuadrantModule,
    "ledger": LedgerModule,
+   "pricehistory": PriceHistoryModule,
 };
 
 export const getModule = (name: string): DashboardModule<any> =>
    DASHBOARD_MODULES[name] || NotAvailableModule;
-
-const defaultDashboard: BaseProps[] = [
-   {
-      type: 'networth',
-      rowspan: 2,
-      colspan: 2,
-      showValue: true,
-      showShares: false,
-      showPrice: false,
-      dates: ["today", "end of last month"],
-   } as NetworthPanelProps,
-   {
-      type: 'incomeexpenses',
-      rowspan: 1,
-      colspan: 2,
-      expenses: true,
-      range: "current year",
-   } as IncomeExpensesProps,
-   {
-      type: 'incomeexpenses',
-      rowspan: 1,
-      colspan: 2,
-      expenses: false,
-      range: "current year",
-   } as IncomeExpensesProps,
-   {
-      type: 'quadrant',
-      rowspan: 1,
-      colspan: 2,
-   } as QuadrantPanelProps,
-   {
-      type: 'ledger',
-      accountIds: undefined,
-      range: 'future',
-      trans_mode: TransactionMode.ONE_LINE,
-      split_mode: SplitMode.COLLAPSED,
-      borders: false,
-      defaultExpand: false,
-      valueColumn: true,
-      hideBalance: true,
-      hideReconcile: true,
-      rowspan: 2,
-      colspan: 2,
-   } as DashboardLedgerPanelProps,
-   {
-      type: 'upcoming',
-      rowspan: 1,
-      colspan: 1,
-   },
-   {
-      type: 'p&l',
-      rowspan: 1,
-      colspan: 1,
-   },
-];
 
 interface DashboardType {
    panels: BaseProps[];
@@ -91,10 +37,13 @@ interface DashboardType {
 /**
  * Load and return the contents of the dashboard with the given name
  */
-const useDashboard = (name: string): DashboardType => {
+const useDashboard = (
+   name: string,
+   defaultPanels: BaseProps[],
+): DashboardType => {
    const KEY = `alere-dash-${name}`;
    const [panels, setPanels] = React.useState<BaseProps[]>(
-      () => JSON.parse(localStorage.getItem(KEY) || 'null') || defaultDashboard,
+      () => JSON.parse(localStorage.getItem(KEY) || 'null') || defaultPanels,
    );
 
    // Save dashboards when they change

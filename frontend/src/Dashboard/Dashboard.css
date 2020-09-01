@@ -3,7 +3,8 @@
 
    display: grid;
    /* 300px is so that we have at most 4 columns */
-   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+   grid-template-columns: repeat(auto-fit, minmax(200px, 24%));
+   grid-template-rows: repeat(auto-fit, minmax(200px, auto));
    grid-auto-flow: row;  /* dense */
 
    /* grid-template-rows: repeat(auto-fill, 1fr); */

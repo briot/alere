@@ -1,8 +1,7 @@
 import * as React from 'react';
-import usePrefs, { LedgerPrefs } from 'services/usePrefs';
+import usePrefs from 'services/usePrefs';
 import RoundButton from 'RoundButton';
 import { Checkbox, Option, Select } from 'Form';
-import { LedgerPrefsSettings } from 'Dashboard/LedgerPanel';
 import "./Settings.css";
 
 interface SettingsProps {
@@ -19,8 +18,6 @@ const Settings: React.FC<SettingsProps> = p => {
 
    const changeDark = (dark_mode: boolean) => updatePrefs({ dark_mode });
    const changeCurrency = (currencyId: string) => updatePrefs({ currencyId });
-   const changeLedger = (ledgers: Partial<LedgerPrefs>) =>
-      updatePrefs({ ledgers: {...prefs.ledgers, ...ledgers }});
 
    return (
       <>
@@ -56,11 +53,6 @@ const Settings: React.FC<SettingsProps> = p => {
                      </Select>
 
                   </fieldset>
-
-                  <LedgerPrefsSettings
-                     {...prefs.ledgers}
-                     setData={changeLedger}
-                  />
                </form>
             }
          </div>

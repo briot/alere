@@ -10,6 +10,7 @@ import { Transaction, incomeExpenseSplits } from 'Transaction';
 const useTransactions = (
    accountIds: AccountId[] | undefined,  // undefined for all accounts
    range?: DateRange|undefined,  // undefined, to see forever
+   precomputed?: Transaction[],  // use this if set, instead of fetching
 ) => {
    const { accounts } = useAccounts();
    const [baseTrans, setBaseTrans] = React.useState<Transaction[]>([]);
@@ -27,9 +28,13 @@ const useTransactions = (
             const data: Transaction[] = await resp.json();
             setBaseTrans(data);
          }
-         dofetch();
+         if (precomputed) {
+            setBaseTrans(precomputed);
+         } else {
+            dofetch();
+         }
       },
-      [idsForQuery, range]
+      [idsForQuery, range, precomputed]
    );
 
    const transactions: Transaction[] = React.useMemo(
