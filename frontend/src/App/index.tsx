@@ -8,10 +8,10 @@ import LedgerPage from 'Ledger/Page';
 import usePrefs from 'services/usePrefs';
 import StyleGuide from 'StyleGuide';
 import { BaseProps } from 'Dashboard/Module';
-import { IncomeExpensesProps } from 'Dashboard/IncomeExpenses';
-import { NetworthPanelProps } from 'Dashboard/NetworthPanel';
+import { IncomeExpensePanelProps } from 'IncomeExpense/Module';
+import { NetworthPanelProps } from 'NetWorth/Module';
 import { QuadrantPanelProps } from 'Dashboard/QuadrantPanel';
-import { LedgerPanelProps } from 'Ledger/Panel';
+import { LedgerPanelProps } from 'Ledger/Module';
 import { SplitMode, TransactionMode } from 'Ledger';
 import './App.css';
 import "font-awesome/css/font-awesome.min.css";
@@ -32,14 +32,14 @@ const defaultOverview: BaseProps[] = [
       colspan: 2,
       expenses: true,
       range: "current year",
-   } as IncomeExpensesProps,
+   } as IncomeExpensePanelProps,
    {
       type: 'incomeexpenses',
       rowspan: 1,
       colspan: 2,
       expenses: false,
       range: "current year",
-   } as IncomeExpensesProps,
+   } as IncomeExpensePanelProps,
    {
       type: 'quadrant',
       rowspan: 1,

@@ -7,7 +7,7 @@ import useDashboard from 'services/useDashboard';
 import { Dashboard } from 'Dashboard';
 import { BaseProps } from 'Dashboard/Module';
 import { SplitMode, TransactionMode } from 'Ledger';
-import { LedgerPanelProps } from 'Ledger/Panel';
+import { LedgerPanelProps } from 'Ledger/Module';
 import { PriceHistoryModuleProps } from 'PriceHistory/Module';
 
 const defaultPanels: BaseProps[] = [

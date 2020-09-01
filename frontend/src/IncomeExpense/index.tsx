@@ -3,13 +3,13 @@ import * as d3ScaleChromatic from 'd3-scale-chromatic';
 import { Legend, PieChart, PieLabelRenderProps,
          Pie, Cell, Tooltip, TooltipProps } from 'recharts';
 import { DateRange, rangeDisplay, rangeToHttp } from 'Dates';
-import { SetHeaderProps } from 'Panel';
+import { SetHeaderProps } from 'Dashboard/Panel';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
 import AccountName from 'Account';
 import useAccounts, { AccountId, Account } from 'services/useAccounts';
 import usePrefs from 'services/usePrefs';
-import './CategoryPie.css';
+import './IncomeExpense.css';
 
 const NAME_KEY = "nam";
 
@@ -81,12 +81,12 @@ const CustomTooltip = (p: TooltipProps & {data: DataType} ) => {
 };
 
 
-export interface PiePlotProps {
+export interface IncomeExpenseProps {
    expenses: boolean;
    range: DateRange;
 }
 
-const CategoryPie: React.FC<PiePlotProps & SetHeaderProps> = p => {
+const IncomeExpense: React.FC<IncomeExpenseProps & SetHeaderProps> = p => {
    const { setHeader } = p;
    const [baseData, setBaseData] = React.useState(noData);
    const { accounts } = useAccounts();
@@ -160,7 +160,11 @@ const CategoryPie: React.FC<PiePlotProps & SetHeaderProps> = p => {
       <AutoSizer>
          {
             ({width, height}) => (
-               <PieChart width={width} height={height} className="piechart">
+               <PieChart
+                  width={width}
+                  height={height}
+                  className="incomeexpense"
+               >
                  <Legend
                     align="right"
                     formatter={legendItem}
@@ -196,4 +200,4 @@ const CategoryPie: React.FC<PiePlotProps & SetHeaderProps> = p => {
       </AutoSizer>
    );
 }
-export default CategoryPie;
+export default IncomeExpense;

@@ -1,8 +1,7 @@
 import * as React from 'react';
-import { Select, Option } from 'Form';
-import { SetHeaderProps } from 'Panel';
+import { SetHeaderProps } from 'Dashboard/Panel';
 
-export type PanelTypes =
+type PanelTypes =
    'incomeexpenses' |
    'networth'       |
    'quadrant'       |
@@ -26,7 +25,6 @@ export interface BaseProps {
  */
 export interface SettingsProps<T extends {}> {
    setData: (p: Partial<T>) => void;
-
    excludeFields?: string[]; // Do not allow configuring those fields
 }
 
@@ -37,37 +35,3 @@ export interface DashboardModule<T extends BaseProps> {
 
    Content: React.FC<T & SetHeaderProps>;
 }
-
-export const BasePropEditor = (p: BaseProps & SettingsProps<BaseProps>) => {
-   const changeRows = (a: string) => p.setData({rowspan: parseInt(a, 10)});
-   const changeCols = (a: string) => p.setData({colspan: parseInt(a, 10)});
-
-   return (
-      <fieldset>
-         <legend>Layout</legend>
-
-         <Select
-            text="Rows"
-            value={p.rowspan}
-            onChange={changeRows}
-         >
-            <Option text="one row"     value="1" />
-            <Option text="two rows"    value="2" />
-            <Option text="three rows"  value="3" />
-            <Option text="four rows"   value="4" />
-         </Select>
-
-         <Select
-            text="Columns"
-            value={p.colspan}
-            onChange={changeCols}
-         >
-            <Option text="one column"     value="1" />
-            <Option text="two columns"    value="2" />
-            <Option text="three columns"  value="3" />
-            <Option text="four columns"   value="4" />
-         </Select>
-      </fieldset>
-   );
-}
-

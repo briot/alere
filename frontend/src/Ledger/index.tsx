@@ -1,9 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { VariableSizeList, ListChildComponentProps } from 'react-window';
-import { DateRange, dateToString, rangeDisplay } from 'Dates';
+import { DateRange, dateToString } from 'Dates';
 import Table from 'List';
-import { SetHeaderProps } from 'Panel';
 import AccountName from 'Account';
 import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
          incomeExpenseSplits, sharesForAccounts, priceForAccounts,
@@ -643,26 +642,9 @@ const setupLogicalRows = (
  * The full ledger, for a panel
  */
 
-interface LedgerProps extends BaseLedgerProps {
-}
-const Ledger: React.FC<LedgerProps & SetHeaderProps> = p => {
-   const { setHeader } = p;
+const Ledger: React.FC<BaseLedgerProps> = p => {
    const [ rowState, setRowState ] = React.useState<RowStateProps>({});
    const list = React.useRef<VariableSizeList>(null);
-
-   React.useEffect(
-      () => {
-         const name = p.accounts === undefined
-            ? 'All accounts'
-            : p.accounts.length === 1
-            ? p.accounts[0]?.name
-            : 'Multiple accounts';
-         const dates = p.range ? rangeDisplay(p.range) : '';
-         setHeader?.(`${name} ${dates}`);
-      },
-      [p.accounts, setHeader, p.range]
-   );
-
    const resetAfterIndex = React.useCallback(
       (index: number) => {
          if (list.current) {
