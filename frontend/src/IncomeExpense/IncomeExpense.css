@@ -1,4 +1,4 @@
-.piechart .recharts-legend-wrapper {
+.incomeexpense .recharts-legend-wrapper {
    height: 100% !important;
    overflow-x: hidden !important;
    top: 0 !important;
@@ -8,7 +8,7 @@
    white-space: nowrap;
 }
 
-.piechart .customTooltip {
+.incomeexpense .customTooltip {
    background-color: var(--gray-400-80p);
    border-radius: 10px;
    border: 1px solid var(--gray-500);

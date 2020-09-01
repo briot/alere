@@ -3,7 +3,7 @@ import { RelativeDate, dateToString } from 'Dates';
 import { ListChildComponentProps } from 'react-window';
 import Numeric from 'Numeric';
 import AccountName from 'Account';
-import { SetHeaderProps } from 'Panel';
+import { SetHeaderProps } from 'Dashboard/Panel';
 import useAccounts, { Account, AccountId } from 'services/useAccounts';
 import usePrefs from 'services/usePrefs';
 import Table from 'List';

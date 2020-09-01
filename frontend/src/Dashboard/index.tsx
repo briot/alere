@@ -1,7 +1,6 @@
 import * as React from 'react';
-import { SetHeaderProps } from 'Panel';
 import { BaseProps } from 'Dashboard/Module';
-import DashboardPanel from 'Dashboard/Panel';
+import DashboardPanel, { SetHeaderProps } from 'Dashboard/Panel';
 import useDashboard from 'services/useDashboard';
 import './Dashboard.css';
 
@@ -9,9 +8,7 @@ export interface DashboardProps extends SetHeaderProps {
    panels: BaseProps[];
    setPanels?: (p: (old: BaseProps[])=>BaseProps[]) => void;
    header: string;
-
-   defaults?: Object;
-   //  Overrides settings for the panels
+   defaults?: Object;    //  Overrides settings for the panels
 }
 export const Dashboard: React.FC<DashboardProps> = p => {
    const { setHeader } = p;

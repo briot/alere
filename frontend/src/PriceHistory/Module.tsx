@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { DateRange } from 'Dates';
-import { SetHeaderProps } from 'Panel';
+import { SetHeaderProps } from 'Dashboard/Panel';
 import { Transaction } from 'Transaction';
 import { BaseProps, DashboardModule } from 'Dashboard/Module';
 import { AccountId } from 'services/useAccounts';

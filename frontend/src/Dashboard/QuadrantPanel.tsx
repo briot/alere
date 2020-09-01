@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { BaseProps, DashboardModule } from 'Dashboard/Module';
-import { SetHeaderProps } from 'Panel';
+import { SetHeaderProps } from 'Dashboard/Panel';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
          Tooltip } from 'recharts';
 import AutoSizer from 'react-virtualized-auto-sizer';

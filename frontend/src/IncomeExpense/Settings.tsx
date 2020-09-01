@@ -1,14 +1,12 @@
 import * as React from 'react';
 import { DateRangePicker, DateRange } from 'Dates';
-import CategoryPie, { PiePlotProps } from 'Plots/CategoryPie';
-import { BaseProps, SettingsProps, DashboardModule } from 'Dashboard/Module';
+import { IncomeExpenseProps } from 'IncomeExpense';
+import { SettingsProps } from 'Dashboard/Module';
 import { Checkbox } from 'Form';
 
-export interface IncomeExpensesProps extends PiePlotProps, BaseProps {
-   type: 'incomeexpenses';
-}
-
-const Settings: React.FC<PiePlotProps & SettingsProps<PiePlotProps>> = p => {
+const Settings: React.FC<
+   IncomeExpenseProps & SettingsProps<IncomeExpenseProps>
+> = p => {
    const changeExp   = (expenses: boolean) => p.setData({ expenses });
    const changeRange = (range: DateRange) => p.setData({ range });
    return (
@@ -27,9 +25,4 @@ const Settings: React.FC<PiePlotProps & SettingsProps<PiePlotProps>> = p => {
       </fieldset>
    );
 }
-
-const IncomeExpensesModule: DashboardModule<IncomeExpensesProps> = {
-   Settings,
-   Content: CategoryPie,
-}
-export default IncomeExpensesModule;
+export default Settings;

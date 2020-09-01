@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { BaseProps, DashboardModule } from 'Dashboard/Module';
-import { SetHeaderProps } from 'Panel';
-import IncomeExpensesModule from 'Dashboard/IncomeExpenses';
-import NetworthModule from 'Dashboard/NetworthPanel';
+import { SetHeaderProps } from 'Dashboard/Panel';
+import IncomeExpensesModule from 'IncomeExpense/Module';
+import NetworthModule from 'NetWorth/Module';
 import QuadrantModule from 'Dashboard/QuadrantPanel';
-import LedgerModule from 'Ledger/Panel';
+import LedgerModule from 'Ledger/Module';
 import PriceHistoryModule from 'PriceHistory/Module';
 
 const NotAvailableModule: DashboardModule<BaseProps> = {
