@@ -14,6 +14,7 @@ export type RelativeDate =
    "end of month"          |
    "start of last month"   |
    "end of last month"     |
+   "end of 2 months ago"   |
    "start of year"         |
    "start of last year"    |
    "end of last year"      |
@@ -57,12 +58,12 @@ const addDay = (d: Date, days: number) => {
  * Modifies d in place to set the last day of the year, n years ago
  */
 const endOfYear = (d: Date, years: number) => {
-   d.setFullYear(d.getFullYear() + years);
-   d.setDate(31);
    d.setMonth(11);
+   d.setDate(31);
    d.setHours(23);
    d.setMinutes(59);
    d.setSeconds(59);
+   d.setFullYear(d.getFullYear() + years);
 }
 
 const startOfYear = (d: Date, years: number) => {
@@ -84,6 +85,7 @@ export const dateToString = (when: RelativeDate): string => {
       case "end of month":        endOfMonth(d, 0);     break;
       case "start of last month": startOfMonth(d, -1);  break;
       case "end of last month":   endOfMonth(d, -1);    break;
+      case "end of 2 months ago": endOfMonth(d, -2);    break;
       case "1 month ago":         addMonth(d, -1);      break;
       case "2 months ago":        addMonth(d, -2);      break;
       case "3 months ago":        addMonth(d, -3);      break;
@@ -233,6 +235,7 @@ export const RelativeDatePicker: React.FC<RelativeDatePickerProps> = p => {
          <DateOption text="end of month"         value="end of month" />
          <DateOption text="start of last month"  value="start of last month" />
          <DateOption text="end of last month"    value="end of last month" />
+         <DateOption text="end of 2 months ago"  value="end of 2 months ago" />
          <DateOption text="start of year"        value="start of year" />
          <DateOption text="start of last year"   value="start of last year" />
          <DateOption text="end of last year"     value="end of last year" />
