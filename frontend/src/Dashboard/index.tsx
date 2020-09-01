@@ -9,6 +9,9 @@ export interface DashboardProps extends SetHeaderProps {
    panels: BaseProps[];
    setPanels?: (p: (old: BaseProps[])=>BaseProps[]) => void;
    header: string;
+
+   defaults?: Object;
+   //  Overrides settings for the panels
 }
 export const Dashboard: React.FC<DashboardProps> = p => {
    const { setHeader } = p;
@@ -24,8 +27,9 @@ export const Dashboard: React.FC<DashboardProps> = p => {
             p.panels.map((p2, idx) =>
                <DashboardPanel
                   key={idx}
-                  panels={p.panels}
+                  panel={{...p2, ...p.defaults}}
                   setPanels={p.setPanels}
+                  excludeFields={Object.keys(p.defaults ?? {})}
                   index={idx} />
             )
          }
@@ -35,9 +39,10 @@ export const Dashboard: React.FC<DashboardProps> = p => {
 
 export interface DashboardFromNameProps extends SetHeaderProps {
    name: string;     // dashboard name
+   defaultPanels: BaseProps[],
 }
 const DashboardFromName: React.FC<DashboardFromNameProps> = p => {
-   const { panels, setPanels } = useDashboard(p.name);
+   const { panels, setPanels } = useDashboard(p.name, p.defaultPanels);
    return <Dashboard
       panels={panels}
       setPanels={setPanels}

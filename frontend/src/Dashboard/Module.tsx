@@ -4,10 +4,11 @@ import { SetHeaderProps } from 'Panel';
 
 export type PanelTypes =
    'incomeexpenses' |
-   'networth' |
-   'quadrant' |
-   'upcoming' |
-   'p&l'      |
+   'networth'       |
+   'quadrant'       |
+   'upcoming'       |
+   'pricehistory'   |
+   'p&l'            |
    'ledger'
    ;
 
@@ -25,6 +26,8 @@ export interface BaseProps {
  */
 export interface SettingsProps<T extends {}> {
    setData: (p: Partial<T>) => void;
+
+   excludeFields?: string[]; // Do not allow configuring those fields
 }
 
 export interface DashboardModule<T extends BaseProps> {

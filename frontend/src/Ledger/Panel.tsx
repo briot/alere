@@ -1,20 +1,29 @@
 import * as React from 'react';
-import { LedgerPanel, LedgerPanelProps } from 'Ledger';
-import { SplitMode, TransactionMode } from 'services/usePrefs';
+import Ledger, { BaseLedgerProps, SplitMode, TransactionMode } from 'Ledger';
+import { SetHeaderProps } from 'Panel';
 import { Checkbox, Select, Option } from 'Form';
 import { DateRange, DateRangePicker } from 'Dates';
 import { BaseProps, SettingsProps, DashboardModule } from 'Dashboard/Module';
-import { LedgerPrefs } from 'services/usePrefs';
 import { Account } from 'services/useAccounts';
 import { SelectMultiAccount } from 'Account';
 import useAccounts from 'services/useAccounts';
+import useAccountIds from 'services/useAccountIds';
+import useTransactions from 'services/useTransactions';
 
-export interface DashboardLedgerPanelProps extends LedgerPanelProps, BaseProps {
+export interface LedgerPanelProps extends BaseLedgerProps, BaseProps {
    type: 'ledger';
 }
+const LedgerPanel: React.FC<LedgerPanelProps & SetHeaderProps> = p => {
+   const accounts = useAccountIds(p.accountIds);
+   const transactions = useTransactions(p.accountIds, p.range, p.transactions);
+   return (
+      <Ledger {...p} accounts={accounts} transactions={transactions} />
+   );
+}
+
 
 export const LedgerPrefsSettings:
-   React.FC<LedgerPrefs & SettingsProps<LedgerPrefs>>
+   React.FC<BaseLedgerProps & SettingsProps<BaseLedgerProps>>
 = p => {
 
    const changeTrans = (trans_mode: string) =>
@@ -137,22 +146,28 @@ const Settings: React.FC<LedgerPanelProps & SettingsProps<LedgerPanelProps>>
    return (
       <>
          <LedgerPrefsSettings {...p} >
-            <DateRangePicker
-               text="Time period"
-               value={p.range || 'forever'}
-               onChange={changeRange}
-            />
-            <SelectMultiAccount
-               text="Accounts"
-               value={allAccounts as Account[]|undefined}
-               onChange={changeAccount}
-            />
+            {
+               !p.excludeFields?.includes("range") &&
+               <DateRangePicker
+                  text="Time period"
+                  value={p.range || 'forever'}
+                  onChange={changeRange}
+               />
+            }
+            {
+               !p.excludeFields?.includes("accountIds") &&
+               <SelectMultiAccount
+                  text="Accounts"
+                  value={allAccounts as Account[]|undefined}
+                  onChange={changeAccount}
+               />
+            }
          </LedgerPrefsSettings>
       </>
    );
 }
 
-const LedgerModule: DashboardModule<DashboardLedgerPanelProps> = {
+const LedgerModule: DashboardModule<LedgerPanelProps> = {
    Settings,
    Content: LedgerPanel,
 }

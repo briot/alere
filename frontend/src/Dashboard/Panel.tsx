@@ -4,16 +4,16 @@ import { BaseProps, BasePropEditor } from 'Dashboard/Module';
 import { getModule } from 'services/useDashboard';
 
 interface PanelProps {
-   panels: BaseProps[];
+   panel: BaseProps;
    setPanels: undefined | ((p: (old: BaseProps[]) => BaseProps[]) => void);
    index: number;
+   excludeFields?: string[]; // Do not allow configuring those fields
 }
 
 const DashboardPanel: React.FC<PanelProps> = React.memo(p => {
    const [header, setHeader] = React.useState("");
    const { setPanels } = p;
-   const p2 = p.panels[p.index];
-   const m = getModule(p2.type);
+   const m = getModule(p.panel.type);
 
    const localChange = React.useCallback(
       (a: Partial<BaseProps>) =>
@@ -31,24 +31,25 @@ const DashboardPanel: React.FC<PanelProps> = React.memo(p => {
             {
                m.Settings &&
                <m.Settings
-                  {...p2 }
+                  {...p.panel }
                   setData={localChange}
+                  excludeFields={p.excludeFields}
                />
             }
-            <BasePropEditor {...p2} setData={localChange} />
+            <BasePropEditor {...p.panel} setData={localChange} />
          </form>
       ),
-      [p2, localChange, m]
+      [p.panel, localChange, m, p.excludeFields]
    );
 
    return (
       <Panel
-         rows={p2.rowspan}
-         cols={p2.colspan}
+         rows={p.panel.rowspan}
+         cols={p.panel.colspan}
          header={header}
          settings={setPanels ? settings : undefined}
       >
-         <m.Content {...p2 as any} setHeader={setHeader} />
+         <m.Content {...p.panel as any} setHeader={setHeader} />
       </Panel>
    );
 });
