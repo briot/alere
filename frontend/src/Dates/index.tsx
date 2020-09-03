@@ -10,6 +10,8 @@ export type RelativeDate =
    "2 months ago"          |
    "3 months ago"          |
    "12 months ago"         |
+   "24 months ago"         |
+   "36 months ago"         |
    "start of month"        |
    "end of month"          |
    "start of last month"   |
@@ -75,7 +77,7 @@ const startOfYear = (d: Date, years: number) => {
    d.setSeconds(0);
 }
 
-export const dateToString = (when: RelativeDate): string => {
+export const dateToDate = (when: RelativeDate): Date => {
    let d: Date = new Date();
 
    switch (when) {
@@ -90,6 +92,8 @@ export const dateToString = (when: RelativeDate): string => {
       case "2 months ago":        addMonth(d, -2);      break;
       case "3 months ago":        addMonth(d, -3);      break;
       case "12 months ago":       addMonth(d, -12);     break;
+      case "24 months ago":       addMonth(d, -24);     break;
+      case "36 months ago":       addMonth(d, -36);     break;
       case "start of year":
          d.setDate(1);
          d.setMonth(0);
@@ -113,7 +117,11 @@ export const dateToString = (when: RelativeDate): string => {
       default:
          break;
    }
+   return d;
+}
 
+export const dateToString = (when: RelativeDate): string => {
+   const d = dateToDate(when);
    const y = ('0' + d.getFullYear()).slice(-4);
    const m = ('0' + (d.getMonth() + 1)).slice(-2);
    const day = ('0' + d.getDate()).slice(-2);
@@ -125,6 +133,8 @@ export type DateRange =
    '1month'        |
    '3months'       |
    '12months'      |
+   '24months'      |
+   '36months'      |
    'current month' |
    'month so far'  |
    'last month'    |
@@ -140,6 +150,8 @@ const rangeToDate = (name: DateRange): [RelativeDate, RelativeDate] => {
       case '1month':        return ['1 month ago', 'today'];
       case '3months':       return ['3 months ago', 'today'];
       case '12months':      return ['12 months ago', 'today'];
+      case '24months':      return ['24 months ago', 'today'];
+      case '36months':      return ['36 months ago', 'today'];
       case 'current month': return ['start of month', 'end of month'];
       case 'month so far':  return ['start of month', 'today'];
       case 'last month':    return ['start of last month', 'end of last month'];
@@ -169,6 +181,37 @@ export const rangeDisplay = (name: DateRange): string => {
    return `from ${dateToString(r[0])} to ${dateToString(r[1])}`;
 }
 
+export const monthCount = (name: DateRange): number => {
+   switch (name) {
+      case '1month':
+      case 'current month':
+      case 'month so far':
+      case 'last month':
+         return 1;
+      case '3months':
+         return 3;
+      case '12months':
+      case 'current year':
+      case 'last year':
+         return 12;
+      case '24months':
+         return 24;
+      case '36months':
+         return 36;
+      default:
+         return NaN;
+   }
+   // const r = rangeToDate(name);
+   // const r0 = dateToDate(r[0]);
+   // let r1 = dateToDate(r[1]);
+   // let count = 0;
+   // while (r1 >= r0) {
+   //    count ++;
+   //    r1.setMonth(r1.getMonth() - 1);
+   // }
+   // return count;
+}
+
 const DateRangeOption = (p: {text: string, value: DateRange}) =>
    <Option text={p.text} value={p.value} />
 
@@ -194,6 +237,8 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = p => {
          <DateRangeOption text="1 month"       value="1month" />
          <DateRangeOption text="3 months"      value="3months" />
          <DateRangeOption text="12 months"     value="12months" />
+         <DateRangeOption text="24 months"     value="24months" />
+         <DateRangeOption text="36 months"     value="36months" />
          <DateRangeOption text="Last month"    value="last month" />
          <DateRangeOption text="Current month" value="current month" />
          <DateRangeOption text="Month so far"  value="month so far" />
