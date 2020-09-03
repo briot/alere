@@ -10,8 +10,9 @@ import StyleGuide from 'StyleGuide';
 import { BaseProps } from 'Dashboard/Module';
 import { IncomeExpensePanelProps } from 'IncomeExpense/Module';
 import { NetworthPanelProps } from 'NetWorth/Module';
-import { QuadrantPanelProps } from 'Dashboard/QuadrantPanel';
+import { QuadrantPanelProps } from 'Cashflow/Quadrant';
 import { LedgerPanelProps } from 'Ledger/Module';
+import { CashflowPanelProps } from 'Cashflow/Module';
 import { SplitMode, TransactionMode } from 'Ledger';
 import './App.css';
 import "font-awesome/css/font-awesome.min.css";
@@ -24,7 +25,7 @@ const defaultOverview: BaseProps[] = [
       showValue: true,
       showShares: false,
       showPrice: false,
-      dates: ["today", "end of last month"],
+      dates: ["today", "1 month ago"],
    } as NetworthPanelProps,
    {
       type: 'incomeexpenses',
@@ -41,10 +42,11 @@ const defaultOverview: BaseProps[] = [
       range: "current year",
    } as IncomeExpensePanelProps,
    {
-      type: 'quadrant',
-      rowspan: 1,
+      type: 'metrics',
+      range: "12months",
+      rowspan: 2,
       colspan: 2,
-   } as QuadrantPanelProps,
+   } as CashflowPanelProps,
    {
       type: 'ledger',
       accountIds: undefined,
@@ -56,19 +58,19 @@ const defaultOverview: BaseProps[] = [
       valueColumn: true,
       hideBalance: true,
       hideReconcile: true,
-      rowspan: 2,
+      rowspan: 1,
       colspan: 2,
    } as LedgerPanelProps,
+   // {
+   //    type: 'upcoming',
+   //    rowspan: 1,
+   //    colspan: 1,
+   // },
    {
-      type: 'upcoming',
+      type: 'quadrant',
       rowspan: 1,
-      colspan: 1,
-   },
-   {
-      type: 'p&l',
-      rowspan: 1,
-      colspan: 1,
-   },
+      colspan: 2,
+   } as QuadrantPanelProps,
 ];
 
 const App: React.FC<{}> = () => {

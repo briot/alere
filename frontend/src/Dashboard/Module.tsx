@@ -7,7 +7,7 @@ type PanelTypes =
    'quadrant'       |
    'upcoming'       |
    'pricehistory'   |
-   'p&l'            |
+   'metrics'        |
    'ledger'
    ;
 

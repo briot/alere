@@ -3,9 +3,10 @@ import { BaseProps, DashboardModule } from 'Dashboard/Module';
 import { SetHeaderProps } from 'Dashboard/Panel';
 import IncomeExpensesModule from 'IncomeExpense/Module';
 import NetworthModule from 'NetWorth/Module';
-import QuadrantModule from 'Dashboard/QuadrantPanel';
+import QuadrantModule from 'Cashflow/Quadrant';
 import LedgerModule from 'Ledger/Module';
 import PriceHistoryModule from 'PriceHistory/Module';
+import CashflowModule from 'Cashflow/Module';
 
 const NotAvailableModule: DashboardModule<BaseProps> = {
    Content: (p: BaseProps & SetHeaderProps) => {
@@ -24,6 +25,7 @@ const DASHBOARD_MODULES: {[name: string]: DashboardModule<any>} = {
    "quadrant": QuadrantModule,
    "ledger": LedgerModule,
    "pricehistory": PriceHistoryModule,
+   "metrics": CashflowModule,
 };
 
 export const getModule = (name: string): DashboardModule<any> =>
