@@ -7,6 +7,7 @@ import QuadrantModule from 'Cashflow/Quadrant';
 import LedgerModule from 'Ledger/Module';
 import PriceHistoryModule from 'PriceHistory/Module';
 import CashflowModule from 'Cashflow/Module';
+import MeanModule from 'Mean';
 
 const NotAvailableModule: DashboardModule<BaseProps> = {
    Content: (p: BaseProps & SetHeaderProps) => {
@@ -26,6 +27,7 @@ const DASHBOARD_MODULES: {[name: string]: DashboardModule<any>} = {
    "ledger": LedgerModule,
    "pricehistory": PriceHistoryModule,
    "metrics": CashflowModule,
+   "mean": MeanModule,
 };
 
 export const getModule = (name: string): DashboardModule<any> =>

@@ -10,9 +10,9 @@ import StyleGuide from 'StyleGuide';
 import { BaseProps } from 'Dashboard/Module';
 import { IncomeExpensePanelProps } from 'IncomeExpense/Module';
 import { NetworthPanelProps } from 'NetWorth/Module';
-import { QuadrantPanelProps } from 'Cashflow/Quadrant';
 import { LedgerPanelProps } from 'Ledger/Module';
 import { CashflowPanelProps } from 'Cashflow/Module';
+import { MeanModuleProps } from 'Mean';
 import { SplitMode, TransactionMode } from 'Ledger';
 import './App.css';
 import "font-awesome/css/font-awesome.min.css";
@@ -44,7 +44,7 @@ const defaultOverview: BaseProps[] = [
    {
       type: 'metrics',
       range: "12months",
-      rowspan: 2,
+      rowspan: 3,
       colspan: 2,
    } as CashflowPanelProps,
    {
@@ -61,16 +61,34 @@ const defaultOverview: BaseProps[] = [
       rowspan: 1,
       colspan: 2,
    } as LedgerPanelProps,
+   {
+      type: 'mean',
+      range: 'forever',
+      prior: 6,
+      after: 6,
+      expenses: true,
+      rowspan: 1,
+      colspan: 2,
+   } as MeanModuleProps,
+   {
+      type: 'mean',
+      range: 'forever',
+      prior: 6,
+      after: 6,
+      expenses: false,
+      rowspan: 1,
+      colspan: 2,
+   } as MeanModuleProps,
    // {
    //    type: 'upcoming',
    //    rowspan: 1,
    //    colspan: 1,
    // },
-   {
-      type: 'quadrant',
-      rowspan: 1,
-      colspan: 2,
-   } as QuadrantPanelProps,
+   // {
+   //    type: 'quadrant',
+   //    rowspan: 1,
+   //    colspan: 2,
+   // } as QuadrantPanelProps,
 ];
 
 const App: React.FC<{}> = () => {

@@ -226,7 +226,6 @@ const PriceHistoryView: React.FC<PriceHistoryProps> = p => {
                             type="linear"
                             dataKey="price"
                             name="price"
-                            id="price"
                             isAnimationActive={false}
                             connectNulls={true}
                             stroke="var(--color-500)"
@@ -250,7 +249,6 @@ const PriceHistoryView: React.FC<PriceHistoryProps> = p => {
                             type="linear"
                             dataKey="holding"
                             name="holdings"
-                            id="holdings"
                             isAnimationActive={false}
                             connectNulls={true}
                             stroke="var(--color-900)"

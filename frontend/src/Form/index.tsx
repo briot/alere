@@ -29,16 +29,27 @@ const SharedInput: React.FC<
 interface InputProps extends SharedInputProps {
    placeholder?: string;
    required?: boolean;
-   type?: 'text';
+   type?: 'text' | 'number';
    value?: string;
+   title?: string;
+   onChange?: (val: string) => void;
 }
 export const Input: React.FC<InputProps> = p => {
+   const { onChange } = p;
+   const localChange = React.useCallback(
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+         onChange?.(e.target.value);
+      },
+      [onChange]
+   );
    return (
       <SharedInput className="input" {...p}>
          <input
             disabled={p.disabled}
+            onChange={localChange}
             placeholder={p.placeholder}
             required={p.required}
+            title={p.title}
             type={p.type || 'text'}
             value={p.value}
          />
