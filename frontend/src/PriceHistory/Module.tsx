@@ -1,21 +1,15 @@
 import * as React from 'react';
-import { DateRange } from 'Dates';
 import { SetHeaderProps } from 'Dashboard/Panel';
 import { Transaction } from 'Transaction';
 import { BaseProps, DashboardModule } from 'Dashboard/Module';
-import { AccountId } from 'services/useAccounts';
 import useAccountIds from 'services/useAccountIds';
 import useTransactions from 'services/useTransactions';
 import PriceHistoryView from 'PriceHistory/View';
+import Settings, { BasePriceHistoryProps } from 'PriceHistory/Settings';
 
 
-interface HistoryPanelProps {
-   accountId: AccountId;
+interface HistoryPanelProps extends BasePriceHistoryProps {
    transactions: Transaction[] | undefined, // use it instead of fetching
-   range?: DateRange|undefined   // undefined, to see forever
-   hidePositions?: boolean;
-   hidePrices?: boolean;
-   hideHoldings?: boolean;
 }
 const PriceHistoryPanel: React.FC<HistoryPanelProps & SetHeaderProps> = p => {
    const { setHeader } = p;
@@ -39,7 +33,7 @@ export interface PriceHistoryModuleProps extends HistoryPanelProps, BaseProps {
 }
 
 const PriceHistoryModule: DashboardModule<PriceHistoryModuleProps> = {
-   Settings: undefined,
+   Settings,
    Content: PriceHistoryPanel,
 }
 export default PriceHistoryModule;
