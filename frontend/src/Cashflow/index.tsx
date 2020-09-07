@@ -51,6 +51,7 @@ interface MetricsProps {
    ideal: number;
    compare: string;
    suffix: string;
+   tooltip?: string;
 }
 
 const Metrics: React.FC<MetricsProps> = p => {
@@ -72,18 +73,18 @@ const Metrics: React.FC<MetricsProps> = p => {
             {
                !isNaN(p.ideal)  &&
                <span className="recommended">
-                  {p.compare} <Numeric amount={p.ideal} precision={0} />{p.suffix}
+                  (recommended {p.compare} <Numeric amount={p.ideal} precision={0} />{p.suffix})
                </span>
             }
             {
                React.isValidElement(p.value)
                ? (
-               <span className="value">
+               <span className="value" title={p.tooltip}>
                   {p.value}
                </span>
                )
                : (
-               <span className="value">
+               <span className="value" title={p.tooltip}>
                   <Numeric amount={p.value as number} />{p.suffix}
                </span>
                )
@@ -112,7 +113,6 @@ const Cashflow: React.FC<CashflowProps & SetHeaderProps> = p => {
    const monthly_expenses = -pl.expenses / months;
    const networth = pl.active + pl.passive;
    const cashflow = pl.income + pl.expenses;
-   const saving_percent = cashflow / pl.income * 100;
 
    return (
       <div className="cashflow">
@@ -122,7 +122,8 @@ const Cashflow: React.FC<CashflowProps & SetHeaderProps> = p => {
          <Metrics
             name="Savings rate"
             descr="How much of your income you are saving"
-            value={saving_percent}
+            value={cashflow / pl.income * 100}
+            tooltip={`cashflow ${cashflow.toFixed(0)} / income ${pl.income.toFixed(0)}`}
             ideal={24}
             compare=">"
             suffix="%"
@@ -132,6 +133,7 @@ const Cashflow: React.FC<CashflowProps & SetHeaderProps> = p => {
             name="Emergency Fund Ratio"
             descr="How many months worth of expenses can be funded through liquid assets, including investments and stocks"
             value={pl.liquid_assets / monthly_expenses}
+            tooltip={`liquid assets ${pl.liquid_assets.toFixed(0)} / monthly expenses ${monthly_expenses.toFixed(0)}`}
             ideal={4}
             compare=">"
             suffix="months"
@@ -140,6 +142,7 @@ const Cashflow: React.FC<CashflowProps & SetHeaderProps> = p => {
             name="Actual income tax rate"
             descr="How much of your income you spend on taxes. This only includes income taxes, not other taxes"
             value={pl.income_taxes / pl.income * 100}
+            tooltip={`Income taxes ${pl.income_taxes.toFixed(0)} / Total income ${pl.income.toFixed(0)}`}
             ideal={10}
             compare="<"
             suffix="%"
@@ -151,6 +154,7 @@ const Cashflow: React.FC<CashflowProps & SetHeaderProps> = p => {
             name="Wealth"
             descr="How many months worth of expenses you own, total"
             value={networth / monthly_expenses}
+            tooltip={`Networth ${networth.toFixed(0)} / Monthly expenses ${monthly_expenses.toFixed(0)}`}
             ideal={6}
             compare=">"
             suffix="months"
@@ -159,6 +163,7 @@ const Cashflow: React.FC<CashflowProps & SetHeaderProps> = p => {
             name="Return on Investment"
             descr="How much passive investment your whole networth provides"
             value={pl.passive_income / networth * 100}
+            tooltip={`Passive income ${pl.passive_income.toFixed(0)} / Networth ${networth.toFixed(0)}`}
             ideal={4}
             compare=">"
             suffix="%"
@@ -167,6 +172,7 @@ const Cashflow: React.FC<CashflowProps & SetHeaderProps> = p => {
             name="Return on Investment for liquid assets"
             descr="How much passive investment your liquid assets provides"
             value={pl.passive_income / pl.liquid_assets * 100}
+            tooltip={`Passive income ${pl.passive_income.toFixed(0)} / Liquid assets ${pl.liquid_assets.toFixed(0)}`}
             ideal={4}
             compare=">"
             suffix="%"
@@ -186,6 +192,7 @@ const Cashflow: React.FC<CashflowProps & SetHeaderProps> = p => {
             name="Financial independence"
             descr="Part of your expenses covered by passive income (investments, rents,...)"
             value={pl.passive_income / -pl.expenses * 100}
+            tooltip={`Passive income ${pl.passive_income.toFixed(0)} / Expenses ${-pl.expenses.toFixed(0)}`}
             ideal={100}
             compare=">"
             suffix="%"
@@ -194,6 +201,7 @@ const Cashflow: React.FC<CashflowProps & SetHeaderProps> = p => {
             name="Passive income"
             descr="What part of the total income comes from sources other than the result of our work (salary,...)"
             value={pl.passive_income / pl.income * 100}
+            tooltip={`Passive income ${pl.passive_income.toFixed(0)} / Total Income ${pl.income.toFixed(0)}`}
             ideal={50}
             compare=">"
             suffix="%"

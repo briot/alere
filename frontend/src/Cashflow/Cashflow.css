@@ -12,6 +12,8 @@
    flex: 3 1;
    text-align: right;
    padding-right: 10px;
+   text-decoration: underline;
+   text-decoration-style: dashed;
 }
 .cashflow .metrics .recommended {
    opacity: 0.8;
