@@ -10,3 +10,9 @@
       fill: var(--panel-fg);
    }
 }
+
+.priceHistory .roundButton {
+   display: block;
+   position: absolute;
+   z-index: 1000;
+}
