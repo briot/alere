@@ -1,13 +1,14 @@
 .dashboard {
    grid-area: main;
 
+   --panel-height: 150px;
+
    display: grid;
-   /* 300px is so that we have at most 4 columns */
+   /* 200px is so that we have at most 4 columns */
    grid-template-columns: repeat(auto-fit, minmax(200px, 24%));
-   grid-template-rows: repeat(auto-fit, minmax(200px, auto));
+   grid-template-rows: repeat(auto-fit, minmax(var(--panel-height), auto));
    grid-auto-flow: row;  /* dense */
 
-   /* grid-template-rows: repeat(auto-fill, 1fr); */
    grid-gap: 20px;
    justify-items: stretch;
 
@@ -15,5 +16,5 @@
 }
 
 .dashboard .panel {
-   min-height: 200px;
+   min-height: var(--panel-height);
 }

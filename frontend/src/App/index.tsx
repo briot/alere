@@ -64,8 +64,8 @@ const defaultOverview: BaseProps[] = [
    {
       type: 'mean',
       range: 'forever',
-      prior: 6,
-      after: 6,
+      prior: 3,
+      after: 3,
       expenses: true,
       rowspan: 1,
       colspan: 2,
@@ -73,8 +73,8 @@ const defaultOverview: BaseProps[] = [
    {
       type: 'mean',
       range: 'forever',
-      prior: 6,
-      after: 6,
+      prior: 3,
+      after: 3,
       expenses: false,
       rowspan: 1,
       colspan: 2,
