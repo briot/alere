@@ -70,6 +70,12 @@ const Metrics: React.FC<MetricsProps> = p => {
          }
          <div className="values" >
             {
+               !isNaN(p.ideal)  &&
+               <span className="recommended">
+                  {p.compare} <Numeric amount={p.ideal} precision={0} />{p.suffix}
+               </span>
+            }
+            {
                React.isValidElement(p.value)
                ? (
                <span className="value">
@@ -81,12 +87,6 @@ const Metrics: React.FC<MetricsProps> = p => {
                   <Numeric amount={p.value as number} />{p.suffix}
                </span>
                )
-            }
-            {
-               !isNaN(p.ideal)  &&
-               <span className="recommended">
-                  {p.compare} <Numeric amount={p.ideal} precision={0} />{p.suffix}
-               </span>
             }
          </div>
       </div>
@@ -159,6 +159,14 @@ const Cashflow: React.FC<CashflowProps & SetHeaderProps> = p => {
             name="Return on Investment"
             descr="How much passive investment your whole networth provides"
             value={pl.passive_income / networth * 100}
+            ideal={4}
+            compare=">"
+            suffix="%"
+         />
+         <Metrics
+            name="Return on Investment for liquid assets"
+            descr="How much passive investment your liquid assets provides"
+            value={pl.passive_income / pl.liquid_assets * 100}
             ideal={4}
             compare=">"
             suffix="%"
@@ -318,14 +326,14 @@ const Cashflow: React.FC<CashflowProps & SetHeaderProps> = p => {
             value={
                <div>
                   <div>
-                     Income taxes:&nbsp;
+                     Income:&nbsp;
                      <Numeric
                         amount={pl.income_taxes}
                         currency={prefs.currencyId}
                      />
                   </div>
                   <div>
-                     Other taxes:&nbsp;
+                     Other:&nbsp;
                      <Numeric
                         amount={pl.other_taxes}
                         currency={prefs.currencyId}

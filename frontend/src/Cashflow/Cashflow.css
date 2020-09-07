@@ -10,9 +10,11 @@
    font-weight: bold;
    font-size: 1.2em;
    flex: 3 1;
-   text-align: center;
+   text-align: right;
+   padding-right: 10px;
 }
 .cashflow .metrics .recommended {
    opacity: 0.8;
    flex: 1 1;
+   text-align: right;
 }
