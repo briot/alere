@@ -8,7 +8,8 @@ type PanelTypes =
    'upcoming'       |
    'pricehistory'   |
    'metrics'        |
-   'ledger'
+   'ledger'         |
+   'mean'
    ;
 
 /**

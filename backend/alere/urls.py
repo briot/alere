@@ -8,8 +8,9 @@ import os
 
 from .views.accounts import AccountList
 from .views.ledger import LedgerView
-from .views.networth import NetworthView
+from .views.means import MeanView
 from .views.metrics import MetricsView
+from .views.networth import NetworthView
 from .views.plots import CategoryPlotView
 from .views.prices import PriceHistory
 
@@ -39,6 +40,7 @@ urlpatterns = [
     path('api/plots/category/<str:expenses>', CategoryPlotView.as_view()),
     path('api/plots/networth', NetworthView.as_view()),
     path('api/metrics', MetricsView.as_view()),
+    path('api/mean', MeanView.as_view()),
 
     # re_path(r'^.*$', static),
 ]
