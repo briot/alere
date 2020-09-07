@@ -17,15 +17,6 @@ interface Holding {
    position: number;
 }
 
-
-interface PriceHistoryProps {
-   account: Account;
-   transactions: Transaction[];
-   hidePositions?: boolean;
-   hidePrices?: boolean;
-   hideHoldings?: boolean;
-}
-
 interface State {
    xmin: number|string,
    xmax: number|string,
@@ -41,6 +32,14 @@ const nullState: State = {
    priceRange: ['dataMin', 'dataMax'],
    posRange: ['dataMin', 'dataMax'],
    holdRange: ['dataMin', 'dataMax'],
+}
+
+export interface PriceHistoryProps {
+   account: Account;
+   transactions: Transaction[];
+   hidePositions?: boolean;
+   hidePrices?: boolean;
+   hideHoldings?: boolean;
 }
 
 const PriceHistoryView: React.FC<PriceHistoryProps> = p => {
