@@ -5,7 +5,7 @@ import Settings from 'Settings';
 
 
 interface HeaderProps {
-   title: string|undefined;
+   title: React.ReactNode|string|undefined;
 }
 
 const Header: React.FC<HeaderProps> = p => {

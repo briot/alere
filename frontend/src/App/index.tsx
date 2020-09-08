@@ -93,7 +93,8 @@ const defaultOverview: BaseProps[] = [
 
 const App: React.FC<{}> = () => {
    const { prefs } = usePrefs();
-   const [header, setHeader] = React.useState<string|undefined>('');
+   const [header, setHeader] = React.useState<React.ReactNode|string|undefined>(
+      '');
 
    return (
       <Switch>

@@ -3,8 +3,56 @@ import { Link } from 'react-router-dom';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import useAccounts, { Account, AccountId } from 'services/useAccounts';
-import { Checkbox } from 'Form';
+import { Checkbox, Select, Option } from 'Form';
 import "./Account.css";
+
+interface SelectAccountProps {
+   text?: string;
+   accountId: AccountId;
+   onChange?: (account: Account) => void;
+}
+export const SelectAccount: React.FC<SelectAccountProps> = p => {
+   const { onChange } = p;
+   const { accounts } = useAccounts();
+   const tree = accounts.accountTree();
+   const localChange = React.useCallback(
+      (val: string) => {
+         const a = accounts.getAccount(val);
+         if (a) {
+            onChange?.(a);
+         }
+      },
+      [onChange, accounts]
+   );
+
+   return (
+      <Select
+         onChange={localChange}
+         text={p.text}
+         value={p.accountId}
+      >
+         { /*
+         <optgroup label="Bourso">
+            <optgroup label="courant">
+               <option value="commun">Commun</option>
+            </optgroup>
+           <option value="foo">Foo</option>
+         </optgroup>
+         */ }
+
+         {
+            tree.map(r => (
+               <Option
+                  key={r.account.id}
+                  style={{paddingLeft: 10 * r.level}}
+                  value={r.account.id}
+                  text={r.account.name}
+               />
+            ))
+         }
+      </Select>
+   );
+}
 
 interface MultiAccountSelectProps {
    text: string;
