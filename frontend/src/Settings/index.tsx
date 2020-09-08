@@ -1,7 +1,7 @@
 import * as React from 'react';
 import usePrefs from 'services/usePrefs';
 import RoundButton from 'RoundButton';
-import { Checkbox, Option, Select } from 'Form';
+import { Checkbox, Select } from 'Form';
 import "./Settings.css";
 
 interface SettingsProps {
@@ -47,10 +47,11 @@ const Settings: React.FC<SettingsProps> = p => {
                          text="Display Currency"
                          onChange={changeCurrency}
                          value={prefs.currencyId}
-                     >
-                        <Option text="EUR" value="EUR" />
-                        <Option text="USD" value="USD" />
-                     </Select>
+                         options={[
+                            {value: "EUR"},
+                            {value: "USD"},
+                         ]}
+                     />
 
                   </fieldset>
                </form>

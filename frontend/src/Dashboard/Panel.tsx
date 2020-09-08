@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Select, Option } from 'Form';
+import { Select } from 'Form';
 import RoundButton from 'RoundButton';
 import { BaseProps } from 'Dashboard/Module';
 import { getModule } from 'services/useDashboard';
@@ -42,11 +42,11 @@ const DashboardPanel: React.FC<PanelProps> = React.memo(p => {
       [setPanels, p.index]
    );
    const changeRows = React.useCallback(
-      (a: string) => localChange({rowspan: parseInt(a, 10)}),
+      (rowspan: number) => localChange({rowspan}),
       [localChange]
    );
    const changeCols = React.useCallback(
-      (a: string) => localChange({colspan: parseInt(a, 10)}),
+      (colspan: number) => localChange({colspan}),
       [localChange]
    );
 
@@ -67,23 +67,25 @@ const DashboardPanel: React.FC<PanelProps> = React.memo(p => {
                   text="Rows"
                   value={p.panel.rowspan}
                   onChange={changeRows}
-               >
-                  <Option text="one row"     value="1" />
-                  <Option text="two rows"    value="2" />
-                  <Option text="three rows"  value="3" />
-                  <Option text="four rows"   value="4" />
-               </Select>
+                  options={[
+                     {text: "one row",    value: 1},
+                     {text: "two rows",   value: 2},
+                     {text: "three rows", value: 3},
+                     {text: "four rows",  value: 4},
+                  ]}
+               />
 
                <Select
                   text="Columns"
                   value={p.panel.colspan}
                   onChange={changeCols}
-               >
-                  <Option text="one column"     value="1" />
-                  <Option text="two columns"    value="2" />
-                  <Option text="three columns"  value="3" />
-                  <Option text="four columns"   value="4" />
-               </Select>
+                  options={[
+                     {text: "one column",    value: 1},
+                     {text: "two columns",   value: 2},
+                     {text: "three columns", value: 3},
+                     {text: "four columns",  value: 4},
+                  ]}
+               />
             </fieldset>
          </form>
       ) : null,

@@ -68,6 +68,8 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeaderProps> = p => {
             <SelectAccount
                accountId={accountId}
                onChange={onAccountChange}
+               hideArrow={false}
+               style={{background: "var(--panel-background)"}}
             />
          );
       },

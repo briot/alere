@@ -10,13 +10,15 @@ interface SelectAccountProps {
    text?: string;
    accountId: AccountId;
    onChange?: (account: Account) => void;
+   hideArrow?: boolean;
+   style?: React.CSSProperties;
 }
 export const SelectAccount: React.FC<SelectAccountProps> = p => {
    const { onChange } = p;
    const { accounts } = useAccounts();
    const tree = accounts.accountTree();
    const localChange = React.useCallback(
-      (val: string) => {
+      (val: AccountId) => {
          const a = accounts.getAccount(val);
          if (a) {
             onChange?.(a);
@@ -25,32 +27,26 @@ export const SelectAccount: React.FC<SelectAccountProps> = p => {
       [onChange, accounts]
    );
 
+   const items: Option<AccountId>[] = []
+   tree.forEach(r => {
+      if (r.level === 0 && items.length > 0) {
+         items.push({value: 'divider'});
+      }
+      items.push({
+         value: r.account.id,
+         text: <span style={{paddingLeft: 20 * r.level}}>{r.account.name}</span>
+      });
+   });
+
    return (
       <Select
          onChange={localChange}
          text={p.text}
          value={p.accountId}
-      >
-         { /*
-         <optgroup label="Bourso">
-            <optgroup label="courant">
-               <option value="commun">Commun</option>
-            </optgroup>
-           <option value="foo">Foo</option>
-         </optgroup>
-         */ }
-
-         {
-            tree.map(r => (
-               <Option
-                  key={r.account.id}
-                  style={{paddingLeft: 10 * r.level}}
-                  value={r.account.id}
-                  text={r.account.name}
-               />
-            ))
-         }
-      </Select>
+         hideArrow={p.hideArrow}
+         style={p.style}
+         options={items}
+      />
    );
 }
 
