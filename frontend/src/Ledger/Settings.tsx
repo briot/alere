@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { BaseLedgerProps, SplitMode, TransactionMode } from 'Ledger';
-import { Checkbox, Select, Option } from 'Form';
+import { Checkbox, Select } from 'Form';
 import { DateRange, DateRangePicker } from 'Dates';
 import { SettingsProps } from 'Dashboard/Module';
 import { Account } from 'services/useAccounts';
@@ -22,10 +22,8 @@ const Settings: React.FC<BaseLedgerProps & SettingsProps<BaseLedgerProps>>
       (a: Account[] | undefined) => p.setData({
          accountIds: a ? a.map(b => b.id) : undefined,
       });
-   const changeTrans = (trans_mode: string) =>
-      p.setData({ trans_mode: parseInt(trans_mode, 10) });
-   const changeSplit = (split_mode: string) =>
-      p.setData({ split_mode: parseInt(split_mode, 10) });
+   const changeTrans = (trans_mode: TransactionMode) => p.setData({trans_mode});
+   const changeSplit = (split_mode: SplitMode) => p.setData({ split_mode });
    const changeBorders = (borders: boolean) => p.setData({ borders });
    const changeExpand = (defaultExpand: boolean) => p.setData({ defaultExpand });
    const changeValueColumn = (valueColumn: boolean) =>
@@ -54,47 +52,25 @@ const Settings: React.FC<BaseLedgerProps & SettingsProps<BaseLedgerProps>>
              text="Memos"
              onChange={changeTrans}
              value={p.trans_mode}
-         >
-             <Option
-                 text="Hide memos"
-                 value={TransactionMode.ONE_LINE}
-             />
-             <Option
-                 text="Show memos if not empty"
-                 value={TransactionMode.AUTO}
-             />
-             <Option
-                 text="Show memos always"
-                 value={TransactionMode.TWO_LINES}
-             />
-         </Select>
+             options={[
+                {text: "Hide memos",              value: TransactionMode.ONE_LINE},
+                {text: "Show memos if not empty", value: TransactionMode.AUTO},
+                {text: "Show memos always",       value: TransactionMode.TWO_LINES},
+            ]}
+         />
 
          <Select
              text="Splits"
              onChange={changeSplit}
              value={p.split_mode}
-         >
-             <Option
-                 text="Never show splits"
-                 value={SplitMode.HIDE}
-             />
-             <Option
-                 text="Show summary"
-                 value={SplitMode.SUMMARY}
-             />
-             <Option
-                 text="Show if more than two accounts"
-                 value={SplitMode.COLLAPSED}
-             />
-             <Option
-                 text="Multiple rows, no duplicate"
-                 value={SplitMode.OTHERS}
-             />
-             <Option
-                 text="Multiple rows"
-                 value={SplitMode.MULTILINE}
-             />
-         </Select>
+             options={[
+                {text: "Never show splits",              value: SplitMode.HIDE},
+                {text: "Show summary",                   value: SplitMode.SUMMARY},
+                {text: "Show if more than two accounts", value: SplitMode.COLLAPSED},
+                {text: "Multiple rows, no duplicate",    value: SplitMode.OTHERS},
+                {text: "Multiple rows",               value: SplitMode.MULTILINE},
+             ]}
+         />
 
          { /*
          <div className="option">
@@ -113,11 +89,12 @@ const Settings: React.FC<BaseLedgerProps & SettingsProps<BaseLedgerProps>>
          <Select
              text="Editing"
              disabled={true}
-             value="inline"
-         >
-             <option>Inline</option>
-             <option>Separate window</option>
-         </Select>
+             value="Inline"
+             options={[
+                {value: "Inline"},
+                {value: "Separate window"},
+             ]}
+         />
 
          {
             !p.excludeFields?.includes("range") &&

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, Checkbox, Input, Select, Option } from 'Form';
+import { Button, Checkbox, Input, Select } from 'Form';
 import RoundButton from 'RoundButton';
 import './StyleGuide.css';
 
@@ -23,14 +23,23 @@ const StyleContent: React.FC<{}> = p => {
                      />
                   </div>
                </div>
-               <Select text="label" value="1">
-                  <Option text="choice1" value="1" />
-                  <Option text="choice2" value="2" />
-               </Select>
-               <Select text="disabled" disabled={true} value="1">
-                  <Option text="choice1" value="1" />
-                  <Option text="choice2" value="2" />
-               </Select>
+               <Select
+                  text="label"
+                  value="1"
+                  options={[
+                     {text: "choice1", value: "1"},
+                     {text: "choice2", value: "2"},
+                  ]}
+               />
+               <Select
+                  text="disabled"
+                  disabled={true}
+                  value="1"
+                  options={[
+                     {text: "choice1", value: "1"},
+                     {text: "choice2", value: "2"},
+                  ]}
+               />
                <Input placeholder="placeholder" text="input" />
                <Input placeholder="placeholder" disabled={true} text="disabled"/>
                <Input required={true} text="invalid" placeholder="required"/>

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Option, Select } from 'Form';
+import { Select } from 'Form';
 import RoundButton from 'RoundButton';
 import './Dates.css';
 
@@ -212,9 +212,6 @@ export const monthCount = (name: DateRange): number => {
    // return count;
 }
 
-const DateRangeOption = (p: {text: string, value: DateRange}) =>
-   <Option text={p.text} value={p.value} />
-
 interface DateRangePickerProps {
    onChange?: (val: DateRange) => void;
    text: string;
@@ -232,26 +229,24 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = p => {
          onChange={localChange}
          text={p.text}
          value={p.value}
-      >
-         <DateRangeOption text="1 day"         value="1day" />
-         <DateRangeOption text="1 month"       value="1month" />
-         <DateRangeOption text="3 months"      value="3months" />
-         <DateRangeOption text="12 months"     value="12months" />
-         <DateRangeOption text="24 months"     value="24months" />
-         <DateRangeOption text="36 months"     value="36months" />
-         <DateRangeOption text="Last month"    value="last month" />
-         <DateRangeOption text="Current month" value="current month" />
-         <DateRangeOption text="Month so far"  value="month so far" />
-         <DateRangeOption text="Last year"     value="last year" />
-         <DateRangeOption text="Current year"  value="current year" />
-         <DateRangeOption text="All dates"     value="forever" />
-         <DateRangeOption text="In the future" value="future" />
-      </Select>
+         options={[
+            {text: "1 day",         value: "1day"},
+            {text: "1 month",       value: "1month" },
+            {text: "3 months",      value: "3months" },
+            {text: "12 months",     value: "12months" },
+            {text: "24 months",     value: "24months" },
+            {text: "36 months",     value: "36months" },
+            {text: "Last month",    value: "last month" },
+            {text: "Current month", value: "current month" },
+            {text: "Month so far",  value: "month so far" },
+            {text: "Last year",     value: "last year" },
+            {text: "Current year",  value: "current year" },
+            {text: "All dates",     value: "forever" },
+            {text: "In the future", value: "future" },
+         ]}
+      />
    );
 }
-
-const DateOption = (p: {text: string, value: RelativeDate}) =>
-   <Option text={p.text} value={p.value} />
 
 interface RelativeDatePickerProps {
    onChange?: (val: RelativeDate) => void;
@@ -270,24 +265,25 @@ export const RelativeDatePicker: React.FC<RelativeDatePickerProps> = p => {
          onChange={localChange}
          text={p.text}
          value={p.value}
-      >
-         <DateOption text="today"                value="today" />
-         <DateOption text="1 month ago"          value="1 month ago" />
-         <DateOption text="2 months ago"         value="2 months ago" />
-         <DateOption text="3 months ago"         value="3 months ago" />
-         <DateOption text="12 months ago"        value="12 months ago" />
-         <DateOption text="start of month"       value="start of month" />
-         <DateOption text="end of month"         value="end of month" />
-         <DateOption text="start of last month"  value="start of last month" />
-         <DateOption text="end of last month"    value="end of last month" />
-         <DateOption text="end of 2 months ago"  value="end of 2 months ago" />
-         <DateOption text="start of year"        value="start of year" />
-         <DateOption text="start of last year"   value="start of last year" />
-         <DateOption text="end of last year"     value="end of last year" />
-         <DateOption text="end of year before last" value="end of prev prev year" />
-         <DateOption text="earliest date"        value="epoch" />
-         <DateOption text="future"               value="armageddon" />
-      </Select>
+         options={[
+            {text: "today",                value: "today"},
+            {text: "1 month ago",          value: "1 month ago"},
+            {text: "2 months ago",         value: "2 months ago"},
+            {text: "3 months ago",         value: "3 months ago"},
+            {text: "12 months ago",        value: "12 months ago"},
+            {text: "start of month",       value: "start of month"},
+            {text: "end of month",         value: "end of month"},
+            {text: "start of last month",  value: "start of last month"},
+            {text: "end of last month",    value: "end of last month"},
+            {text: "end of 2 months ago",  value: "end of 2 months ago"},
+            {text: "start of year",        value: "start of year"},
+            {text: "start of last year",   value: "start of last year"},
+            {text: "end of last year",     value: "end of last year"},
+            {text: "end of year before last", value: "end of prev prev year"},
+            {text: "earliest date",        value: "epoch"},
+            {text: "future",               value: "armageddon"},
+         ]}
+      />
    );
 }
 

@@ -21,9 +21,16 @@
    font-weight: bold;
 
    display: flex;
-   flex-flow: column nowrap;
-   justify-content: center;  /* center text vertically */
-   align-items: flex-start;  /* left-align the text */
+   flex-flow: row nowrap;
+   justify-content: space-between;
+   align-items: center;  /* center vertically */
+}
+
+#header .title .select {
+   flex: 1 1;
+}
+#header .title .select .selector .menu {
+   font-size: 1rem;
 }
 
 #header .settings {

@@ -145,7 +145,7 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
 .lightpalette {
    --page-background: var(--gray-100);
    --panel-background: #f0f0f0;
-   --panel-fg: var(-fg-gray-100);
+   --panel-fg: var(--fg-gray-100);
    --background-summary-popup: rgba(0,0,0,0.9);
    --summary-background: rgba(255,255,255,0.2);
    --focus-color: var(--color-500);
