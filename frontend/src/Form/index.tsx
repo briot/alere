@@ -121,10 +121,13 @@ export const Checkbox: React.FC<CheckboxProps> = p => {
 interface OptionProps<T> {
    text?: string;
    value?: T;
+   style?: React.CSSProperties;
 }
 export const Option = <T extends string|number> (p: OptionProps<T>) => {
    return (
-      <option value={p.value}>{p.text}</option>
+      <option value={p.value} style={p.style}>
+         {p.text}
+      </option>
    );
 }
 

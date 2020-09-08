@@ -1,12 +1,15 @@
 import * as React from 'react';
-import { useParams } from 'react-router-dom';
+import { useHistory as useRouterHistory, useParams } from 'react-router-dom';
 import useAccounts from 'services/useAccounts';
 import useHistory from 'services/useHistory';
 import useTransactions from 'services/useTransactions';
 import useDashboard from 'services/useDashboard';
 import { Dashboard } from 'Dashboard';
+import { SetHeaderProps } from 'Dashboard/Panel';
 import { BaseProps } from 'Dashboard/Module';
 import { SplitMode, TransactionMode } from 'Ledger';
+import { Account } from 'services/useAccounts';
+import { SelectAccount } from 'Account';
 import { LedgerPanelProps } from 'Ledger/Module';
 import { PriceHistoryModuleProps } from 'PriceHistory/Module';
 
@@ -36,19 +39,39 @@ const defaultPanels: BaseProps[] = [
 
 
 interface LedgerPageProps {
-   setHeader: (title: string|undefined) => void;
 }
-const LedgerPage: React.FC<LedgerPageProps> = p => {
+const LedgerPage: React.FC<LedgerPageProps & SetHeaderProps> = p => {
+   const { setHeader } = p;
    const { accountId } = useParams();
+   const history = useRouterHistory();
    const { accounts } = useAccounts();
    const { pushAccount } = useHistory();
    const account = accounts.getAccount(accountId);
    const transactions = useTransactions([accountId], "forever");
    const { panels, setPanels } = useDashboard('ledger', defaultPanels);
 
+   const onAccountChange = React.useCallback(
+      (a: Account) => {
+         history.push(`/ledger/${a.id}`);
+      },
+      [history]
+   );
+
    React.useEffect(
       () => pushAccount(accountId),
       [accountId, pushAccount]
+   );
+
+   React.useEffect(
+      () => {
+         setHeader?.(
+            <SelectAccount
+               accountId={accountId}
+               onChange={onAccountChange}
+            />
+         );
+      },
+      [setHeader, accountId, onAccountChange]
    );
 
    if (!account) {
@@ -60,7 +83,6 @@ const LedgerPage: React.FC<LedgerPageProps> = p => {
          panels={panels}
          setPanels={setPanels}
          header={account.name}
-         setHeader={p.setHeader}
          defaults={{
             accountId: accountId,
             accountIds: [accountId],

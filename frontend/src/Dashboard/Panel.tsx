@@ -10,7 +10,7 @@ import './Panel.css';
  * setHeader to change either the page's header, or a panel's header,...
  */
 export interface SetHeaderProps {
-   setHeader?: (title: string|undefined) => void;
+   setHeader?: (title: React.ReactNode|string|undefined) => void;
 }
 
 interface PanelProps {
