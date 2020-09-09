@@ -46,10 +46,10 @@
       margin: 0;
       padding: 10px;
       z-index: 11;
+   }
 
-      &.visible {
-         display: block;
-      }
+   &.visible > .menu {
+      display: block;
    }
 
    &.left > .menu {

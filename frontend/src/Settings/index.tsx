@@ -15,9 +15,10 @@ const Settings: React.FC<SettingsProps> = p => {
    return (
       <Dropdown
          className="settings"
-         button={
+         button={(visible: boolean) =>
             <RoundButton
                fa='fa-gear'
+               selected={visible}
                size='small'
                title="Settings"
             />

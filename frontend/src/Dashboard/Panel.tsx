@@ -44,8 +44,8 @@ const DashboardPanel: React.FC<PanelProps> = React.memo(p => {
          <div className="header">
             <h1>{header ?? ''}</h1>
             <Dropdown
-               button={
-                  <RoundButton fa='fa-bars' size='tiny' />
+               button={(visible: boolean) =>
+                  <RoundButton fa='fa-bars' size='tiny' selected={visible} />
                }
                menu={
                   <form>
