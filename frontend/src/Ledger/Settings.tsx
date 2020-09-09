@@ -3,25 +3,17 @@ import { BaseLedgerProps, SplitMode, TransactionMode } from 'Ledger';
 import { Checkbox, Select } from 'Form';
 import { DateRange, DateRangePicker } from 'Dates';
 import { SettingsProps } from 'Dashboard/Module';
-import { Account } from 'services/useAccounts';
+import { Account, AccountIdList } from 'services/useAccounts';
 import { SelectMultiAccount } from 'Account';
-import useAccounts from 'services/useAccounts';
+import useAccountIds from 'services/useAccountIds';
 
 const Settings: React.FC<BaseLedgerProps & SettingsProps<BaseLedgerProps>>
 = p => {
-   const { accounts } = useAccounts();
-   const allAccounts =
-      p.accountIds
-      ? p.accountIds
-         .map(a => accounts.getAccount(a))
-         .filter(a => a !== undefined)
-      : undefined;
+   const allAccounts = useAccountIds(p.accountIds);
 
    const changeRange = (range: DateRange) => p.setData({ range });
    const changeAccount =
-      (a: Account[] | undefined) => p.setData({
-         accountIds: a ? a.map(b => b.id) : undefined,
-      });
+      (accountIds: AccountIdList) => p.setData({ accountIds });
    const changeTrans = (trans_mode: TransactionMode) => p.setData({trans_mode});
    const changeSplit = (split_mode: SplitMode) => p.setData({ split_mode });
    const changeBorders = (borders: boolean) => p.setData({ borders });

@@ -2,7 +2,8 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import useAccounts, { Account, AccountId } from 'services/useAccounts';
+import useAccounts, {
+   Account, AccountId, AccountIdList } from 'services/useAccounts';
 import { Checkbox, Select, Option } from 'Form';
 import "./Account.css";
 
@@ -54,7 +55,9 @@ export const SelectAccount: React.FC<SelectAccountProps> = p => {
 interface MultiAccountSelectProps {
    text: string;
    value: Account[] | undefined;
-   onChange: (ids: Account[] | undefined) => void;
+
+   //  ??? Can we return an AccountIdList, including "assets", "all",...
+   onChange: (ids: AccountIdList) => void;
    showStock?: boolean;
 }
 export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
@@ -75,18 +78,18 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
       const r = filteredTree[q.index];
       const localChange = (checked: boolean) => {
          const cp = p.value
-            ? [...p.value]
-            : tree.map(a => a.account);
+            ? p.value.map(a => a.id)
+            : tree.map(a => a.account.id);
          if (checked) {
-            if (!cp.includes(r.account)) {
+            if (!cp.includes(r.account.id)) {
                if (cp.length === tree.length - 1) {
-                  p.onChange(undefined);  // shortcut for all accounts
+                  p.onChange('all');
                } else {
-                  p.onChange([...cp, r.account]);
+                  p.onChange([...cp, r.account.id]);
                }
             }
          } else {
-            cp.splice(cp.indexOf(r.account), 1);
+            cp.splice(cp.indexOf(r.account.id), 1);
             p.onChange(cp);
          }
       };

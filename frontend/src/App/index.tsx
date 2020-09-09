@@ -49,7 +49,7 @@ const defaultOverview: BaseProps[] = [
    } as CashflowPanelProps,
    {
       type: 'ledger',
-      accountIds: undefined,
+      accountIds: 'assets',
       range: 'future',
       trans_mode: TransactionMode.ONE_LINE,
       split_mode: SplitMode.COLLAPSED,
