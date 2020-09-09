@@ -2,9 +2,7 @@ import * as React from 'react';
 import './Dropdown.scss';
 
 interface DropdownProps {
-   // button: (onClick: () => void) => React.ReactNode;
-   // menu: () => React.ReactNode;
-   button: React.ReactNode;
+   button: (visible: boolean) => React.ReactNode;
    menu: React.ReactNode;
    className?: string;
 
@@ -92,16 +90,19 @@ const Dropdown: React.FC<DropdownProps> = p => {
       [onMouse, visible]
    );
 
+   const c = `dropdown ${p.className ?? ''} ${pos.horiz ?? 'offscreen'}` +
+      ` ${visible ? 'visible' : ''}`;
+
    return (
       <div
-         className={`dropdown ${p.className ?? ''} ${pos.horiz ?? 'offscreen'}`}
+         className={c}
          ref={widget}
       >
          <div className="dropdownButton" onClick={onToggle}>
-            {p.button}
+            {p.button(visible)}
          </div>
          <div
-             className={`menu ${visible ? 'visible' : ''}`}
+             className="menu"
              style={{top: pos.vert === 'above' ? 'auto'
                           : pos.vert === 'below' ? '100%'
                           : pos.vert,
