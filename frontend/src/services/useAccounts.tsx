@@ -1,6 +1,7 @@
 import * as React from 'react';
 
 export type AccountId = string|number;
+export type AccountIdList = AccountId[] | 'all' | 'assets';
 
 interface AccountJSON {
    id: AccountId;
@@ -56,6 +57,14 @@ export class Account {
 
    isIncomeExpense(): boolean {
       return this.accountType === "Income" || this.accountType === "Expense";
+   }
+
+   isAsset(): boolean {
+      return this.accountType === "Asset"
+         || this.accountType === "Stock"
+         || this.accountType === "Investment"
+         || this.accountType === "Savings"
+         || this.accountType === "Checking";
    }
 
    /**

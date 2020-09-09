@@ -23,7 +23,7 @@ const defaultPanels: BaseProps[] = [
    } as PriceHistoryModuleProps,
    {
       type: 'ledger',
-      accountIds: undefined,  // overridden later
+      accountIds: 'all',  // overridden later
       transactions: undefined,  // overridden later
       trans_mode: TransactionMode.ONE_LINE,
       split_mode: SplitMode.COLLAPSED,

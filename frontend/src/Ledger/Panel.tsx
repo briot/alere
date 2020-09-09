@@ -8,19 +8,23 @@ import useTransactions from 'services/useTransactions';
 const LedgerPanel: React.FC<BaseLedgerProps & SetHeaderProps> = p => {
    const { setHeader } = p;
    const accounts = useAccountIds(p.accountIds);
-   const transactions = useTransactions(p.accountIds, p.range, p.transactions);
+   const computedIds = accounts?.map(a => a.id);
+   const transactions = useTransactions(computedIds, p.range, p.transactions);
 
    React.useEffect(
       () => {
-         const name = p.accounts === undefined
+         const name =
+            p.accountIds === 'all' || !accounts
             ? 'All accounts'
-            : p.accounts.length === 1
-            ? p.accounts[0]?.name
+            : p.accountIds === 'assets'
+            ? 'All assets'
+            : accounts.length === 1
+            ? accounts[0]?.name
             : 'Multiple accounts';
          const dates = p.range ? rangeDisplay(p.range) : '';
          setHeader?.(`${name} ${dates}`);
       },
-      [p.accounts, setHeader, p.range]
+      [accounts, setHeader, p.range, p.accountIds]
    );
 
    return (

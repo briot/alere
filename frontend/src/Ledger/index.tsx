@@ -8,7 +8,7 @@ import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
          incomeExpenseSplits, sharesForAccounts, priceForAccounts,
          splitsNotForAccounts, Split, Transaction } from 'Transaction';
 import Numeric from 'Numeric';
-import { Account, AccountId } from 'services/useAccounts';
+import { Account, AccountId, AccountIdList } from 'services/useAccounts';
 import './Ledger.css';
 
 const SPLIT = '--split--';
@@ -30,7 +30,7 @@ export enum TransactionMode {
 }
 
 export interface BaseLedgerProps {
-   accountIds: AccountId[] | undefined;     // undefined for all accounts
+   accountIds: AccountIdList;
    range?: DateRange|undefined   // undefined, to see forever
    trans_mode: TransactionMode;
    split_mode: SplitMode;
