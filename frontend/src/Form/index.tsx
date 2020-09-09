@@ -181,7 +181,7 @@ export const Select = <T, > (p: SelectProps<T>) => {
                   }
                </>
             }
-            menu={() => (
+            menu={
                <div
                    style={{height: ROW_HEIGHT * Math.min(p.options.length, 15) }}
                >
@@ -201,7 +201,7 @@ export const Select = <T, > (p: SelectProps<T>) => {
                     }
                   </AutoSizer>
                </div>
-            )}
+            }
          />
       </SharedInput>
    );

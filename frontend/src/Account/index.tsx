@@ -58,6 +58,7 @@ interface MultiAccountSelectProps {
    showStock?: boolean;
 }
 export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
+   const ROW_HEIGHT = 25;
    const { accounts } = useAccounts();
    const tree = accounts.accountTree();
 
@@ -101,7 +102,10 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
    };
 
    return (
-      <div className="multiAccountSelect">
+      <div
+         className="multiAccountSelect"
+         style={{height: 15 * ROW_HEIGHT}}
+      >
          {
             p.text &&
             <label htmlFor={p.text}>{p.text}: </label>
@@ -113,7 +117,7 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
                      width={width}
                      height={height}
                      itemCount={filteredTree.length}
-                     itemSize={25}
+                     itemSize={ROW_HEIGHT}
                      itemKey={getKey}
                   >
                      {getRow}
