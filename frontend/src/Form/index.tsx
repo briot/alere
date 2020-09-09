@@ -1,6 +1,7 @@
 import * as React from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
+import Dropdown from 'Form/Dropdown';
 import "./Form.scss";
 
 interface SharedInputProps {
@@ -121,7 +122,8 @@ export const Checkbox: React.FC<CheckboxProps> = p => {
 
 export interface Option<T> {
    value: T | 'divider';
-   text?: React.ReactNode | string;
+   text?: string;
+   style?: React.CSSProperties;  // when showing the text in the menu
 }
 
 
@@ -136,56 +138,14 @@ interface SelectProps<T> extends SharedInputProps {
 }
 
 export const Select = <T, > (p: SelectProps<T>) => {
+   const ROW_HEIGHT = 20;
+
    const { onChange } = p;
-   const [visible, setVisible] = React.useState(false);
-   const menu = React.useRef<HTMLDivElement>(null);
-
-   const onIconClick = React.useCallback(
-      () => setVisible(old => !old),
-      []
-   );
-
    const selectItem = React.useCallback(
       (val: T) => onChange?.(val),
       [onChange]
    );
-
    const selected = p.options.filter(o => o.value === p.value)[0]
-
-   const onMouseDown = React.useCallback(
-      (e : MouseEvent) => {
-         setVisible(old => {
-            if (old) {
-               let p = e.target as HTMLElement|null;
-               while (p) {
-                  if (p === menu.current) {
-                     return old;  // no change, we want to select an item
-                  }
-                  p = p.parentElement;
-               }
-               e.stopPropagation();
-               e.preventDefault();
-            }
-            return false;
-         });
-      },
-      []
-   );
-
-   React.useEffect(
-      () => {
-         if (visible) {
-            window.document.addEventListener('mousedown', onMouseDown);
-            window.document.addEventListener('mouseup', onMouseDown);
-            return () => {
-               window.document.removeEventListener('mousedown', onMouseDown);
-               window.document.removeEventListener('mouseup', onMouseDown);
-            };
-         }
-      },
-      [onMouseDown, visible]
-   );
-
    const getKey = (index: number) => index;
    const getRow = (q: ListChildComponentProps) => {
       const o = p.options[q.index];
@@ -199,56 +159,49 @@ export const Select = <T, > (p: SelectProps<T>) => {
             style={q.style}
             onClick={() => selectItem(o.value as T)}
          >
-            {o.text ?? o.value}
+            <span style={o.style}>{o.text ?? o.value}</span>
          </div>
       );
    }
-
 
    // ??? handling of `required`
 
    return (
       <SharedInput className="select" {...p} >
-         <div
-            className="selector"
-            onClick={onIconClick}
-            style={p.style}
-            ref={menu}
-         >
-            <div
-               className="text"
-            >
-               {selected?.text ?? selected?.value ?? ''}
-            </div>
-            {
-               !p.hideArrow &&
-               <div
-                  className="icon fa fa-caret-down"
-               />
+         <Dropdown
+            button={
+               <>
+                  <div className="text" >
+                     {selected?.text ?? selected?.value ?? ''}
+                  </div>
+                  {
+                     !p.hideArrow &&
+                     <div className="icon fa fa-caret-down" />
+                  }
+               </>
             }
-            <div
-                className={
-                   `menu ${visible ? 'visible' : ''} ${p.direction ?? 'right'}`
-                }
-                style={{height: 25 * Math.min(p.options.length, 15) }}
-            >
-               <AutoSizer>
-                 {
-                    ({ width, height }) => (
-                        <FixedSizeList
-                           width={width}
-                           height={height}
-                           itemCount={p.options.length}
-                           itemSize={25}
-                           itemKey={getKey}
-                        >
-                           {getRow}
-                        </FixedSizeList>
-                    )
-                 }
-               </AutoSizer>
-            </div>
-         </div>
+            menu={() => (
+               <div
+                   style={{height: ROW_HEIGHT * Math.min(p.options.length, 15) }}
+               >
+                  <AutoSizer>
+                    {
+                       ({ width, height }) => (
+                           <FixedSizeList
+                              width={width}
+                              height={height}
+                              itemCount={p.options.length}
+                              itemSize={ROW_HEIGHT}
+                              itemKey={getKey}
+                           >
+                              {getRow}
+                           </FixedSizeList>
+                       )
+                    }
+                  </AutoSizer>
+               </div>
+            )}
+         />
       </SharedInput>
    );
 }

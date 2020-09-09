@@ -81,86 +81,60 @@ form .select option {
 }
 
 .select {
-   --row-height: 25px;  /* must match ROW_HEIGHT in javascript */
+   --row-height: 20px;  /* must match ROW_HEIGHT in javascript */
    height: 100%;
 
-   & > .selector {
+   .dropdown {
+      border: 1px solid var(--input-border);
+      flex: 1 1;   // use all available width in <select> boxes
+   }
+
+   .dropdownButton {
+      background: var(--input-background);
+      color: var(--input-foreground);
+      border: 1px solid var(--input-border);
       height: 100%;
-      border: 1px solid var(--input-border);
+      padding: 0 5px;
+
+      .icon {
+         display: inline-block;
+         width: 20px;
+         height: 20px;
+         padding-left: 10px;
+         font-size: 1.2em;
+         margin-top: -1px;
+      }
+   }
+
+   .menu {
       background: var(--input-background);
       color: var(--input-foreground);
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: space-between;
+      border: 1px solid var(--input-border);
+   }
+
+   .option {
       cursor: pointer;
-      position: relative;
-      align-items: center;   // center vertically
-      outline: 0;
+      height: var(--row-height);
+      font-weight: normal;
+      display: flex;
+      align-items: center;  // center vertically
 
-   }
-
-   & > .selector > .text {
-   }
-
-   & > .selector > .icon {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      padding-left: 10px;
-      font-size: 1.2em;
-      margin-top: 2px;
-   }
-
-   & > .selector > .menu {
-      display: none;
-      top: 100%;  // below the parent
-      box-shadow: 6px 6px 10px 0 var(--shadow-color);
-      background: var(--input-background);
-      color: var(--input-foreground);
-      border: 1px solid var(--input-border);
-      border-radius: .28571429rem .28571429rem 0 0;
-      //overflow: auto;
-
-      left: 0;
-
-      cursor: auto;
-      position: absolute;
-      outline: 0;
-      width: 100%;             // use same width as the selector itself
-      min-width: max-content;  // but leave space to show full items text
-      max-height: calc(15 * var(--row-height));
-      margin: 0;
-      padding: 0;
-      z-index: 11;
-
-      &.visible {
-         display: block;
+      &:hover {
+         background: var(--table-hover-background);
       }
 
-      & .option {
-         cursor: pointer;
-         height: var(--row-height);
-         font-weight: normal;
-         display: flex;
-         align-items: center;  // center vertically
+      &.selected {
+         font-weight: bold;
+      }
+
+      &.divider {
+         pointer-events: none;
+         border-top: 1px solid var(--input-border);
+         height: 0;
+         margin: 0.5em 0;
 
          &:hover {
-            background: var(--table-hover-background);
-         }
-
-         &.selected {
-            font-weight: bold;
-         }
-
-         &.divider {
-            pointer-events: none;
-            border-top: 1px solid var(--input-border);
-            height: 0;
-            margin: 0.5em 0;
-
-            &:hover {
-               background: none;
-            }
+            background: none;
          }
       }
    }
