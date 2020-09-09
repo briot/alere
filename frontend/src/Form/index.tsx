@@ -169,6 +169,7 @@ export const Select = <T, > (p: SelectProps<T>) => {
    return (
       <SharedInput className="select" {...p} >
          <Dropdown
+            closeOnInsideClick={true}
             button={
                <>
                   <div className="text" >

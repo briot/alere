@@ -7,27 +7,29 @@ interface DropdownProps {
    button: React.ReactNode;
    menu: () => React.ReactNode;
    className?: string;
+
+   // If true, the dropdown is closed when clicking inside it. Otherwise we
+   // keep it open.
+   closeOnInsideClick?: boolean;
 }
 
 const Dropdown: React.FC<DropdownProps> = p => {
    const [visible, setVisible] = React.useState(false);
    const widget = React.useRef<HTMLDivElement>(null);
 
-   const onToggle = React.useCallback(
-      () => setVisible(old => !old),
-      []
-   );
+   const onToggle = () => setVisible(old => !old);
+   const onClose  = () => setVisible(false);
 
    const onMouse = React.useCallback(
       (e : MouseEvent) => {
          setVisible(old => {
             if (old) {
-               let p = e.target as HTMLElement|null;
-               while (p) {
-                  if (p === widget.current) {
+               let t = e.target as HTMLElement|null;
+               while (t) {
+                  if (t === widget.current) {
                      return old;  // no change, we want to select an item
                   }
-                  p = p.parentElement;
+                  t = t.parentElement;
                }
                e.stopPropagation();
                e.preventDefault();
@@ -41,11 +43,9 @@ const Dropdown: React.FC<DropdownProps> = p => {
    React.useEffect(
       () => {
          if (visible) {
-            window.document.addEventListener('mousedown', onMouse);
-            window.document.addEventListener('mouseup', onMouse);
+            window.document.addEventListener('mouseup', onMouse, true);
             return () => {
-               window.document.removeEventListener('mousedown', onMouse);
-               window.document.removeEventListener('mouseup', onMouse);
+               window.document.removeEventListener('mouseup', onMouse, true);
             };
          }
       },
@@ -62,6 +62,7 @@ const Dropdown: React.FC<DropdownProps> = p => {
          </div>
          <div
              className={`menu ${visible ? 'visible' : ''}`}
+             onClick={p.closeOnInsideClick ? onClose : undefined}
          >
             {visible && p.menu()}
          </div>
