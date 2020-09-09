@@ -80,6 +80,11 @@ form .select option {
    overflow: hidden;
 }
 
+.multiAccountSelect {
+   margin-bottom: 20px;  // leave space for the horizontal scrollbar
+}
+
+
 .select {
    --row-height: 20px;  /* must match ROW_HEIGHT in javascript */
    height: 100%;

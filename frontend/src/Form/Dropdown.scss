@@ -17,11 +17,17 @@
       height: 100%;
    }
 
+   &.offscreen {
+      overflow: hidden;  // avoid flickering scrollbars while menu is offscreen
+      & > .menu {
+         left: 100000px;
+      }
+   }
+
    & > .menu {
       font-size: 0.8rem;
 
       display: none;
-      top: 100%;  // below the parent
       box-shadow: 3px 3px 4px 0 var(--shadow-color);
       border-radius: .28571429rem .28571429rem 0 0;
 
@@ -45,4 +51,10 @@
          display: block;
       }
    }
+
+   &.left > .menu {
+      right: 0;
+      left: auto;
+   }
+
 }

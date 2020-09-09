@@ -5,7 +5,7 @@ interface DropdownProps {
    // button: (onClick: () => void) => React.ReactNode;
    // menu: () => React.ReactNode;
    button: React.ReactNode;
-   menu: () => React.ReactNode;
+   menu: React.ReactNode;
    className?: string;
 
    // If true, the dropdown is closed when clicking inside it. Otherwise we
@@ -13,12 +13,52 @@ interface DropdownProps {
    closeOnInsideClick?: boolean;
 }
 
+interface Pos {
+   horiz?: 'left' | 'right'; // undefined when not computed yet
+   vert?: number | 'above' | 'below';
+}
+
 const Dropdown: React.FC<DropdownProps> = p => {
    const [visible, setVisible] = React.useState(false);
+   const [pos, setPos] = React.useState<Pos>({});
    const widget = React.useRef<HTMLDivElement>(null);
 
-   const onToggle = () => setVisible(old => !old);
-   const onClose  = () => setVisible(false);
+   const computePos = () => {
+      const menu = widget.current?.querySelector('.menu');
+      const w = menu?.clientWidth;
+
+      if (!w || !widget.current) { // we could not compute the size yet
+         window.setTimeout(computePos, 50);
+         return;
+      }
+
+      const bb = widget.current.getBoundingClientRect();
+      const h = menu!.clientHeight;
+      const dh = document.documentElement.clientHeight;
+      setPos({
+         horiz: bb.left + w > document.documentElement.clientWidth
+            ? 'left' : 'right',
+         vert: bb.top + h <= dh
+            ? 'below'
+            : bb.top - h < 0 ? -bb.top
+            : 'above',
+      });
+   }
+
+   const doVisible = (visible: boolean) => {
+      setVisible(visible);
+      setPos({});
+
+      if (visible) {
+         computePos();
+      }
+   }
+
+   // const onToggle = () => setPos(old => ({ visible: !old.visible }));
+   // const onClose  = () => setPos({ visible: false });
+
+   const onToggle = () => doVisible(!visible);
+   const onClose  = () => doVisible(false);
 
    const onMouse = React.useCallback(
       (e : MouseEvent) => {
@@ -54,7 +94,7 @@ const Dropdown: React.FC<DropdownProps> = p => {
 
    return (
       <div
-         className={`dropdown ${p.className ?? ''}`}
+         className={`dropdown ${p.className ?? ''} ${pos.horiz ?? 'offscreen'}`}
          ref={widget}
       >
          <div className="dropdownButton" onClick={onToggle}>
@@ -62,9 +102,20 @@ const Dropdown: React.FC<DropdownProps> = p => {
          </div>
          <div
              className={`menu ${visible ? 'visible' : ''}`}
+             style={{top: pos.vert === 'above' ? 'auto'
+                          : pos.vert === 'below' ? '100%'
+                          : pos.vert,
+                     bottom: pos.vert === 'above' ? '100%' : 'auto',
+                   }}
              onClick={p.closeOnInsideClick ? onClose : undefined}
          >
-            {visible && p.menu()}
+            {
+               // Always populate the menu, so that we can compute its size
+               // when the menu is open to decide which side to display on.
+               // Otherwise there is a flash of the dialog before it is moved
+               // to the left side.
+               p.menu
+            }
          </div>
       </div>
    );

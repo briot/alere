@@ -47,7 +47,7 @@ const DashboardPanel: React.FC<PanelProps> = React.memo(p => {
                button={
                   <RoundButton fa='fa-bars' size='tiny' />
                }
-               menu={() => (
+               menu={
                   <form>
                      {
                         m.Settings &&
@@ -84,7 +84,7 @@ const DashboardPanel: React.FC<PanelProps> = React.memo(p => {
                         />
                      </fieldset>
                   </form>
-               )}
+               }
             />
             {/*
                <span className="fa fa-info-circle" />

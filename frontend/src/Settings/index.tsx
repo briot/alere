@@ -22,7 +22,7 @@ const Settings: React.FC<SettingsProps> = p => {
                title="Settings"
             />
          }
-         menu={() => (
+         menu={
             <form>
                <fieldset>
                   <legend>General</legend>
@@ -45,7 +45,7 @@ const Settings: React.FC<SettingsProps> = p => {
 
                </fieldset>
             </form>
-         )}
+         }
      />
    );
 }
