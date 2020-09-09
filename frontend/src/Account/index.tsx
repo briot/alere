@@ -34,7 +34,8 @@ export const SelectAccount: React.FC<SelectAccountProps> = p => {
       }
       items.push({
          value: r.account.id,
-         text: <span style={{paddingLeft: 20 * r.level}}>{r.account.name}</span>
+         text: r.account.name,
+         style: {paddingLeft: 20 * r.level}
       });
    });
 

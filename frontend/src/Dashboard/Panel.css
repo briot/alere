@@ -3,10 +3,7 @@
    color: var(--panel-fg);
    box-shadow: 6px 6px 10px 0 var(--shadow-color);
    border: 1px solid var(--shadow-color);
-   /* border-radius: .5em; */
    padding: 5px 10px;
-
-   overflow: hidden;
 
    display: flex;
    flex-flow: column nowrap;
@@ -46,6 +43,4 @@
 .panel .settingsMenu {
    position: relative;
    cursor: pointer;
-}
-.panel .settings {
 }

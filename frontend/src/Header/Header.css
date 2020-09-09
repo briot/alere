@@ -29,10 +29,9 @@
 #header .title .select {
    flex: 1 1;
 }
+#header .title .select .dropdownButton {
+   background: none;
+}
 #header .title .select .selector .menu {
    font-size: 1rem;
-}
-
-#header .settings {
-   top: var(--header-tool-height);
 }
