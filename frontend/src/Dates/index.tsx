@@ -120,13 +120,15 @@ export const dateToDate = (when: RelativeDate): Date => {
    return d;
 }
 
-export const dateToString = (when: RelativeDate): string => {
-   const d = dateToDate(when);
+export const formatDate = (d: Date): string => {
    const y = ('0' + d.getFullYear()).slice(-4);
    const m = ('0' + (d.getMonth() + 1)).slice(-2);
    const day = ('0' + d.getDate()).slice(-2);
    return `${y}-${m}-${day}`;
 }
+
+export const dateToString = (when: RelativeDate): string =>
+   formatDate(dateToDate(when));
 
 export type DateRange =
    '1day'          |
@@ -168,7 +170,9 @@ export const rangeToHttp = (name: DateRange|undefined): string => {
       return '';
    }
    const r = rangeToDate(name);
-   return `mindate=${dateToString(r[0])}&maxdate=${dateToString(r[1])}`;
+   const min = dateToString(r[0]);
+   const max = dateToString(r[1]);
+   return `mindate=${min}&maxdate=${max}`;
 }
 
 export const rangeDisplay = (name: DateRange): string => {
@@ -178,7 +182,9 @@ export const rangeDisplay = (name: DateRange): string => {
       return ", upcoming";
    }
    const r = rangeToDate(name);
-   return `from ${dateToString(r[0])} to ${dateToString(r[1])}`;
+   const min = dateToString(r[0]);
+   const max = dateToString(r[1]);
+   return `from ${min} to ${max}`;
 }
 
 export const monthCount = (name: DateRange): number => {

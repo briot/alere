@@ -5,6 +5,7 @@ import DashboardFromName from 'Dashboard';
 import LeftSideBar from 'LeftSideBar';
 import RightSideBar from 'RightSideBar';
 import LedgerPage from 'Ledger/Page';
+import InvestmentPage from 'Investment/Page';
 import usePrefs from 'services/usePrefs';
 import StyleGuide from 'StyleGuide';
 import { BaseProps } from 'Dashboard/Module';
@@ -110,6 +111,9 @@ const App: React.FC<{}> = () => {
                <Switch>
                    <Route path="/ledger/:accountId">
                       <LedgerPage setHeader={setHeader} />
+                   </Route>
+                   <Route path="/investments">
+                      <InvestmentPage setHeader={setHeader} />
                    </Route>
                    <Route>
                       <DashboardFromName

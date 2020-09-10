@@ -124,7 +124,7 @@ const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
       (q: ListChildComponentProps) => {
          const r = data[q.index];
          return (
-            <div style={q.style} className="tr" key={r.accountId} >
+            <Table.TR style={q.style} >
                <AccountName
                    id={r.accountId}
                    account={r.account}
@@ -164,7 +164,7 @@ const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
                   </React.Fragment>
                   ))
                }
-            </div>
+            </Table.TR>
          );
       },
       [data, p.showPrice, p.showShares, p.showValue, dates, prefs.currencyId]
@@ -176,7 +176,7 @@ const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
 
    const header = (
       <>
-         <div className="tr">
+         <Table.TR>
             <span className="th">Account</span>
             {
                dates.map((d, idx) =>
@@ -184,21 +184,21 @@ const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
                      {d}
                   </span>)
             }
-         </div>
+         </Table.TR>
          {
             (p.showShares || p.showPrice) &&
-            <div className="tr">
-               <span />
+            <Table.TR>
+               <Table.TH />
                {
                   p.dates.map((d, idx) => (
                      <React.Fragment key={idx}>
-                        {p.showShares && <span className="th">Shares</span>}
-                        {p.showPrice && <span className="th">Price</span>}
-                        {p.showValue && <span className="th">Value</span>}
+                        {p.showShares && <Table.TH>Shares</Table.TH>}
+                        {p.showPrice && <Table.TH>Price</Table.TH>}
+                        {p.showValue && <Table.TH>Value</Table.TH>}
                      </React.Fragment>
                   ))
                }
-            </div>
+            </Table.TR>
          }
       </>
    );

@@ -6,7 +6,7 @@ const GROUP_SEP = ' ';
 
 interface NumericProps {
    currency?: string;
-   amount: number|undefined;
+   amount: number|undefined|null;
    precision?: number;
 }
 

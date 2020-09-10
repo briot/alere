@@ -1,5 +1,4 @@
 from .json import JSONView
-from typing import List, Union
 from .kmm import kmm, do_query
 from .kmymoney import ACCOUNT_TYPE
 

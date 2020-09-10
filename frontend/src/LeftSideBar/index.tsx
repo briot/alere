@@ -40,9 +40,10 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
          />
          <RoundButton
             fa="fa-bank"
+            selected={location.pathname.startsWith('/investments/')}
             text="Investments"
-            disabled={true}
             size='large'
+            url="/investments/"
           />
          <RoundButton
             fa="fa-user"

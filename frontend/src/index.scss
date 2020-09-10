@@ -75,6 +75,7 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
 :root {
    @include generate-color-vars(color, $blue);
    @include generate-color-vars(invalid, $red);
+   @include generate-color-vars(green, $green);
    @include generate-color-vars(gray, #adb5bd);
    white-fg: #{black-or-white(white)};  // foreground to use on top of white
 
@@ -144,7 +145,7 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
 }
 .lightpalette {
    --page-background: var(--gray-100);
-   --panel-background: #f0f0f0;
+   --panel-background: #fbfbfb;
    --panel-fg: var(--fg-gray-100);
    --background-summary-popup: rgba(0,0,0,0.9);
    --summary-background: rgba(255,255,255,0.2);

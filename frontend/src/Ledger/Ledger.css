@@ -29,23 +29,12 @@
 /**
  * Column-specific settings
  */
-.ledger .date {
-   flex: 0 1 6rem;
-   font-family: "minion pro", "myriad pro", "tahoma";
-   font-variant-numeric: oldstyle-nums tabular-nums;
-   font-variant-numeric: lining-nums tabular-nums;
-   font-size-adjust: 0.438;
-}
 .ledger .num {
    flex: 0 1 5rem;
 }
 .ledger .reconcile {
    flex: 0 1 1.5rem;
    text-align: center;
-}
-.ledger .amount {
-   flex: 0 1 7rem;
-   text-align: right;
 }
 .ledger .shares {
    flex: 0 1 5rem;
