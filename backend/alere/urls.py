@@ -13,6 +13,7 @@ from .views.metrics import MetricsView
 from .views.networth import NetworthView
 from .views.plots import CategoryPlotView
 from .views.prices import PriceHistory
+from .views.quotes import QuotesView
 
 
 STATIC_ROOT = (
@@ -41,6 +42,7 @@ urlpatterns = [
     path('api/plots/networth', NetworthView.as_view()),
     path('api/metrics', MetricsView.as_view()),
     path('api/mean', MeanView.as_view()),
+    path('api/quotes', QuotesView.as_view()),
 
     # re_path(r'^.*$', static),
 ]

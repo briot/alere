@@ -9,7 +9,8 @@ type PanelTypes =
    'pricehistory'   |
    'metrics'        |
    'ledger'         |
-   'mean'
+   'mean'           |
+   'investments'
    ;
 
 /**

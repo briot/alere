@@ -16,6 +16,7 @@ interface THProps {
    kind?: string;
    className?: string;
    title?: string;
+   style?: React.CSSProperties;
 }
 const TH: React.FC<THProps> = p => {
    const sortClass = p.sortable ? 'sortable' : '';
@@ -23,6 +24,7 @@ const TH: React.FC<THProps> = p => {
    return (
        <span
           className={`th ${p.kind || ''} ${sortClass} ${ascClass} ${p.className || ''}`}
+          style={p.style}
           title={p.title}
        >
           {p.children}
@@ -54,12 +56,13 @@ const TD: React.FC<TDProps> = p => {
 interface TRProps {
    partial?: boolean;  // if yes, cells will be aligned to the right
    editable?: boolean;
+   style?: React.CSSProperties;
 }
 const TR: React.FC<TRProps> = p => {
    const editClass = p.editable ? 'edit' : '';
    const className = `tr ${p.partial ? 'right-aligned' : ''} ${editClass}`;
    return (
-      <div className={className} >
+      <div className={className} style={p.style} >
          {p.children}
       </div>
    );
@@ -78,13 +81,15 @@ interface TableProps {
    borders?: boolean;
    background?: boolean;
    expandableRows?: boolean;
-   header?: React.ReactNode|React.ReactNode;
-   footer?: React.ReactNode|React.ReactNode;
+   header?: React.ReactNode;
+   footer?: React.ReactNode;
+   className?: string;
 }
 const Table: React.FC<TableProps & React.RefAttributes<VariableSizeList>>
    = React.forwardRef(
 (p, ref) => {
    const c = `table `
+      + (p.className ?? '')
       + (p.expandableRows ? ' expandableRows' : '')
       + (p.borders ? ' borders' : '')
       + (p.background ? ' background' : '');

@@ -84,7 +84,6 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeaderProps> = p => {
       <Dashboard
          panels={panels}
          setPanels={setPanels}
-         header={account.name}
          defaults={{
             accountId: accountId,
             accountIds: [accountId],
