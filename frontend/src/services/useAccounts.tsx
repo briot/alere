@@ -141,6 +141,11 @@ export class AccountList {
       return this.accounts.get(id);
    }
 
+   accountsFromCurrency(currencyId: string): Account[] {
+      return Array.from(this.accounts.values()).filter(
+         a => a.currencyId === currencyId);
+   }
+
    numAccounts(): number {
       return this.accounts.size;
    }

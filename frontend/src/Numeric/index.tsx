@@ -8,6 +8,7 @@ interface NumericProps {
    currency?: string;
    amount: number|undefined|null;
    precision?: number;
+   colored?: boolean;
 }
 
 const Numeric: React.FC<NumericProps> = p => {
@@ -17,7 +18,8 @@ const Numeric: React.FC<NumericProps> = p => {
       );
    }
 
-   const className = 'numeric ' + (p.currency ?? '');
+   const className = 'numeric ' + (p.currency ?? '')
+      + (p.colored ? (p.amount >= 0 ? ' positive' : ' negative') : '');
    const val = p.amount.toFixed(p.precision ?? 2);
 
    let str = val.split('.');  // separator used by toFixed

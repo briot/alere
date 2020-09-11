@@ -1,5 +1,11 @@
 .investment {
    .hist {
       flex: 0 1 80px;
+      overflow: visible;  // let the graph overlap multiple rows
+   }
+
+   .recharts-wrapper {
+      // When we show borders, this avoids having the border split the graph
+      background: var(--panel-background);
    }
 }

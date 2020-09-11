@@ -332,7 +332,7 @@ interface NotesRowProps extends BaseLedgerProps {
 }
 const NotesRow: React.FC<NotesRowProps> = p => {
    return (
-      <Table.TR>
+      <Table.TR secondary={true} >
          <Table.TD kind="date" />
          <Table.TD kind="num"></Table.TD>
          <Table.TD kind="notes">{p.transaction.memo}</Table.TD>
@@ -362,7 +362,7 @@ interface SplitRowProps extends BaseLedgerProps {
 const SplitRow: React.FC<SplitRowProps> = p => {
    const s = p.split;
    return (
-      <Table.TR>
+      <Table.TR secondary={true} >
          <Table.TD kind='date' />
          <Table.TD kind='num' className='numeric'>{s.checknum}</Table.TD>
          <Table.TD kind='notes'>{`${s.memo || ''}${s.payee || ''}`}</Table.TD>

@@ -18,11 +18,7 @@
 }
 
 /* split transaction details */
-.ledger .tr:not(:first-child) .td {
-   color: var(--table-row-details-fg);
-   font-style: italic;
-}
-.ledger .tr:not(:first-child) .numeric {
+.ledger .tr.secondary .numeric {
    font-size: 0.8rem;
 }
 

@@ -6,10 +6,10 @@
    font-size-adjust: 0.438;
 }
 .numeric.positive {
-   color: #06ea06;
+   color: var(--positive-fg);
 }
 .numeric.negative {
-   color: red;
+   color: var(--negative-fg);
 }
 .numeric:after {
    content: '';

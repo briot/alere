@@ -79,6 +79,9 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    @include generate-color-vars(gray, #adb5bd);
    white-fg: #{black-or-white(white)};  // foreground to use on top of white
 
+   --negative-fg: var(--invalid-500);
+   --positive-fg: var(--green-500);
+
    --font-size: 16px;
    --font-size-sidebar: 15px;
    --font-size-tool: 13px;

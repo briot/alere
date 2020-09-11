@@ -135,13 +135,15 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
 interface AccountProps {
    id: AccountId;
    account: Account|undefined;
+   fullName?: boolean;
    noLinkIf?: Account[]|undefined;
 }
 const AccountName: React.FC<AccountProps> = p => {
-   const name = p.account ? p.account.name : `account ${p.id}`;
+   const fname = p.account ? p.account.fullName() : `account ${p.id}`;
+   const name = (!p.account || p.fullName) ? fname : p.account.name;
    return (
       <span
-         title={name}
+         title={fname}
          className={`account ${p.account?.closed ? 'closed' : ''}`}
       >
          {

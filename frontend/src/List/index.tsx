@@ -56,11 +56,13 @@ const TD: React.FC<TDProps> = p => {
 interface TRProps {
    partial?: boolean;  // if yes, cells will be aligned to the right
    editable?: boolean;
+   secondary?: boolean;  // in gray
    style?: React.CSSProperties;
 }
 const TR: React.FC<TRProps> = p => {
-   const editClass = p.editable ? 'edit' : '';
-   const className = `tr ${p.partial ? 'right-aligned' : ''} ${editClass}`;
+   const ec = p.editable ? ' edit' : '';
+   const sc = p.secondary ? ' secondary': '';
+   const className = `tr ${p.partial ? 'right-aligned' : ''}${ec}${sc}`;
    return (
       <div className={className} style={p.style} >
          {p.children}

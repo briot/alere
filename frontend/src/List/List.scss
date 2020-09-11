@@ -42,8 +42,12 @@
     * Show borders
     */
    &.borders {
-      .td, .th {
-         border: 1px solid var(--gray-100);
+      .tr + .tr {
+         border-top: 1px solid var(--gray-100);
+      }
+      .td + .td,
+      .th + .th {
+         border-left: 1px solid var(--gray-100);
       }
       .trgroup {
          border: 1px solid var(--gray-400);
@@ -61,6 +65,11 @@
       .trgroup .tr:not(:first-child) {
          background: var(--table-row-details-background);
       }
+   }
+
+   .tr.secondary .td {
+      color: var(--table-row-details-fg);
+      font-style: italic;
    }
 
    /**

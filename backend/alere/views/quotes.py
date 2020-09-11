@@ -7,9 +7,10 @@ import yfinance as yf
 
 class Symbol:
     def __init__(
-            self, name, ticker, source,
+            self, id, name, ticker, source,
             stored_timestamp, stored_price
         ):
+        self.id = id
         self.name = name
         self.ticker = ticker
         self.source = source
@@ -23,12 +24,25 @@ class Ticker:
 
     def to_json(self):
         return {
+            "id": self.symbol.id,
             "name": self.symbol.name,
             "ticker": self.symbol.ticker,
             "source": self.symbol.source,
             "prices": [(t[0].timestamp() * 1e3, t[1]) for t in self.prices],
             "storedtime": self.symbol.stored_timestamp,
             "storedprice": self.symbol.stored_price,
+        }
+
+
+class AccountTicker:
+    def __init__(self, symbol: str, account: str):
+        self.symbol = symbol
+        self.account = account
+
+    def to_json(self):
+        return {
+            "symbol": self.symbol,
+            "account": self.account,
         }
 
 
@@ -67,7 +81,7 @@ class QuotesView(JSONView):
 
         symbols = [
             Symbol(
-                row.name, row.symbol, row.source,
+                row.id, row.name, row.symbol, row.source,
                 stored_timestamp=row.storedtime,
                 stored_price=row.storedprice,
                 )
@@ -93,19 +107,6 @@ class QuotesView(JSONView):
                 rec.sort(key=lambda v: v[0])  # order by timestamp
             else:
                 rec = []
-
-#            if rec:
-#                timestamp = rec[0][0]
-#                last_close = rec[0][1]
-#                variation = (
-#                    (rec[0][1] / rec[1][1] - 1.0) * 100
-#                    if len(rec) >= 2
-#                    else None
-#                )
-#            else:
-#                last_close = None
-#                timestamp = None
-#                variation = None
 
             result.append(Ticker(
                 symbol=s,
