@@ -1,5 +1,5 @@
 .investment {
-   --account-row-height: 25px;
+   --account-row-height: 75px;
 
    .hist {
       flex: 0 1 80px;
@@ -20,9 +20,17 @@
       height: var(--account-row-height);
    }
 
-   .average {
-      flex: 1 1;
+   .source {
+      flex: 0 0 15ch;
       text-align: left;
+   }
+
+   .shares {
+      flex: 0 0 15ch;
+      text-align: left;
+   }
+   .empty {
+      flex: 0 0 5rem;
    }
 }
 

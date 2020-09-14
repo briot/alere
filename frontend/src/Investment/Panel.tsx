@@ -11,7 +11,7 @@ import './Investment.scss';
 
 
 const ROW_HEIGHT = 25;
-const ACCOUNT_ROW_HEIGHT = 25;
+const ACCOUNT_ROW_HEIGHT = 75;
 
 //  When do we consider a number of shares to be zero (for rounding errors)
 const THRESHOLD = 0.00000001;
@@ -74,7 +74,7 @@ const TickerView: React.FC<TickerViewProps> = p => {
          <Table.TR>
             <Table.TD>{p.ticker.name}</Table.TD>
             <Table.TD>{p.ticker.ticker}</Table.TD>
-            <Table.TD>{p.ticker.source}</Table.TD>
+            <Table.TD className="source">{p.ticker.source}</Table.TD>
             <Table.TD className="price">
                <Numeric amount={p.ticker.storedprice} />
             </Table.TD>
@@ -144,19 +144,20 @@ const TickerView: React.FC<TickerViewProps> = p => {
                const avg_cost = a.value / a.shares;
                return (
                <Table.TR key={a.account} secondary={true} className="account">
-                  <Table.TD />
+                  <Table.TD className="empty" />
                   <Table.TD>
-                     <AccountName
-                        id={a.account}
-                        account={p.accounts.getAccount(a.account)}
-                        fullName={true}
-                     />
-                  </Table.TD>
-                  <Table.TD className="average">
+                     <div>
+                        <AccountName
+                           id={a.account}
+                           account={p.accounts.getAccount(a.account)}
+                           fullName={true}
+                        />
+                     </div>
+
                      {
                         a.absshares > THRESHOLD
                         ? (
-                        <span
+                        <div
                            title="Weighted Average: average price at which you sold or bought shares. It does not include shares added or subtracted with no paiement."
                         >
                            Weighted Average: <Numeric
@@ -165,15 +166,13 @@ const TickerView: React.FC<TickerViewProps> = p => {
                                  weighted_avg >= close ? 'negative' : 'positive'
                               }
                            />
-                        </span>
+                        </div>
                       ) : null
                      }
-                  </Table.TD>
-                  <Table.TD className="average" >
                      {
                         Math.abs(a.shares) > THRESHOLD
                         ? (
-                        <span
+                        <div
                            title="Average Cost: equivalent price for the remaining shares you own, taking into account dividends, added and removed shares,..."
                         >
                            Average Cost: <Numeric
@@ -182,11 +181,11 @@ const TickerView: React.FC<TickerViewProps> = p => {
                                  avg_cost >= close ? 'negative' : 'positive'
                               }
                            />
-                        </span>
+                        </div>
                         ) : null
                      }
                   </Table.TD>
-                  <Table.TD className="average" >
+                  <Table.TD className="shares" >
                      Shares: <Numeric amount={a.shares} />
                   </Table.TD>
                   <Table.TD className="hist" />
@@ -266,7 +265,7 @@ const InvestmentsPanel: React.FC<InvestmentsPanelProps & SetHeaderProps> = p => 
       <Table.TR>
          <Table.TH>Security</Table.TH>
          <Table.TH>Ticker</Table.TH>
-         <Table.TH>Quote source</Table.TH>
+         <Table.TH className="source">Quote source</Table.TH>
 
          <Table.TH
             className="price"
