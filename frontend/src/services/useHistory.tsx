@@ -18,6 +18,7 @@ const noContext: HistContext = {
 
 const ReactHistContext = React.createContext(noContext);
 const KEY = "alereHist";
+const MAX_ENTRIES = 10;
 
 export const HistProvider: React.FC<{}> = p => {
    const [hist, setHist] = React.useState<History>(
@@ -35,7 +36,8 @@ export const HistProvider: React.FC<{}> = p => {
       (id: AccountId) => {
          setHist(old => {
             const v = [{accountId: id },
-                       ...old.filter(h => h.accountId !== id)];
+                       ...old.filter(h => h.accountId !== id)]
+               .slice(0, MAX_ENTRIES);
             localStorage.setItem(KEY, JSON.stringify(v));
             window.console.log('update history');
             return v;
