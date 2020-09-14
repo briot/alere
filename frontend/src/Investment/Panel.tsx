@@ -1,16 +1,20 @@
 import * as React from 'react';
-import { ListChildComponentProps } from 'react-window';
+import { VariableSizeList, ListChildComponentProps } from 'react-window';
 import { SetHeaderProps } from 'Dashboard/Panel';
 import { formatDate } from 'Dates';
 import Numeric from 'Numeric';
 import Table from 'List';
-import useAccounts, { AccountList } from 'services/useAccounts';
+import useAccounts, { AccountId, AccountList } from 'services/useAccounts';
 import AccountName from 'Account';
 import { LineChart, XAxis, YAxis, Line } from 'recharts';
 import './Investment.scss';
 
 
 const ROW_HEIGHT = 25;
+const ACCOUNT_ROW_HEIGHT = 25;
+
+//  When do we consider a number of shares to be zero (for rounding errors)
+const THRESHOLD = 0.00000001;
 
 
 interface Ticker {
@@ -26,10 +30,26 @@ interface Ticker {
    prices: Array<[/*timestamp*/ number|null, /*close*/ number|null]>;
 }
 
+interface AccountTicker {
+   account: AccountId;
+   security: string;
+   absvalue: number;
+   absshares: number;
+   value: number;
+   shares: number;
+}
+
+type Response = [Ticker[], AccountTicker[]];
+
+
+const accountsForTicker = (t: Ticker, accTick: AccountTicker[]) =>
+     accTick.filter(a => a.security === t.id);
+
 
 interface TickerViewProps {
    accounts: AccountList;
    ticker: Ticker;
+   accountTickers: AccountTicker[];
    style?: React.CSSProperties;
 }
 
@@ -47,7 +67,7 @@ const TickerView: React.FC<TickerViewProps> = p => {
    const variation = (close / prevClose - 1) * 100;
 
    const hist = pr.map(r => ({t: r[0], price: r[1]}));
-   const acc = p.accounts.accountsFromCurrency(p.ticker.id);
+   const at = accountsForTicker(p.ticker, p.accountTickers);
 
    return (
       <div className="trgroup" style={p.style} >
@@ -84,7 +104,7 @@ const TickerView: React.FC<TickerViewProps> = p => {
                      width={100}
                      height={
                         // (-3) is for when we show borders
-                        ROW_HEIGHT * (1 + (acc.length ? 1 : 0)) - 3
+                        ROW_HEIGHT * (1 + (at.length ? 1 : 0)) - 3
                      }
                      data={hist}
                   >
@@ -119,23 +139,60 @@ const TickerView: React.FC<TickerViewProps> = p => {
          </Table.TR>
 
          {
-            acc.map(a =>
-               <Table.TR key={a.id} secondary={true} >
+            at.map(a => {
+               const weighted_avg = a.absvalue / a.absshares;
+               const avg_cost = a.value / a.shares;
+               return (
+               <Table.TR key={a.account} secondary={true} className="account">
                   <Table.TD />
                   <Table.TD>
-                     <AccountName id={a.id} account={a} fullName={true} />
+                     <AccountName
+                        id={a.account}
+                        account={p.accounts.getAccount(a.account)}
+                        fullName={true}
+                     />
                   </Table.TD>
-                  <Table.TD />
-                  <Table.TD className="price" />
-                  <Table.TD className="date" />
-                  <Table.TD className="price" />
-                  <Table.TD className="date" />
-                  <Table.TD className="price" />
-                  <Table.TD className="date" />
-                  <Table.TD className="price" />
+                  <Table.TD className="average">
+                     {
+                        a.absshares > THRESHOLD
+                        ? (
+                        <span
+                           title="Weighted Average: average price at which you sold or bought shares. It does not include shares added or subtracted with no paiement."
+                        >
+                           Weighted Average: <Numeric
+                              amount={weighted_avg}
+                              className={
+                                 weighted_avg >= close ? 'negative' : 'positive'
+                              }
+                           />
+                        </span>
+                      ) : null
+                     }
+                  </Table.TD>
+                  <Table.TD className="average" >
+                     {
+                        Math.abs(a.shares) > THRESHOLD
+                        ? (
+                        <span
+                           title="Average Cost: equivalent price for the remaining shares you own, taking into account dividends, added and removed shares,..."
+                        >
+                           Average Cost: <Numeric
+                              amount={avg_cost}
+                              className={
+                                 avg_cost >= close ? 'negative' : 'positive'
+                              }
+                           />
+                        </span>
+                        ) : null
+                     }
+                  </Table.TD>
+                  <Table.TD className="average" >
+                     Shares: <Numeric amount={a.shares} />
+                  </Table.TD>
                   <Table.TD className="hist" />
                </Table.TR>
-            )
+               );
+            })
          }
       </div>
    );
@@ -143,12 +200,33 @@ const TickerView: React.FC<TickerViewProps> = p => {
 
 export interface InvestmentsPanelProps {
    borders?: boolean;
+   hideIfNoShare?: boolean;
 }
 
 const InvestmentsPanel: React.FC<InvestmentsPanelProps & SetHeaderProps> = p => {
    const { setHeader } = p;
    const { accounts } = useAccounts();
-   const [tickers, setTickers] = React.useState<Ticker[]>([]);
+   const list = React.useRef<VariableSizeList>(null);
+
+   const [response, setResponse] = React.useState<Response>([[], []]);
+
+   const accTick = React.useMemo(
+      () => p.hideIfNoShare
+         ? response[1].filter(a => Math.abs(a.shares) > THRESHOLD)
+         : response[1],
+      [p.hideIfNoShare, response]
+   );
+   const tickers = React.useMemo(
+      () => p.hideIfNoShare
+         ? response[0].filter(t => accountsForTicker(t, accTick).length > 0)
+         : response[0],
+      [p.hideIfNoShare, accTick, response]
+   );
+
+   React.useEffect(
+      () => list.current?.resetAfterIndex(0),
+      [tickers]
+   );
 
    React.useEffect(
       () => setHeader?.('Investments'),
@@ -159,8 +237,8 @@ const InvestmentsPanel: React.FC<InvestmentsPanelProps & SetHeaderProps> = p => 
       () => {
          const dofetch = async () => {
             const resp = await window.fetch('/api/quotes');
-            const data: Ticker[] = await resp.json();
-            setTickers(data);
+            const data: Response = await resp.json();
+            setResponse(data);
          }
          dofetch();
       },
@@ -170,12 +248,18 @@ const InvestmentsPanel: React.FC<InvestmentsPanelProps & SetHeaderProps> = p => 
    const itemKey = (index: number) => tickers[index].name;
    const itemSize = (index: number) => {
       const t = tickers[index];
-      return (1 + accounts.accountsFromCurrency(t.id).length) * ROW_HEIGHT;
+      const a = accountsForTicker(t, accTick);
+      return ROW_HEIGHT + a.length * ACCOUNT_ROW_HEIGHT;
    }
 
    const getRow = (q: ListChildComponentProps) => {
       const t = tickers[q.index];
-      return <TickerView ticker={t} style={q.style} accounts={accounts} />
+      return <TickerView
+         ticker={t}
+         style={q.style}
+         accounts={accounts}
+         accountTickers={accTick}
+      />
    }
 
    const header = (
@@ -231,6 +315,7 @@ const InvestmentsPanel: React.FC<InvestmentsPanelProps & SetHeaderProps> = p => 
          getRow={getRow}
          header={header}
          borders={p.borders}
+         ref={list}
       />
    );
 }

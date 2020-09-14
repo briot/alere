@@ -1,4 +1,6 @@
 .investment {
+   --account-row-height: 25px;
+
    .hist {
       flex: 0 1 80px;
       overflow: visible;  // let the graph overlap multiple rows
@@ -8,4 +10,19 @@
       // When we show borders, this avoids having the border split the graph
       background: var(--panel-background);
    }
+
+   .trgroup:hover .recharts-wrapper,
+   .tr:hover .recharts-wrapper {
+      background: var(--table-hover-background);
+   }
+
+   .tr.account {
+      height: var(--account-row-height);
+   }
+
+   .average {
+      flex: 1 1;
+      text-align: left;
+   }
 }
+

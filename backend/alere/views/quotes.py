@@ -1,5 +1,6 @@
 from .json import JSONView
 from .kmm import kmm, do_query
+from .kmymoney import ACCOUNT_TYPE
 from typing import List, Tuple
 import math
 import yfinance as yf
@@ -35,14 +36,26 @@ class Ticker:
 
 
 class AccountTicker:
-    def __init__(self, symbol: str, account: str):
-        self.symbol = symbol
+    def __init__(
+            self, account: str, security: str,
+            absvalue: float, absshares: float,
+            value: float, shares: float,
+        ):
+        self.security = security
         self.account = account
+        self.absvalue = absvalue
+        self.absshares = absshares
+        self.value = value
+        self.shares = shares
 
     def to_json(self):
         return {
-            "symbol": self.symbol,
+            "security": self.security,
             "account": self.account,
+            "absvalue": self.absvalue,
+            "absshares": self.absshares,
+            "value": self.value,
+            "shares": self.shares,
         }
 
 
@@ -115,4 +128,83 @@ class QuotesView(JSONView):
 
         result.sort(key=lambda r: r.symbol.name)
 
-        return result
+        # We are only interested with accounts related to a security (those
+        # are the stocks, but better to look at securities directly).
+        #
+        # For each transaction, we need to look at two splits:
+        #   * the one for the above account, since it includes the shares
+        #   * the sum of the ones for other accounts, since this is the value
+        #     including the fees.
+        #
+        # For weighted average, only the transactions that impact the number
+        # of shares should be counted (so do not count "Add shares" for
+        # instance).
+
+        query2 = f"""
+        WITH
+        accounts_with_securities AS (
+           SELECT
+              kmmAccounts.id as account,
+              kmmSecurities.id as security
+           FROM
+              kmmAccounts
+              JOIN kmmSecurities ON (kmmAccounts.currencyId=kmmSecurities.id)
+        ),
+        transaction_with_shares AS (
+           SELECT
+              a.account,
+              a.security,
+              kmmSplits.transactionId,
+              {kmm._to_float('kmmSplits.shares')} as shares
+           FROM
+              accounts_with_securities a
+              JOIN kmmSplits ON (kmmSplits.accountId=a.account)
+           WHERE ({kmm._to_float('kmmSplits.shares')}) <> 0
+        ),
+        --  total amount, including fees. For this, we look at money that was
+        --  deposited or withdrawn from other asset accounts. Must be done in
+        --  a separate query: if there are multiple asset accounts, we would be
+        --  counting the number of shares multiple times too.
+        transaction_amount AS (
+           SELECT
+              t.transactionId,
+              SUM({kmm._to_float('kmmSplits.value')}) as value
+           FROM
+              transaction_with_shares t
+              JOIN kmmSplits ON (kmmSplits.transactionId=t.transactionId)
+              JOIN kmmAccounts valueA ON (
+                 kmmSplits.accountId=valueA.id
+                 AND (kmmSplits.action = 'Reinvest'
+                      OR
+                      valueA.accountType IN (
+                         {ACCOUNT_TYPE.ASSET},
+                         {ACCOUNT_TYPE.SAVINGS},
+                         {ACCOUNT_TYPE.CHECKING},
+                         {ACCOUNT_TYPE.INVESTMENT}
+                      )
+                )
+               )
+            GROUP BY t.transactionId
+        )
+        --  Now combine everything
+        SELECT
+           t.account,
+           t.security,
+           SUM(t.shares) as shares,
+           -SUM(v.value) as value,
+           SUM(ABS(t.shares)) as absshares,
+           SUM(ABS(v.value)) as absvalue
+        FROM
+           transaction_with_shares t
+           LEFT JOIN transaction_amount v ON (t.transactionId = v.transactionId)
+        GROUP BY t.account, t.security
+        """
+
+        accounts = [
+            AccountTicker(row.account, row.security,
+                          row.absvalue, row.absshares,
+                          row.value, row.shares)
+            for row in do_query(query2)
+        ]
+
+        return result, accounts

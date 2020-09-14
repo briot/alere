@@ -7,6 +7,7 @@ const Settings: React.FC<
    InvestmentsPanelProps & SettingsProps<InvestmentsPanelProps>
 > = p => {
    const changeBorders = (borders: boolean) => p.setData({ borders });
+   const changeHide = (hideIfNoShare: boolean) => p.setData({ hideIfNoShare });
    return (
       <fieldset>
          <legend>Investments</legend>
@@ -14,6 +15,11 @@ const Settings: React.FC<
              checked={p.borders ?? false}
              onChange={changeBorders}
              text="Show borders"
+         />
+         <Checkbox
+             checked={p.hideIfNoShare ?? false}
+             onChange={changeHide}
+             text="Hide no longer traded stocks"
          />
       </fieldset>
    );

@@ -1,4 +1,5 @@
 import React from 'react';
+import classes from 'services/classes';
 import './Numeric.css';
 
 const DECIMAL_SEP = ','
@@ -9,6 +10,7 @@ interface NumericProps {
    amount: number|undefined|null;
    precision?: number;
    colored?: boolean;
+   className?: string;
 }
 
 const Numeric: React.FC<NumericProps> = p => {
@@ -18,8 +20,12 @@ const Numeric: React.FC<NumericProps> = p => {
       );
    }
 
-   const className = 'numeric ' + (p.currency ?? '')
-      + (p.colored ? (p.amount >= 0 ? ' positive' : ' negative') : '');
+   const className = classes(
+      'numeric',
+      p.currency,
+      p.className,
+      p.colored && (p.amount >= 0 ? ' positive' : ' negative'),
+   );
    const val = p.amount.toFixed(p.precision ?? 2);
 
    let str = val.split('.');  // separator used by toFixed

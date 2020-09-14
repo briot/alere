@@ -3,10 +3,15 @@ import pandas as pd
 
 class ACCOUNT_TYPE:
     ASSET = '9'
-    INCOME = '12'
-    EXPENSE = '13'
-    STOCK = '15'
+    CHECKING = '1'
     EQUITY = '16'
+    EXPENSE = '13'
+    INCOME = '12'
+    INVESTMENT = '7'
+    LIABILITY = '10'
+    SAVINGS = '2'
+    STOCK = '15'
+
 
 
 DEFAULT_CURRENCY = 'EUR'   # ??? should be computed from FileInfo.baseCurrency

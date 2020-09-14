@@ -121,3 +121,10 @@ a:hover {
    background-position: right bottom;
    background-size: auto 50%;
 }
+
+.positive {
+   color: var(--positive-fg);
+}
+.negative {
+   color: var(--negative-fg);
+}

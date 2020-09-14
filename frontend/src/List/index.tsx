@@ -2,6 +2,7 @@ import * as React from 'react';
 import { VariableSizeList, FixedSizeList,
          ListChildComponentProps } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
+import classes from 'services/classes';
 import './List.scss';
 
 const ROW_HEIGHT = 25;  // pixels
@@ -19,11 +20,16 @@ interface THProps {
    style?: React.CSSProperties;
 }
 const TH: React.FC<THProps> = p => {
-   const sortClass = p.sortable ? 'sortable' : '';
-   const ascClass = p.asc === undefined ? '' : p.asc ? 'sort-up' : 'sort-down';
+   const n = classes(
+      'th',
+      p.className,
+      p.kind,
+      p.sortable && 'sortable',
+      p.asc === undefined ? '' : p.asc ? 'sort-up' : 'sort-down',
+   );
    return (
        <span
-          className={`th ${p.kind || ''} ${sortClass} ${ascClass} ${p.className || ''}`}
+          className={n}
           style={p.style}
           title={p.title}
        >
@@ -41,9 +47,13 @@ interface TDProps {
    className?: string;
 }
 const TD: React.FC<TDProps> = p => {
-   const className = `td ${p.kind || ''} ${p.className || ''}`;
+   const n = classes(
+      'td',
+      p.kind,
+      p.className,
+   );
    return (
-      <span className={className}>
+      <span className={n}>
          {p.children}
       </span>
    );
@@ -58,13 +68,18 @@ interface TRProps {
    editable?: boolean;
    secondary?: boolean;  // in gray
    style?: React.CSSProperties;
+   className?: string;
 }
 const TR: React.FC<TRProps> = p => {
-   const ec = p.editable ? ' edit' : '';
-   const sc = p.secondary ? ' secondary': '';
-   const className = `tr ${p.partial ? 'right-aligned' : ''}${ec}${sc}`;
+   const n = classes(
+      'tr',
+      p.className,
+      p.partial && 'right-aligned',
+      p.editable && 'edit',
+      p.secondary && 'secondary',
+   );
    return (
-      <div className={className} style={p.style} >
+      <div className={n} style={p.style} >
          {p.children}
       </div>
    );
@@ -90,11 +105,13 @@ interface TableProps {
 const Table: React.FC<TableProps & React.RefAttributes<VariableSizeList>>
    = React.forwardRef(
 (p, ref) => {
-   const c = `table `
-      + (p.className ?? '')
-      + (p.expandableRows ? ' expandableRows' : '')
-      + (p.borders ? ' borders' : '')
-      + (p.background ? ' background' : '');
+   const c = classes(
+      'table',
+      p.className,
+      p.expandableRows && 'expandableRows',
+      p.borders && 'borders',
+      p.background && 'background',
+   );
    const isVariable = isNaN(p.itemSize as any);
    return (
       <div className={c}>
