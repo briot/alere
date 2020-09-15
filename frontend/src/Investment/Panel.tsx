@@ -2,6 +2,7 @@ import * as React from 'react';
 import { VariableSizeList } from 'react-window';
 import { SetHeaderProps } from 'Dashboard/Panel';
 import * as d3TimeFormat from 'd3-time-format';
+import * as d3Array from 'd3-array';
 import { formatDate } from 'Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
@@ -14,6 +15,7 @@ import './Investment.scss';
 //  When do we consider a number of shares to be zero (for rounding errors)
 const THRESHOLD = 0.00000001;
 
+type ClosePrice = [/*timestamp*/ number|null, /*close*/ number|null];
 
 interface Ticker {
    id: string;
@@ -25,7 +27,7 @@ interface Ticker {
    storedprice: number|null;
 
    // sorted chronologically
-   prices: Array<[/*timestamp*/ number|null, /*close*/ number|null]>;
+   prices: ClosePrice[];
 }
 
 interface AccountTicker {
@@ -45,6 +47,8 @@ const labelForm = (d: number|string) => <span>{dateForm(new Date(d))}</span>;
 
 const accountsForTicker = (t: Ticker, accTick: AccountTicker[]) =>
      accTick.filter(a => a.security === t.id);
+
+const bisect = d3Array.bisector((d: ClosePrice) => d[0]).left;
 
 interface HistoryProps {
    ticker: Ticker;
@@ -69,6 +73,18 @@ const History: React.FC<HistoryProps> = p => {
    const storedVariation = p.ticker.storedprice
       ? (close / p.ticker.storedprice - 1) * 100
       : null;
+
+   const m6idx = ts === null ? undefined : bisect(pr, ts - 86400000 * 365 / 2);
+   const m6price = m6idx === undefined ? undefined : pr[m6idx][1];
+   const m6perf = m6price ? (close / m6price - 1) * 100 : undefined;
+   const m6ts = m6idx === undefined ? null : pr[m6idx]?.[0];
+   const m6date = m6ts ? formatDate(new Date(m6ts)) : undefined;
+
+   const y1idx = ts === null ? undefined : bisect(pr, ts - 86400000 * 365);
+   const y1price = y1idx === undefined ? undefined : pr[y1idx][1];
+   const y1perf = y1price ? (close / y1price - 1) * 100 : undefined;
+   const y1ts = y1idx === undefined ? null : pr[y1idx]?.[0];
+   const y1date = y1ts ? formatDate(new Date(y1ts)) : undefined;
 
    return (
    <>
@@ -100,12 +116,15 @@ const History: React.FC<HistoryProps> = p => {
                      <Tooltip
                          labelFormatter={labelForm}
                          contentStyle={{backgroundColor: "var(--panel-background)"}}
+                         allowEscapeViewBox={{x: true, y: true}}
+                         isAnimationActive={false}
                      />
                      <Area
                          type="linear"
                          dataKey="price"
                          isAnimationActive={false}
                          connectNulls={true}
+                         stroke="none"
                          fill={
                             variation > 0
                             ? "var(--positive-fg)"
@@ -132,6 +151,12 @@ const History: React.FC<HistoryProps> = p => {
                   <th title={`From ${p.ticker.storedtime} to ${date}`} >
                       Since last stored
                   </th>
+                  <th title={`From ${y1date} to ${date}`} >
+                     1y
+                  </th>
+                  <th title={`From ${m6date} to ${date}`} >
+                     6m
+                  </th>
                   <th title={`From ${prevDate} to ${date}`} >
                      { days }d
                   </th>
@@ -141,6 +166,12 @@ const History: React.FC<HistoryProps> = p => {
                <tr>
                   <td title={`${p.ticker.storedprice} -> ${close}`} >
                     <Numeric amount={storedVariation} colored={true} />%
+                  </td>
+                  <td>
+                     <Numeric amount={y1perf} colored={true} />%
+                  </td>
+                  <td>
+                     <Numeric amount={m6perf} colored={true} />%
                   </td>
                   <td title={`${prevClose} -> ${close}`}>
                      <Numeric amount={variation} colored={true} />%
