@@ -35,6 +35,10 @@
    }
 }
 
+.main {
+   grid-area: main;
+}
+
 .main-area {
    grid-area: main;
 

@@ -2,6 +2,7 @@ import * as React from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import Dropdown from 'Form/Dropdown';
+import classes from 'services/classes';
 import "./Form.scss";
 
 interface SharedInputProps {
@@ -13,9 +14,13 @@ interface SharedInputProps {
 const SharedInput: React.FC<
    SharedInputProps & {textAfter?: boolean, className?: string}
 > = p => {
+   const c = classes(
+      p.className,
+      p.disabled && 'disabled',
+   );
    return (
       <label
-         className={`${p.className || ''}${p.disabled ? ' disabled' : ''}`}
+         className={c}
          style={p.style}
       >
          {
@@ -67,7 +72,13 @@ interface ButtonProps extends SharedInputProps {
    onClick?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
 }
 export const Button: React.FC<ButtonProps> = p => {
-   const c = `button ${p.className || ''}${p.disabled ? ' disabled' : ''}${p.primary ? ' primary' : ''}${p.danger ? ' danger' : ''}`;
+   const c = classes(
+      'button',
+      p.className,
+      p.disabled && 'disabled',
+      p.primary && 'primary',
+      p.danger && 'danger',
+   );
    return (
       <button
          className={c}

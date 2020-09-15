@@ -5,7 +5,6 @@ import useHistory from 'services/useHistory';
 import useTransactions from 'services/useTransactions';
 import useDashboard from 'services/useDashboard';
 import { Dashboard } from 'Dashboard';
-import { SetHeaderProps } from 'Dashboard/Panel';
 import { BaseProps } from 'Dashboard/Module';
 import { SplitMode, TransactionMode } from 'Ledger';
 import { Account } from 'services/useAccounts';
@@ -40,8 +39,7 @@ const defaultPanels: BaseProps[] = [
 
 interface LedgerPageProps {
 }
-const LedgerPage: React.FC<LedgerPageProps & SetHeaderProps> = p => {
-   const { setHeader } = p;
+const LedgerPage: React.FC<LedgerPageProps> = p => {
    const { accountId } = useParams();
    const history = useRouterHistory();
    const { accounts } = useAccounts();
@@ -62,35 +60,30 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeaderProps> = p => {
       [accountId, pushAccount]
    );
 
-   React.useEffect(
-      () => {
-         setHeader?.(
-            <SelectAccount
-               accountId={accountId}
-               onChange={onAccountChange}
-               hideArrow={false}
-               style={{background: "var(--panel-background)"}}
-            />
-         );
-      },
-      [setHeader, accountId, onAccountChange]
-   );
-
    if (!account) {
       return <div>Unknown account</div>;
    }
 
    return (
-      <Dashboard
-         panels={panels}
-         setPanels={setPanels}
-         defaults={{
-            accountId: accountId,
-            accountIds: [accountId],
-            transactions: transactions,
-            range: "forever",
-         }}
-      />
+      <div className="main-area">
+         <div className="ledgerAccount">
+            <SelectAccount
+               accountId={accountId}
+               onChange={onAccountChange}
+               hideArrow={false}
+            />
+         </div>
+         <Dashboard
+            panels={panels}
+            setPanels={setPanels}
+            defaults={{
+               accountId: accountId,
+               accountIds: [accountId],
+               transactions: transactions,
+               range: "forever",
+            }}
+         />
+      </div>
    );
 }
 

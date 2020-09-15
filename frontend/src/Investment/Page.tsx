@@ -1,28 +1,13 @@
 import * as React from 'react';
-import { SetHeaderProps } from 'Dashboard/Panel';
-import { BaseProps } from 'Dashboard/Module';
-import { InvestmentsModuleProps } from 'Investment/Module';
-import DashboardFromName from 'Dashboard';
+import InvestmentsPanel from 'Investment/Panel';
 
-const defaultInvestmentPanels: BaseProps[] = [
-   {
-      type: 'investments',
-      borders: false,
-      rowspan: 1,
-      colspan: 4,
-   } as InvestmentsModuleProps,
-];
-
-interface InvestmentPageProps {
-}
-
-const InvestmentPage: React.FC<InvestmentPageProps & SetHeaderProps> = p => {
+const InvestmentPage: React.FC<{}> = p => {
    return (
-      <DashboardFromName
-          name='Investments'
-          defaultPanels={defaultInvestmentPanels}
-          setHeader={p.setHeader}
-      />
+      <div className="main">
+         <InvestmentsPanel
+            hideIfNoShare={true}
+         />
+      </div>
    );
 }
 

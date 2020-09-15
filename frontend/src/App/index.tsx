@@ -1,6 +1,5 @@
 import React from 'react';
 import { Route, Switch } from "react-router-dom";
-import Header from 'Header';
 import DashboardFromName from 'Dashboard';
 import LeftSideBar from 'LeftSideBar';
 import RightSideBar from 'RightSideBar';
@@ -94,8 +93,6 @@ const defaultOverview: BaseProps[] = [
 
 const App: React.FC<{}> = () => {
    const { prefs } = usePrefs();
-   const [header, setHeader] = React.useState<React.ReactNode|string|undefined>(
-      '');
 
    return (
       <Switch>
@@ -104,21 +101,19 @@ const App: React.FC<{}> = () => {
          </Route>
          <Route>
             <div id="app" className={prefs.dark_mode ? 'page darkpalette' : 'page lightpalette' }>
-               <Header title={header} />
                <LeftSideBar />
                <RightSideBar />
 
                <Switch>
                    <Route path="/ledger/:accountId">
-                      <LedgerPage setHeader={setHeader} />
+                      <LedgerPage />
                    </Route>
                    <Route path="/investments">
-                      <InvestmentPage setHeader={setHeader} />
+                      <InvestmentPage />
                    </Route>
                    <Route>
                       <DashboardFromName
                          defaultPanels={defaultOverview}
-                         setHeader={setHeader}
                          name='Overview'
                       />
                    </Route>

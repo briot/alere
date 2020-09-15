@@ -1,18 +1,16 @@
-.panel.investments {
-   background: none;
-   border: 0;
-   box-shadow: none;
-}
-
 .investment {
    --account-row-height: 75px;
+   --gap: 20px;
+   --items-per-row: 5;
 
    display: flex;
    flex-flow: row wrap;
-   gap: 20px;
+   gap: var(--gap);
+   font-size: 0.8rem;
 
    .tickerPanel {
-      width: calc(100% / 4 - 3 * 20px);
+      width: calc(100% / var(--items-per-row) - var(--gap));
+      box-sizing: border-box;
    }
 
    .hist {

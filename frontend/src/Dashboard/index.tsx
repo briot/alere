@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { BaseProps } from 'Dashboard/Module';
-import DashboardPanel, { SetHeaderProps } from 'Dashboard/Panel';
+import DashboardPanel from 'Dashboard/Panel';
 import useDashboard from 'services/useDashboard';
 import './Dashboard.css';
 
@@ -11,7 +11,7 @@ export interface DashboardProps {
 }
 export const Dashboard: React.FC<DashboardProps> = p => {
    return (
-      <div className="dashboard">
+      <div className="dashboard main">
          {
             p.panels.map((p2, idx) =>
                <DashboardPanel
@@ -26,19 +26,12 @@ export const Dashboard: React.FC<DashboardProps> = p => {
    );
 }
 
-export interface DashboardFromNameProps extends SetHeaderProps {
+export interface DashboardFromNameProps {
    name: string;     // dashboard name
    defaultPanels: BaseProps[],
 }
 const DashboardFromName: React.FC<DashboardFromNameProps> = p => {
-   const { setHeader } = p;
    const { panels, setPanels } = useDashboard(p.name, p.defaultPanels);
-
-   React.useEffect(
-      () => setHeader?.(p.name),
-      [setHeader, p.name]
-   );
-
    return (
       <Dashboard
          panels={panels}

@@ -268,7 +268,6 @@ const TickerView: React.FC<TickerViewProps> = p => {
 }
 
 export interface InvestmentsPanelProps {
-   borders?: boolean;
    hideIfNoShare?: boolean;
 }
 
