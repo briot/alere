@@ -100,10 +100,11 @@ class QuotesView(JSONView):
                 )
             for row in do_query(query)]
 
-        tickers = [s.ticker for s in symbols] # if s.source == "Yahoo Finance"]
+        tickers = [s.ticker for s in symbols if s.source == "Yahoo Finance"]
         data = yf.download(
             tickers,
-            start="2020-08-01",
+            period="1y",
+            # start="2020-01-01",
             # period="".  # 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
             interval="1d",   # 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
         )

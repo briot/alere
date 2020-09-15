@@ -45,6 +45,7 @@ const TH: React.FC<THProps> = p => {
 interface TDProps {
    kind?: string;
    className?: string;
+   title?: string;
 }
 const TD: React.FC<TDProps> = p => {
    const n = classes(
@@ -53,7 +54,7 @@ const TD: React.FC<TDProps> = p => {
       p.className,
    );
    return (
-      <span className={n}>
+      <span className={n} title={p.title}>
          {p.children}
       </span>
    );

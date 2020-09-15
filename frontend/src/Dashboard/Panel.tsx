@@ -4,6 +4,7 @@ import RoundButton from 'RoundButton';
 import Dropdown from 'Form/Dropdown';
 import { BaseProps } from 'Dashboard/Module';
 import { getModule } from 'services/useDashboard';
+import classes from 'services/classes';
 import './Panel.css';
 
 /**
@@ -39,10 +40,17 @@ const DashboardPanel: React.FC<PanelProps> = React.memo(p => {
    const changeRows = (rowspan: number) => localChange({rowspan});
    const changeCols = (colspan: number) => localChange({colspan});
 
+   const c = classes(
+      'panel',
+      p.panel.type,
+      `row${p.panel.rowspan}`,
+      `col${p.panel.colspan}`,
+   );
+
    return (
-      <div className={`panel row${p.panel.rowspan} col${p.panel.colspan}`} >
+      <div className={c} >
          <div className="header">
-            <h1>{header ?? ''}</h1>
+            <h5>{header ?? ''}</h5>
             <Dropdown
                button={(visible: boolean) =>
                   <RoundButton fa='fa-bars' size='tiny' selected={visible} />

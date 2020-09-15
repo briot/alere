@@ -1,36 +1,59 @@
+.panel.investments {
+   background: none;
+   border: 0;
+   box-shadow: none;
+}
+
 .investment {
    --account-row-height: 75px;
 
+   display: flex;
+   flex-flow: row wrap;
+   gap: 20px;
+
+   .tickerPanel {
+      width: calc(100% / 4 - 3 * 20px);
+   }
+
    .hist {
-      flex: 0 1 80px;
-      overflow: visible;  // let the graph overlap multiple rows
+      flex: 0 1 100px;
    }
 
-   .recharts-wrapper {
-      // When we show borders, this avoids having the border split the graph
-      background: var(--panel-background);
+   .prices {
+      margin: 10px 0;
+      display: flex;
+      justify-content: space-between;
    }
 
-   .trgroup:hover .recharts-wrapper,
-   .tr:hover .recharts-wrapper {
-      background: var(--table-hover-background);
+   .recharts-cartesian-axis-tick-value {
+      font-size: 0.8em;
+      color: var(--table-row-details-fg);
    }
 
-   .tr.account {
-      height: var(--account-row-height);
+   .perf table {
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
+
+      td, th {
+         border: 1px solid var(--shadow-color);
+         text-align: center;
+      }
    }
 
-   .source {
-      flex: 0 0 15ch;
-      text-align: left;
-   }
+   .account {
+      margin-top: 20px;
 
-   .shares {
-      flex: 0 0 15ch;
-      text-align: left;
-   }
-   .empty {
-      flex: 0 0 5rem;
+      table {
+         width: 100%;
+         margin-top: 10px;
+         padding: 0 20px;
+
+         th, td {
+            text-align: left;
+            font-weight: normal;
+         }
+      }
    }
 }
 
