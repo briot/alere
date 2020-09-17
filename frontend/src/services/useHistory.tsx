@@ -9,11 +9,13 @@ type History = HistoryLine[];
 
 interface HistContext {
    hist: History;
-   pushAccount: (id: AccountId) => void;
+   pushAccount: (id: AccountId | undefined) => void;
+   mostRecent: AccountId | undefined;
 }
 const noContext: HistContext = {
    hist: [],
    pushAccount: () => {},
+   mostRecent: undefined,
 };
 
 const ReactHistContext = React.createContext(noContext);
@@ -33,8 +35,11 @@ export const HistProvider: React.FC<{}> = p => {
    );
 
    const pushAccount = React.useCallback(
-      (id: AccountId) => {
+      (id: AccountId | undefined) => {
          setHist(old => {
+            if (id === undefined) {
+               return old;
+            }
             const v = [{accountId: id },
                        ...old.filter(h => h.accountId !== id)]
                .slice(0, MAX_ENTRIES);
@@ -47,7 +52,7 @@ export const HistProvider: React.FC<{}> = p => {
    );
 
    const data = React.useMemo(
-      () => ({ hist, pushAccount }),
+      () => ({ hist, pushAccount, mostRecent: hist?.[0]?.accountId }),
       [hist, pushAccount]
    );
 

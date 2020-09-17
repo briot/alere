@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useLocation } from "react-router-dom";
+import useHistory from 'services/useHistory';
 import RoundButton from 'RoundButton';
 import './LeftSideBar.css';
 
@@ -8,6 +9,7 @@ interface LeftSideBarProps {
 
 const LeftSideBar: React.FC<LeftSideBarProps> = p => {
    const location = useLocation();
+   const { mostRecent } = useHistory();
 
    return (
       <div id='lsidebar'>
@@ -30,7 +32,8 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
             selected={location.pathname.startsWith('/ledger/')}
             text="Ledger"
             size='large'
-            url="/ledger/1"
+            disabled={mostRecent === undefined}
+            url={`/ledger/${mostRecent}`}
           />
          <RoundButton
             fa="fa-balance-scale"

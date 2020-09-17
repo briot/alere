@@ -57,11 +57,11 @@ const LedgerPage: React.FC<LedgerPageProps> = p => {
 
    React.useEffect(
       () => pushAccount(accountId),
-      [accountId, pushAccount]
+      [accountId, pushAccount ]
    );
 
    if (!account) {
-      return <div>Unknown account</div>;
+      return <div className="main-area">Unknown account</div>;
    }
 
    return (

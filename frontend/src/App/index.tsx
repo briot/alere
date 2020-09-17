@@ -105,7 +105,7 @@ const App: React.FC<{}> = () => {
                <RightSideBar />
 
                <Switch>
-                   <Route path="/ledger/:accountId">
+                   <Route path="/ledger/:accountId" >
                       <LedgerPage />
                    </Route>
                    <Route path="/investments">
