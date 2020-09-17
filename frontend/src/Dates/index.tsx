@@ -349,3 +349,14 @@ export const MultiDatePicker: React.FC<MultiDatePickerProps> = p => {
       </div>
    );
 }
+
+interface DateProps {
+   when: Date | undefined;
+}
+export const DateDisplay: React.FC<DateProps> = p => {
+   return (
+      <span className="date">
+         {p.when && formatDate(p.when)}
+      </span>
+   );
+}

@@ -7,7 +7,7 @@
    flex-flow: row wrap;
    gap: var(--gap);
    justify-content: center;   // center the spinner
-   align-items: center;       // center the spinner
+   align-items: stretch;      // panels should all have the same length
 
    font-size: 0.8rem;
 
@@ -22,11 +22,23 @@
       &:hover {
          transform: scale(1.1);
       }
-
    }
 
    th {
       font-weight: normal
+   }
+
+   .tooltip {
+      display: none;
+      white-space: nowrap;
+      text-align: left;
+   }
+   td:hover .tooltip {
+      display: block;
+      position: absolute;
+      background: var(--page-background);
+      color: var(--panel-fg);
+      border: 1px solid var(--shadow-color);
    }
 
    .hist {

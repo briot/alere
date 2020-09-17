@@ -3,7 +3,7 @@ import { VariableSizeList } from 'react-window';
 import { SetHeaderProps } from 'Dashboard/Panel';
 import * as d3TimeFormat from 'd3-time-format';
 import * as d3Array from 'd3-array';
-import { formatDate } from 'Dates';
+import { formatDate, DateDisplay } from 'Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
 import useAccounts, { AccountId, AccountList } from 'services/useAccounts';
@@ -50,7 +50,64 @@ const labelForm = (d: number|string) => <span>{dateForm(new Date(d))}</span>;
 const accountsForTicker = (t: Ticker, accTick: AccountTicker[]) =>
      accTick.filter(a => a.security === t.id);
 
-const bisect = d3Array.bisector((d: ClosePrice) => d[0]).left;
+const bisect = d3Array.bisector((d: ClosePrice) => d[0]).right;
+
+const DAY_MS = 86400000;
+
+interface PastValue  {
+   fromDate: Date|undefined;
+   toDate: Date|undefined;
+   fromPrice: number;
+   toPrice: number;
+   perf: number;
+   number_of_days: number;
+}
+
+const pastValue = (
+   prices: ClosePrice[],
+   ms: number,              // how far back in the past
+): PastValue => {
+   const now =prices[prices.length - 1]?.[0] || null;
+   const close = prices[prices.length - 1]?.[1] || NaN;
+   const idx = now === null
+      ? undefined
+      : Math.max(0, bisect(prices, now - ms) - 1);
+   const price = idx === undefined ? undefined : prices[idx][1];
+   const ts = idx === undefined ? null : prices[idx]?.[0];
+   return {
+      fromDate: ts === null ? undefined : new Date(ts),
+      toDate: now === null ? undefined : new Date(now),
+      fromPrice: price ?? NaN,
+      toPrice: close,
+      perf: !price ? NaN : (close / price - 1) * 100,
+      number_of_days: now === null || ts === null ? NaN
+         : Math.floor((now - ts) / DAY_MS),
+   };
+}
+
+const Past: React.FC<PastValue> = p => {
+   return (
+      !isNaN(p.perf)
+      ? (
+      <td>
+         <Numeric amount={p.perf} colored={true} unit="%"/>
+         <div className="tooltip">
+            <div>
+               From <DateDisplay when={p.fromDate} />
+               &nbsp;to&nbsp;
+               <DateDisplay when={p.toDate} />
+            </div>
+            <div>
+               <Numeric amount={p.fromPrice} />
+               &nbsp;->&nbsp;
+               <Numeric amount={p.toPrice} />
+            </div>
+         </div>
+      </td>
+      ) : <td />
+   );
+}
+
 
 interface HistoryProps {
    ticker: Ticker;
@@ -62,34 +119,21 @@ const History: React.FC<HistoryProps> = p => {
    const pr = p.ticker.prices;
    const close = pr[pr.length - 1]?.[1] || NaN;
    const ts =pr[pr.length - 1]?.[0] || null;
-   const date = ts === null ? '-' : formatDate(new Date(ts));
-
-   const prevClose = pr[pr.length - 2]?.[1] || NaN;
-   const prevTs = pr[pr.length - 2]?.[0] || null;
-   const prevDate = prevTs === null ? '-' : formatDate(new Date(prevTs));
-
    const hist = pr.map(r => ({t: r[0], price: r[1]}));
 
-   const days = ts === null || prevTs === null
-      ? null
-      : (ts - prevTs) / 86400000;
-
-   const variation = (close / prevClose - 1) * 100;
-   const storedVariation = p.ticker.storedprice
-      ? (close / p.ticker.storedprice - 1) * 100
-      : null;
-
-   const m6idx = ts === null ? undefined : bisect(pr, ts - 86400000 * 365 / 2);
-   const m6price = m6idx === undefined ? undefined : pr[m6idx][1];
-   const m6perf = m6price ? (close / m6price - 1) * 100 : undefined;
-   const m6ts = m6idx === undefined ? null : pr[m6idx]?.[0];
-   const m6date = m6ts ? formatDate(new Date(m6ts)) : undefined;
-
-   const y1idx = ts === null ? undefined : bisect(pr, ts - 86400000 * 365);
-   const y1price = y1idx === undefined ? undefined : pr[y1idx][1];
-   const y1perf = y1price ? (close / y1price - 1) * 100 : undefined;
-   const y1ts = y1idx === undefined ? null : pr[y1idx]?.[0];
-   const y1date = y1ts ? formatDate(new Date(y1ts)) : undefined;
+   const stored: PastValue = {
+      fromDate: new Date(p.ticker.storedtime),
+      toDate: ts === null ? undefined : new Date(ts),
+      fromPrice: p.ticker.storedprice ?? NaN,
+      toPrice: close,
+      perf: !p.ticker.storedprice ? NaN : (close / p.ticker.storedprice - 1) * 100,
+      number_of_days: 0,
+   };
+   const d1 = pastValue(pr, DAY_MS);
+   const d5 = pastValue(pr, DAY_MS * 5);
+   const m6 = pastValue(pr, DAY_MS * 365 / 2);
+   const m3 = pastValue(pr, DAY_MS * 365 / 4);
+   const y1 = pastValue(pr, DAY_MS * 365);
 
    return (
    <>
@@ -155,7 +199,7 @@ const History: React.FC<HistoryProps> = p => {
                          connectNulls={true}
                          stroke="none"
                          fill={
-                            variation > 0
+                            d1.perf > 0
                             ? "var(--positive-fg)"
                             : "var(--negative-fg)"
                           }
@@ -170,41 +214,32 @@ const History: React.FC<HistoryProps> = p => {
       <div className="prices">
          Closing price:
          <Numeric amount={close} />
-         on {date}
+         on {formatDate(stored.toDate!)}
       </div>
 
       <div className="perf">
          <table>
             <thead>
                <tr>
-                  <th title={`From ${p.ticker.storedtime} to ${date}`} >
-                      Since last stored
-                  </th>
-                  <th title={`From ${y1date} to ${date}`} >
-                     1y
-                  </th>
-                  <th title={`From ${m6date} to ${date}`} >
-                     6m
-                  </th>
-                  <th title={`From ${prevDate} to ${date}`} >
-                     { days }d
+                  <th>Since last stored</th>
+                  <th>1y</th>
+                  <th>6m</th>
+                  <th>3m</th>
+                  <th>5d</th>
+                  <th>{ isNaN(d1.number_of_days)
+                        ? '' : `${d1.number_of_days}d`
+                      }
                   </th>
                </tr>
             </thead>
             <tbody>
                <tr>
-                  <td title={`${p.ticker.storedprice} -> ${close}`} >
-                    <Numeric amount={storedVariation} colored={true} unit="%"/>
-                  </td>
-                  <td>
-                     <Numeric amount={y1perf} colored={true} unit="%"/>
-                  </td>
-                  <td>
-                     <Numeric amount={m6perf} colored={true} unit="%"/>
-                  </td>
-                  <td title={`${prevClose} -> ${close}`}>
-                     <Numeric amount={variation} colored={true} unit="%" />
-                  </td>
+                  <Past {...stored} />
+                  <Past {...y1 } />
+                  <Past {...m6 } />
+                  <Past {...m3 } />
+                  <Past {...d5 } />
+                  <Past {...d1 } />
                </tr>
             </tbody>
          </table>

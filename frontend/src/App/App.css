@@ -51,11 +51,6 @@
    font-style: italic;
 }
 
-/*text {
-   fill: var(--panel-fg);
-}
-*/
-
 input:focus,
 button:focus,
 select:focus {

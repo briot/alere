@@ -8,3 +8,11 @@
    margin: 0 0 0 10px;
    justify-content: flex-start;
 }
+
+.date {
+   font-family: "minion pro", "myriad pro", "tahoma";
+   font-variant-numeric: oldstyle-nums tabular-nums;
+   font-variant-numeric: lining-nums tabular-nums;
+   white-space: nowrap;
+   font-size-adjust: 0.438;
+}
