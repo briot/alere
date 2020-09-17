@@ -8,6 +8,7 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
 import useAccounts, { AccountId, AccountList } from 'services/useAccounts';
 import AccountName from 'Account';
+import Spinner from 'Spinner';
 import { AreaChart, XAxis, YAxis, Area, Tooltip,
          ReferenceLine } from 'recharts';
 import './Investment.scss';
@@ -356,17 +357,23 @@ const InvestmentsPanel: React.FC<InvestmentsPanelProps & SetHeaderProps> = p => 
    const { accounts } = useAccounts();
    const list = React.useRef<VariableSizeList>(null);
 
-   const [response, setResponse] = React.useState<Response>([[], []]);
+   const [response, setResponse] = React.useState<Response|undefined>();
 
    const accTick = React.useMemo(
-      () => p.hideIfNoShare
+      () =>
+         response === undefined
+         ? undefined
+         : p.hideIfNoShare
          ? response[1].filter(a => Math.abs(a.shares) > THRESHOLD)
          : response[1],
       [p.hideIfNoShare, response]
    );
    const tickers = React.useMemo(
-      () => p.hideIfNoShare
-         ? response[0].filter(t => accountsForTicker(t, accTick).length > 0)
+      () =>
+         response === undefined
+         ? undefined
+         : p.hideIfNoShare
+         ? response[0].filter(t => accountsForTicker(t, accTick!).length > 0)
          : response[0],
       [p.hideIfNoShare, accTick, response]
    );
@@ -396,12 +403,14 @@ const InvestmentsPanel: React.FC<InvestmentsPanelProps & SetHeaderProps> = p => 
    return (
       <div className="investment">
          {
-            tickers.map(t =>
+            tickers === undefined
+            ? <Spinner />
+            : tickers.map(t =>
                <TickerView
                   key={t.id}
                   ticker={t}
                   accounts={accounts}
-                  accountTickers={accTick}
+                  accountTickers={accTick!}
                   showWALine={p.showWALine}
                   showACLine={p.showACLine}
                />

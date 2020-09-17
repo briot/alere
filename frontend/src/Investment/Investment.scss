@@ -6,7 +6,13 @@
    display: flex;
    flex-flow: row wrap;
    gap: var(--gap);
+   justify-content: center;   // center the spinner
+   align-items: center;       // center the spinner
+
    font-size: 0.8rem;
+
+   width: 100%;               // Use all available space
+   height: 100%;               // Use all available space
 
    .tickerPanel {
       width: calc(100% / var(--items-per-row) - var(--gap));
