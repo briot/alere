@@ -146,8 +146,7 @@ const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
                         <span>
                            <Numeric
                               amount={r.price[idx]}
-                              currency={prefs.currencyId
-                                  || r.account?.currencySymbol}
+                              unit={prefs.currencyId || r.account?.currencySymbol}
                            />
                         </span>
                      }
@@ -156,7 +155,7 @@ const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
                         <span>
                            <Numeric
                               amount={r.shares[idx] * (r.price[idx] ?? NaN)}
-                              currency={prefs.currencyId
+                              unit={prefs.currencyId
                                   || r.account?.currencySymbol}
                            />
                         </span>
@@ -227,7 +226,7 @@ const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
                         <span>
                            <Numeric
                               amount={total[idx]}
-                              currency={prefs.currencyId}
+                              unit={prefs.currencyId}
                            />
                         </span>
                      }

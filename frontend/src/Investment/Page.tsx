@@ -6,6 +6,8 @@ const InvestmentPage: React.FC<{}> = p => {
       <div className="main">
          <InvestmentsPanel
             hideIfNoShare={true}
+            showWALine={false}
+            showACLine={true}
          />
       </div>
    );

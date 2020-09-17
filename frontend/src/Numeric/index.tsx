@@ -6,8 +6,9 @@ const DECIMAL_SEP = ','
 const GROUP_SEP = ' ';
 
 interface NumericProps {
-   currency?: string;
    amount: number|undefined|null;
+   unit?: string;
+   suffix?: string;
    precision?: number;
    colored?: boolean;
    className?: string;
@@ -22,7 +23,6 @@ const Numeric: React.FC<NumericProps> = p => {
 
    const className = classes(
       'numeric',
-      p.currency,
       p.className,
       p.colored && (p.amount >= 0 ? ' positive' : ' negative'),
    );
@@ -38,8 +38,24 @@ const Numeric: React.FC<NumericProps> = p => {
 //       str[1] = str[1].replace(/(\d{3})/g, '$1 ');
 //   }
 
+   const currencySymbol = (
+      p.unit === 'EUR'
+      ? <span>&euro;</span>
+      : p.unit === 'USD'
+      ? <span>$</span>
+      : p.unit === 'pound'
+      ? <span>&pound;</span>
+      : p.unit
+      ? <span>{p.unit}</span>
+      : null
+   );
+
    return (
-      <span className={className}>{str.join(DECIMAL_SEP)}</span>
+      <span className={className}>
+         {str.join(DECIMAL_SEP)}
+         {currencySymbol}
+         {p.suffix}
+      </span>
    );
 }
 

@@ -5,15 +5,6 @@
    white-space: nowrap;
    font-size-adjust: 0.438;
 }
-.numeric:after {
-   content: '';
-   margin-left: 6px;
+.numeric span {
+   margin-left: 3px;
 }
-.numeric.EUR:after {
-   content: '\20ac';
-}
-.numeric.USD:after {
-   content: '\f155';
-   font: normal normal normal 14px/1 FontAwesome;
-}
-

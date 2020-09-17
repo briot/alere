@@ -69,13 +69,13 @@ const CustomTooltip = (p: TooltipProps & {data: DataType} ) => {
               <Numeric
                  amount={value}
                  precision={pay.payload.account.pricePrecision}
-                 currency={pay.payload.account.currencySymbol}
+                 unit={pay.payload.account.currencySymbol}
               />
            </div>
-           <div className="numeric">
-              {(value / total * 100).toFixed(2)}
-              %
-           </div>
+           <Numeric
+               amount={value / total * 100}
+               unit="%"
+           />
        </div>
      ) : null;
 };
@@ -137,7 +137,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps & SetHeaderProps> = p => {
               &nbsp;(
                   <Numeric
                      amount={data.items[index].value}
-                     currency={prefs.currencyId}
+                     unit={prefs.currencyId}
                   />
                )
            </span>

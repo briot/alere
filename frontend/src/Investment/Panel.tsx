@@ -8,7 +8,8 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
 import useAccounts, { AccountId, AccountList } from 'services/useAccounts';
 import AccountName from 'Account';
-import { AreaChart, XAxis, YAxis, Area, Tooltip } from 'recharts';
+import { AreaChart, XAxis, YAxis, Area, Tooltip,
+         ReferenceLine } from 'recharts';
 import './Investment.scss';
 
 
@@ -52,6 +53,9 @@ const bisect = d3Array.bisector((d: ClosePrice) => d[0]).left;
 
 interface HistoryProps {
    ticker: Ticker;
+   accs: AccountTicker[];
+   showWALine?: boolean;
+   showACLine?: boolean;
 }
 const History: React.FC<HistoryProps> = p => {
    const pr = p.ticker.prices;
@@ -119,6 +123,30 @@ const History: React.FC<HistoryProps> = p => {
                          allowEscapeViewBox={{x: true, y: true}}
                          isAnimationActive={false}
                      />
+                     {
+                        p.showWALine &&
+                        p.accs.map(a =>
+                           <ReferenceLine
+                               key={`${a.account}-wa`}
+                               y={a.absvalue / a.absshares}
+                               stroke="var(--cartesian-grid)"
+                               strokeDasharray="3 3"
+                               isFront={true}
+                           />
+                        )
+                     }
+                     {
+                        p.showACLine &&
+                        p.accs.map(a =>
+                           <ReferenceLine
+                               key={`${a.account}-ac`}
+                               y={a.value / a.shares}
+                               stroke="var(--cartesian-grid)"
+                               strokeDasharray="3 3"
+                               isFront={true}
+                           />
+                        )
+                     }
                      <Area
                          type="linear"
                          dataKey="price"
@@ -165,16 +193,16 @@ const History: React.FC<HistoryProps> = p => {
             <tbody>
                <tr>
                   <td title={`${p.ticker.storedprice} -> ${close}`} >
-                    <Numeric amount={storedVariation} colored={true} />%
+                    <Numeric amount={storedVariation} colored={true} unit="%"/>
                   </td>
                   <td>
-                     <Numeric amount={y1perf} colored={true} />%
+                     <Numeric amount={y1perf} colored={true} unit="%"/>
                   </td>
                   <td>
-                     <Numeric amount={m6perf} colored={true} />%
+                     <Numeric amount={m6perf} colored={true} unit="%"/>
                   </td>
                   <td title={`${prevClose} -> ${close}`}>
-                     <Numeric amount={variation} colored={true} />%
+                     <Numeric amount={variation} colored={true} unit="%" />
                   </td>
                </tr>
             </tbody>
@@ -216,7 +244,7 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                </td>
             </tr>
            {
-              a.absshares > THRESHOLD
+              a.absshares > THRESHOLD && weighted_avg !== 0
               ? (
               <tr>
                  <th
@@ -231,12 +259,18 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                           weighted_avg >= close ? 'negative' : 'positive'
                        }
                     />
+                    &nbsp;(
+                    <Numeric
+                       amount={(close / weighted_avg - 1) * 100}
+                       unit="%"
+                    />
+                    )
                  </td>
               </tr>
             ) : null
            }
            {
-              Math.abs(a.shares) > THRESHOLD
+              Math.abs(a.shares) > THRESHOLD && avg_cost !== 0
               ? (
               <tr>
                  <th
@@ -251,6 +285,12 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                           avg_cost >= close ? 'negative' : 'positive'
                        }
                     />
+                    &nbsp;(
+                    <Numeric
+                       amount={(close / avg_cost - 1) * 100}
+                       unit="%"
+                    />
+                    )
                  </td>
               </tr>
               ) : null
@@ -266,6 +306,8 @@ interface TickerViewProps {
    accounts: AccountList;
    ticker: Ticker;
    accountTickers: AccountTicker[];
+   showWALine?: boolean;
+   showACLine?: boolean;
 }
 
 const TickerView: React.FC<TickerViewProps> = p => {
@@ -280,7 +322,12 @@ const TickerView: React.FC<TickerViewProps> = p => {
          <div className="content">
             {
                p.ticker.prices.length > 0 &&
-               <History ticker={p.ticker} />
+               <History
+                  ticker={p.ticker}
+                  accs={at}
+                  showWALine={p.showWALine}
+                  showACLine={p.showACLine}
+               />
             }
 
             {
@@ -300,6 +347,8 @@ const TickerView: React.FC<TickerViewProps> = p => {
 
 export interface InvestmentsPanelProps {
    hideIfNoShare?: boolean;
+   showWALine?: boolean;
+   showACLine?: boolean;
 }
 
 const InvestmentsPanel: React.FC<InvestmentsPanelProps & SetHeaderProps> = p => {
@@ -353,6 +402,8 @@ const InvestmentsPanel: React.FC<InvestmentsPanelProps & SetHeaderProps> = p => 
                   ticker={t}
                   accounts={accounts}
                   accountTickers={accTick}
+                  showWALine={p.showWALine}
+                  showACLine={p.showACLine}
                />
             )
          }

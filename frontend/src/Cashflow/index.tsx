@@ -73,7 +73,12 @@ const Metrics: React.FC<MetricsProps> = p => {
             {
                !isNaN(p.ideal)  &&
                <span className="recommended">
-                  (recommended {p.compare} <Numeric amount={p.ideal} precision={0} />{p.suffix})
+                  (recommended {p.compare}
+                     <Numeric
+                        amount={p.ideal}
+                        precision={0}
+                        unit={p.suffix}
+                     />
                </span>
             }
             {
@@ -85,7 +90,10 @@ const Metrics: React.FC<MetricsProps> = p => {
                )
                : (
                <span className="value" title={p.tooltip}>
-                  <Numeric amount={p.value as number} />{p.suffix}
+                  <Numeric
+                     amount={p.value as number}
+                     unit={p.suffix}
+                  />
                </span>
                )
             }
@@ -223,32 +231,32 @@ const Cashflow: React.FC<CashflowProps & SetHeaderProps> = p => {
                <div>
                   <div>
                      Total income (
-                     <Numeric amount={pl.income} currency={prefs.currencyId} />
+                     <Numeric amount={pl.income} unit={prefs.currencyId} />
                      {
                         !isNaN(months) &&
                         <>
                            ,&nbsp;
                            <Numeric
                               amount={pl.income / months}
-                              currency={prefs.currencyId}
+                              unit={prefs.currencyId}
+                              suffix=" / month"
                            />
-                           &nbsp;/&nbsp;month
                         </>
                      }
                   )
                   </div>
                   <div>
                      - Total expenses (
-                     <Numeric amount={-pl.expenses} currency={prefs.currencyId} />
+                     <Numeric amount={-pl.expenses} unit={prefs.currencyId} />
                      {
                         !isNaN(months) &&
                         <>
                            ,&nbsp;
                            <Numeric
                               amount={-pl.expenses / months}
-                              currency={prefs.currencyId}
+                              unit={prefs.currencyId}
+                              suffix=" / month"
                            />
-                           &nbsp;/&nbsp;month
                         </>
                      }
                   )
@@ -258,10 +266,13 @@ const Cashflow: React.FC<CashflowProps & SetHeaderProps> = p => {
             value={
                <div>
                   <div>
-                     <Numeric amount={cashflow} currency={prefs.currencyId} />
                      {
                         !isNaN(months) &&
-                        <span>&nbsp;/&nbsp; {months} months</span>
+                        <Numeric
+                           amount={cashflow}
+                           unit={prefs.currencyId}
+                           suffix={` / ${months} months`}
+                        />
                      }
                   </div>
                   {
@@ -269,9 +280,9 @@ const Cashflow: React.FC<CashflowProps & SetHeaderProps> = p => {
                      <div>
                         <Numeric
                            amount={cashflow / months}
-                           currency={prefs.currencyId}
+                           unit={prefs.currencyId}
+                           suffix=" / month"
                         />
-                        &nbsp;/&nbsp; month
                      </div>
                   }
                </div>
@@ -288,18 +299,18 @@ const Cashflow: React.FC<CashflowProps & SetHeaderProps> = p => {
                   At the end of the selected period,
                   <div>
                      how much you own (
-                     <Numeric amount={pl.active} currency={prefs.currencyId} />
+                     <Numeric amount={pl.active} unit={prefs.currencyId} />
                      )
                   </div>
                   <div>
                      - how much you owe (
-                     <Numeric amount={-pl.passive} currency={prefs.currencyId} />
+                     <Numeric amount={-pl.passive} unit={prefs.currencyId} />
                   )
                   </div>
                </div>
             }
             value={
-               <Numeric amount={networth} currency={prefs.currencyId} />
+               <Numeric amount={networth} unit={prefs.currencyId} />
             }
             ideal={NaN}
             compare=">"
@@ -310,7 +321,7 @@ const Cashflow: React.FC<CashflowProps & SetHeaderProps> = p => {
             name="Passive income"
             descr="Income that would remain if you stopped working"
             value={
-               <Numeric amount={pl.passive_income} currency={prefs.currencyId} />
+               <Numeric amount={pl.passive_income} unit={prefs.currencyId} />
             }
             ideal={NaN}
             compare=">"
@@ -321,7 +332,7 @@ const Cashflow: React.FC<CashflowProps & SetHeaderProps> = p => {
             name="Liquid assets"
             descr="The part of your assets in savings, checkings, investments and stocks"
             value={
-               <Numeric amount={pl.liquid_assets} currency={prefs.currencyId} />
+               <Numeric amount={pl.liquid_assets} unit={prefs.currencyId} />
             }
             ideal={NaN}
             compare=">"
@@ -337,14 +348,14 @@ const Cashflow: React.FC<CashflowProps & SetHeaderProps> = p => {
                      Income:&nbsp;
                      <Numeric
                         amount={pl.income_taxes}
-                        currency={prefs.currencyId}
+                        unit={prefs.currencyId}
                      />
                   </div>
                   <div>
                      Other:&nbsp;
                      <Numeric
                         amount={pl.other_taxes}
-                        currency={prefs.currencyId}
+                        unit={prefs.currencyId}
                      />
                   </div>
                </div>

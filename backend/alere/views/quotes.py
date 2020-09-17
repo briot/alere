@@ -2,6 +2,7 @@ from .json import JSONView
 from .kmm import kmm, do_query
 from .kmymoney import ACCOUNT_TYPE
 from typing import List, Tuple
+import datetime
 import math
 import yfinance as yf
 
@@ -16,22 +17,18 @@ class Symbol:
         self.ticker = ticker
         self.source = source
         self.stored_timestamp = stored_timestamp
-        self.stored_price = stored_price
-
-class Ticker:
-    def __init__(self, symbol: Symbol, prices: List[Tuple[int, float]]):
-        self.symbol = symbol
-        self.prices = prices
+        self.stored_price = stored_price   # last stored price
+        self.prices = []   # history of prices
 
     def to_json(self):
         return {
-            "id": self.symbol.id,
-            "name": self.symbol.name,
-            "ticker": self.symbol.ticker,
-            "source": self.symbol.source,
-            "prices": [(t[0].timestamp() * 1e3, t[1]) for t in self.prices],
-            "storedtime": self.symbol.stored_timestamp,
-            "storedprice": self.symbol.stored_price,
+            "id": self.id,
+            "name": self.name,
+            "ticker": self.ticker,
+            "source": self.source,
+            "prices": self.prices,
+            "storedtime": self.stored_timestamp,
+            "storedprice": self.stored_price,
         }
 
 
@@ -63,6 +60,7 @@ class AccountTicker:
 class QuotesView(JSONView):
 
     def get_json(self, params):
+        currency = 'EUR'
 
         query = f"""
         SELECT kmmSecurities.*,
@@ -92,44 +90,63 @@ class QuotesView(JSONView):
                   AND isin.kvpKey='kmm-security-id')
         """
 
-        symbols = [
-            Symbol(
+        symbols = {
+            row.id: Symbol(
                 row.id, row.name, row.symbol, row.source,
                 stored_timestamp=row.storedtime,
                 stored_price=row.storedprice,
+            )
+            for row in do_query(query)
+        }
+
+        # Fetch prices from Yahoo, when requested
+        tickers = [s.ticker for s in symbols.values()
+                   if s.source == "Yahoo Finance"]
+        if tickers:
+            data = yf.download(
+                tickers,
+                # start="2020-01-01",
+                period="1y",  # 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
+                interval="1d",   # 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
+            )
+            d = data['Adj Close'].to_dict()
+            for s in symbols.values():
+                if s.ticker in d:
+                    s.prices = [
+                        (timestamp.timestamp() * 1e3, val)
+                        for timestamp, val in d[s.ticker].items()
+                        if not math.isnan(val)
+                    ]
+                    s.prices.sort(key=lambda v: v[0]) # order by timestamp
+
+        # Fetch prices from database if no price was found yet
+
+        ids = [s.id for s in symbols.values() if not s.prices]
+        if ids:
+            ids_str = ','.join(f"'{id}'" for id in ids)
+            query_prices = f"""
+            SELECT fromId, priceDate, {kmm._to_float('price')} as price
+              FROM kmmPrices
+              WHERE toId=:currency
+                AND fromId IN ({ids_str})
+              ORDER BY priceDate
+            """
+
+            for row in do_query(query_prices, {"currency": currency}):
+                symbols[row.fromId].prices.append(
+                    (datetime.datetime.fromisoformat(row.priceDate).timestamp()
+                        * 1e3,
+                    row.price)
                 )
-            for row in do_query(query)]
 
-        tickers = [s.ticker for s in symbols if s.source == "Yahoo Finance"]
-        data = yf.download(
-            tickers,
-            period="1y",
-            # start="2020-01-01",
-            # period="".  # 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
-            interval="1d",   # 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
-        )
+            for id in ids:
+                symbols[id].source = 'database'
 
-        d = data['Adj Close'].to_dict()
+        # Sort symbols
+        result = sorted(symbols.values(), key=lambda r: r.name)
 
-        result = []
-        for s in symbols:
-            if s.ticker in d:
-                rec = [(timestamp, val)
-                       for timestamp, val in d[s.ticker].items()
-                       if not math.isnan(val)
-                      ]
-                rec.sort(key=lambda v: v[0])  # order by timestamp
-            else:
-                rec = []
 
-            result.append(Ticker(
-                symbol=s,
-                prices=rec,
-            ))
-
-        result.sort(key=lambda r: r.symbol.name)
-
-        # We are only interested with accounts related to a security (those
+        # We are only interested in accounts related to a security (those
         # are the stocks, but better to look at securities directly).
         #
         # For each transaction, we need to look at two splits:
