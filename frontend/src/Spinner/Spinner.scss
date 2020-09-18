@@ -4,6 +4,7 @@
    position: relative;
    width: 80px;
    height: 80px;
+   margin: auto auto;   // center spinner within its parent
 
    div {
      animation: spinner-roller 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;

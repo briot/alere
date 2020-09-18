@@ -6,7 +6,6 @@
    display: flex;
    flex-flow: row wrap;
    gap: var(--gap);
-   justify-content: center;   // center the spinner
    align-items: stretch;      // panels should all have the same length
 
    font-size: 0.8rem;
