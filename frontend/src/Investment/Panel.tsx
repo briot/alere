@@ -3,7 +3,7 @@ import { VariableSizeList } from 'react-window';
 import { SetHeaderProps } from 'Dashboard/Panel';
 import * as d3TimeFormat from 'd3-time-format';
 import * as d3Array from 'd3-array';
-import { formatDate, DateDisplay } from 'Dates';
+import { DateDisplay } from 'Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
 import useAccounts, { AccountId, AccountList } from 'services/useAccounts';
@@ -59,7 +59,6 @@ interface PastValue  {
    toDate: Date|undefined;
    fromPrice: number;
    toPrice: number;
-   perf: number;
    number_of_days: number;
 }
 
@@ -79,18 +78,18 @@ const pastValue = (
       toDate: now === null ? undefined : new Date(now),
       fromPrice: price ?? NaN,
       toPrice: close,
-      perf: !price ? NaN : (close / price - 1) * 100,
       number_of_days: now === null || ts === null ? NaN
          : Math.floor((now - ts) / DAY_MS),
    };
 }
 
 const Past: React.FC<PastValue> = p => {
+   const perf = (p.toPrice / p.fromPrice - 1) * 100;
    return (
-      !isNaN(p.perf)
+      !isNaN(perf)
       ? (
       <td>
-         <Numeric amount={p.perf} colored={true} unit="%"/>
+         <Numeric amount={perf} colored={true} unit="%"/>
          <div className="tooltip">
             <div>
                From <DateDisplay when={p.fromDate} />
@@ -121,14 +120,6 @@ const History: React.FC<HistoryProps> = p => {
    const ts =pr[pr.length - 1]?.[0] || null;
    const hist = pr.map(r => ({t: r[0], price: r[1]}));
 
-   const stored: PastValue = {
-      fromDate: new Date(p.ticker.storedtime),
-      toDate: ts === null ? undefined : new Date(ts),
-      fromPrice: p.ticker.storedprice ?? NaN,
-      toPrice: close,
-      perf: !p.ticker.storedprice ? NaN : (close / p.ticker.storedprice - 1) * 100,
-      number_of_days: 0,
-   };
    const d1 = pastValue(pr, DAY_MS);
    const d5 = pastValue(pr, DAY_MS * 5);
    const m6 = pastValue(pr, DAY_MS * 365 / 2);
@@ -199,7 +190,7 @@ const History: React.FC<HistoryProps> = p => {
                          connectNulls={true}
                          stroke="none"
                          fill={
-                            d1.perf > 0
+                            d1.fromPrice < d1.toPrice
                             ? "var(--positive-fg)"
                             : "var(--negative-fg)"
                           }
@@ -214,14 +205,13 @@ const History: React.FC<HistoryProps> = p => {
       <div className="prices">
          Closing price:
          <Numeric amount={close} />
-         on {formatDate(stored.toDate!)}
+         on <DateDisplay when={ts === null ? undefined : new Date(ts)} />
       </div>
 
       <div className="perf">
          <table>
             <thead>
                <tr>
-                  <th>Since last stored</th>
                   <th>1y</th>
                   <th>6m</th>
                   <th>3m</th>
@@ -234,7 +224,6 @@ const History: React.FC<HistoryProps> = p => {
             </thead>
             <tbody>
                <tr>
-                  <Past {...stored} />
                   <Past {...y1 } />
                   <Past {...m6 } />
                   <Past {...m3 } />
@@ -331,6 +320,22 @@ const AccTicker: React.FC<AccTickerProps> = p => {
               </tr>
               ) : null
            }
+           {
+              <tr>
+                 <th>Latest in database:</th>
+                 <td>
+                    <Numeric amount={p.ticker.storedprice} />
+                    &nbsp;on&nbsp;
+                    <DateDisplay when={new Date(p.ticker.storedtime)} />
+                    &nbsp;(
+                    <Numeric
+                       amount={(close / (p.ticker.storedprice || NaN) - 1) * 100}
+                       unit="%"
+                    />
+                    )
+                 </td>
+               </tr>
+           }
          </tbody>
       </table>
    </div>
@@ -426,7 +431,7 @@ const InvestmentsPanel: React.FC<InvestmentsPanelProps & SetHeaderProps> = p => 
    React.useEffect(
       () => {
          const dofetch = async () => {
-            const resp = await window.fetch('/api/quotes');
+            const resp = await window.fetch('/api/quotes?update=false');
             const data: Response = await resp.json();
             setResponse(data);
          }
