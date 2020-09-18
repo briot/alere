@@ -23,6 +23,7 @@ interface Ticker {
    name: string;
    ticker: string;
    source: string;
+   currency: string;
 
    storedtime: string;   // timestamp of last stored price
    storedprice: number|null;
@@ -59,12 +60,14 @@ interface PastValue  {
    fromPrice: number;
    toPrice: number;
    number_of_days: number;
+   currency: string;
 }
 
 const pastValue = (
-   prices: ClosePrice[],
+   ticker: Ticker,
    ms: number,              // how far back in the past
 ): PastValue => {
+   const prices = ticker.prices;
    const now =prices[prices.length - 1]?.[0] || null;
    const close = prices[prices.length - 1]?.[1] || NaN;
    const idx = now === null
@@ -79,6 +82,7 @@ const pastValue = (
       toPrice: close,
       number_of_days: now === null || ts === null ? NaN
          : Math.floor((now - ts) / DAY_MS),
+      currency: ticker.currency,
    };
 }
 
@@ -96,9 +100,9 @@ const Past: React.FC<PastValue> = p => {
                <DateDisplay when={p.toDate} />
             </div>
             <div>
-               <Numeric amount={p.fromPrice} />
+               <Numeric amount={p.fromPrice} unit={p.currency} />
                &nbsp;->&nbsp;
-               <Numeric amount={p.toPrice} />
+               <Numeric amount={p.toPrice} unit={p.currency} />
             </div>
          </div>
       </td>
@@ -119,11 +123,11 @@ const History: React.FC<HistoryProps> = p => {
    const ts =pr[pr.length - 1]?.[0] || null;
    const hist = pr.map(r => ({t: r[0], price: r[1]}));
 
-   const d1 = pastValue(pr, DAY_MS);
-   const d5 = pastValue(pr, DAY_MS * 5);
-   const m6 = pastValue(pr, DAY_MS * 365 / 2);
-   const m3 = pastValue(pr, DAY_MS * 365 / 4);
-   const y1 = pastValue(pr, DAY_MS * 365);
+   const d1 = pastValue(p.ticker, DAY_MS);
+   const d5 = pastValue(p.ticker, DAY_MS * 5);
+   const m6 = pastValue(p.ticker, DAY_MS * 365 / 2);
+   const m3 = pastValue(p.ticker, DAY_MS * 365 / 4);
+   const y1 = pastValue(p.ticker, DAY_MS * 365);
 
    return (
    <>
@@ -203,7 +207,7 @@ const History: React.FC<HistoryProps> = p => {
 
       <div className="prices">
          Closing price:
-         <Numeric amount={close} />
+         <Numeric amount={close} unit={p.ticker.currency} />
          on <DateDisplay when={ts === null ? undefined : new Date(ts)} />
       </div>
 
@@ -282,6 +286,7 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                        className={
                           weighted_avg >= close ? 'negative' : 'positive'
                        }
+                       unit={p.ticker.currency}
                     />
                     &nbsp;(
                     <Numeric
@@ -308,6 +313,7 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                        className={
                           avg_cost >= close ? 'negative' : 'positive'
                        }
+                       unit={p.ticker.currency}
                     />
                     &nbsp;(
                     <Numeric
@@ -323,7 +329,10 @@ const AccTicker: React.FC<AccTickerProps> = p => {
               <tr>
                  <th>Latest in database:</th>
                  <td>
-                    <Numeric amount={p.ticker.storedprice} />
+                    <Numeric
+                        amount={p.ticker.storedprice}
+                        unit={p.ticker.currency}
+                    />
                     &nbsp;on&nbsp;
                     <DateDisplay when={new Date(p.ticker.storedtime)} />
                     &nbsp;(

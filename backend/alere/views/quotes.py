@@ -9,13 +9,14 @@ import yfinance as yf
 
 class Symbol:
     def __init__(
-            self, id, name, ticker, source,
+            self, id, name, ticker, source, currency,
             stored_timestamp, stored_price
         ):
         self.id = id
         self.name = name
         self.ticker = ticker
         self.source = source
+        self.currency = currency
         self.stored_timestamp = stored_timestamp
         self.stored_price = stored_price   # last stored price
         self.prices = []   # history of prices
@@ -27,6 +28,7 @@ class Symbol:
             "ticker": self.ticker,
             "source": self.source,
             "prices": self.prices,
+            "currency": self.currency,
             "storedtime": self.stored_timestamp,
             "storedprice": self.stored_price,
         }
@@ -94,6 +96,7 @@ class QuotesView(JSONView):
         symbols = {
             row.id: Symbol(
                 row.id, row.name, row.symbol, row.source,
+                row.tradingCurrency,
                 stored_timestamp=row.storedtime,
                 stored_price=row.storedprice,
             )
