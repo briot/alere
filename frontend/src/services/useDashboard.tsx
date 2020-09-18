@@ -8,7 +8,6 @@ import QuadrantModule from 'Cashflow/Quadrant';
 import LedgerModule from 'Ledger/Module';
 import PriceHistoryModule from 'PriceHistory/Module';
 import CashflowModule from 'Cashflow/Module';
-import InvestmentsModule from 'Investment/Module';
 import MeanModule from 'Mean';
 
 const NotAvailableModule: DashboardModule<BaseProps> = {
@@ -24,7 +23,6 @@ const NotAvailableModule: DashboardModule<BaseProps> = {
 
 const DASHBOARD_MODULES: {[name: string]: DashboardModule<any>} = {
    "incomeexpenses": IncomeExpensesModule,
-   "investments": InvestmentsModule,
    "ledger": LedgerModule,
    "mean": MeanModule,
    "metrics": CashflowModule,

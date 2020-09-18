@@ -1,5 +1,6 @@
 import * as React from 'react';
-import InvestmentsPanel, { InvestmentsPanelProps } from 'Investment/Panel';
+import InvestmentsPanel, {
+   InvestmentsPanelProps, TickerList } from 'Investment/Panel';
 import Settings from 'Investment/Settings';
 import { SetHeader } from 'Header';
 import RoundButton from 'RoundButton';
@@ -16,6 +17,30 @@ const InvestmentPage: React.FC<SetHeader> = p => {
       }
    );
 
+   const [update, setUpdate] = React.useState(false);
+   const [refresh, setRefresh] = React.useState(0);
+   const forceUpdate = React.useCallback(
+      () => {
+         setUpdate(true);
+         setRefresh(old => old + 1);
+      },
+      []
+   );
+
+   const [response, setResponse] = React.useState<TickerList|undefined>();
+   React.useEffect(
+      () => {
+         const dofetch = async () => {
+            const resp = await window.fetch(
+               `/api/quotes?update=${update}`);
+            const data: TickerList = await resp.json();
+            setResponse(data);
+         }
+         dofetch();
+      },
+      [update, refresh]
+   );
+
    const { setHeader } = p;
    React.useEffect(
       () => {
@@ -27,7 +52,7 @@ const InvestmentPage: React.FC<SetHeader> = p => {
                      fa='fa-refresh'
                      size='small'
                      title='sync'
-                     disabled={true}
+                     onClick={forceUpdate}
                   />
                   <Dropdown
                      className="settings"
@@ -52,12 +77,15 @@ const InvestmentPage: React.FC<SetHeader> = p => {
             ),
          });
       },
-      [setHeader, state.val, state.setPartial ]
+      [setHeader, state.val, state.setPartial, forceUpdate ]
    );
 
    return (
       <div className="main">
-         <InvestmentsPanel { ...state.val } />
+         <InvestmentsPanel
+            { ...state.val }
+            data={response}
+         />
       </div>
    );
 }

@@ -40,7 +40,7 @@ interface AccountTicker {
    shares: number;
 }
 
-type Response = [Ticker[], AccountTicker[]];
+export type TickerList = [Ticker[], AccountTicker[]];
 
 const dateForm = d3TimeFormat.timeFormat("%Y-%m-%d");
 const priceForm = (v: number) => v.toFixed(2);
@@ -390,47 +390,36 @@ export interface InvestmentsPanelProps {
    showWALine: boolean;
    showACLine: boolean;
 }
+interface DataProps {
+   data: TickerList|undefined;
+}
 
-const InvestmentsPanel: React.FC<InvestmentsPanelProps> = p => {
+const InvestmentsPanel: React.FC<InvestmentsPanelProps & DataProps> = p => {
    const { accounts } = useAccounts();
    const list = React.useRef<VariableSizeList>(null);
 
-   const [response, setResponse] = React.useState<Response|undefined>();
-
    const accTick = React.useMemo(
       () =>
-         response === undefined
+         p.data === undefined
          ? undefined
          : p.hideIfNoShare
-         ? response[1].filter(a => Math.abs(a.shares) > THRESHOLD)
-         : response[1],
-      [p.hideIfNoShare, response]
+         ? p.data[1].filter(a => Math.abs(a.shares) > THRESHOLD)
+         : p.data[1],
+      [p.hideIfNoShare, p.data]
    );
    const tickers = React.useMemo(
       () =>
-         response === undefined
+         p.data === undefined
          ? undefined
          : p.hideIfNoShare
-         ? response[0].filter(t => accountsForTicker(t, accTick!).length > 0)
-         : response[0],
-      [p.hideIfNoShare, accTick, response]
+         ? p.data[0].filter(t => accountsForTicker(t, accTick!).length > 0)
+         : p.data[0],
+      [p.hideIfNoShare, accTick, p.data]
    );
 
    React.useEffect(
       () => list.current?.resetAfterIndex(0),
       [tickers]
-   );
-
-   React.useEffect(
-      () => {
-         const dofetch = async () => {
-            const resp = await window.fetch('/api/quotes?update=false');
-            const data: Response = await resp.json();
-            setResponse(data);
-         }
-         dofetch();
-      },
-      []
    );
 
    return (
