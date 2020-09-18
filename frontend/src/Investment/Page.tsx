@@ -61,7 +61,7 @@ const InvestmentPage: React.FC<SetHeader> = p => {
                            fa="fa-bars"
                            selected={visible}
                            size='small'
-                           title='Settings'
+                           title='Investments Settings'
                         />
                      }
                      menu={

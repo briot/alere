@@ -20,7 +20,7 @@ const Settings: React.FC<SettingsProps> = p => {
                fa='fa-gear'
                selected={visible}
                size='small'
-               title="Settings"
+               title="Global Settings"
             />
          }
          menu={

@@ -79,9 +79,6 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    @include generate-color-vars(gray, #adb5bd);
    white-fg: #{black-or-white(white)};  // foreground to use on top of white
 
-   --negative-fg: var(--invalid-500);
-   --positive-fg: var(--green-500);
-
    --font-size: 16px;
    --font-size-sidebar: 15px;
    --font-size-tool: 13px;
@@ -102,6 +99,7 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --page-background: var(--gray-800);
    --panel-background: var(--gray-900);
    --panel-fg: var(--fg-gray-700);
+   --panel-fg-low-contrast: var(--gray-200);
    --background-summary-popup: rgba(0,0,0,0.9);
    --summary-background: rgba(255,255,255,0.2);
    --table-color: #b1afaf;
@@ -113,6 +111,9 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
 
    --danger: var(--invalid-500);
    --danger-fg: var(--fg-invalid-500);
+
+   --positive-fg: var(--green-300);
+   --negative-fg: var(--invalid-400);
 
    --cartesian-grid: var(--gray-800);
    --area-chart-fill: var(--color-800-20p);
@@ -150,6 +151,7 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --page-background: var(--gray-100);
    --panel-background: #fbfbfb;
    --panel-fg: var(--fg-gray-100);
+   --panel-fg-low-contrast: var(--gray-500);
    --background-summary-popup: rgba(0,0,0,0.9);
    --summary-background: rgba(255,255,255,0.2);
    --focus-color: var(--color-500);
@@ -162,6 +164,9 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
 
    --danger: var(--invalid-500);
    --danger-fg: var(--fg-invalid-500);
+
+   --positive-fg: var(--green-500);
+   --negative-fg: var(--invalid-500);
 
    --input-background: white;
    --input-foreground: var(--white-fg);
