@@ -26,13 +26,13 @@ class PriceHistory(JSONView):
           AND kmmAccounts.id = :account
         ORDER BY kmmPrices.priceDate"""
 
-        params = {
+        p = {
             "account": accountId,
-            "currency": params.get("currency")[0] or "EUR",
+            "currency": params.get("currency", "EUR"),
         }
 
         return [
             Price(date=row.priceDate, price=row.price)
-            for row in do_query(query, params)
+            for row in do_query(query, p)
         ]
 

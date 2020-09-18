@@ -59,8 +59,8 @@ class LedgerView(JSONView):
 
     def get_json(self, params, id: str):
         accounts = id
-        maxdate = params.get('maxdate', [None])[0]
-        mindate = params.get('mindate', [None])[0]
+        maxdate = params.get('maxdate', None)
+        mindate = params.get('mindate', None)
 
         if id:
             # ??? Basic security, very wrong

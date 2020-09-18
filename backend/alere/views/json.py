@@ -22,8 +22,14 @@ class JSONView(View):
         return coder.encode(obj)
 
     def get(self, request, *args, **kwargs):
-        params = {}
-        params.update(request.GET)
-
-        resp = self.get_json(params, *args, **kwargs)
+        resp = self.get_json(request.GET, *args, **kwargs)
         return HttpResponse(self.to_json(resp), content_type="application/json")
+
+    def as_bool(self, params, name, default=False):
+        """
+        Return the given parameter as a boolean
+        """
+        v = params.get(name)
+        if v is None:
+            return default
+        return bool(v) and v.lower() not in ('false', '0')

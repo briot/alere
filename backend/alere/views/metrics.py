@@ -38,9 +38,9 @@ class Metric:
 class MetricsView(JSONView):
 
     def get_json(self, params):
-        maxdate = params.get('maxdate')[0]
-        mindate = params.get('mindate')[0]
-        currency = params.get('currency')[0]
+        maxdate = params['maxdate']
+        mindate = params['mindate']
+        currency = params['currency']
 
         # ??? Should use currency
 

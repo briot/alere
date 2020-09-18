@@ -28,8 +28,8 @@ class NetworthLine:
 class NetworthView(JSONView):
 
     def get_json(self, params):
-        dates = params.get("dates")[0].split(',') or []
-        currency = params.get("currency")[0]
+        dates = params.get('dates', '').split(',')
+        currency = params['currency']
 
         shares = {}
         prices = {}

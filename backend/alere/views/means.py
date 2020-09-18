@@ -19,11 +19,11 @@ class Point:
 class MeanView(JSONView):
 
     def get_json(self, params):
-        expenses = params.get('expenses')[0] == "true"
-        maxdate = params.get('maxdate')[0]
-        mindate = params.get('mindate')[0]
-        prior = params.get('prior')[0] or 6
-        after = params.get('after')[0] or 6
+        expenses = self.as_bool(params, 'expenses')
+        maxdate = params['maxdate']
+        mindate = params['mindate']
+        prior = int(params.get('prior', 6))
+        after = int(params.get('after', 6))
 
         query = f"""
            SELECT q.date,

@@ -60,7 +60,8 @@ class AccountTicker:
 class QuotesView(JSONView):
 
     def get_json(self, params):
-        currency = 'EUR'
+        update = self.as_bool(params, 'update', False)
+        currency = params.get("currency", "EUR")
 
         query = f"""
         SELECT kmmSecurities.*,
@@ -100,24 +101,26 @@ class QuotesView(JSONView):
         }
 
         # Fetch prices from Yahoo, when requested
-        tickers = [s.ticker for s in symbols.values()
-                   if s.source == "Yahoo Finance"]
-        if tickers:
-            data = yf.download(
-                tickers,
-                # start="2020-01-01",
-                period="1y",  # 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
-                interval="1d",   # 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
-            )
-            d = data['Adj Close'].to_dict()
-            for s in symbols.values():
-                if s.ticker in d:
-                    s.prices = [
-                        (timestamp.timestamp() * 1e3, val)
-                        for timestamp, val in d[s.ticker].items()
-                        if not math.isnan(val)
-                    ]
-                    s.prices.sort(key=lambda v: v[0]) # order by timestamp
+        if update:
+            tickers = [s.ticker for s in symbols.values()
+                       if s.source == "Yahoo Finance"]
+            if tickers:
+                data = yf.download(
+                    tickers,
+                    # start="2020-01-01",
+                    period="1y",   # 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
+                    interval="1d", # 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,
+                                   # 1wk,1mo,3mo
+                )
+                d = data['Adj Close'].to_dict()
+                for s in symbols.values():
+                    if s.ticker in d:
+                        s.prices = [
+                            (timestamp.timestamp() * 1e3, val)
+                            for timestamp, val in d[s.ticker].items()
+                            if not math.isnan(val)
+                        ]
+                        s.prices.sort(key=lambda v: v[0]) # order by timestamp
 
         # Fetch prices from database if no price was found yet
 
