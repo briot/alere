@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { BaseProps, DashboardModule } from 'Dashboard/Module';
-import { SetHeaderProps } from 'Dashboard/Panel';
+import { SetHeader } from 'Header';
+import useSettings from 'services/useSettings';
 import IncomeExpensesModule from 'IncomeExpense/Module';
 import NetworthModule from 'NetWorth/Module';
 import QuadrantModule from 'Cashflow/Quadrant';
@@ -11,10 +12,10 @@ import InvestmentsModule from 'Investment/Module';
 import MeanModule from 'Mean';
 
 const NotAvailableModule: DashboardModule<BaseProps> = {
-   Content: (p: BaseProps & SetHeaderProps) => {
+   Content: (p: BaseProps & SetHeader) => {
       const { setHeader } = p;
       React.useEffect(
-         () => setHeader?.(p.type),
+         () => setHeader({ title: p.type }),
          [setHeader, p.type]
       );
       return <span>Not available</span>
@@ -47,17 +48,7 @@ const useDashboard = (
    name: string,
    defaultPanels: BaseProps[],
 ): DashboardType => {
-   const KEY = `alere-dash-${name}`;
-   const [panels, setPanels] = React.useState<BaseProps[]>(
-      () => JSON.parse(localStorage.getItem(KEY) || 'null') || defaultPanels,
-   );
-
-   // Save dashboards when they change
-   React.useEffect(
-      () => localStorage.setItem(KEY, JSON.stringify(panels)),
-      [panels, KEY]
-   );
-
-   return { panels, setPanels };
+   const v = useSettings<BaseProps[]>(`dash-${name}`, defaultPanels);
+   return { panels: v.val, setPanels: v.setVal };
 }
 export default useDashboard;

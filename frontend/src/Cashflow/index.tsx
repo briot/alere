@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { DateRange, monthCount, rangeDisplay, rangeToHttp } from 'Dates';
-import { SetHeaderProps } from 'Dashboard/Panel';
+import { SetHeader } from 'Header';
 import Numeric from 'Numeric';
 import usePrefs from 'services/usePrefs';
 import './Cashflow.css';
@@ -107,13 +107,15 @@ export interface CashflowProps {
    range: DateRange;
 }
 
-const Cashflow: React.FC<CashflowProps & SetHeaderProps> = p => {
+const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
    const { prefs } = usePrefs();
    const pl = useFetchPL(p.range, prefs.currencyId);
 
    const { setHeader } = p;
    React.useEffect(
-      () => setHeader?.(`Metrics ${rangeDisplay(p.range)}`),
+      () => setHeader?.({
+         title: `Metrics ${rangeDisplay(p.range)}`,
+      }),
       [setHeader, p.range]
    );
 

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { BaseProps } from 'Dashboard/Module';
 import DashboardPanel from 'Dashboard/Panel';
+import { SetHeader } from 'Header';
 import useDashboard from 'services/useDashboard';
 import './Dashboard.css';
 
@@ -30,8 +31,15 @@ export interface DashboardFromNameProps {
    name: string;     // dashboard name
    defaultPanels: BaseProps[],
 }
-const DashboardFromName: React.FC<DashboardFromNameProps> = p => {
+const DashboardFromName: React.FC<DashboardFromNameProps & SetHeader> = p => {
+   const { setHeader } = p;
    const { panels, setPanels } = useDashboard(p.name, p.defaultPanels);
+
+   React.useEffect(
+      () => setHeader({title: p.name}),
+      [setHeader, p.name]
+   );
+
    return (
       <Dashboard
          panels={panels}

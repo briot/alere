@@ -2,7 +2,7 @@ import * as React from 'react';
 import { BaseProps, DashboardModule } from 'Dashboard/Module';
 import { SettingsProps } from 'Dashboard/Module';
 import { DateRange, DateRangePicker, rangeToHttp, rangeDisplay } from 'Dates';
-import { SetHeaderProps } from 'Dashboard/Panel';
+import { SetHeader } from 'Header';
 import { Checkbox, Input } from 'Form';
 import { ComposedChart, XAxis, YAxis, CartesianGrid, Area,
          Line, Tooltip } from 'recharts';
@@ -49,15 +49,15 @@ interface MeanProps {
    accountType?: string;
    expenses: boolean;
 }
-const Mean: React.FC<MeanProps & SetHeaderProps> = p => {
+const Mean: React.FC<MeanProps & SetHeader> = p => {
    const { setHeader } = p;
    const points = useMeanHistory(p.range, p.prior, p.after, p.expenses);
 
    React.useEffect(
-      () => setHeader?.(
-         `${p.expenses ? 'Expenses' : 'Income'}`
-         + ` history ${rangeDisplay(p.range)}`
-      ),
+      () => setHeader({
+         title: `${p.expenses ? 'Expenses' : 'Income'}`
+            + ` history ${rangeDisplay(p.range)}`,
+      }),
       [setHeader, p.range, p.expenses]
    );
 

@@ -1,9 +1,8 @@
 import React from 'react';
 import AccountName from 'Account';
 import useHistory from 'services/useHistory';
-import RoundButton from 'RoundButton';
-import Settings from 'Settings';
 import useAccounts from 'services/useAccounts';
+import RoundButton from 'RoundButton';
 import './RightSideBar.css';
 
 interface RightSideBarProps {
@@ -15,16 +14,6 @@ const RightSideBar: React.FC<RightSideBarProps> = p => {
 
    return (
       <div id='rsidebar'>
-         <div className='group'>
-            <RoundButton
-               fa='fa-refresh'
-               size='small'
-               title='sync'
-               disabled={true}
-            />
-            <Settings />
-         </div>
-
          <h3>Recent accounts</h3>
 
          {

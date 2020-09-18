@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { SetHeaderProps } from 'Dashboard/Panel';
+import { SetHeader } from 'Header';
 
 type PanelTypes =
    'incomeexpenses' |
@@ -35,5 +35,5 @@ export interface DashboardModule<T extends BaseProps> {
    // A function that returns one or more <fieldset> to configure the module.
    // It receives the current properties of the module
 
-   Content: React.FC<T & SetHeaderProps>;
+   Content: React.FC<T & SetHeader>;
 }

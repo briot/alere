@@ -4,16 +4,9 @@ import RoundButton from 'RoundButton';
 import Dropdown from 'Form/Dropdown';
 import { BaseProps } from 'Dashboard/Module';
 import { getModule } from 'services/useDashboard';
+import { HeaderProps } from 'Header';
 import classes from 'services/classes';
 import './Panel.css';
-
-/**
- * Passed to any widget that can be displayed in a panel. The widget can call
- * setHeader to change either the page's header, or a panel's header,...
- */
-export interface SetHeaderProps {
-   setHeader?: (title: React.ReactNode|string|undefined) => void;
-}
 
 interface PanelProps {
    panel: BaseProps;
@@ -23,7 +16,7 @@ interface PanelProps {
 }
 
 const DashboardPanel: React.FC<PanelProps> = React.memo(p => {
-   const [header, setHeader] = React.useState("");
+   const [header, setHeader] = React.useState<HeaderProps>({});
    const { setPanels } = p;
 
    const m = getModule(p.panel.type);
@@ -50,54 +43,57 @@ const DashboardPanel: React.FC<PanelProps> = React.memo(p => {
    return (
       <div className={c} >
          <div className="header">
-            <h5>{header ?? ''}</h5>
-            <Dropdown
-               button={(visible: boolean) =>
-                  <RoundButton fa='fa-bars' size='tiny' selected={visible} />
-               }
-               menu={
-                  <form>
-                     {
-                        m.Settings &&
-                        <m.Settings
-                           {...p.panel }
-                           setData={localChange}
-                           excludeFields={p.excludeFields}
-                        />
-                     }
-                     <fieldset>
-                        <legend>Layout</legend>
-                        <Select
-                           text="Rows"
-                           value={p.panel.rowspan}
-                           onChange={changeRows}
-                           options={[
-                              {text: "one row",    value: 1},
-                              {text: "two rows",   value: 2},
-                              {text: "three rows", value: 3},
-                              {text: "four rows",  value: 4},
-                           ]}
-                        />
+            <h5>{header.title}</h5>
+            <div className="group">
+               {header.buttons}
+               <Dropdown
+                  button={(visible: boolean) =>
+                     <RoundButton fa='fa-bars' size='tiny' selected={visible} />
+                  }
+                  menu={
+                     <form>
+                        {
+                           m.Settings &&
+                           <m.Settings
+                              {...p.panel }
+                              setData={localChange}
+                              excludeFields={p.excludeFields}
+                           />
+                        }
+                        <fieldset>
+                           <legend>Layout</legend>
+                           <Select
+                              text="Rows"
+                              value={p.panel.rowspan}
+                              onChange={changeRows}
+                              options={[
+                                 {text: "one row",    value: 1},
+                                 {text: "two rows",   value: 2},
+                                 {text: "three rows", value: 3},
+                                 {text: "four rows",  value: 4},
+                              ]}
+                           />
 
-                        <Select
-                           text="Columns"
-                           value={p.panel.colspan}
-                           onChange={changeCols}
-                           options={[
-                              {text: "one column",    value: 1},
-                              {text: "two columns",   value: 2},
-                              {text: "three columns", value: 3},
-                              {text: "four columns",  value: 4},
-                           ]}
-                        />
-                     </fieldset>
-                  </form>
-               }
-            />
-            {/*
-               <span className="fa fa-info-circle" />
-               <span className="fa fa-window-close" />
-             */ }
+                           <Select
+                              text="Columns"
+                              value={p.panel.colspan}
+                              onChange={changeCols}
+                              options={[
+                                 {text: "one column",    value: 1},
+                                 {text: "two columns",   value: 2},
+                                 {text: "three columns", value: 3},
+                                 {text: "four columns",  value: 4},
+                              ]}
+                           />
+                        </fieldset>
+                     </form>
+                  }
+               />
+               {/*
+                  <span className="fa fa-info-circle" />
+                  <span className="fa fa-window-close" />
+                */ }
+            </div>
          </div>
          <div className="content">
             <m.Content {...p.panel as any} setHeader={setHeader} />

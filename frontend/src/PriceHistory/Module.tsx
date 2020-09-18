@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { SetHeaderProps } from 'Dashboard/Panel';
+import { SetHeader } from 'Header';
 import { Transaction } from 'Transaction';
 import { BaseProps, DashboardModule } from 'Dashboard/Module';
 import useAccountIds from 'services/useAccountIds';
@@ -11,12 +11,12 @@ import Settings, { BasePriceHistoryProps } from 'PriceHistory/Settings';
 interface HistoryPanelProps extends BasePriceHistoryProps {
    transactions: Transaction[] | undefined, // use it instead of fetching
 }
-const PriceHistoryPanel: React.FC<HistoryPanelProps & SetHeaderProps> = p => {
+const PriceHistoryPanel: React.FC<HistoryPanelProps & SetHeader> = p => {
    const { setHeader } = p;
    const accounts = useAccountIds([p.accountId]);
    const transactions = useTransactions([p.accountId], p.range, p.transactions);
    React.useEffect(
-      () => setHeader?.('Price History'),
+      () => setHeader({ title: 'Price History' }),
       [setHeader],
    );
    return accounts?.[0] ? (

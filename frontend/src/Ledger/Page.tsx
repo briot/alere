@@ -4,6 +4,7 @@ import useAccounts from 'services/useAccounts';
 import useHistory from 'services/useHistory';
 import useTransactions from 'services/useTransactions';
 import useDashboard from 'services/useDashboard';
+import { SetHeader } from 'Header';
 import { Dashboard } from 'Dashboard';
 import { BaseProps } from 'Dashboard/Module';
 import { SplitMode, TransactionMode } from 'Ledger';
@@ -39,7 +40,8 @@ const defaultPanels: BaseProps[] = [
 
 interface LedgerPageProps {
 }
-const LedgerPage: React.FC<LedgerPageProps> = p => {
+const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
+   const { setHeader } = p;
    const { accountId } = useParams();
    const history = useRouterHistory();
    const { accounts } = useAccounts();
@@ -60,19 +62,29 @@ const LedgerPage: React.FC<LedgerPageProps> = p => {
       [accountId, pushAccount ]
    );
 
+   React.useEffect(
+      () => {
+         setHeader({  /* Keep arrow next to account name */
+            title: (
+               <div>
+                  <SelectAccount
+                     accountId={accountId}
+                     onChange={onAccountChange}
+                     hideArrow={false}
+                  />
+               </div>
+            )
+         });
+      },
+      [setHeader, accountId, onAccountChange]
+   );
+
    if (!account) {
       return <div className="main-area">Unknown account</div>;
    }
 
    return (
       <div className="main-area">
-         <div className="ledgerAccount">
-            <SelectAccount
-               accountId={accountId}
-               onChange={onAccountChange}
-               hideArrow={false}
-            />
-         </div>
          <Dashboard
             panels={panels}
             setPanels={setPanels}

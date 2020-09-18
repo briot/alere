@@ -6,6 +6,7 @@ import RightSideBar from 'RightSideBar';
 import LedgerPage from 'Ledger/Page';
 import InvestmentPage from 'Investment/Page';
 import usePrefs from 'services/usePrefs';
+import Header, { HeaderProps } from 'Header';
 import StyleGuide from 'StyleGuide';
 import { BaseProps } from 'Dashboard/Module';
 import { IncomeExpensePanelProps } from 'IncomeExpense/Module';
@@ -93,6 +94,7 @@ const defaultOverview: BaseProps[] = [
 
 const App: React.FC<{}> = () => {
    const { prefs } = usePrefs();
+   const [ header, setHeader ] = React.useState<HeaderProps>({});
 
    return (
       <Switch>
@@ -101,19 +103,21 @@ const App: React.FC<{}> = () => {
          </Route>
          <Route>
             <div id="app" className={prefs.dark_mode ? 'page darkpalette' : 'page lightpalette' }>
+               <Header {...header} />
                <LeftSideBar />
                <RightSideBar />
 
                <Switch>
                    <Route path="/ledger/:accountId" >
-                      <LedgerPage />
+                      <LedgerPage setHeader={setHeader} />
                    </Route>
                    <Route path="/investments">
-                      <InvestmentPage />
+                      <InvestmentPage setHeader={setHeader} />
                    </Route>
                    <Route>
                       <DashboardFromName
                          defaultPanels={defaultOverview}
+                         setHeader={setHeader}
                          name='Overview'
                       />
                    </Route>

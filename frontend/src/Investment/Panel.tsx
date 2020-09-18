@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { VariableSizeList } from 'react-window';
-import { SetHeaderProps } from 'Dashboard/Panel';
 import * as d3TimeFormat from 'd3-time-format';
 import * as d3Array from 'd3-array';
 import { DateDisplay } from 'Dates';
@@ -347,8 +346,8 @@ interface TickerViewProps {
    accounts: AccountList;
    ticker: Ticker;
    accountTickers: AccountTicker[];
-   showWALine?: boolean;
-   showACLine?: boolean;
+   showWALine: boolean;
+   showACLine: boolean;
 }
 
 const TickerView: React.FC<TickerViewProps> = p => {
@@ -387,13 +386,12 @@ const TickerView: React.FC<TickerViewProps> = p => {
 }
 
 export interface InvestmentsPanelProps {
-   hideIfNoShare?: boolean;
-   showWALine?: boolean;
-   showACLine?: boolean;
+   hideIfNoShare: boolean;
+   showWALine: boolean;
+   showACLine: boolean;
 }
 
-const InvestmentsPanel: React.FC<InvestmentsPanelProps & SetHeaderProps> = p => {
-   const { setHeader } = p;
+const InvestmentsPanel: React.FC<InvestmentsPanelProps> = p => {
    const { accounts } = useAccounts();
    const list = React.useRef<VariableSizeList>(null);
 
@@ -421,11 +419,6 @@ const InvestmentsPanel: React.FC<InvestmentsPanelProps & SetHeaderProps> = p => 
    React.useEffect(
       () => list.current?.resetAfterIndex(0),
       [tickers]
-   );
-
-   React.useEffect(
-      () => setHeader?.('Investments'),
-      [setHeader]
    );
 
    React.useEffect(

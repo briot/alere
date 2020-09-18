@@ -3,7 +3,7 @@ import { RelativeDate, dateToString } from 'Dates';
 import { ListChildComponentProps } from 'react-window';
 import Numeric from 'Numeric';
 import AccountName from 'Account';
-import { SetHeaderProps } from 'Dashboard/Panel';
+import { SetHeader } from 'Header';
 import useAccounts, { Account, AccountId } from 'services/useAccounts';
 import usePrefs from 'services/usePrefs';
 import Table from 'List';
@@ -31,7 +31,7 @@ export interface NetworthProps {
    // threshold (absolute value).
 }
 
-const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
+const Networth: React.FC<NetworthProps & SetHeader> = p => {
    const { setHeader } = p;
    const [baseData, setBaseData] = React.useState<Networth>([]);
    const { accounts } = useAccounts();
@@ -112,7 +112,7 @@ const Networth: React.FC<NetworthProps & SetHeaderProps> = p => {
    );
 
    React.useEffect(
-      () => setHeader?.('Net worth'),
+      () => setHeader({ title: 'Net worth' }),
       [setHeader]
    );
 

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { BaseProps, DashboardModule } from 'Dashboard/Module';
-import { SetHeaderProps } from 'Dashboard/Panel';
+import { SetHeader } from 'Header';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
          Tooltip } from 'recharts';
 import AutoSizer from 'react-virtualized-auto-sizer';
@@ -20,10 +20,12 @@ const radar_data = [
 interface QuadrantProps {
 }
 
-const Quadrant: React.FC<QuadrantProps & SetHeaderProps> = p => {
+const Quadrant: React.FC<QuadrantProps & SetHeader> = p => {
    const { setHeader } = p;
    React.useEffect(
-      () => setHeader?.('Cashflow quadrant'),
+      () => setHeader?.({
+         title: 'Cashflow quadrant',
+      }),
       [setHeader],
    );
 

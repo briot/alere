@@ -1,9 +1,18 @@
 import React from 'react';
+import Settings from 'Settings';
 import './Header.css';
 
+export interface HeaderProps {
+   title?: string|React.ReactNode;
+   buttons?: React.ReactNode|React.ReactNode[];
+}
 
-interface HeaderProps {
-   title: React.ReactNode|string|undefined;
+/**
+ * Passed to any widget that can be displayed in a panel. The widget can call
+ * setHeader to change either the page's header, or a panel's header,...
+ */
+export interface SetHeader {
+   setHeader: React.Dispatch<React.SetStateAction<HeaderProps>>;
 }
 
 const Header: React.FC<HeaderProps> = p => {
@@ -12,6 +21,12 @@ const Header: React.FC<HeaderProps> = p => {
          <div className='title'>
              {p.title || ''}
          </div>
+
+         <div className='group'>
+            {p.buttons}
+            <Settings />
+         </div>
+
       </div>
    );
 }

@@ -1,11 +1,11 @@
 import * as React from 'react';
 import Ledger, { BaseLedgerProps } from 'Ledger';
-import { SetHeaderProps } from 'Dashboard/Panel';
+import { SetHeader } from 'Header';
 import { rangeDisplay } from 'Dates';
 import useAccountIds from 'services/useAccountIds';
 import useTransactions from 'services/useTransactions';
 
-const LedgerPanel: React.FC<BaseLedgerProps & SetHeaderProps> = p => {
+const LedgerPanel: React.FC<BaseLedgerProps & SetHeader> = p => {
    const { setHeader } = p;
    const accounts = useAccountIds(p.accountIds);
    const computedIds = accounts?.map(a => a.id);
@@ -22,7 +22,7 @@ const LedgerPanel: React.FC<BaseLedgerProps & SetHeaderProps> = p => {
             ? accounts[0]?.name
             : 'Multiple accounts';
          const dates = p.range ? rangeDisplay(p.range) : '';
-         setHeader?.(`${name} ${dates}`);
+         setHeader({title: `${name} ${dates}` });
       },
       [accounts, setHeader, p.range, p.accountIds]
    );

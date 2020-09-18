@@ -3,7 +3,7 @@ import * as d3ScaleChromatic from 'd3-scale-chromatic';
 import { Legend, PieChart, PieLabelRenderProps,
          Pie, Cell, Tooltip, TooltipProps } from 'recharts';
 import { DateRange, rangeDisplay, rangeToHttp } from 'Dates';
-import { SetHeaderProps } from 'Dashboard/Panel';
+import { SetHeader } from 'Header';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
 import AccountName from 'Account';
@@ -86,7 +86,7 @@ export interface IncomeExpenseProps {
    range: DateRange;
 }
 
-const IncomeExpense: React.FC<IncomeExpenseProps & SetHeaderProps> = p => {
+const IncomeExpense: React.FC<IncomeExpenseProps & SetHeader> = p => {
    const { setHeader } = p;
    const [baseData, setBaseData] = React.useState(noData);
    const { accounts } = useAccounts();
@@ -150,9 +150,9 @@ const IncomeExpense: React.FC<IncomeExpenseProps & SetHeaderProps> = p => {
          (index + 1) / data.items.length)
 
    React.useEffect(
-      () => setHeader?.(
-         `${p.expenses ? 'Expenses' : 'Income'} ${rangeDisplay(p.range)}`
-      ),
+      () => setHeader({
+         title: `${p.expenses ? 'Expenses' : 'Income'} ${rangeDisplay(p.range)}`,
+      }),
       [setHeader, p.expenses, p.range]
    );
 
