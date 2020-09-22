@@ -4,112 +4,31 @@ import { ListChildComponentProps } from 'react-window';
 import Numeric from 'Numeric';
 import AccountName from 'Account';
 import { SetHeader } from 'Header';
-import useAccounts, { Account, AccountId } from 'services/useAccounts';
+import useBalanceWithThreshold from 'services/useBalanceWithThreshold';
 import usePrefs from 'services/usePrefs';
 import Table from 'List';
 import "./NetWorth.css";
 
-interface NetworthLine {
-   account: Account | undefined;
-   accountId: AccountId;
-   shares: number[];
-   price: (number|undefined)[];
-}
-type Networth = NetworthLine[];
-
 const NW_LINE_HEIGHT = 25;  // sync with var(--nw-line-height)
-
 
 export interface NetworthProps {
    dates: RelativeDate[];
-   showValue?: boolean;
-   showPrice?: boolean;
-   showShares?: boolean;
+   showValue: boolean;
+   showPrice: boolean;
+   showShares: boolean;
 
-   threshold?: number;
+   threshold: number;
    // Only show account if at least one of the value columns is above this
    // threshold (absolute value).
 }
 
 const Networth: React.FC<NetworthProps & SetHeader> = p => {
-   const { setHeader } = p;
-   const [baseData, setBaseData] = React.useState<Networth>([]);
-   const { accounts } = useAccounts();
    const { prefs } = usePrefs();
-   const threshold = p.threshold === undefined ? 0.01 : p.threshold;
-
-   const dates = React.useMemo(
-      () => p.dates.map(dateToString),
-      [p.dates]
-   );
-
-   React.useEffect(
-      () => {
-         const doFetch = async () => {
-            const resp = await window.fetch(
-               `/api/plots/networth`
-               + `?currency=${prefs.currencyId}`
-               + `&dates=${dates.join(',')}`
-            );
-            const d: Networth = await resp.json()
-            setBaseData(d);
-         }
-         doFetch();
-      },
-      [prefs.currencyId, dates]
-   );
-
-   const data: Networth = React.useMemo(
-      () => {
-         let d = [...baseData];
-         d.forEach(n =>
-            n.account = accounts.getAccount(n.accountId)
-         );
-
-         // Remove lines with only 0 values
-         if (threshold !== 0) {
-            d = d.filter(a => {
-               let hasNonZero = false;
-               dates.forEach((when, idx) => {
-                  if (Math.abs(a.shares[idx] * (a.price[idx] ?? NaN))
-                      > threshold
-                     ) {
-                     hasNonZero = true;
-                  }
-               });
-               return hasNonZero;
-            });
-         }
-
-         // Sort alphabetically
-         d.sort((a, b) =>
-            a.account
-               ? b.account
-                  ? a.account.name.localeCompare(b.account.name)
-                  : 1
-               : -1
-         );
-         return d;
-      },
-      [accounts, threshold, dates, baseData]
-   );
-
-   const totalShares = React.useMemo(
-      () => p.dates.flatMap(
-         (d, idx) => data.reduce((t, d) => t + d.shares[idx], 0)
-      ),
-      [p.dates, data]
-   );
-
-   const total = React.useMemo(
-      () => p.dates.flatMap(
-         (d, idx) =>
-            data
-             .filter(d => d.price[idx])
-             .reduce((t, d) => t + d.shares[idx] * d.price[idx]!, 0),
-      ),
-      [p.dates, data]
-   );
+   const { setHeader } = p;
+   const {baseData, data} = useBalanceWithThreshold({
+      ...p,
+      currencyId: prefs.currencyId,
+   });
 
    React.useEffect(
       () => setHeader({ title: 'Net worth' }),
@@ -130,13 +49,13 @@ const Networth: React.FC<NetworthProps & SetHeader> = p => {
                    account={r.account}
                />
                {
-                  dates.map((d, idx) => (
+                  r.atDate.map((d, idx)=> (
                      <React.Fragment key={idx}>
                      {
                         p.showShares &&
                         <span>
                            <Numeric
-                              amount={r.shares[idx]}
+                              amount={d.shares}
                               precision={r.account?.sharesPrecision}
                            />
                         </span>
@@ -145,8 +64,8 @@ const Networth: React.FC<NetworthProps & SetHeader> = p => {
                         p.showPrice &&
                         <span>
                            <Numeric
-                              amount={r.price[idx]}
-                              unit={prefs.currencyId || r.account?.currencySymbol}
+                              amount={d.price}
+                              unit={baseData.currencyId}
                            />
                         </span>
                      }
@@ -154,9 +73,8 @@ const Networth: React.FC<NetworthProps & SetHeader> = p => {
                         p.showValue &&
                         <span>
                            <Numeric
-                              amount={r.shares[idx] * (r.price[idx] ?? NaN)}
-                              unit={prefs.currencyId
-                                  || r.account?.currencySymbol}
+                              amount={d.shares * d.price}
+                              unit={baseData.currencyId}
                            />
                         </span>
                      }
@@ -166,7 +84,7 @@ const Networth: React.FC<NetworthProps & SetHeader> = p => {
             </Table.TR>
          );
       },
-      [data, p.showPrice, p.showShares, p.showValue, dates, prefs.currencyId]
+      [data, p.showPrice, p.showShares, p.showValue, baseData.currencyId]
    );
 
    const span = (p.showValue ? 1 : 0)
@@ -178,9 +96,9 @@ const Networth: React.FC<NetworthProps & SetHeader> = p => {
          <Table.TR>
             <span className="th">Account</span>
             {
-               dates.map((d, idx) =>
-                  <span className={`th span${span}`} key={idx} >
-                     {d}
+               p.dates.map(d =>
+                  <span className={`th span${span}`} key={d} >
+                     {dateToString(d)}
                   </span>)
             }
          </Table.TR>
@@ -189,8 +107,8 @@ const Networth: React.FC<NetworthProps & SetHeader> = p => {
             <Table.TR>
                <Table.TH />
                {
-                  p.dates.map((d, idx) => (
-                     <React.Fragment key={idx}>
+                  p.dates.map(d => (
+                     <React.Fragment key={d}>
                         {p.showShares && <Table.TH>Shares</Table.TH>}
                         {p.showPrice && <Table.TH>Price</Table.TH>}
                         {p.showValue && <Table.TH>Value</Table.TH>}
@@ -211,11 +129,7 @@ const Networth: React.FC<NetworthProps & SetHeader> = p => {
                   <React.Fragment key={idx}>
                      {
                         p.showShares &&
-                        <span>
-                           <Numeric
-                              amount={totalShares[idx]}
-                           />
-                        </span>
+                        <span />
                      }
                      {
                         p.showPrice &&
@@ -225,8 +139,8 @@ const Networth: React.FC<NetworthProps & SetHeader> = p => {
                         p.showValue &&
                         <span>
                            <Numeric
-                              amount={total[idx]}
-                              unit={prefs.currencyId}
+                              amount={baseData.totalValue[idx]}
+                              unit={baseData.currencyId}
                            />
                         </span>
                      }

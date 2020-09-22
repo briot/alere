@@ -26,6 +26,7 @@ const defaultOverview: BaseProps[] = [
       showValue: true,
       showShares: false,
       showPrice: false,
+      threshold: 1e-13,
       dates: ["today", "1 month ago"],
    } as NetworthPanelProps,
    {

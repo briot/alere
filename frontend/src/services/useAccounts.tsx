@@ -146,6 +146,15 @@ export class AccountList {
          a => a.currencyId === currencyId);
    }
 
+   /**
+    * Sort accounts alphabetically
+    */
+   cmpAlphabetical(a : Account|undefined, b: Account|undefined) {
+      return a
+         ? b ? a.name.localeCompare(b.name) : 1
+         : -1;
+   }
+
    numAccounts(): number {
       return this.accounts.size;
    }

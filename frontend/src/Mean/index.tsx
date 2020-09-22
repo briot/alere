@@ -3,7 +3,7 @@ import { BaseProps, DashboardModule } from 'Dashboard/Module';
 import { SettingsProps } from 'Dashboard/Module';
 import { DateRange, DateRangePicker, rangeToHttp, rangeDisplay } from 'Dates';
 import { SetHeader } from 'Header';
-import { Checkbox, Input } from 'Form';
+import { Checkbox, NumberInput } from 'Form';
 import { ComposedChart, XAxis, YAxis, CartesianGrid, Area,
          Line, Tooltip } from 'recharts';
 import AutoSizer from 'react-virtualized-auto-sizer';
@@ -115,8 +115,8 @@ const Settings: React.FC<
    MeanProps & SettingsProps<MeanProps>
 > = p => {
    const changeRange = (range: DateRange) => p.setData({ range });
-   const changePrior = (val: string) => p.setData({ prior: parseInt(val, 10)});
-   const changeAfter = (val: string) => p.setData({ after: parseInt(val, 10)});
+   const changePrior = (prior: number) => p.setData({ prior });
+   const changeAfter = (after: number) => p.setData({ after });
    const changeExp   = (expenses: boolean) => p.setData({ expenses });
 
    return (
@@ -127,16 +127,14 @@ const Settings: React.FC<
             onChange={changeExp}
             text="Show expenses"
          />
-         <Input
-            type="number"
-            value={p.prior.toString()}
+         <NumberInput
+            value={p.prior}
             text="Months before"
             title="How many months before the date to use, when computing averages"
             onChange={changePrior}
          />
-         <Input
-            type="number"
-            value={p.after.toString()}
+         <NumberInput
+            value={p.after}
             text="Months after"
             title="How many months after the date to use, when computing averages"
             onChange={changeAfter}

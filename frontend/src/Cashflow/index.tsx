@@ -79,6 +79,7 @@ const Metrics: React.FC<MetricsProps> = p => {
                         precision={0}
                         unit={p.suffix}
                      />
+                  )
                </span>
             }
             {

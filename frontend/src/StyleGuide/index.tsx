@@ -40,9 +40,19 @@ const StyleContent: React.FC<{}> = p => {
                      {text: "choice2", value: "2"},
                   ]}
                />
-               <Input placeholder="placeholder" text="input" />
-               <Input placeholder="placeholder" disabled={true} text="disabled"/>
-               <Input required={true} text="invalid" placeholder="required"/>
+               <Input placeholder="placeholder" text="input" value=""/>
+               <Input
+                  placeholder="placeholder"
+                  disabled={true}
+                  value=""
+                  text="disabled"
+               />
+               <Input
+                  required={true}
+                  text="invalid"
+                  placeholder="required"
+                  value=""
+               />
                <div className="wrappedRow">
                   <Button text="label" />
                   <Button text="primary" primary={true} />

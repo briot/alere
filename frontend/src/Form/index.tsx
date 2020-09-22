@@ -37,8 +37,7 @@ const SharedInput: React.FC<
 interface InputProps extends SharedInputProps {
    placeholder?: string;
    required?: boolean;
-   type?: 'text' | 'number';
-   value?: string;
+   value: string;
    title?: string;
    onChange?: (val: string) => void;
 }
@@ -58,7 +57,35 @@ export const Input: React.FC<InputProps> = p => {
             placeholder={p.placeholder}
             required={p.required}
             title={p.title}
-            type={p.type || 'text'}
+            type='text'
+            value={p.value}
+         />
+      </SharedInput>
+   );
+}
+
+interface NumberInputProps extends SharedInputProps {
+   required?: boolean;
+   value: number;
+   title?: string;
+   onChange?: (val: number) => void;
+}
+export const NumberInput: React.FC<NumberInputProps> = p => {
+   const { onChange } = p;
+   const localChange = React.useCallback(
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+         onChange?.(parseFloat(e.target.value));
+      },
+      [onChange]
+   );
+   return (
+      <SharedInput className="input" {...p}>
+         <input
+            disabled={p.disabled}
+            onChange={localChange}
+            required={p.required}
+            title={p.title}
+            type="number"
             value={p.value}
          />
       </SharedInput>
