@@ -61,6 +61,123 @@ class AccountTicker:
 
 class QuotesView(JSONView):
 
+    def from_database(self, symbols, currency):
+        """
+        Fetch prices from database, for symbols that do not have prices yet.
+        """
+        ids = [s.id for s in symbols.values() if not s.prices]
+        if ids:
+            ids_str = ','.join(f"'{id}'" for id in ids)
+            query_prices = f"""
+            SELECT fromId, priceDate, {kmm._to_float('price')} as price
+              FROM kmmPrices
+              WHERE toId=:currency
+                AND fromId IN ({ids_str})
+              ORDER BY priceDate
+            """
+
+            for row in do_query(query_prices, {"currency": currency}):
+                symbols[row.fromId].prices.append(
+                    (datetime.datetime.fromisoformat(row.priceDate).timestamp()
+                        * 1e3,
+                    row.price)
+                )
+
+            for id in ids:
+                symbols[id].source = 'database'
+
+    def from_yahoo(self, symbols):
+        """
+        Fetch prices from Yahoo
+        """
+        tickers = [s.ticker for s in symbols.values()
+                   if s.source == "Yahoo Finance"]
+        if tickers:
+            data = yf.download(
+                tickers,
+                # start="2020-01-01",
+                period="1y",   # 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
+                interval="1d", # 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,
+                               # 1wk,1mo,3mo
+            )
+            d = data['Adj Close'].to_dict()
+            for s in symbols.values():
+                if s.ticker in d:
+                    s.prices = [
+                        (timestamp.timestamp() * 1e3, val)
+                        for timestamp, val in d[s.ticker].items()
+                        if not math.isnan(val)
+                    ]
+                    s.prices.sort(key=lambda v: v[0]) # order by timestamp
+
+    def roi_from_balance(self, symbols, currency):
+        """
+        For accounts that do not use prices (mutual funds,...) we simply compute
+        performance by computing the balance from the account.
+        """
+        ids = [s.id for s in symbols.values() if not s.prices]
+        if not ids:
+            return;
+
+        ids_str = ','.join(f"'{id}'" for id in ids)
+
+        q = f"""
+        WITH RECURSIVE
+        first_split_dates AS (
+            SELECT MIN(kmmSplits.postDate) as mindate,
+               kmmSplits.accountId as accountId,
+               kmmAccounts.currencyId as currencyId
+            FROM kmmSplits, kmmAccounts
+            WHERE kmmAccounts.currencyId IN ({ids_str})
+              AND kmmSplits.accountId=kmmAccounts.id
+            GROUP BY kmmSplits.accountId
+        ),
+        all_dates AS (
+            SELECT first_split_dates.accountId,
+               first_split_dates.currencyId,
+               first_split_dates.mindate as date
+               FROM first_split_dates
+            UNION ALL
+            SELECT all_dates.accountId,
+                  all_dates.currencyId,
+                  DATE(all_dates.date, "+1 MONTHS")
+               FROM all_dates
+               WHERE all_dates.date < CURRENT_DATE
+        ),
+        {kmm._price_history(currency)}
+
+        SELECT
+           all_dates.accountId,
+           all_dates.currencyId,
+           all_dates.date,
+           coalesce(price_history.computedPrice, 1) as computedPrice,
+           SUM({kmm._to_float('s.shares')}) as balanceShares,
+           SUM(CASE
+              WHEN s.action IN ('Buy', 'Sell') THEN
+                 {kmm._to_float('s.value')}   --  doesn't include fees
+              ELSE 0
+              END) as invested
+        FROM
+           kmmSplits s,
+           all_dates
+           LEFT JOIN price_history
+              ON (price_history.fromId = all_dates.currencyId
+                  AND all_dates.date >= price_history.priceDate
+                  AND all_dates.date < price_history.maxDate)
+        WHERE all_dates.accountId=s.accountId
+           AND s.postDate <= all_dates.date
+        GROUP BY all_dates.accountId, all_dates.date, computedPrice
+
+        ORDER BY all_dates.accountId, all_dates.date
+        """
+
+        for row in do_query(q):
+            symbols[row.currencyId].prices.append(
+                (datetime.datetime.fromisoformat(row.date).timestamp() * 1e3,
+                row.computedPrice * row.balanceShares - row.invested)
+            )
+
+
     def get_json(self, params):
         update = self.as_bool(params, 'update', False)
         currency = params.get("currency", "EUR")
@@ -103,54 +220,13 @@ class QuotesView(JSONView):
             for row in do_query(query)
         }
 
-        # Fetch prices from Yahoo, when requested
         if update:
-            tickers = [s.ticker for s in symbols.values()
-                       if s.source == "Yahoo Finance"]
-            if tickers:
-                data = yf.download(
-                    tickers,
-                    # start="2020-01-01",
-                    period="1y",   # 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
-                    interval="1d", # 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,
-                                   # 1wk,1mo,3mo
-                )
-                d = data['Adj Close'].to_dict()
-                for s in symbols.values():
-                    if s.ticker in d:
-                        s.prices = [
-                            (timestamp.timestamp() * 1e3, val)
-                            for timestamp, val in d[s.ticker].items()
-                            if not math.isnan(val)
-                        ]
-                        s.prices.sort(key=lambda v: v[0]) # order by timestamp
-
-        # Fetch prices from database if no price was found yet
-
-        ids = [s.id for s in symbols.values() if not s.prices]
-        if ids:
-            ids_str = ','.join(f"'{id}'" for id in ids)
-            query_prices = f"""
-            SELECT fromId, priceDate, {kmm._to_float('price')} as price
-              FROM kmmPrices
-              WHERE toId=:currency
-                AND fromId IN ({ids_str})
-              ORDER BY priceDate
-            """
-
-            for row in do_query(query_prices, {"currency": currency}):
-                symbols[row.fromId].prices.append(
-                    (datetime.datetime.fromisoformat(row.priceDate).timestamp()
-                        * 1e3,
-                    row.price)
-                )
-
-            for id in ids:
-                symbols[id].source = 'database'
+            self.from_yahoo(symbols)
+        # self.roi_from_balance(symbols, currency=currency)
+        self.from_database(symbols, currency=currency)
 
         # Sort symbols
         result = sorted(symbols.values(), key=lambda r: r.name)
-
 
         # We are only interested in accounts related to a security (those
         # are the stocks, but better to look at securities directly).

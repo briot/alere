@@ -193,7 +193,7 @@ const History: React.FC<HistoryProps> = p => {
                          connectNulls={true}
                          stroke="none"
                          fill={
-                            d1.fromPrice < d1.toPrice
+                            d1.fromPrice <= d1.toPrice
                             ? "var(--positive-fg)"
                             : "var(--negative-fg)"
                           }

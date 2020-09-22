@@ -178,6 +178,20 @@ class KMyMoney:
         else:
             return ""
 
+    def _all_dates(self, mindate, maxdate, inc):
+        """
+        Generate the set of dates for which we want balances
+        :param str inc:  "+1 MONTHS" or "+1 YEARS" for instance
+        """
+        return f"""
+        all_dates(d) AS (
+            SELECT "{mindate}"
+            UNION ALL
+            SELECT DATE(d, "{inc}") FROM all_dates
+               WHERE DATE(d, "{inc}") <= "{maxdate}"
+        )
+        """
+
     def networth(
         self,
         accounts=None,
@@ -210,14 +224,7 @@ class KMyMoney:
         p = pd.read_sql_query(
             f"""
         WITH RECURSIVE
-
-        --  Generate the set of dates for which we want balances
-        all_dates(d) AS (
-            SELECT "{earliest_date}"
-            UNION ALL
-            SELECT DATE(d, "{inc}") FROM all_dates
-               WHERE DATE(d, "{inc}") <= "{maxdate}"
-        ),
+        ${self._all_dates(earliest_date, maxdate, inc)},
 
         --  We will need to compute the prices at the end of each period
         {self._price_history(currency)},

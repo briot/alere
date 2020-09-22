@@ -13,6 +13,8 @@
    width: 100%;               // Use all available space
    height: 100%;               // Use all available space
 
+   overflow: auto;
+
    .tickerPanel {
       width: calc(100% / var(--items-per-row) - var(--gap));
       box-sizing: border-box;
