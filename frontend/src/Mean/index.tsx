@@ -90,7 +90,7 @@ const Mean: React.FC<MeanProps & SetHeader> = p => {
                      formatter={formatVal}
                   />
                   <Area
-                     type="stepAfter"
+                     type="step"
                      dataKey="value"
                      fill="var(--area-chart-fill)"
                      stroke="var(--area-chart-stroke)"
