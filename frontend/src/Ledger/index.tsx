@@ -773,6 +773,7 @@ const Ledger: React.FC<BaseLedgerProps> = p => {
    );
 
    const footer = (
+      p.accountIds.length === 1 &&
       <Table.TR partial={true}>
          {
             selected !== undefined &&
