@@ -87,12 +87,15 @@ const TR: React.FC<TRProps> = p => {
 }
 
 /**
- * A table
+ * Low-level support for creating tables.
+ * It provides a few React components that helps create rows, cells,...
+ * We do not use an actual <table> for compatibility with react-window, and
+ * because it might make configuring column widths easier.
  */
 
 interface TableProps {
    itemCount: number;
-   itemSize: number | ((index: number) => number);
+   itemSize?: number | ((index: number) => number);
    itemKey: (index: number) => number|string;
    getRow: React.ComponentType<ListChildComponentProps>;
 
@@ -113,7 +116,7 @@ const Table: React.FC<TableProps & React.RefAttributes<VariableSizeList>>
       p.borders && 'borders',
       p.background && 'background',
    );
-   const isVariable = isNaN(p.itemSize as any);
+   const isVariable = p.itemSize !== undefined && isNaN(p.itemSize as any);
    return (
       <div className={c}>
          {
@@ -143,7 +146,7 @@ const Table: React.FC<TableProps & React.RefAttributes<VariableSizeList>>
                            width={width}
                            height={height}
                            itemCount={p.itemCount}
-                           itemSize={p.itemSize as number}
+                           itemSize={(p.itemSize ?? ROW_HEIGHT)  as number}
                            itemKey={p.itemKey}
                         >
                            {p.getRow}

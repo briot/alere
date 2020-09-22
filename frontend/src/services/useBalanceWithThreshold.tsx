@@ -1,7 +1,11 @@
 import * as React from 'react';
 import { RelativeDate } from 'Dates';
-import useBalance from 'services/useBalance';
-import useAccounts from 'services/useAccounts';
+import useBalance, { Balance, BalanceList } from 'services/useBalance';
+import useAccounts, { Account } from 'services/useAccounts';
+
+export interface BalanceWithAccount extends Balance {
+   account: Account|undefined;
+}
 
 /**
  * Similar to useBalance, but hide accounts for which the value is below a
@@ -14,7 +18,7 @@ const useBalanceWithThreshold = (p: {
    currencyId: string;
    dates: RelativeDate[];
    threshold: number;
-}) => {
+}): {baseData: BalanceList, data: BalanceWithAccount[]} => {
    const baseData = useBalance({...p});
    const { accounts } = useAccounts();
    const data = React.useMemo(
