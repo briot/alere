@@ -46,6 +46,7 @@ interface TDProps {
    kind?: string;
    className?: string;
    title?: string;
+   style?: React.CSSProperties;
 }
 const TD: React.FC<TDProps> = p => {
    const n = classes(
@@ -54,7 +55,7 @@ const TD: React.FC<TDProps> = p => {
       p.className,
    );
    return (
-      <span className={n} title={p.title}>
+      <span className={n} title={p.title} style={p.style} >
          {p.children}
       </span>
    );
@@ -70,6 +71,12 @@ interface TRProps {
    secondary?: boolean;  // in gray
    style?: React.CSSProperties;
    className?: string;
+
+   onClick?: () => void;
+
+   expanded?: undefined|true|false;
+   // undefined if not expandable. This only has an effect if the Table itself
+   // had an expandableRows property set to True.
 }
 const TR: React.FC<TRProps> = p => {
    const n = classes(
@@ -78,9 +85,11 @@ const TR: React.FC<TRProps> = p => {
       p.partial && 'right-aligned',
       p.editable && 'edit',
       p.secondary && 'secondary',
+      p.expanded !== undefined
+         && (p.expanded ? 'expandable expanded' : 'expandable collapsed'),
    );
    return (
-      <div className={n} style={p.style} >
+      <div className={n} style={p.style} onClick={p.onClick} >
          {p.children}
       </div>
    );

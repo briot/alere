@@ -76,6 +76,7 @@
     * Expandable rows
     */
    &.expandableRows {
+      .tr.expandable::before,
       .trgroup.expandable::before {
          --size: 20px;
          font: normal normal normal 14px/1 FontAwesome;
@@ -90,6 +91,7 @@
          float: left;
          color: var(--expand-arrow-color);
       }
+      .tr.collapsed,
       .trgroup.collapsed {
          .tr:not(:first-child) .th,
          .tr:not(:first-child) .td {
@@ -103,6 +105,7 @@
             transition: transform 0.2s;
          }
       }
+      .tr.expanded,
       .trgroup.expanded {
          .tr:not(:first-child) .th,
          .tr:not(:first-child) .td {
@@ -115,6 +118,7 @@
          }
       }
       .tbody .trgroup,
+      .tbody .tr,    // if there is no trgroup
       .thead,
       .tfoot {
          --padding-left: 20px;
