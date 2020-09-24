@@ -819,30 +819,29 @@ const Ledger: React.FC<BaseLedgerProps> = p => {
    );
 
    return (
-      <div className="ledger" >
-         <Table.Table
-            borders={p.borders}
-            background={
-               p.trans_mode !== TransactionMode.ONE_LINE
-               || p.split_mode !== SplitMode.HIDE
-            }
-            expandableRows={p.split_mode !== SplitMode.HIDE}
-            header={header}
-            footer={footer}
-            itemCount={p.transactions?.length ?? 0}
-            itemSize={getTransactionHeight}
-            itemKey={getTransactionKey}
-            getRow={Row}
-            ref={list}
-         />
+      <Table.Table
+         borders={p.borders}
+         background={
+            p.trans_mode !== TransactionMode.ONE_LINE
+            || p.split_mode !== SplitMode.HIDE
+         }
+         className="ledger"
+         expandableRows={p.split_mode !== SplitMode.HIDE}
+         header={header}
+         footer={footer}
+         itemCount={p.transactions?.length ?? 0}
+         itemSize={getTransactionHeight}
+         itemKey={getTransactionKey}
+         getRow={Row}
+         ref={list}
+      />
+   );
 
-         {/*
+         /*
             p.accountIds && p.accountIds.length === 1 &&
             <EditingRow accountId={p.accountIds[0] as AccountId} />
             */
-         }
-      </div>
-   );
+
 }
 
 export default React.memo(Ledger);

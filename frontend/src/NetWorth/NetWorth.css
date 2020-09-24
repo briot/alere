@@ -6,7 +6,7 @@
    white-space: wrap;
 }
 .networth .tr span:first-child {
-   flex: 1 0 150px;
+   flex: 1 1 150px;
 }
 .networth .tr span:not(:first-child) {
    --col-width: 110px;
