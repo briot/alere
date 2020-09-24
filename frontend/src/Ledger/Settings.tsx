@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { BaseLedgerProps, SplitMode, TransactionMode } from 'Ledger';
+import { BaseLedgerProps, SplitMode, NotesMode } from 'Ledger';
 import { Checkbox, Select } from 'Form';
 import { DateRange, DateRangePicker } from 'Dates';
 import { SettingsProps } from 'Dashboard/Module';
@@ -14,7 +14,7 @@ const Settings: React.FC<BaseLedgerProps & SettingsProps<BaseLedgerProps>>
    const changeRange = (range: DateRange) => p.setData({ range });
    const changeAccount =
       (accountIds: AccountIdList) => p.setData({ accountIds });
-   const changeTrans = (trans_mode: TransactionMode) => p.setData({trans_mode});
+   const changeTrans = (notes_mode: NotesMode) => p.setData({notes_mode});
    const changeSplit = (split_mode: SplitMode) => p.setData({ split_mode });
    const changeBorders = (borders: boolean) => p.setData({ borders });
    const changeExpand = (defaultExpand: boolean) => p.setData({ defaultExpand });
@@ -43,11 +43,12 @@ const Settings: React.FC<BaseLedgerProps & SettingsProps<BaseLedgerProps>>
          <Select
              text="Memos"
              onChange={changeTrans}
-             value={p.trans_mode}
+             value={p.notes_mode}
              options={[
-                {text: "Hide memos",              value: TransactionMode.ONE_LINE},
-                {text: "Show memos if not empty", value: TransactionMode.AUTO},
-                {text: "Show memos always",       value: TransactionMode.TWO_LINES},
+                {text: "Hide memos",              value: NotesMode.ONE_LINE},
+                {text: "Show memos if not empty", value: NotesMode.AUTO},
+                {text: "Show memos always",       value: NotesMode.TWO_LINES},
+                {text: "Separate column",         value: NotesMode.COLUMN},
             ]}
          />
 

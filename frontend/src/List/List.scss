@@ -62,24 +62,6 @@
    }
 
    /**
-    * Rows can have a background color: the first row in a group is displayed
-    * differently from other rows.
-    */
-   &.background {
-      .trgroup .tr:first-child {
-         background: var(--table-row-first-background);
-      }
-      .trgroup .tr:not(:first-child) {
-         background: var(--table-row-details-background);
-      }
-   }
-
-   .tr.secondary .td {
-      color: var(--table-row-details-fg);
-      font-style: italic;
-   }
-
-   /**
     * Expandable rows
     */
    &.expandableRows {
@@ -146,24 +128,6 @@
    .tbody .trgroup:hover .tr,
    .tbody .tr:hover {
       background: var(--table-hover-background);
-   }
-
-   /**
-    * A row can have all its cells right-aligned (i.e. not in the usual
-    * columns)
-    */
-   .tr.right-aligned {
-      justify-content: flex-end;
-
-      .th, .td {
-         flex: 0 0 auto;
-         white-space: nowrap;
-      }
-      .th + .th, .td + .td {
-         // do not use flex's gap, because we also have an invisible item for
-         // the scrollbar's width.
-         margin-left: 20px;  // space between items
-      }
    }
 
    /**

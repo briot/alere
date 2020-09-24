@@ -14,7 +14,6 @@ const ROW_HEIGHT = 25;  // pixels
 interface THProps {
    sortable?: boolean;
    asc?: boolean; // if sorted (not undefined), whether ascending or descending
-   kind?: string;
    className?: string;
    title?: string;
    style?: React.CSSProperties;
@@ -23,7 +22,6 @@ const TH: React.FC<THProps> = p => {
    const n = classes(
       'th',
       p.className,
-      p.kind,
       p.sortable && 'sortable',
       p.asc === undefined ? '' : p.asc ? 'sort-up' : 'sort-down',
    );
@@ -43,7 +41,6 @@ const TH: React.FC<THProps> = p => {
  */
 
 interface TDProps {
-   kind?: string;
    className?: string;
    title?: string;
    style?: React.CSSProperties;
@@ -51,7 +48,6 @@ interface TDProps {
 const TD: React.FC<TDProps> = p => {
    const n = classes(
       'td',
-      p.kind,
       p.className,
    );
    return (
@@ -66,9 +62,8 @@ const TD: React.FC<TDProps> = p => {
  */
 
 interface TRProps {
-   partial?: boolean;  // if yes, cells will be aligned to the right
    editable?: boolean;
-   secondary?: boolean;  // in gray
+   nestingLevel?: number;
    style?: React.CSSProperties;
    className?: string;
 
@@ -82,9 +77,8 @@ const TR: React.FC<TRProps> = p => {
    const n = classes(
       'tr',
       p.className,
-      p.partial && 'right-aligned',
       p.editable && 'edit',
-      p.secondary && 'secondary',
+      `nesting-${p.nestingLevel ?? 0}`,
       p.expanded !== undefined
          && (p.expanded ? 'expandable expanded' : 'expandable collapsed'),
    );
@@ -109,7 +103,6 @@ interface TableProps {
    getRow: React.ComponentType<ListChildComponentProps>;
 
    borders?: boolean;
-   background?: boolean;
    expandableRows?: boolean;
    header?: React.ReactNode;
    footer?: React.ReactNode;
@@ -123,7 +116,6 @@ const Table: React.FC<TableProps & React.RefAttributes<VariableSizeList>>
       p.className,
       p.expandableRows && 'expandableRows',
       p.borders && 'borders',
-      p.background && 'background',
    );
    const isVariable = p.itemSize !== undefined && isNaN(p.itemSize as any);
    return (

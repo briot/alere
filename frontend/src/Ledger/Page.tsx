@@ -7,7 +7,7 @@ import useDashboard from 'services/useDashboard';
 import { SetHeader } from 'Header';
 import { Dashboard } from 'Dashboard';
 import { BaseProps } from 'Dashboard/Module';
-import { SplitMode, TransactionMode } from 'Ledger';
+import { SplitMode, NotesMode } from 'Ledger';
 import { Account } from 'services/useAccounts';
 import { SelectAccount } from 'Account';
 import { LedgerPanelProps } from 'Ledger/Module';
@@ -25,7 +25,7 @@ const defaultPanels: BaseProps[] = [
       type: 'ledger',
       accountIds: 'all',  // overridden later
       transactions: undefined,  // overridden later
-      trans_mode: TransactionMode.ONE_LINE,
+      notes_mode: NotesMode.ONE_LINE,
       split_mode: SplitMode.COLLAPSED,
       borders: false,
       defaultExpand: true,

@@ -17,9 +17,20 @@
    appearance: none;
 }
 
-/* split transaction details */
-.ledger .tr.secondary .numeric {
+.ledger .tr .numeric {
    font-size: 0.8rem;
+}
+.ledger .tr.nesting-0 .numeric {
+   font-size: inherit;
+}
+
+.ledger .tr {
+   color: var(--table-row-details-fg);
+   font-style: italic;
+}
+.ledger .tr.nesting-0 {
+   color: inherit;
+   font-style: inherit;
 }
 
 /**
@@ -40,9 +51,19 @@
 .ledger .transfer {
    min-width: 150px;
 }
+.ledger .summary {
+   flex: 1 1;
+   text-align: right;
+}
+.ledger .memo {
+   margin-left: 40px;
+}
+.ledger .tfoot .th {
+   text-align: right;
+}
 
 /*
-.ledger .notes {
+.ledger .memo {
    border-left: 1px solid var(--gray-400);
 }
 .ledger .trgroup .tr:first-child .date,

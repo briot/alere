@@ -6,11 +6,12 @@ import Table from 'List';
  * Description for each column in the array
  */
 export interface Column<T> {
-   head: () => React.ReactNode;
-   colspan?: number;
+   head?: string | (() => React.ReactNode);
    className?: string;
-   cell: (data: T) => React.ReactNode;
-   foot?: () => React.ReactNode;
+   sortable?: boolean;
+   title?: string;
+   cell?: (data: T) => React.ReactNode;
+   foot?: string | ((data: LogicalRow<T>[]) => React.ReactNode);
 }
 
 /**
@@ -19,9 +20,15 @@ export interface Column<T> {
  * can have children rows).
  */
 export interface LogicalRow<T> {
-   key: string|number;    //  unique id for this row
+   key: any;    //  unique id for this row (used a index in a Map)
    data: T;
-   getChildren?: () => LogicalRow<T>[];
+   getChildren?: (d: T) => LogicalRow<T>[];
+
+   columnsOverride?: Column<T>[];
+   // In case a row should display a different set of columns, those columns
+   // can be set here. They might not be properly aligned with the others,
+   // though !
+   // The header and footer are ignored for these columns.
 }
 
 /**
@@ -40,12 +47,13 @@ const computePhysicalRows = <T extends any> (
    r: LogicalRow<T>,
    expanded: Map<number|string, boolean>,
    level: number,
+   defaultExpand: boolean,
 ): PhysicalRow<T>[] => {
-   const children = r.getChildren?.();
-   const isExpanded = expanded.get(r.key);
+   const children = r.getChildren?.(r.data);
+   const isExpanded = expanded.get(r.key) ?? defaultExpand;
    const result = [{
       logicalRow: r,
-      numChildren: isExpanded ? children!.length : 0,
+      numChildren: isExpanded && children ? children.length : 0,
       expandable: children ? children.length !== 0 : false,
       level: level,
    }];
@@ -53,7 +61,8 @@ const computePhysicalRows = <T extends any> (
    if (isExpanded) {
       return result.concat(
          children
-            ? children.flatMap(c => computePhysicalRows(c, expanded, level + 1))
+            ? children.flatMap(c =>
+               computePhysicalRows(c, expanded, level + 1, defaultExpand))
             : []
       );
    } else {
@@ -69,21 +78,25 @@ interface PhysicalRows<T> {
 }
 
 
-const usePhysicalRows = <T extends any> (rows: LogicalRow<T>[]) => {
+const usePhysicalRows = <T extends any> (
+   rows: LogicalRow<T>[],
+   defaultExpand: boolean,
+) => {
    //  Compute the initial set of rows
    const [phys, setPhys] = React.useState<PhysicalRows<T>|undefined>();
 
    React.useEffect(
       () => {
          const expanded = new Map();
-         const r = rows.flatMap(c => computePhysicalRows(c, expanded, 0));
+         const r = rows.flatMap(c =>
+            computePhysicalRows(c, expanded, 0, defaultExpand));
          setPhys({
             rows: r,
             expanded,
             expandableRows: r.filter(r => r.expandable).length !== 0,
          });
       },
-      [rows]
+      [rows, defaultExpand]
    );
 
    //  Whether the row is expanded
@@ -98,10 +111,10 @@ const usePhysicalRows = <T extends any> (rows: LogicalRow<T>[]) => {
          }
          const e = phys.expanded.get(phys.rows[index].logicalRow.key);
          return phys.rows[index].expandable
-            ? (e ?? false)
+            ? (e ?? defaultExpand)
             : undefined;
       },
-      [phys]
+      [phys, defaultExpand]
    );
 
    //  Expand or collapse the physical row at the given index
@@ -111,7 +124,7 @@ const usePhysicalRows = <T extends any> (rows: LogicalRow<T>[]) => {
             const r = old?.rows[index];
             if (!r || !old) {
                return old;
-            } else if (old.expanded.get(r.logicalRow.key)) {
+            } else if (old.expanded.get(r.logicalRow.key) ?? defaultExpand) {
                const expanded = new Map(old.expanded);
                expanded.set(r.logicalRow.key, false);
                return {
@@ -130,7 +143,7 @@ const usePhysicalRows = <T extends any> (rows: LogicalRow<T>[]) => {
                   rows: [
                      ...old.rows.slice(0, index),
                      ...computePhysicalRows(
-                        r.logicalRow, expanded, r.level),
+                        r.logicalRow, expanded, r.level, defaultExpand),
                      ...old.rows.slice(index + 1),
                   ],
                   expanded,
@@ -138,7 +151,7 @@ const usePhysicalRows = <T extends any> (rows: LogicalRow<T>[]) => {
             }
          });
       },
-      []
+      [defaultExpand]
    );
 
    return {phys: phys?.rows ?? [],
@@ -160,6 +173,13 @@ interface ListWithColumnsProps<T> {
    columns: (undefined | Column<T>) [];
    rows: LogicalRow<T> [];
    className?: string;
+   indentNested?: boolean;
+   borders?: boolean;
+   defaultExpand?: boolean;
+
+   footColumnsOverride?: Column<T>[];
+   //  Columns to use for the footer, if the default columns are not
+   //  appropriate
 }
 
 const ListWithColumns = <T extends any> (p: ListWithColumnsProps<T>) => {
@@ -167,49 +187,62 @@ const ListWithColumns = <T extends any> (p: ListWithColumnsProps<T>) => {
       () => p.columns.filter(c => c !== undefined) as Column<T> [],
       [p.columns]
    );
-   const {phys, expandableRows, isExpandable, toggleRow} = usePhysicalRows(p.rows);
+   const {phys, expandableRows, isExpandable, toggleRow} =
+      usePhysicalRows(p.rows, p.defaultExpand ?? false);
    const getKey = (idx: number) => phys[idx]!.logicalRow.key;
 
    const getRow = React.useCallback(
       (q: ListChildComponentProps) => {
+         const logic = phys[q.index].logicalRow;
          const expandable = isExpandable(q.index);
          const onExpand = expandable === undefined
             ? undefined
             : () => toggleRow(q.index);
+         const theCols = logic.columnsOverride ?? cols;
+
+         // Use width from CSS
+         const style = {...q.style, width: undefined};
+
          return (
             <Table.TR
-               style={q.style}
+               style={style}
                expanded={isExpandable(q.index)}
                onClick={onExpand}
+               nestingLevel={phys[q.index].level}
             >
             {
-               cols.map((c, idx) =>
+               theCols.map((c, idx) =>
                   <Table.TD
                      key={idx}
                      className={c.className}
                      style={{
                         // Indent first column to show nesting
-                        paddingLeft: idx !== 0
+                        paddingLeft: !p.indentNested || idx !== 0
                            ? 0
                            : phys[q.index].level * 20
                      }}
                   >
-                     {c.cell(phys[q.index].logicalRow.data)}
+                     {c.cell?.(logic.data)}
                   </Table.TD>
                )
             }
             </Table.TR>
          );
       },
-      [phys, cols, isExpandable, toggleRow]
+      [phys, cols, isExpandable, toggleRow, p.indentNested]
    );
 
    const header = (
       <Table.TR>
       {
          cols.map((c, idx) =>
-            <Table.TH key={idx} className={c.className} >
-               {c.head()}
+            <Table.TH
+               key={idx}
+               className={c.className}
+               title={c.title}
+               sortable={c.sortable}
+            >
+               {typeof c.head  === "function" ? c.head() : c.head}
             </Table.TH>
          )
       }
@@ -219,9 +252,9 @@ const ListWithColumns = <T extends any> (p: ListWithColumnsProps<T>) => {
    const footer = (
       <Table.TR>
       {
-         cols.map((c, idx) =>
+         (p.footColumnsOverride ?? cols).map((c, idx) =>
             <Table.TH key={idx} className={c.className} >
-               {c.foot?.()}
+               {typeof c.foot === "function" ? c.foot(p.rows) : c.foot}
             </Table.TH>
          )
       }
@@ -237,6 +270,7 @@ const ListWithColumns = <T extends any> (p: ListWithColumnsProps<T>) => {
          header={header}
          footer={footer}
          expandableRows={expandableRows}
+         borders={p.borders}
       />
    );
 }

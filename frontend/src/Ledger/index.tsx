@@ -1,18 +1,20 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { VariableSizeList, ListChildComponentProps } from 'react-window';
 import { DateRange, dateToString } from 'Dates';
-import Table from 'List';
 import AccountName from 'Account';
+import Table from 'List';
 import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
          incomeExpenseSplits, sharesForAccounts, priceForAccounts,
          splitsNotForAccounts, Split, Transaction } from 'Transaction';
 import Numeric from 'Numeric';
+import ListWithColumns, { Column, LogicalRow } from 'List/ListWithColumns';
 import { Account, AccountId, AccountIdList } from 'services/useAccounts';
 import './Ledger.css';
 
 const SPLIT = '--split--';
 const SPLIT_ID: AccountId = "";
+type MAIN_TYPE = "main";
+const MAIN: MAIN_TYPE = 'main';
 
 export enum SplitMode {
    HIDE,       // never show the splits
@@ -23,16 +25,17 @@ export enum SplitMode {
    MULTILINE,  // one line per split in a transaction
 }
 
-export enum TransactionMode {
+export enum NotesMode {
    ONE_LINE,   // only use one line (notes are never displayed)
    AUTO,       // transactions use two lines if they have notes
    TWO_LINES,  // transactions always use two lines (to show notes)
+   COLUMN,     // in a separate column
 }
 
 export interface BaseLedgerProps {
    accountIds: AccountIdList;
    range?: DateRange|undefined   // undefined, to see forever
-   trans_mode: TransactionMode;
+   notes_mode: NotesMode;
    split_mode: SplitMode;
    borders: boolean;
    defaultExpand: boolean;
@@ -44,180 +47,272 @@ export interface BaseLedgerProps {
    transactions: Transaction[] | undefined, // use it instead of fetching
 }
 
-const splitRowsCount = (
-   t: Transaction,
-   split_mode: SplitMode,
-   expanded: boolean | undefined,
-   accounts: Account[] | undefined,
-): number => {
-   if (!expanded) {
-      return 0;
-   }
-   switch (split_mode) {
-      case SplitMode.COLLAPSED:
-         return (t.splits.length > 2) ? t.splits.length : 0;
-      case SplitMode.MULTILINE:
-         return t.splits.length;
-      case SplitMode.OTHERS:
-         const d = accounts === undefined
-            ? t.splits.length
-            : splitsNotForAccounts(t, accounts).length;
-         return d > 1 ? d : 0;
-      case SplitMode.SUMMARY:
-         return (t.splits.length > 2) ? 1 : 0;
-      default:
-         return 0;
-   }
-}
-
-const noteRowsCount = (
-   t: Transaction,
-   trans_mode: TransactionMode,
-   expanded: boolean|undefined,
-): number => {
-   if (!expanded) {
-      return 0;
-   }
-
-   switch (trans_mode) {
-      case TransactionMode.ONE_LINE:
-         return 0;
-      case TransactionMode.AUTO:
-         return t?.memo ? 1 : 0;
-      default:
-         return 1;
-   }
-}
-
-/**
- * The column(s) to use to show transaction amounts
- */
-
-const amountColumnsHeaders = (
-   valueColumn: boolean,
-) => {
-   return valueColumn
-      ? (
-         <Table.TH kind='amount' sortable={true} asc={false}>Amount</Table.TH>
-      ) : (
-         <>
-           <Table.TH kind='amount' sortable={true} asc={false}>Withdrawal</Table.TH>
-           <Table.TH kind='amount' sortable={true} asc={true}>Deposit</Table.TH>
-         </>
-      );
-}
-
-const amountColumns = (
-   s: Split,
-   valueColumn: boolean,
-) => {
-   return valueColumn
-      ? (
-         <Table.TD kind='amount'>
-            <Numeric amount={s.amount} />
-         </Table.TD>
-      ) : (
-         <>
-            <Table.TD kind='amount'>
-               {
-                  s.amount < 0 && (
-                     <Numeric amount={Math.abs(s.amount)} />
-                  )
-               }
-            </Table.TD>
-            <Table.TD kind='amount'>
-               {
-                  s.amount >= 0 && (
-                     <Numeric amount={s.amount} />
-                  )
-               }
-            </Table.TD>
-         </>
-      );
-}
-
-const amountColumnsNotes = (
-   valueColumn: boolean,
-) => {
-   return valueColumn
-      ? <Table.TD kind="amount" />
-      : (
-         <>
-            <Table.TD kind="amount" />
-            <Table.TD kind="amount" />
-         </>
-      );
-}
-
-/**
- * The column(s) to use for stock accounts
- */
-
-const stockColumnsHeader = (
-   account: Account | undefined, // set only when showing for a single account
-) => {
-   return account?.isStock()
-      ? (
-         <>
-            <Table.TH kind="shares" sortable={true}>Shares</Table.TH>
-            <Table.TH
-               kind="amount"
-               title="Price of one share at the time of the transaction"
-               sortable={true}
-            >
-               Price
-            </Table.TH>
-            <Table.TH kind="shares" title="Balance of shares">SBalance</Table.TH>
-         </>
-      ) : null;
-}
-
-const stockColumns = (
-   account: Account | undefined, // set only when showing for a single account
-   t: Transaction|undefined,
-   s: Split,
-   force?: boolean,
-) => {
-   if (! account?.isStock()) {
-      return null;
-   }
-
-   return (
-      <>
-         <Table.TD kind="shares">
-             <Numeric
-                amount={s.shares}
-                precision={account?.sharesPrecision}
-             />
-         </Table.TD>
-         <Table.TD kind="amount">
-             <Numeric
-                amount={s.price}
-                precision={account?.pricePrecision}
-             />
-         </Table.TD>
-         <Table.TD kind="shares">
-            <Numeric
-                amount={t?.balanceShares}
-                precision={account?.sharesPrecision}
-            />
-         </Table.TD>
-      </>
-   );
-}
-
-/**
- * The first two for a transaction.
- * It will show either the single split associated with the transaction, or a
- * summary of all the splits.
- */
-
-interface FirstRowProps extends BaseLedgerProps {
+interface TableRowData {
+   settings: BaseLedgerProps;
    transaction: Transaction;
-   expanded?: boolean;
+   firstRowSplit: Split;         //  simulated split for the first row
+   account: undefined|Account;   // destination account
+   split: MAIN_TYPE | Split;  // what kind of row we are showing
 }
-const FirstRow: React.FC<FirstRowProps> = p => {
-   const t = p.transaction;
+
+const columnDate: Column<TableRowData> = {
+   className: "date",
+   head: "Date",
+   sortable: true,
+   cell: (d: TableRowData) => d.split === MAIN ? d.transaction.date : '',
+}
+
+const columnNum: Column<TableRowData> = {
+   className: "numeric",
+   head: "Check #",
+   sortable: true,
+   cell: (d: TableRowData) =>
+      d.split === MAIN ? d.firstRowSplit.checknum : d.split.checknum,
+}
+
+const columnSummary: Column<TableRowData> = {
+   className: "summary",
+   cell: (d: TableRowData) => {
+      const amount =
+         d.account === undefined  //  not for one specific account
+         ? amountIncomeExpense(d.transaction)
+         : amountForAccounts(d.transaction, d.settings.accounts!);
+      return (
+         <>
+            <Numeric amount={amount} />
+            &nbsp;=&nbsp;
+            {
+               d.transaction.splits.map((s, index) =>
+                  (d.settings.accounts === undefined
+                     || !s.account
+                     || !d.settings.accounts.includes(s.account)
+                  ) ? <span key={index}>
+                     <span>{ s.amount >= 0 ? ' - ' : ' + ' }</span>
+                     <Numeric amount={Math.abs(s.amount)} />
+                     &nbsp;(
+                        <AccountName
+                            id={s.accountId}
+                            account={s.account}
+                        />
+                     )
+                  </span> : null
+               )
+            }
+         </>
+      );
+   }
+}
+
+const columnMemo: Column<TableRowData> = {
+   head: "Memo",
+   className: "memo",
+   cell: (d: TableRowData) =>
+      d.transaction.memo ? d.transaction.memo : 'No memo'
+}
+
+const columnPayee: Column<TableRowData> = {
+   className: "payee",
+   head: "Payee",
+   sortable: true,
+   cell: (d: TableRowData) =>
+      d.split === MAIN
+      ? ( <Link to={`/payee/${d.firstRowSplit.payee}`}>
+             {d.firstRowSplit.payee}
+          </Link>
+      ) : `${d.split.memo || ''}${d.split.payee || ''}`
+}
+
+const columnFromTo: Column<TableRowData> = {
+   className: "transfer",
+   sortable: true,
+   head: "From/To",
+   cell: (d: TableRowData) =>
+      d.split === MAIN
+      ? (d.firstRowSplit.accountId === SPLIT_ID
+         ? SPLIT
+         : <AccountName
+             id={d.firstRowSplit.accountId}
+             account={d.firstRowSplit.account}
+             noLinkIf={d.settings.accounts}
+           />
+      ) : (
+        <AccountName
+           id={d.split.accountId}
+           account={d.split.account}
+           noLinkIf={d.settings.accounts}
+        />
+      )
+}
+
+const columnReconcile: Column<TableRowData> = {
+   className: "reconcile",
+   head: "R",
+   cell: (d: TableRowData) =>
+      d.split === MAIN ? d.firstRowSplit.reconcile : d.split.reconcile,
+}
+
+const columnAmount: Column<TableRowData> = {
+   className: "amount",
+   sortable: true,
+   head: "Amount",
+   cell: (d: TableRowData) =>
+      d.split === MAIN ? d.firstRowSplit.amount : d.split.amount,
+}
+
+const columnWidthdraw: Column<TableRowData> = {
+   className: "amount",
+   sortable: true,
+   head: "Payment",
+   cell: (d: TableRowData) =>
+      d.split === MAIN
+      ? (d.firstRowSplit.amount < 0
+           && <Numeric amount={Math.abs(d.firstRowSplit.amount)} />)
+      : (d.split.amount < 0 && <Numeric amount={Math.abs(d.split.amount)} />)
+}
+
+const columnDeposit: Column<TableRowData> = {
+   className: "amount",
+   sortable: true,
+   head: "Deposit",
+   cell: (d: TableRowData) =>
+      d.split === MAIN
+      ? (d.firstRowSplit.amount >= 0
+           && <Numeric amount={d.firstRowSplit.amount} />)
+      : (d.split.amount >= 0 && <Numeric amount={d.split.amount} />)
+}
+
+const columnShares: Column<TableRowData> = {
+   className: "shares",
+   sortable: true,
+   head: "Shares",
+   cell: (d: TableRowData) =>
+      d.split === MAIN &&
+      <Numeric
+         amount={d.firstRowSplit.shares}
+         precision={d.account?.sharesPrecision}
+      />
+}
+
+const columnPrice: Column<TableRowData> = {
+   className: "amount",
+   sortable: true,
+   title: "Price of one share at the time of the transaction",
+   head: "Price",
+   cell: (d: TableRowData) =>
+      d.split === MAIN &&
+      <Numeric
+         amount={d.firstRowSplit.price}
+         precision={d.account?.pricePrecision}
+      />
+}
+
+const columnSharesBalance: Column<TableRowData> = {
+   className: "shares",
+   title: "Balance of shares",
+   head: "SBalance",
+   cell: (d: TableRowData) =>
+      d.split === MAIN &&
+      <Numeric
+          amount={d.transaction?.balanceShares}
+          precision={d.account?.sharesPrecision}
+      />
+}
+
+const columnBalance: Column<TableRowData> = {
+   className: "amount",
+   head: "Balance",
+   cell: (d: TableRowData) =>
+      d.split === MAIN &&
+      <Numeric amount={d.transaction.balance} />
+}
+
+const columnTotal = (v: Totals): Column<TableRowData> => ({
+   foot: () => (
+      <>
+         {
+            v.selected &&
+            <Table.TD>selected: <Numeric amount={v.selected} /></Table.TD>
+         }
+         {
+            v.reconciled &&
+            <Table.TD>reconciled: <Numeric amount={v.reconciled} /></Table.TD>
+         }
+         {
+            v.cleared &&
+            <Table.TD>cleared: <Numeric amount={v.cleared} /></Table.TD>
+         }
+         {
+            v.present &&
+            <Table.TD>present: <Numeric amount={v.present} /></Table.TD>
+         }
+         {
+            v.future && v.future !== v.present &&
+            <Table.TD>future: <Numeric amount={v.future} /></Table.TD>
+         }
+      </>
+   )
+})
+
+/**
+ * Compute totals
+ */
+interface Totals {
+   future: number|undefined;
+   present: number|undefined;
+   reconciled: number;
+   cleared: number;
+   selected: number;
+}
+const nullTotal: Totals = {
+   future: undefined, present: undefined, reconciled: 0,
+   cleared: 0, selected: 0,
+};
+
+const useTotal = (
+   transactions: Transaction[] | undefined,
+   accounts: Account[] | undefined,
+) => {
+   const [total, setTotal] = React.useState(nullTotal);
+
+   React.useEffect(
+      () => setTotal(() => {
+         const v = nullTotal;
+         v.future = transactions?.[transactions.length - 1]?.balance;
+
+         const formatted = dateToString("today");
+         if (transactions) {
+            const addSplit = (s: Split) => {
+               switch (s.reconcile) {
+                  case 'R': v.reconciled += s.amount; break;
+                  case 'C': v.cleared += s.amount; break;
+                  default: break;
+               }
+            }
+
+            for (let j = transactions.length - 1; j >= 0; j--) {
+               const t = transactions[j];
+               if (v.present === undefined && t.date <= formatted) {
+                  v.present = t.balance;
+               }
+               if (accounts === undefined) {
+                  t.splits.forEach(addSplit);
+               } else {
+                  splitsForAccounts(t, accounts).forEach(addSplit);
+               }
+            }
+         }
+         return v;
+      }),
+      [transactions, accounts]
+   );
+   return total;
+}
+
+/**
+ * Compute a dummy Split to be shown on the first line of a transaction
+ */
+
+const computeFirstSplit = (p: BaseLedgerProps, t: Transaction) => {
    const sa = p.accounts ? splitsForAccounts(t, p.accounts) : undefined;
    let s: Split = {
       accountId: SPLIT_ID,
@@ -282,566 +377,250 @@ const FirstRow: React.FC<FirstRowProps> = p => {
          break;
    }
 
-   return (
-      <Table.TR>
-         <Table.TD kind='date'>{t.date}</Table.TD>
-         <Table.TD kind='num' className='numeric'>{s.checknum}</Table.TD>
-         <Table.TD kind='payee'>
-            <Link to={`/payee/${s.payee}`}>{s.payee}</Link>
-         </Table.TD>
-         <Table.TD kind='transfer'>
-            {
-               s.accountId === SPLIT_ID
-               ? SPLIT
-               : <AccountName
-                    id={s.accountId}
-                    account={s.account}
-                    noLinkIf={p.accounts}
-                 />
-            }
-         </Table.TD>
-         {
-            !p.hideReconcile &&
-            <Table.TD kind='reconcile'>{s.reconcile}</Table.TD>
-         }
-         {
-            amountColumns(s, p.valueColumn)
-         }
-         {
-            stockColumns(
-               p.accounts && p.accounts.length === 1 ? p.accounts[0] : undefined,
-               t, s, true)
-         }
-         {
-            !p.hideBalance &&
-            <Table.TD kind='amount'>
-               <Numeric amount={t.balance} />
-            </Table.TD>
-         }
-      </Table.TR>
-   );
+   return s;
 }
 
 
 /**
- * The row that shows the details for a transaction
+ * Compute the children rows
  */
 
-interface NotesRowProps extends BaseLedgerProps {
-   transaction: Transaction;
-}
-const NotesRow: React.FC<NotesRowProps> = p => {
-   return (
-      <Table.TR secondary={true} >
-         <Table.TD kind="date" />
-         <Table.TD kind="num"></Table.TD>
-         <Table.TD kind="notes">{p.transaction.memo}</Table.TD>
-         <Table.TD kind="transfer" />
-         {
-            !p.hideReconcile &&
-            <Table.TD kind="reconcile" />
-         }
-         {
-            amountColumnsNotes(p.valueColumn)
-         }
-         {
-            !p.hideBalance &&
-            <Table.TD kind="amount" />
-         }
-      </Table.TR>
-   );
-}
+const getChildren = (d: TableRowData) => {
+   let result: LogicalRow<TableRowData>[] = [];
+   const t = d.transaction;
 
-/**
- * Split details
- */
+   // Do we need a notes row ?
 
-interface SplitRowProps extends BaseLedgerProps {
-   split: Split;
-}
-const SplitRow: React.FC<SplitRowProps> = p => {
-   const s = p.split;
-   return (
-      <Table.TR secondary={true} >
-         <Table.TD kind='date' />
-         <Table.TD kind='num' className='numeric'>{s.checknum}</Table.TD>
-         <Table.TD kind='notes'>{`${s.memo || ''}${s.payee || ''}`}</Table.TD>
-         <Table.TD kind='transfer'>
-            <AccountName
-               id={s.accountId}
-               account={s.account}
-               noLinkIf={p.accounts}
-            />
-         </Table.TD>
-         {
-            !p.hideReconcile &&
-            <Table.TD kind='reconcile'>{s.reconcile}</Table.TD>
-         }
-         {
-            amountColumns(s, p.valueColumn)
-         }
-         {
-            stockColumns(
-               p.accounts && p.accounts.length === 1 ? p.accounts[0] : undefined,
-               undefined,
-               s)
-         }
-         {
-            !p.hideBalance &&
-            <Table.TD kind='amount' />
-         }
-      </Table.TR>
-   );
-}
-
-/**
- * One or more rows to describe a transaction
- */
-
-interface TransactionRowProps extends BaseLedgerProps {
-   transaction: Transaction;
-   style?: React.CSSProperties;
-   expanded: undefined|boolean;
-   setExpanded: (tr: Transaction, expanded: boolean) => void;
-}
-
-const TransactionRow: React.FC<TransactionRowProps> = p => {
-   const t = p.transaction;
-   const { setExpanded } = p;
-
-   const onExpand = React.useCallback(
-      () => setExpanded(t, !p.expanded),
-      [setExpanded, p.expanded, t]
-   );
-
-   let lines: (JSX.Element|null)[] | JSX.Element = [];
-
-   const expClass = 'trgroup ' + (
-       p.expanded === undefined ? ''
-       : p.expanded ? 'expandable expanded'
-       : 'expandable collapsed'
-   );
-
-   if (splitRowsCount(t, p.split_mode, p.expanded, p.accounts) > 0) {
-      let filterSplits: undefined|Split[];
-
-      switch (p.split_mode) {
-         case SplitMode.SUMMARY:
-            const amount =
-                (p.accounts === undefined || p.accounts.length > 1)
-                ? amountIncomeExpense(t)
-                : amountForAccounts(t, p.accounts);
-            if (t.splits.length > 2) {
-               lines = (
-                  <Table.TR partial={true}>
-                     <Table.TD>
-                        <Numeric amount={amount} />
-                        &nbsp;=&nbsp;
-                        {
-                           t.splits.map((s, index) =>
-                              (p.accounts === undefined
-                                 || !s.account
-                                 || !p.accounts.includes(s.account)
-                              ) ? <span key={index}>
-                                 <span>{ s.amount >= 0 ? ' - ' : ' + ' }</span>
-                                 <Numeric amount={Math.abs(s.amount)} />
-                                 (
-                                    <AccountName
-                                        id={s.accountId}
-                                        account={s.account}
-                                    />
-                                 )
-                              </span> : null
-                           )
-                        }
-                     </Table.TD>
-                  </Table.TR>
-               );
-            }
-            break;
-         case SplitMode.OTHERS:
-            filterSplits = p.accounts === undefined
-                ? t.splits
-                : splitsNotForAccounts(t, p.accounts);
-            break;
-         default:
-            filterSplits = t.splits;
-      }
-
-      if (filterSplits) {
-         lines = filterSplits.map((s, sid) => (
-            <SplitRow
-               key={`${t.id} ${sid}`}
-               {...p}
-               split={s}
-            />
-         ));
-      }
+   let hasNotes: boolean;
+   switch (d.settings.notes_mode) {
+      case NotesMode.ONE_LINE:
+      case NotesMode.COLUMN:
+         hasNotes = false;
+         break;
+      case NotesMode.AUTO:
+         hasNotes = t.memo ? true : false;
+         break;
+      default:
+         hasNotes = true;
+   }
+   if (hasNotes) {
+      result.push({
+         key: `${t.id}-notes`,
+         columnsOverride: [columnMemo],
+         data: d,
+      });
    }
 
-   return (
-      <div
-         className={expClass}
-         onClick={p.expanded === undefined ? undefined : onExpand}
-         style={p.style}
-      >
-         <FirstRow
-            {...p}
-            transaction={t}
-            expanded={p.expanded}
-          />
-         {
-            noteRowsCount(t, p.trans_mode, p.expanded) > 0 &&
-            <NotesRow {...p} transaction={t} />
+   // What split rows do we need ?
+
+   let filterSplits: undefined|Split[];
+
+   switch (d.settings.split_mode) {
+      case SplitMode.SUMMARY:
+         if (t.splits.length > 2) {
+            result.push({
+               key: `${t.id}-sum`,
+               columnsOverride: [ columnSummary, ],
+               data: d,
+            });
          }
-         {lines}
-      </div>
-   );
+         break;
+
+      case SplitMode.COLLAPSED:
+         if (t.splits.length > 2) {
+            filterSplits = t.splits;
+         }
+         break;
+
+      case SplitMode.OTHERS:
+         filterSplits = d.settings.accounts === undefined
+             ? t.splits
+             : splitsNotForAccounts(t, d.settings.accounts);
+         break;
+
+      case SplitMode.MULTILINE:
+         filterSplits = t.splits;
+         break;
+
+      default:  // SplitMode.HIDE
+         break;
+   }
+
+   if (filterSplits) {
+      result = result.concat(filterSplits.map((s, sid) => ({
+         key: `${t.id}--${sid}`,
+         data: {
+            ...d,
+            split: s,
+         }
+      })));
+   }
+
+   return result;
 }
 
 /**
  * A row to edit a new transaction
  */
 
-interface EditingRowProps {
-   accountId: AccountId;
-   account: Account;
-}
-
-export const EditingRow: React.FC<EditingRowProps> = p => {
-   return (
-      <div className="trgroup">
-         <Table.TR editable={true} >
-            <Table.TD kind='date'>
-               <input type="date" placeholder="2020-07-01" tabIndex={1} />
-            </Table.TD>
-            <Table.TD kind='num'>
-               <input placeholder="num" />
-            </Table.TD>
-            <Table.TD kind='payee'>
-               <input placeholder="payee" tabIndex={2} />
-            </Table.TD>
-            <Table.TD kind='transfer' />
-            <Table.TD kind='reconcile' />
-            <Table.TD kind='amount' />
-            <Table.TD kind='amount' />
-            <Table.TD kind='amount'>
-               <button className="fa fa-check" tabIndex={13} />
-            </Table.TD>
-         </Table.TR>
-         <Table.TR editable={true} >
-            <Table.TD kind='date' />
-            <Table.TD kind='num'>
-               <input placeholder="action" tabIndex={3} />
-            </Table.TD>
-            <Table.TD kind='payee'>
-               <input placeholder="notes" tabIndex={4} />
-            </Table.TD>
-            <Table.TD kind='transfer'>
-               <AccountName
-                  id={p.accountId}
-                  account={p.account}
-                  noLinkIf={[p.account]}
-               />
-            </Table.TD>
-            <Table.TD kind='reconcile'>
-               <select>
-                  <option>n</option>
-                  <option>C</option>
-                  <option>R</option>
-               </select>
-            </Table.TD>
-            <Table.TD kind='amount'>
-               <input
-                  type="numeric"
-                  placeholder="0.00"
-                  tabIndex={6}
-                  style={{textAlign: 'right'}}
-               />
-            </Table.TD>
-            <Table.TD kind='amount'>
-               <input
-                  type="numeric"
-                  placeholder="0.00"
-                  tabIndex={7}
-                  style={{textAlign: 'right'}}
-               />
-            </Table.TD>
-            <Table.TD kind='amount'>
-               <button className="fa fa-ban" />
-            </Table.TD>
-         </Table.TR>
-         <Table.TR editable={true} >
-            <Table.TD kind='date' />
-            <Table.TD kind='num'>
-               <input placeholder="action" tabIndex={8} />
-            </Table.TD>
-            <Table.TD kind='payee'>
-               <input placeholder="notes" tabIndex={9} />
-            </Table.TD>
-            <Table.TD kind='transfer'>
-               <input placeholder="transfer to/from" tabIndex={10} />
-            </Table.TD>
-            <Table.TD kind='reconcile' />
-            <Table.TD kind='amount'>
-               <input
-                  type="numeric"
-                  placeholder="0.00"
-                  tabIndex={11}
-                  style={{textAlign: 'right'}}
-               />
-            </Table.TD>
-            <Table.TD kind='amount'>
-               <input
-                  type="numeric"
-                  placeholder="0.00"
-                  tabIndex={12}
-                  style={{textAlign: 'right'}}
-               />
-            </Table.TD>
-            <Table.TD kind='amount' />
-            </Table.TR>
-      </div>
-   );
-}
-
-/**
- * The logical rows of the table (one transaction is one logical row, but
- * occupies multiple rows on the screen).
- */
-
-interface RowState {
-   expanded: undefined|boolean;
-}
-
-type RowStateProps = { [transactionId: string]: RowState|undefined };
-
-const setupLogicalRows = (
-   transactions: Transaction[] | undefined,
-   trans_mode: TransactionMode,
-   split_mode: SplitMode,
-   defaultExpand: boolean,
-   accounts: Account[]|undefined,
-) => {
-   const r: RowStateProps = {};
-
-   transactions?.forEach(t => {
-      const rows =
-         splitRowsCount(t, split_mode, true, accounts)
-         + noteRowsCount(t, trans_mode, true);
-
-      r[t.id] = {
-         expanded: rows > 0 ? defaultExpand : undefined,
-      };
-   });
-
-   return r;
-}
+//const EditingRow: React.FC<EditingRowProps> = p => {
+//   return (
+//      <div className="trgroup">
+//         <Table.TR editable={true} >
+//            <Table.TD kind='date'>
+//               <input type="date" placeholder="2020-07-01" tabIndex={1} />
+//            </Table.TD>
+//            <Table.TD kind='num'>
+//               <input placeholder="num" />
+//            </Table.TD>
+//            <Table.TD kind='payee'>
+//               <input placeholder="payee" tabIndex={2} />
+//            </Table.TD>
+//            <Table.TD kind='transfer' />
+//            <Table.TD kind='reconcile' />
+//            <Table.TD kind='amount' />
+//            <Table.TD kind='amount' />
+//            <Table.TD kind='amount'>
+//               <button className="fa fa-check" tabIndex={13} />
+//            </Table.TD>
+//         </Table.TR>
+//         <Table.TR editable={true} >
+//            <Table.TD kind='date' />
+//            <Table.TD kind='num'>
+//               <input placeholder="action" tabIndex={3} />
+//            </Table.TD>
+//            <Table.TD kind='payee'>
+//               <input placeholder="notes" tabIndex={4} />
+//            </Table.TD>
+//            <Table.TD kind='transfer'>
+//               <AccountName
+//                  id={p.accountId}
+//                  account={p.account}
+//                  noLinkIf={[p.account]}
+//               />
+//            </Table.TD>
+//            <Table.TD kind='reconcile'>
+//               <select>
+//                  <option>n</option>
+//                  <option>C</option>
+//                  <option>R</option>
+//               </select>
+//            </Table.TD>
+//            <Table.TD kind='amount'>
+//               <input
+//                  type="numeric"
+//                  placeholder="0.00"
+//                  tabIndex={6}
+//                  style={{textAlign: 'right'}}
+//               />
+//            </Table.TD>
+//            <Table.TD kind='amount'>
+//               <input
+//                  type="numeric"
+//                  placeholder="0.00"
+//                  tabIndex={7}
+//                  style={{textAlign: 'right'}}
+//               />
+//            </Table.TD>
+//            <Table.TD kind='amount'>
+//               <button className="fa fa-ban" />
+//            </Table.TD>
+//         </Table.TR>
+//         <Table.TR editable={true} >
+//            <Table.TD kind='date' />
+//            <Table.TD kind='num'>
+//               <input placeholder="action" tabIndex={8} />
+//            </Table.TD>
+//            <Table.TD kind='payee'>
+//               <input placeholder="notes" tabIndex={9} />
+//            </Table.TD>
+//            <Table.TD kind='transfer'>
+//               <input placeholder="transfer to/from" tabIndex={10} />
+//            </Table.TD>
+//            <Table.TD kind='reconcile' />
+//            <Table.TD kind='amount'>
+//               <input
+//                  type="numeric"
+//                  placeholder="0.00"
+//                  tabIndex={11}
+//                  style={{textAlign: 'right'}}
+//               />
+//            </Table.TD>
+//            <Table.TD kind='amount'>
+//               <input
+//                  type="numeric"
+//                  placeholder="0.00"
+//                  tabIndex={12}
+//                  style={{textAlign: 'right'}}
+//               />
+//            </Table.TD>
+//            <Table.TD kind='amount' />
+//            </Table.TR>
+//      </div>
+//   );
+//}
 
 /**
  * The full ledger, for a panel
  */
 
 const Ledger: React.FC<BaseLedgerProps> = p => {
-   const [ rowState, setRowState ] = React.useState<RowStateProps>({});
-   const list = React.useRef<VariableSizeList>(null);
-   const resetAfterIndex = React.useCallback(
-      (index: number) => {
-         if (list.current) {
-            list.current!.resetAfterIndex(index);
-         }
-      },
-      []
-   );
+   const total = useTotal(p.transactions, p.accounts);
+   const singleAccount =
+      (p.accounts !== undefined && p.accounts.length === 1
+       ? p.accounts[0]
+       : undefined);
+   const isStock = singleAccount?.isStock();
 
-   React.useLayoutEffect(
-      () => {
-         setRowState(setupLogicalRows(
-            p.transactions,
-            p.trans_mode, p.split_mode,
-            p.defaultExpand,
-            p.accounts));
-         resetAfterIndex(0);
-      },
-      [p.transactions, p.accounts, p.split_mode, p.trans_mode, p.defaultExpand,
-       resetAfterIndex]
-   );
+   const columns = [
+      columnDate,
+      columnNum,
+      columnPayee,
+      p.notes_mode === NotesMode.COLUMN ? columnMemo : undefined,
+      columnFromTo,
+      p.hideReconcile ? undefined           : columnReconcile,
+      p.valueColumn   ? columnAmount        : undefined,
+      p.valueColumn   ? undefined           : columnWidthdraw,
+      p.valueColumn   ? undefined           : columnDeposit,
+      isStock         ? columnShares        : undefined,
+      isStock         ? columnPrice         : undefined,
+      isStock         ? columnSharesBalance : undefined,
+      p.hideBalance   ? undefined           : columnBalance,
+   ];
 
-   const setTransactionExpanded = React.useCallback(
-      (tr: Transaction, expanded: boolean) => {
-         resetAfterIndex(0);
-         setRowState(old => ({
-               ...old,
-               [tr.id]: {expanded},
-         }));
-      },
-      [resetAfterIndex]
-   );
+   const footColumns = p.accountIds.length !== 1
+      ? []
+      : [
+         columnTotal(total),
+      ];
 
-   const [future, present, reconciled, cleared, selected] = React.useMemo(
-      () => {
-         const future = p.transactions?.[p.transactions.length - 1]?.balance;
-         const formatted = dateToString("today");
-         let present: undefined|number;
-         let reconciled: number = 0;
-         let cleared: number = 0;
-         let selected: undefined|number;
-
-         if (p.transactions) {
-            const addSplit = (s: Split) => {
-               switch (s.reconcile) {
-                  case 'R': reconciled += s.amount; break;
-                  case 'C': cleared += s.amount; break;
-                  default: break;
-               }
+   const rows: LogicalRow<TableRowData>[] = React.useMemo(
+      () => p.transactions?.flatMap(t => [
+            {
+               data: {
+                  settings: p,
+                  transaction: t,
+                  firstRowSplit: computeFirstSplit(p, t),
+                  split: MAIN,
+                  account: singleAccount,
+               },
+               key: t.id,
+               getChildren,
             }
-
-            for (let j = p.transactions.length - 1; j >= 0; j--) {
-               const t = p.transactions[j];
-               if (present === undefined && t.date <= formatted) {
-                  present = t.balance;
-               }
-               if (p.accounts === undefined) {
-                  t.splits.forEach(addSplit);
-               } else {
-                  splitsForAccounts(t, p.accounts).forEach(addSplit);
-               }
-            }
-         }
-
-         return [future, present, reconciled, cleared, selected];
-      },
-      [p.transactions, p.accounts]
-   );
-
-   const Row =
-      (r: ListChildComponentProps) => {
-         const t = p.transactions![r.index];
-         delete r.style['width'];   // set in the CSS
-         return (
-            <TransactionRow
-               {...p}
-               style={r.style}
-               transaction={t}
-               expanded={rowState[t.id]?.expanded}
-               setExpanded={setTransactionExpanded}
-            />
-         );
-      }
-
-   const getTransactionHeight = React.useCallback(
-      (index: number) => {
-         const t = p.transactions![index];
-         const d = rowState[t?.id];
-         return Table.ROW_HEIGHT * (
-            1
-            + noteRowsCount(t, p.trans_mode, d?.expanded)
-            + splitRowsCount(t, p.split_mode, d?.expanded, p.accounts));
-      },
-      [rowState, p.transactions, p.trans_mode, p.accounts, p.split_mode]
-   );
-
-   const getTransactionKey = (index: number) => {
-      return p.transactions![index].id;
-   }
-
-   const header = (
-      <Table.TR>
-         <Table.TH kind='date' sortable={true}>Date</Table.TH>
-         <Table.TH kind='num' className="numeric" sortable={true}>Num</Table.TH>
-         <Table.TH kind='payee' sortable={true}>Payee/Memos</Table.TH>
-         <Table.TH kind='transfer' sortable={true}>From/To</Table.TH>
-         {
-            !p.hideReconcile &&
-            <Table.TH kind='reconcile'>R</Table.TH>
-         }
-         {
-            amountColumnsHeaders(p.valueColumn)
-         }
-         {
-            stockColumnsHeader(
-               p.accounts !== undefined && p.accounts.length === 1
-               ? p.accounts[0]
-               : undefined
-            )
-         }
-         {
-            !p.hideBalance &&
-            <Table.TH kind='amount' >Balance</Table.TH>
-         }
-      </Table.TR>
-   );
-
-   const footer = (
-      p.accountIds.length === 1 &&
-      <Table.TR partial={true}>
-         {
-            selected !== undefined &&
-            <Table.TD>
-               selected:
-               <Numeric amount={selected} />
-            </Table.TD>
-         }
-         {
-            reconciled  // also omit when 0
-            ? (
-               <Table.TD>
-                  reconciled:
-                  <Numeric amount={reconciled} />
-               </Table.TD>
-            ) : null
-         }
-         {
-            cleared  // also omit when 0
-            ? (
-               <Table.TD>
-                  cleared:
-                  <Numeric amount={cleared} />
-               </Table.TD>
-            ) : null
-         }
-         {
-            present !== undefined &&
-            <Table.TD>
-               present:
-               <Numeric amount={present} />
-            </Table.TD>
-         }
-         {
-            future !== undefined &&
-            future !== present &&
-            <Table.TD>
-               future:
-               <Numeric amount={future} />
-            </Table.TD>
-         }
-      </Table.TR>
+         ]) ?? [],
+      [singleAccount, p]
    );
 
    return (
-      <Table.Table
-         borders={p.borders}
-         background={
-            p.trans_mode !== TransactionMode.ONE_LINE
-            || p.split_mode !== SplitMode.HIDE
-         }
+      <ListWithColumns
          className="ledger"
-         expandableRows={p.split_mode !== SplitMode.HIDE}
-         header={header}
-         footer={footer}
-         itemCount={p.transactions?.length ?? 0}
-         itemSize={getTransactionHeight}
-         itemKey={getTransactionKey}
-         getRow={Row}
-         ref={list}
+         columns={columns}
+         rows={rows}
+         borders={p.borders}
+         defaultExpand={p.defaultExpand}
+         footColumnsOverride={footColumns}
       />
    );
-
-         /*
-            p.accountIds && p.accountIds.length === 1 &&
-            <EditingRow accountId={p.accountIds[0] as AccountId} />
-            */
-
 }
 
 export default React.memo(Ledger);

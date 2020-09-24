@@ -14,7 +14,7 @@ import { NetworthPanelProps } from 'NetWorth/Module';
 import { LedgerPanelProps } from 'Ledger/Module';
 import { CashflowPanelProps } from 'Cashflow/Module';
 import { MeanModuleProps } from 'Mean';
-import { SplitMode, TransactionMode } from 'Ledger';
+import { SplitMode, NotesMode } from 'Ledger';
 import './App.css';
 import "font-awesome/css/font-awesome.min.css";
 
@@ -53,7 +53,7 @@ const defaultOverview: BaseProps[] = [
       type: 'ledger',
       accountIds: 'assets',
       range: 'future',
-      trans_mode: TransactionMode.ONE_LINE,
+      notes_mode: NotesMode.ONE_LINE,
       split_mode: SplitMode.COLLAPSED,
       borders: false,
       defaultExpand: false,
