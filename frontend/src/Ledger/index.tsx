@@ -292,7 +292,7 @@ const useTotal = (
 
    React.useEffect(
       () => setTotal(() => {
-         const v = nullTotal;
+         const v = {...nullTotal};
          v.future = transactions?.[transactions.length - 1]?.balance;
 
          const formatted = dateToString("today");
