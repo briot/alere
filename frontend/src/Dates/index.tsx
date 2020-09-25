@@ -355,7 +355,7 @@ interface DateProps {
 }
 export const DateDisplay: React.FC<DateProps> = p => {
    return (
-      <span className="date">
+      <span className="datevalue">
          {p.when && formatDate(p.when)}
       </span>
    );

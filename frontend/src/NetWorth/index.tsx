@@ -11,13 +11,13 @@ import ListWithColumns, { Column, LogicalRow } from 'List/ListWithColumns';
 import "./NetWorth.css";
 
 const columnAccountName: Column<BalanceWithAccount> = {
-   head: () => 'Account',
+   id: 'Account',
    cell: d => <AccountName id={d.accountId} account={d.account} />,
    foot: () => "Total",
 };
 
 const columnShares = (base: BalanceList, date_idx: number) => ({
-   head: () => "Shares",
+   id: "Shares",
    cell: (d: BalanceWithAccount) =>
       <Numeric
          amount={d.atDate[date_idx].shares}
@@ -26,7 +26,7 @@ const columnShares = (base: BalanceList, date_idx: number) => ({
 });
 
 const columnPrice = (base: BalanceList, date_idx: number) => ({
-   head: () => "Price",
+   id: "Price",
    cell: (d: BalanceWithAccount) =>
       <Numeric
          amount={d.atDate[date_idx].price}
@@ -35,7 +35,7 @@ const columnPrice = (base: BalanceList, date_idx: number) => ({
 });
 
 const columnValue = (base: BalanceList, date_idx: number) => ({
-   head: () => dateToString(base.dates[date_idx]),
+   id: dateToString(base.dates[date_idx]),
    cell: (d: BalanceWithAccount) =>
       <Numeric
          amount={d.atDate[date_idx].price * d.atDate[date_idx].shares}

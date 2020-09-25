@@ -17,19 +17,21 @@ interface THProps {
    className?: string;
    title?: string;
    style?: React.CSSProperties;
+   onClick?: () => void;
 }
 const TH: React.FC<THProps> = p => {
    const n = classes(
       'th',
       p.className,
       p.sortable && 'sortable',
-      p.asc === undefined ? '' : p.asc ? 'sort-up' : 'sort-down',
+      p.asc === undefined ? '' : p.asc ? 'sorted-up' : 'sorted-down',
    );
    return (
        <span
           className={n}
           style={p.style}
           title={p.title}
+          onClick={p.onClick}
        >
           {p.children}
        </span>

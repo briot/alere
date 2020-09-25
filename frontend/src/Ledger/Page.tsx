@@ -66,13 +66,11 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
       () => {
          setHeader({  /* Keep arrow next to account name */
             title: (
-               <div>
-                  <SelectAccount
-                     accountId={accountId}
-                     onChange={onAccountChange}
-                     hideArrow={false}
-                  />
-               </div>
+               <SelectAccount
+                  accountId={accountId}
+                  onChange={onAccountChange}
+                  hideArrow={false}
+               />
             )
          });
       },

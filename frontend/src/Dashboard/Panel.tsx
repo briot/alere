@@ -96,7 +96,11 @@ const DashboardPanel: React.FC<PanelProps> = React.memo(p => {
             </div>
          </div>
          <div className="content">
-            <m.Content {...p.panel as any} setHeader={setHeader} />
+            <m.Content
+               {...p.panel as any}
+               setHeader={setHeader}
+               setData={localChange}
+            />
          </div>
       </div>
    );

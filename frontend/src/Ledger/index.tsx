@@ -44,6 +44,7 @@ export interface BaseLedgerProps {
    hideBalance?: boolean;
    hideReconcile?: boolean;
    alternateColors?: boolean;
+   sortOn?: string;  // +colid  or -colid
 
    accounts: Account[] | undefined;         // computed from accountIds
    transactions: Transaction[] | undefined, // use it instead of fetching
@@ -58,21 +59,24 @@ interface TableRowData {
 }
 
 const columnDate: Column<TableRowData> = {
-   className: "date",
+   id: "date",
    head: "Date",
-   sortable: true,
+   compare: (a, b) => a.transaction.date.localeCompare(b.transaction.date),
    cell: (d: TableRowData) => d.split === MAIN ? d.transaction.date : '',
 }
 
 const columnNum: Column<TableRowData> = {
-   className: "num",
+   id: "num",
    head: "Check #",
-   sortable: true,
+   compare: (a, b) =>
+      (a.firstRowSplit.checknum ?? '').localeCompare(
+         b.firstRowSplit.checknum ?? ''),
    cell: (d: TableRowData) =>
       d.split === MAIN ? d.firstRowSplit.checknum : d.split.checknum,
 }
 
 const columnSummary: Column<TableRowData> = {
+   id: "Summary",
    className: "summary",
    cell: (d: TableRowData) => {
       const amount =
@@ -106,16 +110,19 @@ const columnSummary: Column<TableRowData> = {
 }
 
 const columnMemo: Column<TableRowData> = {
-   head: "Memo",
+   id: "Memo",
    className: "memo",
+   compare: (a, b) =>
+      (a.transaction.memo ?? '').localeCompare(b.transaction.memo ?? ''),
    cell: (d: TableRowData) =>
       d.transaction.memo ? d.transaction.memo : 'No memo'
 }
 
 const columnPayee: Column<TableRowData> = {
+   id: "Payee",
    className: "payee",
-   head: "Payee",
-   sortable: true,
+   compare: (a, b) =>
+      (a.firstRowSplit.payee ?? '').localeCompare(b.firstRowSplit.payee ?? ''),
    cell: (d: TableRowData) =>
       d.split === MAIN
       ? ( <Link to={`/payee/${d.firstRowSplit.payee}`}>
@@ -125,9 +132,11 @@ const columnPayee: Column<TableRowData> = {
 }
 
 const columnFromTo: Column<TableRowData> = {
+   id: "From/To",
    className: "transfer",
-   sortable: true,
-   head: "From/To",
+   compare: (a, b) =>
+      (a.firstRowSplit.account?.name ?? '').localeCompare(
+         b.firstRowSplit.account?.name ?? ''),
    cell: (d: TableRowData) =>
       d.split === MAIN
       ? (d.firstRowSplit.accountId === SPLIT_ID
@@ -147,16 +156,16 @@ const columnFromTo: Column<TableRowData> = {
 }
 
 const columnReconcile: Column<TableRowData> = {
+   id: "R",
    className: "reconcile",
-   head: "R",
    cell: (d: TableRowData) =>
       d.split === MAIN ? d.firstRowSplit.reconcile : d.split.reconcile,
 }
 
 const columnAmount: Column<TableRowData> = {
+   id: "Amount",
    className: "amount",
-   sortable: true,
-   head: "Amount",
+   compare: (a, b) => a.firstRowSplit.amount - b.firstRowSplit.amount,
    cell: (d: TableRowData) =>
       <Numeric
          amount={d.split === MAIN ? d.firstRowSplit.amount : d.split.amount}
@@ -164,9 +173,9 @@ const columnAmount: Column<TableRowData> = {
 }
 
 const columnWidthdraw: Column<TableRowData> = {
+   id: "Payment",
    className: "amount",
-   sortable: true,
-   head: "Payment",
+   compare: (a, b) => a.firstRowSplit.amount - b.firstRowSplit.amount,
    cell: (d: TableRowData) =>
       d.split === MAIN
       ? (d.firstRowSplit.amount < 0
@@ -175,9 +184,9 @@ const columnWidthdraw: Column<TableRowData> = {
 }
 
 const columnDeposit: Column<TableRowData> = {
+   id: "Deposit",
    className: "amount",
-   sortable: true,
-   head: "Deposit",
+   compare: (a, b) => a.firstRowSplit.amount - b.firstRowSplit.amount,
    cell: (d: TableRowData) =>
       d.split === MAIN
       ? (d.firstRowSplit.amount >= 0
@@ -186,9 +195,10 @@ const columnDeposit: Column<TableRowData> = {
 }
 
 const columnShares: Column<TableRowData> = {
+   id: "Shares",
    className: "shares",
-   sortable: true,
-   head: "Shares",
+   compare: (a, b) =>
+      (a.firstRowSplit.shares ?? 0) - (b.firstRowSplit.shares ?? 0),
    cell: (d: TableRowData) =>
       d.split === MAIN &&
       <Numeric
@@ -198,10 +208,11 @@ const columnShares: Column<TableRowData> = {
 }
 
 const columnPrice: Column<TableRowData> = {
+   id: "Price",
    className: "amount",
-   sortable: true,
+   compare: (a, b) =>
+      (a.firstRowSplit.price ?? 0) - (b.firstRowSplit.price ?? 0),
    title: "Price of one share at the time of the transaction",
-   head: "Price",
    cell: (d: TableRowData) =>
       d.split === MAIN &&
       <Numeric
@@ -211,9 +222,9 @@ const columnPrice: Column<TableRowData> = {
 }
 
 const columnSharesBalance: Column<TableRowData> = {
+   id: "SBalance",
    className: "shares",
    title: "Balance of shares",
-   head: "SBalance",
    cell: (d: TableRowData) =>
       d.split === MAIN &&
       <Numeric
@@ -223,14 +234,15 @@ const columnSharesBalance: Column<TableRowData> = {
 }
 
 const columnBalance: Column<TableRowData> = {
+   id: "Balance",
    className: "amount",
-   head: "Balance",
    cell: (d: TableRowData) =>
       d.split === MAIN &&
       <Numeric amount={d.transaction.balance} />
 }
 
 const columnTotal = (v: Totals): Column<TableRowData> => ({
+   id: "Total",
    foot: () => (
       <>
          {
@@ -568,7 +580,10 @@ const getChildren = (d: TableRowData) => {
  * The full ledger, for a panel
  */
 
-const Ledger: React.FC<BaseLedgerProps> = p => {
+interface ExtraProps {
+   setSortOn?: (on: string) => void; //  called when user wants to sort
+}
+const Ledger: React.FC<BaseLedgerProps & ExtraProps> = p => {
    const total = useTotal(p.transactions, p.accounts);
    const singleAccount =
       (p.accounts !== undefined && p.accounts.length === 1
@@ -624,6 +639,8 @@ const Ledger: React.FC<BaseLedgerProps> = p => {
          defaultExpand={p.defaultExpand}
          footColumnsOverride={footColumns}
          scrollToBottom={true}
+         sortOn={p.sortOn}
+         setSortOn={p.setSortOn}
          alternate={
             p.alternateColors ? AlternateRows.PARENT : AlternateRows.NO_COLOR
          }

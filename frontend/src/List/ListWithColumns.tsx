@@ -13,12 +13,15 @@ export enum AlternateRows {
  * Description for each column in the array
  */
 export interface Column<T> {
-   head?: string | (() => React.ReactNode);
+   id: string; // unique id for this column
+   head?: string | (() => React.ReactNode);  // defaults to id
    className?: string;
-   sortable?: boolean;
    title?: string;
    cell?: (data: T) => React.ReactNode;
    foot?: string | ((data: LogicalRow<T>[]) => React.ReactNode);
+
+   compare?: (left: T, right: T) => number;
+   // Used for sorting. The column is not sortable if this is undefined
 }
 
 /**
@@ -191,6 +194,9 @@ interface ListWithColumnsProps<T> {
    defaultExpand?: boolean;
    alternate?: AlternateRows;
 
+   sortOn?: string;                  //  "+colid" or "-colid"
+   setSortOn?: (on: string) => void; //  called when user wants to sort
+
    scrollToBottom?: boolean;
    //  If true, automatically show bottom row by default
 
@@ -203,23 +209,43 @@ const ListWithColumns = <T extends any> (
    p: ListWithColumnsProps<T>,
 ) => {
    const list = React.createRef<FixedSizeList>();
+   const oldRowCount = React.useRef(p.rows.length);
 
    const cols = React.useMemo(
       () => p.columns.filter(c => c !== undefined) as Column<T> [],
       [p.columns]
    );
+   const sortedRows = React.useMemo(
+      () => {
+         if (p.sortOn === undefined) {
+            return p.rows;
+         }
+         const colid = p.sortOn.slice(1);
+         const col = cols.filter(c => c.id === colid)?.[0];
+         if (!col || !col.compare) {
+            return p.rows;
+         }
+         const asc = p.sortOn.charAt(0) === '+' ? 1 : -1;
+         return p.rows.sort((a, b) => col.compare!(a.data, b.data) * asc);
+      },
+      [p.rows, p.sortOn, cols]
+   );
+
    const {phys, expandableRows, isExpandable, toggleRow} =
-      usePhysicalRows(p.rows, p.defaultExpand ?? false);
+      usePhysicalRows(sortedRows, p.defaultExpand ?? false);
    const getKey = (idx: number) => phys[idx]!.logicalRow.key;
 
-   // Scroll to bottom by default
+   // Scroll to bottom initally (when we had zero rows before and now have some)
    React.useEffect(
       () => {
-         if (p.scrollToBottom && list.current && phys.length) {
+         if (p.scrollToBottom && list.current && phys.length
+             && oldRowCount.current === 0
+         ) {
             list.current.scrollToItem(phys.length - 1, 'end');
+            oldRowCount.current = phys.length;
          }
       },
-      [phys, list, p.scrollToBottom]
+      [phys.length, list, p.scrollToBottom]
    )
 
    const getRow = React.useCallback(
@@ -251,7 +277,7 @@ const ListWithColumns = <T extends any> (
             {
                theCols.map((c, idx) =>
                   <Table.TD
-                     key={idx}
+                     key={c.id}
                      className={c.className}
                      style={{
                         // Indent first column to show nesting
@@ -271,6 +297,19 @@ const ListWithColumns = <T extends any> (
       [phys, cols, isExpandable, toggleRow, p.indentNested, p.alternate]
    );
 
+   const onSort = (col: Column<T>) => {
+      let sortOn: string;
+      if (p.sortOn !== undefined
+          && p.sortOn.slice(1) === col.id
+      ) {
+         const asc = p.sortOn.charAt(0);
+         sortOn = `${asc === '+' ? '-' : '+'}${col.id}`;
+      } else {
+         sortOn = `+${col.id}`;
+      }
+      p.setSortOn?.(sortOn);
+   }
+
    const header = (
       <Table.TR>
       {
@@ -279,9 +318,19 @@ const ListWithColumns = <T extends any> (
                key={idx}
                className={c.className}
                title={c.title}
-               sortable={c.sortable}
+               sortable={c.compare !== undefined && p.setSortOn !== undefined}
+               asc={p.sortOn === undefined ||p.sortOn.slice(1) !== c.id
+                  ? undefined
+                  : p.sortOn.charAt(0) === '+'
+               }
+               onClick={
+                  c.compare !== undefined
+                  && p.setSortOn !== undefined
+                  ? () => onSort(c)
+                  : undefined
+               }
             >
-               {typeof c.head  === "function" ? c.head() : c.head}
+               {typeof c.head  === "function" ? c.head() : c.head ?? c.id}
             </Table.TH>
          )
       }

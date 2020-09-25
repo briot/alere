@@ -188,15 +188,17 @@
          cursor: pointer;  /* indicate that we can sort by clicking */
       }
       .tr:hover .th.sortable:after {
-         content: "\f0dc" !important;
+         content: "\f0dc";
          position: absolute;  /* do not impact the rest of the layout */
          padding-top: var(--th-padding-top);
       }
+      .tr:hover .th.sortable.sorted-down:after,
       .th.sorted-down:after {
-         content: "\f0dd";
-      }
-      .th.sorted-up:after {
          content: "\f0de";
+      }
+      .tr:hover .th.sortable.sorted-up:after,
+      .th.sorted-up:after {
+         content: "\f0dd";
       }
    }
 

@@ -22,11 +22,14 @@ export interface BaseProps {
    colspan: number;
 }
 
+export interface SaveData<T extends {}> {
+   setData: (p: Partial<T>) => void;
+}
+
 /**
  * Properties for the settings editor of a dashboard panel
  */
-export interface SettingsProps<T extends {}> {
-   setData: (p: Partial<T>) => void;
+export interface SettingsProps<T extends {}> extends SaveData<T>{
    excludeFields?: string[]; // Do not allow configuring those fields
 }
 
@@ -35,5 +38,5 @@ export interface DashboardModule<T extends BaseProps> {
    // A function that returns one or more <fieldset> to configure the module.
    // It receives the current properties of the module
 
-   Content: React.FC<T & SetHeader>;
+   Content: React.FC<T & SetHeader & SaveData<T>>;
 }

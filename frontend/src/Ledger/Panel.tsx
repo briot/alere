@@ -1,11 +1,14 @@
 import * as React from 'react';
 import Ledger, { BaseLedgerProps } from 'Ledger';
+import { SaveData } from 'Dashboard/Module';
 import { SetHeader } from 'Header';
 import { rangeDisplay } from 'Dates';
 import useAccountIds from 'services/useAccountIds';
 import useTransactions from 'services/useTransactions';
 
-const LedgerPanel: React.FC<BaseLedgerProps & SetHeader> = p => {
+const LedgerPanel: React.FC<
+   BaseLedgerProps & SetHeader & SaveData<BaseLedgerProps>
+> = p => {
    const { setHeader } = p;
    const accounts = useAccountIds(p.accountIds);
    const computedIds = accounts?.map(a => a.id);
@@ -27,8 +30,15 @@ const LedgerPanel: React.FC<BaseLedgerProps & SetHeader> = p => {
       [accounts, setHeader, p.range, p.accountIds]
    );
 
+   const setSortOn = (sortOn: string) => p.setData({ sortOn });
+
    return (
-      <Ledger {...p} accounts={accounts} transactions={transactions} />
+      <Ledger
+         {...p}
+         accounts={accounts}
+         transactions={transactions}
+         setSortOn={setSortOn}
+      />
    );
 }
 export default LedgerPanel;
