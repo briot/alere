@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { FixedSizeList } from 'react-window';
 import { ListChildComponentProps } from 'react-window';
 import Table from 'List';
 
@@ -190,12 +191,19 @@ interface ListWithColumnsProps<T> {
    defaultExpand?: boolean;
    alternate?: AlternateRows;
 
+   scrollToBottom?: boolean;
+   //  If true, automatically show bottom row by default
+
    footColumnsOverride?: Column<T>[];
    //  Columns to use for the footer, if the default columns are not
    //  appropriate
 }
 
-const ListWithColumns = <T extends any> (p: ListWithColumnsProps<T>) => {
+const ListWithColumns = <T extends any> (
+   p: ListWithColumnsProps<T>,
+) => {
+   const list = React.createRef<FixedSizeList>();
+
    const cols = React.useMemo(
       () => p.columns.filter(c => c !== undefined) as Column<T> [],
       [p.columns]
@@ -203,6 +211,16 @@ const ListWithColumns = <T extends any> (p: ListWithColumnsProps<T>) => {
    const {phys, expandableRows, isExpandable, toggleRow} =
       usePhysicalRows(p.rows, p.defaultExpand ?? false);
    const getKey = (idx: number) => phys[idx]!.logicalRow.key;
+
+   // Scroll to bottom by default
+   React.useEffect(
+      () => {
+         if (p.scrollToBottom && list.current && phys.length) {
+            list.current.scrollToItem(phys.length - 1, 'end');
+         }
+      },
+      [phys, list, p.scrollToBottom]
+   )
 
    const getRow = React.useCallback(
       (q: ListChildComponentProps) => {
@@ -292,6 +310,7 @@ const ListWithColumns = <T extends any> (p: ListWithColumnsProps<T>) => {
          footer={footer}
          expandableRows={expandableRows}
          borders={p.borders}
+         ref={list}
       />
    );
 }

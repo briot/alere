@@ -110,9 +110,9 @@ interface TableProps {
    footer?: React.ReactNode;
    className?: string;
 }
-const Table: React.FC<TableProps & React.RefAttributes<VariableSizeList>>
-   = React.forwardRef(
-(p, ref) => {
+const Table: React.FC<
+   TableProps & React.RefAttributes<FixedSizeList>
+> = React.forwardRef((p, ref) => {
    const c = classes(
       'table',
       p.className,
@@ -137,7 +137,6 @@ const Table: React.FC<TableProps & React.RefAttributes<VariableSizeList>>
                         <VariableSizeList
                            width={width}
                            height={height}
-                           ref={ref}
                            itemCount={p.itemCount}
                            itemSize={p.itemSize as (index:number)=>number}
                            itemKey={p.itemKey}
@@ -149,6 +148,7 @@ const Table: React.FC<TableProps & React.RefAttributes<VariableSizeList>>
                         <FixedSizeList
                            width={width}
                            height={height}
+                           ref={ref}
                            itemCount={p.itemCount}
                            itemSize={(p.itemSize ?? ROW_HEIGHT)  as number}
                            itemKey={p.itemKey}

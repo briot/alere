@@ -623,6 +623,7 @@ const Ledger: React.FC<BaseLedgerProps> = p => {
          borders={p.borders}
          defaultExpand={p.defaultExpand}
          footColumnsOverride={footColumns}
+         scrollToBottom={true}
          alternate={
             p.alternateColors ? AlternateRows.PARENT : AlternateRows.NO_COLOR
          }
