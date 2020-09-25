@@ -2,6 +2,12 @@ import * as React from 'react';
 import { ListChildComponentProps } from 'react-window';
 import Table from 'List';
 
+export enum AlternateRows {
+   NO_COLOR,   // do not alternate background colors
+   ROW,        // each row (and child rows) alternates colors
+   PARENT,     // color of a row depends on the top-level parent
+}
+
 /**
  * Description for each column in the array
  */
@@ -38,9 +44,10 @@ export interface LogicalRow<T> {
  */
 interface PhysicalRow<T> {
    logicalRow: LogicalRow<T>; // points to the logical row
-   numChildren: number;       // number of visible children rows on the screen
+   topRowIndex: number; // index of the top parent row (for alternate colors)
+   numChildren: number; // number of visible children rows on the screen
    expandable: boolean;
-   level: number;             // nesting level
+   level: number;       // nesting level
 }
 
 const computePhysicalRows = <T extends any> (
@@ -48,11 +55,13 @@ const computePhysicalRows = <T extends any> (
    expanded: Map<number|string, boolean>,
    level: number,
    defaultExpand: boolean,
+   topRowIndex: number,
 ): PhysicalRow<T>[] => {
    const children = r.getChildren?.(r.data);
    const isExpanded = expanded.get(r.key) ?? defaultExpand;
    const result = [{
       logicalRow: r,
+      topRowIndex,
       numChildren: isExpanded && children ? children.length : 0,
       expandable: children ? children.length !== 0 : false,
       level: level,
@@ -62,7 +71,9 @@ const computePhysicalRows = <T extends any> (
       return result.concat(
          children
             ? children.flatMap(c =>
-               computePhysicalRows(c, expanded, level + 1, defaultExpand))
+               computePhysicalRows(
+                  c, expanded, level + 1, defaultExpand, topRowIndex
+               ))
             : []
       );
    } else {
@@ -88,8 +99,8 @@ const usePhysicalRows = <T extends any> (
    React.useEffect(
       () => {
          const expanded = new Map();
-         const r = rows.flatMap(c =>
-            computePhysicalRows(c, expanded, 0, defaultExpand));
+         const r = rows.flatMap((c, idx) =>
+            computePhysicalRows(c, expanded, 0, defaultExpand, idx));
          setPhys({
             rows: r,
             expanded,
@@ -143,7 +154,8 @@ const usePhysicalRows = <T extends any> (
                   rows: [
                      ...old.rows.slice(0, index),
                      ...computePhysicalRows(
-                        r.logicalRow, expanded, r.level, defaultExpand),
+                        r.logicalRow, expanded, r.level, defaultExpand,
+                        r.topRowIndex),
                      ...old.rows.slice(index + 1),
                   ],
                   expanded,
@@ -176,6 +188,7 @@ interface ListWithColumnsProps<T> {
    indentNested?: boolean;
    borders?: boolean;
    defaultExpand?: boolean;
+   alternate?: AlternateRows;
 
    footColumnsOverride?: Column<T>[];
    //  Columns to use for the footer, if the default columns are not
@@ -209,6 +222,13 @@ const ListWithColumns = <T extends any> (p: ListWithColumnsProps<T>) => {
                expanded={isExpandable(q.index)}
                onClick={onExpand}
                nestingLevel={phys[q.index].level}
+               isOdd={
+                  p.alternate === AlternateRows.ROW
+                  ? q.index % 2 === 0
+                  : p.alternate === AlternateRows.PARENT
+                  ? phys[q.index].topRowIndex % 2 === 0
+                  : undefined
+               }
             >
             {
                theCols.map((c, idx) =>
@@ -230,7 +250,7 @@ const ListWithColumns = <T extends any> (p: ListWithColumnsProps<T>) => {
             </Table.TR>
          );
       },
-      [phys, cols, isExpandable, toggleRow, p.indentNested]
+      [phys, cols, isExpandable, toggleRow, p.indentNested, p.alternate]
    );
 
    const header = (

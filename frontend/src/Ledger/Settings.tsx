@@ -17,6 +17,7 @@ const Settings: React.FC<BaseLedgerProps & SettingsProps<BaseLedgerProps>>
    const changeTrans = (notes_mode: NotesMode) => p.setData({notes_mode});
    const changeSplit = (split_mode: SplitMode) => p.setData({ split_mode });
    const changeBorders = (borders: boolean) => p.setData({ borders });
+   const changeAlt = (alternateColors: boolean) => p.setData({ alternateColors });
    const changeExpand = (defaultExpand: boolean) => p.setData({ defaultExpand });
    const changeValueColumn = (valueColumn: boolean) =>
       p.setData({ valueColumn });
@@ -28,6 +29,11 @@ const Settings: React.FC<BaseLedgerProps & SettingsProps<BaseLedgerProps>>
              checked={p.borders}
              onChange={changeBorders}
              text="Show borders"
+         />
+         <Checkbox
+             checked={p.alternateColors}
+             onChange={changeAlt}
+             text="Alternate background color"
          />
          <Checkbox
              checked={p.valueColumn}

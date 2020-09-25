@@ -96,6 +96,13 @@
    }
 
    /**
+    * Alternate row colors
+    */
+   .tr.odd {
+      background-color: var(--table-alternate-row);
+   }
+
+   /**
     * Expandable rows
     */
    &.expandableRows {

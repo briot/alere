@@ -7,7 +7,8 @@ import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
          incomeExpenseSplits, sharesForAccounts, priceForAccounts,
          splitsNotForAccounts, Split, Transaction } from 'Transaction';
 import Numeric from 'Numeric';
-import ListWithColumns, { Column, LogicalRow } from 'List/ListWithColumns';
+import ListWithColumns, {
+   AlternateRows, Column, LogicalRow } from 'List/ListWithColumns';
 import { Account, AccountId, AccountIdList } from 'services/useAccounts';
 import './Ledger.css';
 
@@ -42,6 +43,7 @@ export interface BaseLedgerProps {
    valueColumn: boolean;
    hideBalance?: boolean;
    hideReconcile?: boolean;
+   alternateColors?: boolean;
 
    accounts: Account[] | undefined;         // computed from accountIds
    transactions: Transaction[] | undefined, // use it instead of fetching
@@ -621,6 +623,9 @@ const Ledger: React.FC<BaseLedgerProps> = p => {
          borders={p.borders}
          defaultExpand={p.defaultExpand}
          footColumnsOverride={footColumns}
+         alternate={
+            p.alternateColors ? AlternateRows.PARENT : AlternateRows.NO_COLOR
+         }
       />
    );
 }

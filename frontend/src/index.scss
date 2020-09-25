@@ -40,9 +40,12 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    $v-700: shade-color($base, 4) !default;
    $v-800: shade-color($base, 6) !default;
    $v-900: shade-color($base, 8) !default;
+   --#{$key}-100-10p: #{rgba($v-100, 0.1)};
+   --#{$key}-100-20p: #{rgba($v-100, 0.2)};
    --#{$key}-100: #{$v-100};
    --#{$key}-200: #{$v-200};
    --#{$key}-300: #{$v-300};
+   --#{$key}-300-10p: #{rgba($v-300, 0.1)};
    --#{$key}-400: #{$v-400};
    --#{$key}-400-80p: #{rgba($v-400, 0.8)};
    --#{$key}-500: #{$base};
@@ -107,6 +110,7 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --table-row-first-background: none;
    --table-row-details-background: none;
    --table-row-details-fg: var(--gray-600);
+   --table-alternate-row: var(--color-300-10p);
    --focus-color: var(--color-500);
 
    --danger: var(--invalid-500);
@@ -161,6 +165,7 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --table-row-first-background: none;
    --table-row-details-background: none;
    --table-row-details-fg: var(--gray-500);
+   --table-alternate-row: var(--color-100-10p);
 
    --danger: var(--invalid-500);
    --danger-fg: var(--fg-invalid-500);

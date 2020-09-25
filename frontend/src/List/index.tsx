@@ -66,6 +66,7 @@ interface TRProps {
    nestingLevel?: number;
    style?: React.CSSProperties;
    className?: string;
+   isOdd?: boolean;  // to alternate row colors
 
    onClick?: () => void;
 
@@ -77,6 +78,7 @@ const TR: React.FC<TRProps> = p => {
    const n = classes(
       'tr',
       p.className,
+      p.isOdd && 'odd',
       p.editable && 'edit',
       `nesting-${p.nestingLevel ?? 0}`,
       p.expanded !== undefined
@@ -139,6 +141,7 @@ const Table: React.FC<TableProps & React.RefAttributes<VariableSizeList>>
                            itemCount={p.itemCount}
                            itemSize={p.itemSize as (index:number)=>number}
                            itemKey={p.itemKey}
+                           overscanCount={10}
                         >
                            {p.getRow}
                         </VariableSizeList>
@@ -149,6 +152,7 @@ const Table: React.FC<TableProps & React.RefAttributes<VariableSizeList>>
                            itemCount={p.itemCount}
                            itemSize={(p.itemSize ?? ROW_HEIGHT)  as number}
                            itemKey={p.itemKey}
+                           overscanCount={10}
                         >
                            {p.getRow}
                         </FixedSizeList>
