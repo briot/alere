@@ -63,7 +63,7 @@ const columnDate: Column<TableRowData> = {
 }
 
 const columnNum: Column<TableRowData> = {
-   className: "numeric",
+   className: "num",
    head: "Check #",
    sortable: true,
    cell: (d: TableRowData) =>
@@ -156,7 +156,9 @@ const columnAmount: Column<TableRowData> = {
    sortable: true,
    head: "Amount",
    cell: (d: TableRowData) =>
-      d.split === MAIN ? d.firstRowSplit.amount : d.split.amount,
+      <Numeric
+         amount={d.split === MAIN ? d.firstRowSplit.amount : d.split.amount}
+      />
 }
 
 const columnWidthdraw: Column<TableRowData> = {

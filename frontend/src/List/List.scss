@@ -1,6 +1,7 @@
 .table {
-   --row-height: 25px;  /* must match ROW_HEIGHT in javascript */
+   --row-height: 25px;       /* must match ROW_HEIGHT in javascript */
    --th-padding-top: 3px;
+   --exp-padding-left: 0px;  /* space for expanders if needed */
 
    display: flex;
    flex-flow: column nowrap;
@@ -14,9 +15,9 @@
    .tr {
       display: flex;
       flex-flow: row nowrap;
-      width: 100%;         /* All rows use the full width */
       line-height: var(--row-height);
       height: var(--row-height);
+      box-sizing: border-box;
    }
    .trgroup {
       width: 100%;
@@ -28,7 +29,8 @@
       border-style: solid;
       border-color: var(--table-color);
       border-width: var(--table-horiz-border-width) var(--table-vert-border-width);
-      padding: var(--th-padding-top) 2px;
+      box-sizing: border-box;
+      padding: var(--th-padding-top) 5px;
       overflow: hidden;  /* obey column sizes */
       min-width: 20px;
       white-space: nowrap;  /* lines should always use constant height */
@@ -43,6 +45,38 @@
    }
    .tfoot .tr {
       border-top: 1px solid var(--table-color);
+   }
+
+   /**
+    * Always display the scrollbar: otherwise it ends up resizing the width of
+    * tbody when it appears, and the header's width is no longer in sync. We
+    * style it to make it less like a gray block though, using either standard
+    * CSS (firefox), or -webkit specific ones (Chrome + Safari)
+    *    https://alligator.io/css/css-scrollbars/
+    */
+   .thead .tr,
+   .tfoot .tr {
+      // Thanks to box-sizing, we do not have to take into account
+      // exp-padding-left when we compute the size
+      width: calc(100% - var(--scrollbar-width));
+   }
+   .tbody .tr {
+      width: 100%;
+   }
+   .tbody > div {
+      scrollbar-color: var(--scrollbar-fg) var(--scrollbar-bg);  /* firefox */
+
+      &::-webkit-scrollbar {
+         width: auto;
+      }
+      &::-webkit-scrollbar-track {
+         background: var(--scrollbar-bg);
+      }
+      &::-webkit-scrollbar-thumb {
+         background-color: var(--scrollbar-fg);
+         border-radius: 20px;
+         border: 3px solid var(--scrollbar-border);
+      }
    }
 
    /**
@@ -69,6 +103,7 @@
 
       .tr.expandable::before,
       .trgroup.expandable::before {
+         content: '';
          font: normal normal normal 14px/1 FontAwesome;
          text-rendering: auto;
          width: var(--exp-padding-left);
@@ -112,11 +147,9 @@
       .tr,
       .trgroup {
          padding-left: var(--exp-padding-left);
-         width: calc(100% - var(--exp-padding-left));
       }
       .trgroup .tr {
          padding-left: 0;
-         width: 100%;
       }
    }
 
@@ -161,10 +194,12 @@
    }
 
    /**
-    * Some standard sizing for columns
+    * Some standard sizing for columns.
+    * Do not use units like 'ch' since they depend on the font-weight and would
+    * result in different widths in header and body unfortunately.
     */
    .date {
-      flex: 0 1 10ch;
+      flex: 0 1 75px;
    }
    .td.date {
       font-family: "minion pro", "myriad pro", "tahoma";
@@ -173,53 +208,17 @@
       font-size-adjust: 0.438;
    }
    .price {
-      flex: 0 1 9ch;
+      flex: 0 1 65px;
       text-align: right;
    }
    .amount {
-      flex: 0 1 7rem;
+      flex: 0 1 80px;
       text-align: right;
    }
-}
-
-/**
- * Always display the scrollbar: otherwise it ends up resizing the width of
- * tbody when it appears, and the header's width is no longer in sync. We
- * style it to make it less like a gray block though, using either standard
- * CSS (firefox), or -webkit specific ones (Chrome + Safari)
- *    https://alligator.io/css/css-scrollbars/
- */
-.table .thead .tr:after,
-.table .tfoot .tr:after {
-   width: var(--scrollbar-width);
-   content: '';
-}
-.table .thead .tr.right-aligned:after,
-.table .tfoot .tr.right-aligned:after {
-   content: none;
-   width: 0;
-}
-.table .tbody > div > div {
-   overflow: visible scroll !important; // always leave space for vertical scrollbar
 }
 
 .table .tbody {
    flex: 1 1;  /* needed for proper sizing of the react-window */
-}
-.table .tbody > div {
-   /* overflow-y: scroll;   /* Show scrollbar always */
-   scrollbar-color: var(--scrollbar-fg) var(--scrollbar-bg);  /* firefox */
-}
-.table .tbody > div::-webkit-scrollbar {
-   width: auto;
-}
-.table .tbody > div::-webkit-scrollbar-track {
-   background: var(--scrollbar-bg);
-}
-.table .tbody > div::-webkit-scrollbar-thumb {
-   background-color: var(--scrollbar-fg);
-   border-radius: 20px;
-   border: 3px solid var(--scrollbar-border);
 }
 
 /* Warning for inconsistent data */

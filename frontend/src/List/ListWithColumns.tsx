@@ -217,8 +217,9 @@ const ListWithColumns = <T extends any> (p: ListWithColumnsProps<T>) => {
                      className={c.className}
                      style={{
                         // Indent first column to show nesting
-                        paddingLeft: !p.indentNested || idx !== 0
-                           ? 0
+                        paddingLeft:
+                           idx !== 0 || !p.indentNested
+                           ? undefined   // keep the CSS padding
                            : phys[q.index].level * 20
                      }}
                   >
