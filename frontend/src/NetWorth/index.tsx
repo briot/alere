@@ -38,7 +38,7 @@ const columnValue = (base: BalanceList, date_idx: number) => ({
    id: dateToString(base.dates[date_idx]),
    cell: (d: BalanceWithAccount) =>
       <Numeric
-         amount={d.atDate[date_idx].price * d.atDate[date_idx].shares}
+         amount={d.atDate[date_idx]?.price * d.atDate[date_idx]?.shares}
          unit={base.currencyId}
       />,
    foot: () =>
