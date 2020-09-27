@@ -172,7 +172,7 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
          />
          <Metrics
             name="Return on Investment"
-            descr="How much passive investment your whole networth provides"
+            descr="How much passive income your whole networth provides"
             value={pl.passive_income / networth * 100}
             tooltip={`Passive income ${pl.passive_income.toFixed(0)} / Networth ${networth.toFixed(0)}`}
             ideal={4}
@@ -181,7 +181,7 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
          />
          <Metrics
             name="Return on Investment for liquid assets"
-            descr="How much passive investment your liquid assets provides"
+            descr="How much passive income your liquid assets provides"
             value={pl.passive_income / pl.liquid_assets * 100}
             tooltip={`Passive income ${pl.passive_income.toFixed(0)} / Liquid assets ${pl.liquid_assets.toFixed(0)}`}
             ideal={4}
