@@ -1,34 +1,34 @@
-.ledger {
+.ledgerTable {
    flex: 1 1;  /* ledger itself occupies as much space as possible */
 }
 
-.ledger a {
+.ledgerTable a {
    text-decoration: none;
 }
 
 /* Editing */
-.ledger .tr.edit .td input,
-.ledger .tr.edit .td select {
+.ledgerTable .tr.edit .td input,
+.ledgerTable .tr.edit .td select {
    width: calc(100% - 9px);
 }
-.ledger .tr.edit .td.reconcile select {
+.ledgerTable .tr.edit .td.reconcile select {
    -moz-appearance: none;
    -webkit-appearance: none;
    appearance: none;
 }
 
-.ledger .tr .numeric {
+.ledgerTable .tr .numeric {
    font-size: 0.8rem;
 }
-.ledger .tr.nesting-0 .numeric {
+.ledgerTable .tr.nesting-0 .numeric {
    font-size: inherit;
 }
 
-.ledger .tr {
+.ledgerTable .tr {
    color: var(--table-row-details-fg);
    font-style: italic;
 }
-.ledger .tr.nesting-0 {
+.ledgerTable .tr.nesting-0 {
    color: inherit;
    font-style: inherit;
 }
@@ -36,38 +36,38 @@
 /**
  * Column-specific settings
  */
-.ledger .num {
+.ledgerTable .num {
    flex: 0 1 5rem;
 }
-.ledger .reconcile {
+.ledgerTable .reconcile {
    flex: 0 1 1.5rem;
    text-align: center;
 }
-.ledger .shares {
+.ledgerTable .shares {
    flex: 0 1 5rem;
    text-align: right;
 }
-.ledger .payee,
-.ledger .transfer {
+.ledgerTable .payee,
+.ledgerTable .transfer {
    min-width: 150px;
 }
-.ledger .summary {
+.ledgerTable .summary {
    flex: 1 1;
    text-align: right;
 }
-.ledger .memo {
+.ledgerTable .memo {
    margin-left: 40px;
 }
-.ledger .tfoot .th {
+.ledgerTable .tfoot .th {
    text-align: right;
 }
 
 /*
-.ledger .memo {
+.ledgerTable .memo {
    border-left: 1px solid var(--gray-400);
 }
-.ledger .trgroup .tr:first-child .date,
-.ledger .trgroup .tr:first-child .num {
+.ledgerTable .trgroup .tr:first-child .date,
+.ledgerTable .trgroup .tr:first-child .num {
    border-bottom: 1px solid var(--gray-400);
 }
 */

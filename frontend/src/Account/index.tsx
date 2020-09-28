@@ -1,10 +1,12 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { FixedSizeList, ListChildComponentProps } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer';
 import useAccounts, {
    Account, AccountId, AccountIdList } from 'services/useAccounts';
+import useAccountTree, {
+   DataWithAccount, TreeNode } from 'services/useAccountTree';
 import { Checkbox, Select, Option } from 'Form';
+import ListWithColumns, { AlternateRows, Column } from 'List/ListWithColumns';
+import List from 'List';
 import "./Account.css";
 
 interface SelectAccountProps {
@@ -17,7 +19,10 @@ interface SelectAccountProps {
 export const SelectAccount: React.FC<SelectAccountProps> = p => {
    const { onChange } = p;
    const { accounts } = useAccounts();
-   const tree = accounts.accountTree();
+   const tree = useAccountTree(accounts.allAccounts().map(a => ({
+      account: a,
+   })));
+
    const localChange = React.useCallback(
       (val: AccountId) => {
          const a = accounts.getAccount(val);
@@ -30,13 +35,13 @@ export const SelectAccount: React.FC<SelectAccountProps> = p => {
 
    const items: Option<AccountId>[] = []
    tree.forEach(r => {
-      if (r.level === 0 && items.length > 0) {
+      if (r.depth === 0 && items.length > 0) {
          items.push({value: 'divider'});
       }
       items.push({
-         value: r.account.id,
-         text: r.account.name,
-         style: {paddingLeft: 20 * r.level}
+         value: r.data.account.id,
+         text: r.data.account.name,
+         style: {paddingLeft: 20 * r.depth}
       });
    });
 
@@ -61,73 +66,66 @@ interface MultiAccountSelectProps {
    showStock?: boolean;
 }
 export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
-   const ROW_HEIGHT = 25;
    const { accounts } = useAccounts();
-   const tree = accounts.accountTree();
+   const filteredTree = useAccountTree(accounts.allAccounts()
+      .filter(a => p.showStock || !a.isStock())
+      .map(account => ({ account })));
 
-   const filteredTree = React.useMemo(
-      () =>
-         p.showStock
-         ? tree
-         : tree.filter(a => !a.account.isStock()),
-      [tree, p.showStock]
-   );
+   const toLogicalRows = (list: TreeNode<DataWithAccount>[]) =>
+      list.map(n => ({
+         key: n.data.account.id,
+         data: n.data.account,
+         getChildren: () => toLogicalRows(n.children),
+      }));
+   const rows = toLogicalRows(filteredTree);
 
-   const getKey = (index: number) => filteredTree[index].account.id;
-   const getRow = (q: ListChildComponentProps) => {
-      const r = filteredTree[q.index];
-      const localChange = (checked: boolean) => {
-         const cp = p.value
-            ? p.value.map(a => a.id)
-            : tree.map(a => a.account.id);
-         if (checked) {
-            if (!cp.includes(r.account.id)) {
-               if (cp.length === tree.length - 1) {
-                  p.onChange('all');
-               } else {
-                  p.onChange([...cp, r.account.id]);
-               }
+   const localChange = (account: Account, checked: boolean) => {
+      const cp = p.value
+         ? p.value.map(a => a.id)
+         : filteredTree.map(a => a.data.account.id);
+      if (checked) {
+         if (!cp.includes(account.id)) {
+            if (cp.length === filteredTree.length - 1) {
+               p.onChange('all');
+            } else {
+               p.onChange([...cp, account.id]);
             }
-         } else {
-            cp.splice(cp.indexOf(r.account.id), 1);
-            p.onChange(cp);
          }
-      };
+      } else {
+         cp.splice(cp.indexOf(account.id), 1);
+         p.onChange(cp);
+      }
+   };
 
-      return (
-         <Checkbox
-            style={{ ...q.style, marginLeft: r.level * 20 }}
-            text={r.account.name}
-            checked={!p.value || p.value.includes(r.account)}
-            onChange={localChange}
-         />
-      )
+   const columnAccountName: Column<Account> = {
+      id: 'Account',
+      cell: (account: Account) => {
+         return (
+            <Checkbox
+               text={account.name}
+               checked={!p.value || p.value.includes(account)}
+               onChange={(checked: boolean) => localChange(account, checked)}
+            />
+         );
+      }
    };
 
    return (
       <div
          className="multiAccountSelect"
-         style={{height: 15 * ROW_HEIGHT}}
+         style={{height: 15 * List.ROW_HEIGHT}}
       >
          {
             p.text &&
             <label htmlFor={p.text}>{p.text}: </label>
          }
-         <AutoSizer>
-            {
-               ({ width, height }) => (
-                  <FixedSizeList
-                     width={width}
-                     height={height}
-                     itemCount={filteredTree.length}
-                     itemSize={ROW_HEIGHT}
-                     itemKey={getKey}
-                  >
-                     {getRow}
-                  </FixedSizeList>
-               )
-            }
-         </AutoSizer>
+         <ListWithColumns
+            columns={[columnAccountName]}
+            rows={rows}
+            indentNested={true}
+            defaultExpand={true}
+            alternate={AlternateRows.ROW}
+         />
       </div>
    );
 }

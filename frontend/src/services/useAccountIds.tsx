@@ -11,9 +11,9 @@ const useAccountIds = (
    const allAcc = React.useMemo(
       () =>
          accountIds === 'all'
-         ? accounts.accountTree().map(n => n.account!)
+         ? accounts.allAccounts()
          : accountIds === 'assets'
-         ? accounts.accountTree().map(n => n.account!).filter(a => a.isAsset())
+         ? accounts.allAccounts().filter(a => a.isAsset())
          : accountIds.map(a => accounts.getAccount(a))
             .filter(a => a !== undefined),
       [accountIds, accounts]

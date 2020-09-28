@@ -632,7 +632,7 @@ const Ledger: React.FC<BaseLedgerProps & ExtraProps> = p => {
 
    return (
       <ListWithColumns
-         className="ledger"
+         className="ledgerTable"
          columns={columns}
          rows={rows}
          borders={p.borders}

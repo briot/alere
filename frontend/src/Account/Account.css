@@ -8,7 +8,9 @@
 }
 
 .multiAccountSelect div {
-   min-height: 200px;
    background: var(--input-background);
    white-space: nowrap;
+}
+.multiAccountSelect label {
+   margin: 0;
 }

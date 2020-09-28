@@ -235,7 +235,7 @@ const ListWithColumns = <T extends any> (
       usePhysicalRows(sortedRows, p.defaultExpand ?? false);
    const getKey = (idx: number) => phys[idx]!.logicalRow.key;
 
-   // Scroll to bottom initally (when we had zero rows before and now have some)
+   // Scroll to bottom initially (when we had zero rows before and now have some)
    React.useEffect(
       () => {
          if (p.scrollToBottom && list.current && phys.length
