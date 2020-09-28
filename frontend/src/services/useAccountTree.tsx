@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Account, AccountId, cmpAccounts } from 'services/useAccounts';
+import useAccounts, {
+   Account, AccountId, cmpAccounts } from 'services/useAccounts';
 
 
 export interface DataWithAccount {
@@ -7,7 +8,7 @@ export interface DataWithAccount {
 }
 
 export interface TreeNode <T extends DataWithAccount> {
-   data: T;
+   data: T; // undefined when we had to create a dummy parent
    children: TreeNode<T> [];
    parentNode: TreeNode<T> | undefined;
    depth: number;  // 0 for root nodes, 1 for direct children, ...
@@ -15,7 +16,9 @@ export interface TreeNode <T extends DataWithAccount> {
 
 const useAccountTree = <T extends DataWithAccount> (
    p: T[],
+   createDummyParent: (a: Account)=>T,
 ): TreeNode<T>[] => {
+   const { accounts } = useAccounts();
    const roots: TreeNode<T>[] = React.useMemo(
       () => {
          // Create one node per account in the list
@@ -34,12 +37,25 @@ const useAccountTree = <T extends DataWithAccount> (
 
          // Reorganize those nodes into a tree
          nodes.forEach(n => {
-            if (n.data.account.parentId !== undefined) {
-               const pnode = nodes.get(n.data.account.parentId);
-               if (pnode) {
-                  pnode.children.push(n);
-                  n.parentNode = pnode;
+            if (n.data.account.parentId) {
+               let pnode = nodes.get(n.data.account.parentId);
+
+               // Create missing parents
+               if (!pnode) {
+                  pnode = {
+                     data: createDummyParent(
+                        accounts.getAccount(n.data.account.parentId)
+                     ),
+                     children: [],
+                     parentNode: undefined,
+                     depth: 0,
+                  };
+
+                  nodes.set(n.data.account.parentId, pnode);
                }
+
+               pnode.children.push(n);
+               n.parentNode = pnode;
             }
          });
 
@@ -54,7 +70,7 @@ const useAccountTree = <T extends DataWithAccount> (
          roots.sort(cmpNode);
          return roots;
       },
-      [p]
+      [p, accounts, createDummyParent]
    );
 
    return roots;

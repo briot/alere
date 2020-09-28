@@ -2,12 +2,14 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import useAccounts, {
    Account, AccountId, AccountIdList } from 'services/useAccounts';
-import useAccountTree, {
-   DataWithAccount, TreeNode } from 'services/useAccountTree';
+import useAccountTree from 'services/useAccountTree';
 import { Checkbox, Select, Option } from 'Form';
 import ListWithColumns, { AlternateRows, Column } from 'List/ListWithColumns';
+import useListFromAccount from 'List/ListAccounts';
 import List from 'List';
 import "./Account.css";
+
+const createDummyParent = (account: Account) => ({ account });
 
 interface SelectAccountProps {
    text?: string;
@@ -19,9 +21,11 @@ interface SelectAccountProps {
 export const SelectAccount: React.FC<SelectAccountProps> = p => {
    const { onChange } = p;
    const { accounts } = useAccounts();
-   const tree = useAccountTree(accounts.allAccounts().map(a => ({
-      account: a,
-   })));
+
+   const tree = useAccountTree(
+      accounts.allAccounts().map(account => ({ account })),
+      createDummyParent,
+   );
 
    const localChange = React.useCallback(
       (val: AccountId) => {
@@ -67,17 +71,14 @@ interface MultiAccountSelectProps {
 }
 export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
    const { accounts } = useAccounts();
-   const filteredTree = useAccountTree(accounts.allAccounts()
-      .filter(a => p.showStock || !a.isStock())
-      .map(account => ({ account })));
+   const filteredTree = useAccountTree(
+      accounts.allAccounts()
+         .filter(a => p.showStock || !a.isStock())
+         .map(account => ({ account })),
+      createDummyParent,
+   );
 
-   const toLogicalRows = (list: TreeNode<DataWithAccount>[]) =>
-      list.map(n => ({
-         key: n.data.account.id,
-         data: n.data.account,
-         getChildren: () => toLogicalRows(n.children),
-      }));
-   const rows = toLogicalRows(filteredTree);
+   const rows = useListFromAccount(filteredTree);
 
    const localChange = (account: Account, checked: boolean) => {
       const cp = p.value
@@ -97,14 +98,16 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
       }
    };
 
-   const columnAccountName: Column<Account> = {
+   const columnAccountName: Column<{ account: Account }> = {
       id: 'Account',
-      cell: (account: Account) => {
+      cell: (account: { account: Account} ) => {
          return (
             <Checkbox
-               text={account.name}
-               checked={!p.value || p.value.includes(account)}
-               onChange={(checked: boolean) => localChange(account, checked)}
+               text={account.account.name}
+               checked={!p.value || p.value.includes(account.account)}
+               onChange={(checked: boolean) =>
+                  localChange(account.account, checked)
+               }
             />
          );
       }

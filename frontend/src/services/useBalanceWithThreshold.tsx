@@ -4,7 +4,7 @@ import useBalance, { Balance, BalanceList } from 'services/useBalance';
 import useAccounts, { Account, cmpAccounts } from 'services/useAccounts';
 
 export interface BalanceWithAccount extends Balance {
-   account: Account|undefined;
+   account: Account;
 }
 
 /**

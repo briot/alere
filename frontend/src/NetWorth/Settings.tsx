@@ -10,6 +10,7 @@ const Settings: React.FC<NetworthProps & SettingsProps<NetworthProps>> = p => {
    const changeShares = (showShares: boolean) => p.setData({ showShares });
    const changedates = (dates: RelativeDate[]) => p.setData({ dates });
    const changeThreshold = (threshold: number) => p.setData({ threshold });
+   const changeAlt = (alternateColors: boolean) => p.setData({ alternateColors });
    return (
       <fieldset>
          <legend>Networth</legend>
@@ -27,6 +28,11 @@ const Settings: React.FC<NetworthProps & SettingsProps<NetworthProps>> = p => {
             checked={p.showShares}
             onChange={changeShares}
             text="Show shares"
+         />
+         <Checkbox
+             checked={p.alternateColors}
+             onChange={changeAlt}
+             text="Alternate background color"
          />
          <NumberInput
             value={p.threshold ?? 0}

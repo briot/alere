@@ -106,10 +106,10 @@
     * Expandable rows
     */
    &.expandableRows {
-      --exp-padding-left: 16px;
+      --exp-padding-left: 16px;  // match JS INDENT_LEVEL
 
-      .tr.expandable::before,
-      .trgroup.expandable::before {
+      .tr.expandable .td:first-child::before,
+      .trgroup.expandable .td:first-child::before {
          content: '';
          font: normal normal normal 14px/1 FontAwesome;
          text-rendering: auto;
@@ -123,6 +123,8 @@
          cursor: pointer;
          float: left;
          color: var(--expand-arrow-color);
+
+         position: absolute; // arrow not hidden by the cell's overflow:hidden
       }
       .tr.collapsed,
       .trgroup.collapsed {
@@ -132,7 +134,7 @@
             height: 0;
             padding: 0 0;
          }
-         &::before {
+         & .td:first-child::before {
             content: "\f0da";
             transform: rotateZ(0) translate(25%,0%);
             transition: transform 0.2s;
@@ -144,7 +146,7 @@
          .tr:not(:first-child) .td {
             transition: height 0.2s, padding 0.2s;
          }
-         &::before {
+         & .td:first-child::before {
             content: "\f0da";
             transform: rotateZ(90deg) translate(25%,0%);
             transition: transform 0.2s;

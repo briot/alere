@@ -7,7 +7,11 @@ import { BalanceList } from 'services/useBalance';
 import useBalanceWithThreshold, {
    BalanceWithAccount } from 'services/useBalanceWithThreshold';
 import usePrefs from 'services/usePrefs';
-import ListWithColumns, { Column, LogicalRow } from 'List/ListWithColumns';
+import { Account } from 'services/useAccounts';
+import useAccountTree, { TreeNode } from 'services/useAccountTree';
+import useListFromAccount from 'List/ListAccounts';
+import ListWithColumns, {
+   AlternateRows, Column, LogicalRow, RowDetails } from 'List/ListWithColumns';
 import "./NetWorth.css";
 
 const columnAccountName: Column<BalanceWithAccount> = {
@@ -17,28 +21,56 @@ const columnAccountName: Column<BalanceWithAccount> = {
 };
 
 const columnShares = (base: BalanceList, date_idx: number) => ({
-   id: "Shares",
-   cell: (d: BalanceWithAccount) =>
-      <Numeric
-         amount={d.atDate[date_idx].shares}
-         precision={d.account?.sharesPrecision}
-      />,
+   id: `Shares${date_idx}`,
+   head: 'Shares',
+   cell: (d: BalanceWithAccount, details: RowDetails<BalanceWithAccount>) =>
+      details.isExpanded === false
+      ? ''
+      : (
+         <Numeric
+            amount={d.atDate[date_idx]?.shares}
+            precision={d.account?.sharesPrecision}
+         />
+      ),
 });
 
 const columnPrice = (base: BalanceList, date_idx: number) => ({
-   id: "Price",
-   cell: (d: BalanceWithAccount) =>
-      <Numeric
-         amount={d.atDate[date_idx].price}
-         unit={base.currencyId}
-      />
+   id: `Price${date_idx}`,
+   head: 'Price',
+   cell: (d: BalanceWithAccount, details: RowDetails<BalanceWithAccount>) =>
+      details.isExpanded === false
+      ? ''
+      : (
+         <Numeric
+            amount={d.atDate[date_idx]?.price}
+            unit={base.currencyId}
+         />
+      )
 });
+
+const cumulatedValue = (
+   logic: LogicalRow<BalanceWithAccount>,
+   date_idx: number,
+): number => {
+   const d = logic.data;
+   const val = d.atDate[date_idx]?.price * d.atDate[date_idx]?.shares || 0;
+   return logic.getChildren === undefined
+      ? val
+      : logic.getChildren(d).reduce(
+           (total, row) => total + cumulatedValue(row, date_idx),
+           val
+      );
+}
 
 const columnValue = (base: BalanceList, date_idx: number) => ({
    id: dateToString(base.dates[date_idx]),
-   cell: (d: BalanceWithAccount) =>
+   cell: (d: BalanceWithAccount, details: RowDetails<BalanceWithAccount>) =>
       <Numeric
-         amount={d.atDate[date_idx]?.price * d.atDate[date_idx]?.shares}
+         amount={
+            details.isExpanded === false
+            ? cumulatedValue(details.logic, date_idx)
+            : d.atDate[date_idx]?.price * d.atDate[date_idx]?.shares
+         }
          unit={base.currencyId}
       />,
    foot: () =>
@@ -53,6 +85,7 @@ export interface NetworthProps {
    showValue: boolean;
    showPrice: boolean;
    showShares: boolean;
+   alternateColors?: boolean;
 
    threshold: number;
    // Only show account if at least one of the value columns is above this
@@ -65,6 +98,20 @@ const Networth: React.FC<NetworthProps & SetHeader> = p => {
       ...p,
       currencyId: prefs.currencyId,
    });
+
+   const createDummyParent = React.useCallback(
+      (account: Account): BalanceWithAccount => (
+         { account,
+           accountId: account.id,
+           atDate: [],
+         }),
+      []
+   );
+   const tree: TreeNode<BalanceWithAccount>[] = useAccountTree(
+      data,
+      createDummyParent);
+   const rows = useListFromAccount(tree);
+
    const columns = React.useMemo(
       () => [
             undefined,  /* typescript workaround */
@@ -75,13 +122,6 @@ const Networth: React.FC<NetworthProps & SetHeader> = p => {
             p.showValue ? columnValue(baseData, date_idx) : undefined,
          ])),
       [p.dates, p.showShares, p.showPrice, p.showValue, baseData]
-   );
-   const rows: LogicalRow<BalanceWithAccount>[] = React.useMemo(
-      () => data.map(a => ({
-         key: a.accountId,
-         data: a,
-      })),
-      [data]
    );
 
    const { setHeader } = p;
@@ -95,6 +135,11 @@ const Networth: React.FC<NetworthProps & SetHeader> = p => {
          className="networth"
          columns={columns}
          rows={rows}
+         indentNested={true}
+         defaultExpand={true}
+         alternate={
+            p.alternateColors ? AlternateRows.ROW : AlternateRows.NO_COLOR
+         }
       />
    );
 }

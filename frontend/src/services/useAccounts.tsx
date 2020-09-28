@@ -108,8 +108,22 @@ export class AccountList {
       return Array.from(this.accounts.values());
    }
 
-   getAccount(id: AccountId): Account|undefined {
-      return this.accounts.get(id);
+   getAccount(id: AccountId): Account {
+      return this.accounts.get(id) || new Account({
+         id,
+         name: `account ${id}`,
+         favorite: false,
+         currencyId: 'unknown',
+         currencySymbol: 'unknown',
+         accountType: 'unknown',
+         closed: false,
+         iban: '',
+         parent: undefined,
+         lastReconciled: '',
+         forOpeningBalances: false,
+         pricePrecision: 0,
+         sharesPrecision: 0,
+      });
    }
 
    accountsFromCurrency(currencyId: string): Account[] {

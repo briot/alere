@@ -3,10 +3,17 @@ import { FixedSizeList } from 'react-window';
 import { ListChildComponentProps } from 'react-window';
 import Table from 'List';
 
+const INDENT_LEVEL = 16;  // should match CSS --exp-padding-level
+
 export enum AlternateRows {
    NO_COLOR,   // do not alternate background colors
    ROW,        // each row (and child rows) alternates colors
    PARENT,     // color of a row depends on the top-level parent
+}
+
+export interface RowDetails<T> {
+   isExpanded: boolean|undefined,  // undefined if not expandable
+   logic: LogicalRow<T>,           // the matching logical row
 }
 
 /**
@@ -17,7 +24,7 @@ export interface Column<T> {
    head?: string | (() => React.ReactNode);  // defaults to id
    className?: string;
    title?: string;
-   cell?: (data: T) => React.ReactNode;
+   cell?: (data: T, details: RowDetails<T>) => React.ReactNode;
    foot?: string | ((data: LogicalRow<T>[]) => React.ReactNode);
 
    compare?: (left: T, right: T) => number;
@@ -49,7 +56,6 @@ export interface LogicalRow<T> {
 interface PhysicalRow<T> {
    logicalRow: LogicalRow<T>; // points to the logical row
    topRowIndex: number; // index of the top parent row (for alternate colors)
-   numChildren: number; // number of visible children rows on the screen
    expandable: boolean;
    level: number;       // nesting level
 }
@@ -66,7 +72,6 @@ const computePhysicalRows = <T extends any> (
    const result = [{
       logicalRow: r,
       topRowIndex,
-      numChildren: isExpanded && children ? children.length : 0,
       expandable: children ? children.length !== 0 : false,
       level: level,
    }];
@@ -119,7 +124,7 @@ const usePhysicalRows = <T extends any> (
    //     - true to indicate the row is currently expanded
    //     - false to indicate it is not currently expanded, but could be
    //     - undefined to indicate it is not expandable
-   const isExpandable = React.useCallback(
+   const isExpanded = React.useCallback(
       (index: number) => {
          if (!phys) {
             return undefined;
@@ -139,39 +144,26 @@ const usePhysicalRows = <T extends any> (
             const r = old?.rows[index];
             if (!r || !old) {
                return old;
-            } else if (old.expanded.get(r.logicalRow.key) ?? defaultExpand) {
-               const expanded = new Map(old.expanded);
-               expanded.set(r.logicalRow.key, false);
-               return {
-                  ...old,
-                  rows: [
-                     ...old.rows.slice(0, index + 1),
-                     ...old.rows.slice(index + 1 + r.numChildren),
-                  ],
-                  expanded,
-               };
-            } else {
-               const expanded = new Map(old.expanded);
-               expanded.set(r.logicalRow.key, true);
-               return {
-                  ...old,
-                  rows: [
-                     ...old.rows.slice(0, index),
-                     ...computePhysicalRows(
-                        r.logicalRow, expanded, r.level, defaultExpand,
-                        r.topRowIndex),
-                     ...old.rows.slice(index + 1),
-                  ],
-                  expanded,
-               };
             }
+
+            const expanded = new Map(old.expanded);
+            expanded.set(
+               r.logicalRow.key,
+               !(old.expanded.get(r.logicalRow.key) ?? defaultExpand));
+
+            return {
+               ...old,
+               rows: rows.flatMap((c, idx) =>
+                  computePhysicalRows(c, expanded, 0, defaultExpand, idx)),
+               expanded,
+            };
          });
       },
-      [defaultExpand]
+      [defaultExpand, rows]
    );
 
    return {phys: phys?.rows ?? [],
-           isExpandable,
+           isExpanded,
            expandableRows: phys?.expandableRows,
            toggleRow};
 }
@@ -231,7 +223,7 @@ const ListWithColumns = <T extends any> (
       [p.rows, p.sortOn, cols]
    );
 
-   const {phys, expandableRows, isExpandable, toggleRow} =
+   const {phys, expandableRows, isExpanded, toggleRow} =
       usePhysicalRows(sortedRows, p.defaultExpand ?? false);
    const getKey = (idx: number) => phys[idx]!.logicalRow.key;
 
@@ -251,8 +243,8 @@ const ListWithColumns = <T extends any> (
    const getRow = React.useCallback(
       (q: ListChildComponentProps) => {
          const logic = phys[q.index].logicalRow;
-         const expandable = isExpandable(q.index);
-         const onExpand = expandable === undefined
+         const expanded = isExpanded(q.index);
+         const onExpand = expanded === undefined
             ? undefined
             : () => toggleRow(q.index);
          const theCols = logic.columnsOverride ?? cols;
@@ -263,7 +255,7 @@ const ListWithColumns = <T extends any> (
          return (
             <Table.TR
                style={style}
-               expanded={isExpandable(q.index)}
+               expanded={expanded}
                onClick={onExpand}
                nestingLevel={phys[q.index].level}
                isOdd={
@@ -284,17 +276,23 @@ const ListWithColumns = <T extends any> (
                         paddingLeft:
                            idx !== 0 || !p.indentNested
                            ? undefined   // keep the CSS padding
-                           : phys[q.index].level * 20
+                           : phys[q.index].level * INDENT_LEVEL
                      }}
                   >
-                     {c.cell?.(logic.data)}
+                     {c.cell?.(
+                        logic.data,
+                        {
+                           isExpanded: expanded,
+                           logic,
+                        }
+                     )}
                   </Table.TD>
                )
             }
             </Table.TR>
          );
       },
-      [phys, cols, isExpandable, toggleRow, p.indentNested, p.alternate]
+      [phys, cols, isExpanded, toggleRow, p.indentNested, p.alternate]
    );
 
    const onSort = (col: Column<T>) => {
