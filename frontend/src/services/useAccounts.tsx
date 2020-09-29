@@ -33,8 +33,7 @@ export class Account {
    readonly sharesPrecision: number;
    readonly parentId: AccountId | undefined;
    parentAccount: Account | undefined;
-
-   private accountType: string;
+   accountType: string;
 
    constructor(d: AccountJSON) {
       this.id = d.id;
@@ -111,7 +110,7 @@ export class AccountList {
    getAccount(id: AccountId): Account {
       return this.accounts.get(id) || new Account({
          id,
-         name: `account ${id}`,
+         name: id.toString(),
          favorite: false,
          currencyId: 'unknown',
          currencySymbol: 'unknown',

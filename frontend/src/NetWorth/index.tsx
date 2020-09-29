@@ -8,7 +8,7 @@ import useBalanceWithThreshold, {
    BalanceWithAccount } from 'services/useBalanceWithThreshold';
 import usePrefs from 'services/usePrefs';
 import { Account } from 'services/useAccounts';
-import useAccountTree, { TreeNode } from 'services/useAccountTree';
+import useAccountTree, { TreeMode, TreeNode } from 'services/useAccountTree';
 import useListFromAccount from 'List/ListAccounts';
 import ListWithColumns, {
    AlternateRows, Column, LogicalRow, RowDetails } from 'List/ListWithColumns';
@@ -86,6 +86,7 @@ export interface NetworthProps {
    showPrice: boolean;
    showShares: boolean;
    alternateColors?: boolean;
+   treeMode: TreeMode;
 
    threshold: number;
    // Only show account if at least one of the value columns is above this
@@ -109,7 +110,9 @@ const Networth: React.FC<NetworthProps & SetHeader> = p => {
    );
    const tree: TreeNode<BalanceWithAccount>[] = useAccountTree(
       data,
-      createDummyParent);
+      createDummyParent,
+      p.treeMode,
+   );
    const rows = useListFromAccount(tree);
 
    const columns = React.useMemo(

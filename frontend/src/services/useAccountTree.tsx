@@ -14,11 +14,28 @@ export interface TreeNode <T extends DataWithAccount> {
    depth: number;  // 0 for root nodes, 1 for direct children, ...
 }
 
+export enum TreeMode {
+   FLAT,          // flat list of account, sorted alphabetically
+   USER_DEFINED,  // use parent account set by the user
+   ACCOUNT_TYPE,  // organize by account type
+}
+
+
 const useAccountTree = <T extends DataWithAccount> (
    p: T[],
-   createDummyParent: (a: Account)=>T,
+   createDummyParent: (a: Account) => T,
+   mode: TreeMode = TreeMode.USER_DEFINED,
 ): TreeNode<T>[] => {
    const { accounts } = useAccounts();
+   const getParent: ((a: Account) => AccountId|undefined) = React.useMemo(
+      () => mode === TreeMode.FLAT
+         ? (a: Account) => undefined
+         : mode === TreeMode.USER_DEFINED
+         ? (a: Account) => a.parentId
+         : (a: Account) => a.accountType,
+      [mode]
+   );
+
    const roots: TreeNode<T>[] = React.useMemo(
       () => {
          // Create one node per account in the list
@@ -38,24 +55,25 @@ const useAccountTree = <T extends DataWithAccount> (
          // Reorganize those nodes into a tree
          nodes.forEach(n => {
             if (n.data.account.parentId) {
-               let pnode = nodes.get(n.data.account.parentId);
+               let parentId = getParent(n.data.account);
+               if (parentId !== undefined) {
+                  let pnode = nodes.get(parentId);
 
-               // Create missing parents
-               if (!pnode) {
-                  pnode = {
-                     data: createDummyParent(
-                        accounts.getAccount(n.data.account.parentId)
-                     ),
-                     children: [],
-                     parentNode: undefined,
-                     depth: 0,
-                  };
+                  // Create missing parents
+                  if (!pnode) {
+                     pnode = {
+                        data: createDummyParent(accounts.getAccount(parentId)),
+                        children: [],
+                        parentNode: undefined,
+                        depth: 0,
+                     };
 
-                  nodes.set(n.data.account.parentId, pnode);
+                     nodes.set(parentId, pnode);
+                  }
+
+                  pnode.children.push(n);
+                  n.parentNode = pnode;
                }
-
-               pnode.children.push(n);
-               n.parentNode = pnode;
             }
          });
 
@@ -70,7 +88,7 @@ const useAccountTree = <T extends DataWithAccount> (
          roots.sort(cmpNode);
          return roots;
       },
-      [p, accounts, createDummyParent]
+      [p, accounts, createDummyParent, getParent]
    );
 
    return roots;

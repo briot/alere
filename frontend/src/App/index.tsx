@@ -15,6 +15,7 @@ import { LedgerPanelProps } from 'Ledger/Module';
 import { CashflowPanelProps } from 'Cashflow/Module';
 import { MeanModuleProps } from 'Mean';
 import { SplitMode, NotesMode } from 'Ledger';
+import { TreeMode } from 'services/useAccountTree';
 import './App.css';
 import "font-awesome/css/font-awesome.min.css";
 
@@ -28,6 +29,7 @@ const defaultOverview: BaseProps[] = [
       showPrice: false,
       threshold: 1e-6,
       dates: ["today", "1 month ago"],
+      treeMode: TreeMode.USER_DEFINED,
    } as NetworthPanelProps,
    {
       type: 'incomeexpenses',

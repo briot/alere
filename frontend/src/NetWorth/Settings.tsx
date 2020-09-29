@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { NetworthProps } from 'NetWorth';
-import { Checkbox, NumberInput } from 'Form';
+import { Checkbox, NumberInput, Select } from 'Form';
 import { SettingsProps } from 'Dashboard/Module';
 import { RelativeDate, MultiDatePicker } from 'Dates';
+import { TreeMode } from 'services/useAccountTree';
 
 const Settings: React.FC<NetworthProps & SettingsProps<NetworthProps>> = p => {
    const changeValue = (showValue: boolean) => p.setData({ showValue });
@@ -11,6 +12,7 @@ const Settings: React.FC<NetworthProps & SettingsProps<NetworthProps>> = p => {
    const changedates = (dates: RelativeDate[]) => p.setData({ dates });
    const changeThreshold = (threshold: number) => p.setData({ threshold });
    const changeAlt = (alternateColors: boolean) => p.setData({ alternateColors });
+   const changeTreeMode = (treeMode: TreeMode) => p.setData({ treeMode });
    return (
       <fieldset>
          <legend>Networth</legend>
@@ -41,6 +43,17 @@ const Settings: React.FC<NetworthProps & SettingsProps<NetworthProps>> = p => {
             text="Threshold"
             title="Hide accounts with a value below this threshold"
          />
+         <Select
+             text="Group by"
+             onChange={changeTreeMode}
+             value={p.treeMode}
+             options={[
+                {text: "Flat list",      value: TreeMode.FLAT},
+                {text: "Parent account", value: TreeMode.USER_DEFINED},
+                {text: "Account type",   value: TreeMode.ACCOUNT_TYPE},
+            ]}
+         />
+
          <MultiDatePicker
             text="Columns"
             value={p.dates}
