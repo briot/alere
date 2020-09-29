@@ -9,13 +9,25 @@ const Settings: React.FC<NetworthProps & SettingsProps<NetworthProps>> = p => {
    const changeValue = (showValue: boolean) => p.setData({ showValue });
    const changePrice = (showPrice: boolean) => p.setData({ showPrice });
    const changeShares = (showShares: boolean) => p.setData({ showShares });
+   const changePercent = (showPercent: boolean) => p.setData({ showPercent });
    const changedates = (dates: RelativeDate[]) => p.setData({ dates });
+   const changeBorders = (borders: boolean) => p.setData({ borders });
    const changeThreshold = (threshold: number) => p.setData({ threshold });
    const changeAlt = (alternateColors: boolean) => p.setData({ alternateColors });
    const changeTreeMode = (treeMode: TreeMode) => p.setData({ treeMode });
    return (
       <fieldset>
          <legend>Networth</legend>
+         <Checkbox
+             checked={p.borders}
+             onChange={changeBorders}
+             text="Show borders"
+         />
+         <Checkbox
+             checked={p.alternateColors}
+             onChange={changeAlt}
+             text="Alternate background color"
+         />
          <Checkbox
             checked={p.showValue}
             onChange={changeValue}
@@ -32,9 +44,9 @@ const Settings: React.FC<NetworthProps & SettingsProps<NetworthProps>> = p => {
             text="Show shares"
          />
          <Checkbox
-             checked={p.alternateColors}
-             onChange={changeAlt}
-             text="Alternate background color"
+            checked={p.showPercent}
+            onChange={changePercent}
+            text="Show percents"
          />
          <NumberInput
             value={p.threshold ?? 0}

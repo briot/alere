@@ -23,6 +23,7 @@ const columnAccountName: Column<BalanceWithAccount> = {
 const columnShares = (base: BalanceList, date_idx: number) => ({
    id: `Shares${date_idx}`,
    head: 'Shares',
+   className: 'price',
    cell: (d: BalanceWithAccount, details: RowDetails<BalanceWithAccount>) =>
       details.isExpanded === false
       ? ''
@@ -37,6 +38,7 @@ const columnShares = (base: BalanceList, date_idx: number) => ({
 const columnPrice = (base: BalanceList, date_idx: number) => ({
    id: `Price${date_idx}`,
    head: 'Price',
+   className: 'price',
    cell: (d: BalanceWithAccount, details: RowDetails<BalanceWithAccount>) =>
       details.isExpanded === false
       ? ''
@@ -64,6 +66,7 @@ const cumulatedValue = (
 
 const columnValue = (base: BalanceList, date_idx: number) => ({
    id: dateToString(base.dates[date_idx]),
+   className: 'amount',
    cell: (d: BalanceWithAccount, details: RowDetails<BalanceWithAccount>) =>
       <Numeric
          amount={
@@ -80,11 +83,29 @@ const columnValue = (base: BalanceList, date_idx: number) => ({
       />
 });
 
+const columnPercent = (base: BalanceList, date_idx: number) => ({
+   id: `Percent${date_idx}`,
+   head: '% total',
+   className: 'percent',
+   cell: (d: BalanceWithAccount, details: RowDetails<BalanceWithAccount>) =>
+      <Numeric
+         amount={
+            (details.isExpanded === false
+               ? cumulatedValue(details.logic, date_idx)
+               : d.atDate[date_idx]?.price * d.atDate[date_idx]?.shares
+            ) / base.totalValue[date_idx] * 100
+         }
+         unit="%"
+      />,
+});
+
 export interface NetworthProps {
    dates: RelativeDate[];
    showValue: boolean;
    showPrice: boolean;
    showShares: boolean;
+   showPercent: boolean;
+   borders?: boolean;
    alternateColors?: boolean;
    treeMode: TreeMode;
 
@@ -123,8 +144,10 @@ const Networth: React.FC<NetworthProps & SetHeader> = p => {
             p.showShares ? columnShares(baseData, date_idx) : undefined,
             p.showPrice ? columnPrice(baseData, date_idx) : undefined,
             p.showValue ? columnValue(baseData, date_idx) : undefined,
+            p.showPercent ? columnPercent(baseData, date_idx) : undefined,
          ])),
-      [p.dates, p.showShares, p.showPrice, p.showValue, baseData]
+      [p.dates, p.showShares, p.showPrice, p.showValue, baseData,
+       p.showPercent]
    );
 
    const { setHeader } = p;
@@ -140,6 +163,7 @@ const Networth: React.FC<NetworthProps & SetHeader> = p => {
          rows={rows}
          indentNested={true}
          defaultExpand={true}
+         borders={p.borders}
          alternate={
             p.alternateColors ? AlternateRows.ROW : AlternateRows.NO_COLOR
          }

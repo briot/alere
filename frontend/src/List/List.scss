@@ -223,7 +223,11 @@
       text-align: right;
    }
    .amount {
-      flex: 0 1 80px;
+      flex: 0 1 90px;
+      text-align: right;
+   }
+   .percent {
+      flex: 0 1 60px;
       text-align: right;
    }
 }
