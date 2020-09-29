@@ -1,3 +1,9 @@
 .meanHistory {
    flex: 1 1;
+
+   font-size: 1em;
+   font-family: "minion pro", "myriad pro", "tahoma";
+   font-variant-numeric: oldstyle-nums tabular-nums;
+   font-variant-numeric: lining-nums tabular-nums;
+   font-size-adjust: 0.438;
 }

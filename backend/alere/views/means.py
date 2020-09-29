@@ -35,10 +35,9 @@ class MeanView(JSONView):
                    sum(s.valueFormatted) as value
                  FROM kmmSplits s JOIN kmmAccounts a ON (s.accountId=a.id)
                  WHERE a.accountType=:accountType
-                   AND date < strftime('%Y-%m', 'now')
                    AND s.postDate >= :mindate
                    AND s.postDate <= :maxdate
-                 GROUP BY date) q;
+                 GROUP BY date) q
         """
 
         return [
