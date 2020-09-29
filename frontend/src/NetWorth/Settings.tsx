@@ -51,6 +51,7 @@ const Settings: React.FC<NetworthProps & SettingsProps<NetworthProps>> = p => {
                 {text: "Flat list",      value: TreeMode.FLAT},
                 {text: "Parent account", value: TreeMode.USER_DEFINED},
                 {text: "Account type",   value: TreeMode.ACCOUNT_TYPE},
+                {text: "Institution",    value: TreeMode.INSTITUTION},
             ]}
          />
 

@@ -15,9 +15,10 @@ export interface TreeNode <T extends DataWithAccount> {
 }
 
 export enum TreeMode {
-   FLAT,          // flat list of account, sorted alphabetically
-   USER_DEFINED,  // use parent account set by the user
-   ACCOUNT_TYPE,  // organize by account type
+   FLAT,          // Flat list of account, sorted alphabetically
+   USER_DEFINED,  // Use parent account set by the user
+   ACCOUNT_TYPE,  // Organize by account type
+   INSTITUTION,   // By institution
 }
 
 
@@ -32,6 +33,8 @@ const useAccountTree = <T extends DataWithAccount> (
          ? (a: Account) => undefined
          : mode === TreeMode.USER_DEFINED
          ? (a: Account) => a.parentId
+         : mode === TreeMode.INSTITUTION
+         ? (a: Account) => a.getInstitution()
          : (a: Account) => a.accountType,
       [mode]
    );

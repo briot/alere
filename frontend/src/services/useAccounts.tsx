@@ -17,6 +17,7 @@ interface AccountJSON {
    forOpeningBalances: boolean;
    pricePrecision: number;
    sharesPrecision: number;
+   institution: string | null;
 }
 
 export class Account {
@@ -32,8 +33,9 @@ export class Account {
    readonly pricePrecision: number;
    readonly sharesPrecision: number;
    readonly parentId: AccountId | undefined;
+   readonly accountType: string;
    parentAccount: Account | undefined;
-   accountType: string;
+   private institution: string | null;
 
    constructor(d: AccountJSON) {
       this.id = d.id;
@@ -49,6 +51,7 @@ export class Account {
       this.pricePrecision = d.pricePrecision;
       this.sharesPrecision = d.sharesPrecision;
       this.parentId = d.parent;
+      this.institution = d.institution;
    }
 
    isStock(): boolean {
@@ -80,6 +83,11 @@ export class Account {
 
    setParent(parent: Account|undefined) {
       this.parentAccount = parent;
+   }
+
+   getInstitution(): string {
+      return (this.institution || this.parentAccount?.getInstitution())
+        ?? 'Unknown';
    }
 }
 
@@ -122,6 +130,7 @@ export class AccountList {
          forOpeningBalances: false,
          pricePrecision: 0,
          sharesPrecision: 0,
+         institution: 'Unknown',
       });
    }
 

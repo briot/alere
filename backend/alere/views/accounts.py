@@ -16,6 +16,7 @@ class Account:
             lastReconciled: str,
             sharesPrecision: int,
             pricePrecision: int,
+            institution: str,
             favorite=False,
         ):
 
@@ -32,6 +33,7 @@ class Account:
         self.sharesPrecision = sharesPrecision
         self.pricePrecision = pricePrecision
         self.currencySymbol = currencySymbol
+        self.institution = institution
 
     def to_json(self):
         return {
@@ -48,6 +50,7 @@ class Account:
             "forOpeningBalances": self.forOpeningBalances,
             "sharesPrecision": self.sharesPrecision,
             "pricePrecision": self.pricePrecision,
+            "institution": self.institution,
         }
 
 
@@ -70,12 +73,15 @@ class AccountList(JSONView):
            COALESCE
               (kmmSecurities.pricePrecision,
                kmmCurrencies.pricePrecision
-              ) as pricePrecision
+              ) as pricePrecision,
+            kmmInstitutions.name as institution
         FROM kmmAccounts
            LEFT JOIN kmmSecurities
               ON (kmmAccounts.currencyId = kmmSecurities.id)
            LEFT JOIN kmmCurrencies
               ON (kmmAccounts.currencyId = kmmCurrencies.ISOcode)
+            LEFT JOIN kmmInstitutions
+              ON (kmmAccounts.institutionId = kmmInstitutions.id)
         """
 
         accounts = {}
@@ -93,6 +99,7 @@ class AccountList(JSONView):
                    else "",
                 pricePrecision=int(a.pricePrecision),
                 sharesPrecision=int(math.log10(float(a.sharesPrecision))),
+                institution=a.institution,
                 favorite=False)
 
         query = f"""
