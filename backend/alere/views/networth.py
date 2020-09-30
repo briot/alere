@@ -34,7 +34,9 @@ class NetworthView(JSONView):
         shares = {}
         prices = {}
 
-        for d in dates:
+        default = [0] * len(dates)
+
+        for d_idx, d in enumerate(dates):
             query, params = (f"""
                WITH
                   {kmm._price_history(currency)},
@@ -76,8 +78,11 @@ class NetworthView(JSONView):
             )
 
             for row in do_query(query, params):
-                shares.setdefault(row.accountId, []).append(row.balanceShares)
-                prices.setdefault(row.accountId, []).append(row.computedPrice)
+                s = shares.setdefault(row.accountId, [0] * len(dates))
+                s[d_idx] = row.balanceShares
+
+                p = prices.setdefault(row.accountId, [0] * len(dates))
+                p[d_idx] = row.computedPrice
 
         result = []
         for a in shares.keys():

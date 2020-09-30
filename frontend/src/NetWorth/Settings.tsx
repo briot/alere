@@ -10,6 +10,8 @@ const Settings: React.FC<NetworthProps & SettingsProps<NetworthProps>> = p => {
    const changePrice = (showPrice: boolean) => p.setData({ showPrice });
    const changeShares = (showShares: boolean) => p.setData({ showShares });
    const changePercent = (showPercent: boolean) => p.setData({ showPercent });
+   const changeDeltaL = (showDeltaLast: boolean) => p.setData({ showDeltaLast });
+   const changeDeltaN = (showDeltaNext: boolean) => p.setData({ showDeltaNext });
    const changedates = (dates: RelativeDate[]) => p.setData({ dates });
    const changeBorders = (borders: boolean) => p.setData({ borders });
    const changeThreshold = (threshold: number) => p.setData({ threshold });
@@ -46,7 +48,17 @@ const Settings: React.FC<NetworthProps & SettingsProps<NetworthProps>> = p => {
          <Checkbox
             checked={p.showPercent}
             onChange={changePercent}
-            text="Show percents"
+            text="Show percent of total"
+         />
+         <Checkbox
+            checked={p.showDeltaNext}
+            onChange={changeDeltaN}
+            text="Show delta with next column"
+         />
+         <Checkbox
+            checked={p.showDeltaLast}
+            onChange={changeDeltaL}
+            text="Show delta with last column"
          />
          <NumberInput
             value={p.threshold ?? 0}

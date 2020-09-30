@@ -53,27 +53,25 @@ const columnPrice = (base: BalanceList, date_idx: number) => ({
 const cumulatedValue = (
    logic: LogicalRow<BalanceWithAccount>,
    date_idx: number,
+   isExpanded: boolean | undefined,
 ): number => {
    const d = logic.data;
-   const val = d.atDate[date_idx]?.price * d.atDate[date_idx]?.shares || 0;
-   return logic.getChildren === undefined
+   const val = d.atDate[date_idx]?.price * d.atDate[date_idx]?.shares;
+   return logic.getChildren === undefined || isExpanded === true
       ? val
       : logic.getChildren(d).reduce(
-           (total, row) => total + cumulatedValue(row, date_idx),
-           val
+           (total, row) => total + cumulatedValue(row, date_idx, isExpanded),
+           val || 0
       );
 }
 
 const columnValue = (base: BalanceList, date_idx: number) => ({
-   id: dateToString(base.dates[date_idx]),
+   id: `Value${date_idx}`,
+   head: dateToString(base.dates[date_idx]),
    className: 'amount',
    cell: (d: BalanceWithAccount, details: RowDetails<BalanceWithAccount>) =>
       <Numeric
-         amount={
-            details.isExpanded === false
-            ? cumulatedValue(details.logic, date_idx)
-            : d.atDate[date_idx]?.price * d.atDate[date_idx]?.shares
-         }
+         amount={cumulatedValue(details.logic, date_idx, details.isExpanded)}
          unit={base.currencyId}
       />,
    foot: () =>
@@ -90,14 +88,41 @@ const columnPercent = (base: BalanceList, date_idx: number) => ({
    cell: (d: BalanceWithAccount, details: RowDetails<BalanceWithAccount>) =>
       <Numeric
          amount={
-            (details.isExpanded === false
-               ? cumulatedValue(details.logic, date_idx)
-               : d.atDate[date_idx]?.price * d.atDate[date_idx]?.shares
-            ) / base.totalValue[date_idx] * 100
+            cumulatedValue(details.logic, date_idx, details.isExpanded)
+            / base.totalValue[date_idx] * 100
          }
          unit="%"
       />,
 });
+
+const columnDelta = (
+   base: BalanceList, date_idx: number, ref: number,
+   head: string, title: string,
+) => {
+   return {
+      id: `${head}${date_idx}`,
+      head,
+      title,
+      className: 'percent',
+      cell: (d: BalanceWithAccount, details: RowDetails<BalanceWithAccount>) =>
+         <Numeric
+            amount={
+               (
+                  cumulatedValue(details.logic, ref, details.isExpanded)
+                  / cumulatedValue(details.logic, date_idx, details.isExpanded)
+                  - 1
+               ) * 100
+            }
+            unit="%"
+         />,
+      foot: () =>
+         <Numeric
+            amount={
+               (base.totalValue[ref] / base.totalValue[date_idx] - 1) * 100
+            }
+            unit="%"
+         />
+}};
 
 export interface NetworthProps {
    dates: RelativeDate[];
@@ -105,6 +130,8 @@ export interface NetworthProps {
    showPrice: boolean;
    showShares: boolean;
    showPercent: boolean;
+   showDeltaNext: boolean;
+   showDeltaLast: boolean;
    borders?: boolean;
    alternateColors?: boolean;
    treeMode: TreeMode;
@@ -145,9 +172,20 @@ const Networth: React.FC<NetworthProps & SetHeader> = p => {
             p.showPrice ? columnPrice(baseData, date_idx) : undefined,
             p.showValue ? columnValue(baseData, date_idx) : undefined,
             p.showPercent ? columnPercent(baseData, date_idx) : undefined,
+            p.showDeltaNext && date_idx !== p.dates.length - 1
+               ? columnDelta(
+                  baseData, date_idx, date_idx + 1, 'ΔNext',
+                  'Delta between this column and the next column')
+               : undefined,
+            p.showDeltaLast && date_idx !== p.dates.length - 1
+               && (!p.showDeltaNext || date_idx !== p.dates.length - 2)
+               ? columnDelta(
+                  baseData, date_idx, p.dates.length - 1, 'ΔLast',
+                  'Delta between this column and the last column')
+               : undefined,
          ])),
       [p.dates, p.showShares, p.showPrice, p.showValue, baseData,
-       p.showPercent]
+       p.showPercent, p.showDeltaLast, p.showDeltaNext]
    );
 
    const { setHeader } = p;
