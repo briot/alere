@@ -17,24 +17,25 @@ export interface BalanceWithAccount extends Balance {
 const useBalanceWithThreshold = (p: {
    currencyId: string;
    dates: RelativeDate[];
-   threshold: number;
+   threshold?: number;
 }): {baseData: BalanceList, data: BalanceWithAccount[]} => {
    const baseData = useBalance({...p});
    const { accounts } = useAccounts();
+   const thresh = p.threshold ?? 1e-10;
    const data = React.useMemo(
       () => baseData.list
 
             // Remove lines below the threshold
             .filter(n =>
                n.atDate.find(a =>
-                  (Math.abs(a.shares * a.price) >= p.threshold)) !== undefined)
+                  (Math.abs(a.shares * a.price) >= thresh)) !== undefined)
 
             // Lookup accounts
             .map(n => ({...n, account: accounts.getAccount(n.accountId) }))
 
             // Sort alphabetically
             .sort((a, b) => cmpAccounts(a.account, b.account)),
-      [accounts, p.threshold, baseData]
+      [accounts, baseData, thresh]
    );
 
    return {baseData, data};

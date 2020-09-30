@@ -5,6 +5,7 @@ import LeftSideBar from 'LeftSideBar';
 import RightSideBar from 'RightSideBar';
 import LedgerPage from 'Ledger/Page';
 import InvestmentPage from 'Investment/Page';
+import AccountsPage from 'NetWorth/Page';
 import usePrefs from 'services/usePrefs';
 import Header, { HeaderProps } from 'Header';
 import StyleGuide from 'StyleGuide';
@@ -113,6 +114,9 @@ const App: React.FC<{}> = () => {
                <Switch>
                    <Route path="/ledger/:accountId" >
                       <LedgerPage setHeader={setHeader} />
+                   </Route>
+                   <Route path="/accounts">
+                      <AccountsPage setHeader={setHeader} />
                    </Route>
                    <Route path="/investments">
                       <InvestmentPage setHeader={setHeader} />
