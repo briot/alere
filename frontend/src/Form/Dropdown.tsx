@@ -1,4 +1,5 @@
 import * as React from 'react';
+import classes from 'services/classes';
 import './Dropdown.scss';
 
 interface DropdownProps {
@@ -21,42 +22,54 @@ const Dropdown: React.FC<DropdownProps> = p => {
    const [pos, setPos] = React.useState<Pos>({});
    const widget = React.useRef<HTMLDivElement>(null);
 
-   const computePos = () => {
-      const menu = widget.current?.querySelector('.menu');
-      const w = menu?.clientWidth;
+   const computePos = React.useCallback(
+      () => {
+         const menu = widget.current?.querySelector('.menu');
+         const w = menu?.clientWidth;
 
-      if (!w || !widget.current) { // we could not compute the size yet
-         window.setTimeout(computePos, 50);
-         return;
-      }
+         if (!w || !widget.current) { // we could not compute the size yet
+            window.setTimeout(computePos, 50);
+            return;
+         }
 
-      const bb = widget.current.getBoundingClientRect();
-      const h = menu!.clientHeight;
-      const dh = document.documentElement.clientHeight;
-      setPos({
-         horiz: bb.left + w > document.documentElement.clientWidth
-            ? 'left' : 'right',
-         vert: bb.top + h <= dh
-            ? 'below'
-            : bb.top - h < 0 ? -bb.top
-            : 'above',
-      });
-   }
+         const bb = widget.current.getBoundingClientRect();
+         const h = menu!.clientHeight;
+         const dh = document.documentElement.clientHeight;
+         setPos({
+            horiz: bb.left + w > document.documentElement.clientWidth
+               ? 'left' : 'right',
+            vert: bb.top + h <= dh
+               ? 'below'
+               : bb.top - h < 0 ? -bb.top
+               : 'above',
+         });
+      },
+      []
+   );
 
-   const doVisible = (visible: boolean) => {
-      setVisible(visible);
-      setPos({});
+   const doVisible = React.useCallback(
+      (forceHide?: boolean) => {
+         setVisible(old => {
+            const n = forceHide ? false : !old;
+            if (n) {
+               computePos();
+            } else {
+               setPos({});
+            }
+            return n;
+         });
+      },
+      [computePos]
+   );
 
-      if (visible) {
-         computePos();
-      }
-   }
-
-   // const onToggle = () => setPos(old => ({ visible: !old.visible }));
-   // const onClose  = () => setPos({ visible: false });
-
-   const onToggle = () => doVisible(!visible);
-   const onClose  = () => doVisible(false);
+   const onToggle = React.useCallback(
+      () => doVisible(),
+      [doVisible]
+   );
+   const onClose  = React.useCallback(
+      () => doVisible(true /* forceHide */),
+      [doVisible]
+   );
 
    const onMouse = React.useCallback(
       (e : MouseEvent) => {
@@ -90,8 +103,15 @@ const Dropdown: React.FC<DropdownProps> = p => {
       [onMouse, visible]
    );
 
-   const c = `dropdown ${p.className ?? ''} ${pos.horiz ?? 'offscreen'}` +
-      ` ${visible ? 'visible' : ''}`;
+   const c = classes(
+      'dropdown',
+      p.className,
+      pos.horiz ?? 'offscreen',
+   );
+   const menuc = classes(
+      'menu',
+      visible && 'visible',
+   );
 
    return (
       <div
@@ -102,7 +122,7 @@ const Dropdown: React.FC<DropdownProps> = p => {
             {p.button(visible)}
          </div>
          <div
-             className="menu"
+             className={menuc}
              style={{top: pos.vert === 'above' ? 'auto'
                           : pos.vert === 'below' ? '100%'
                           : pos.vert,

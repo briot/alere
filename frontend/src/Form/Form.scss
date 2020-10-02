@@ -116,6 +116,7 @@ form .select option {
       background: var(--input-background);
       color: var(--input-foreground);
       border: 1px solid var(--input-border);
+      max-height: calc(15 * var(--row-height));
    }
 
    .option {

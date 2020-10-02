@@ -26,7 +26,6 @@
    & > .menu {
       font-size: 0.8rem;
 
-      display: none;
       box-shadow: 3px 3px 4px 0 var(--shadow-color);
       border-radius: .28571429rem .28571429rem 0 0;
 
@@ -41,14 +40,22 @@
       outline: 0;
       width: 100%;             // use same width as the selector itself
       min-width: max-content;  // but leave space to show full items text
-      max-height: calc(15 * var(--row-height));
       margin: 0;
       padding: 10px;
       z-index: 11;
-   }
 
-   &.visible > .menu {
-      display: block;
+      transform: scaleY(0);
+      transition: transform 0.2s ease-out;
+      &.visible {
+         transform: scaleY(1);
+      }
+
+//      max-height: 0;
+//      transition: max-height 0.2s ease-out;
+//      &.visible {
+//         max-height: 100vh;
+//      }
+
    }
 
    &.left > .menu {
