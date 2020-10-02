@@ -104,17 +104,15 @@ const columnDelta = (
       head,
       title,
       className: 'percent',
-      cell: (d: BalanceWithAccount, details: RowDetails<BalanceWithAccount>) =>
-         <Numeric
-            amount={
-               (
-                  cumulatedValue(details.logic, ref, details.isExpanded)
-                  / cumulatedValue(details.logic, date_idx, details.isExpanded)
-                  - 1
-               ) * 100
-            }
-            unit="%"
-         />,
+      cell: (d: BalanceWithAccount, details: RowDetails<BalanceWithAccount>) => {
+         const m = cumulatedValue(details.logic, date_idx, details.isExpanded);
+         const delta =
+            Math.abs(m) < 1e-10
+            ? NaN
+            : (cumulatedValue(details.logic, ref, details.isExpanded) / m - 1
+              ) * 100;
+         return <Numeric amount={delta} unit="%" />;
+      },
       foot: () =>
          <Numeric
             amount={
