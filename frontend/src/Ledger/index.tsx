@@ -203,7 +203,7 @@ const columnShares: Column<TableRowData> = {
       d.split === MAIN &&
       <Numeric
          amount={d.firstRowSplit.shares}
-         precision={d.account?.sharesPrecision}
+         scale={d.account?.sharesScale}
       />
 }
 
@@ -217,7 +217,7 @@ const columnPrice: Column<TableRowData> = {
       d.split === MAIN &&
       <Numeric
          amount={d.firstRowSplit.price}
-         precision={d.account?.pricePrecision}
+         scale={d.account?.priceScale}
       />
 }
 
@@ -229,7 +229,7 @@ const columnSharesBalance: Column<TableRowData> = {
       d.split === MAIN &&
       <Numeric
           amount={d.transaction?.balanceShares}
-          precision={d.account?.sharesPrecision}
+          scale={d.account?.sharesScale}
       />
 }
 

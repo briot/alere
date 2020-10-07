@@ -1,3 +1,4 @@
+import datetime
 from django.http import HttpResponse
 from django.views.generic import View
 import json
@@ -7,6 +8,8 @@ class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if hasattr(obj, "to_json"):
             return obj.to_json()
+        elif isinstance(obj, datetime.datetime):
+            return obj.strftime('%Y-%m-%d %H:%M:%s')
 
         return super().default(obj)
 

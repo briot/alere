@@ -9,7 +9,7 @@ interface NumericProps {
    amount: number|undefined|null;
    unit?: string;
    suffix?: string;
-   precision?: number;
+   scale?: number;  //  100 => precision is 0.01
    colored?: boolean;
    className?: string;
 }
@@ -26,7 +26,8 @@ const Numeric: React.FC<NumericProps> = p => {
       p.className,
       p.colored && (p.amount >= 0 ? ' positive' : ' negative'),
    );
-   const val = p.amount.toFixed(p.precision ?? 2);
+   const val = p.amount.toFixed(
+      p.scale === undefined ? 2 : Math.log10(p.scale));
 
    let str = val.split('.');  // separator used by toFixed
    if (str[0].length >= 4) {

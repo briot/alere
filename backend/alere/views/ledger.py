@@ -1,6 +1,7 @@
 from .json import JSONView
 from typing import List, Union
 from .kmm import kmm, do_query
+import alere.models
 
 class Split:
     def __init__(

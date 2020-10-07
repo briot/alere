@@ -1,3 +1,3 @@
 env
 __pycache__
-backend/db.sqlite3
+backend/alere_db.sqlite3

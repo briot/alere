@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.contrib import admin
+# from django.contrib import admin
 import django.shortcuts
 from django.template.context_processors import csrf
 from django.urls import path, re_path
@@ -33,7 +33,7 @@ def static(request):
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # path('admin/', admin.site.urls),
     path('api/account/list', AccountList.as_view()),
     path('api/ledger/<str:id>', LedgerView.as_view()),
     path('api/prices/<str:accountId>', PriceHistory.as_view()),

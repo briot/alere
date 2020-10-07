@@ -68,7 +68,7 @@ const CustomTooltip = (p: TooltipProps & {data: DataType} ) => {
            <div>
               <Numeric
                  amount={value}
-                 precision={pay.payload.account.pricePrecision}
+                 scale={pay.payload.account.priceScale}
                  unit={pay.payload.account.currencySymbol}
               />
            </div>

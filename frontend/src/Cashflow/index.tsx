@@ -76,7 +76,7 @@ const Metrics: React.FC<MetricsProps> = p => {
                   (recommended {p.compare}
                      <Numeric
                         amount={p.ideal}
-                        precision={0}
+                        scale={1 /* show no decimal digits */}
                         unit={p.suffix}
                      />
                   )

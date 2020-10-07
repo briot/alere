@@ -7,16 +7,16 @@ interface AccountJSON {
    id: AccountId;
    name: string;
    favorite: boolean;
-   currencyId: string;
+   currencyId: string|number;
    currencySymbol: string;
+   currencyPrefixed: boolean;
    accountType: string;
    closed: boolean;
    iban: string;
    parent: AccountId | undefined;
    lastReconciled: string;
-   forOpeningBalances: boolean;
-   pricePrecision: number;
-   sharesPrecision: number;
+   priceScale: number;
+   sharesScale: number;
    institution: string | null;
 }
 
@@ -24,14 +24,14 @@ export class Account {
    readonly id: AccountId;
    readonly name: string;
    readonly favorite: boolean;
-   readonly currencyId: string;
+   readonly currencyId: string|number;
    readonly currencySymbol: string;
+   readonly currencyPrefixed: boolean;
    readonly closed: boolean;
    readonly iban: string;
    readonly lastReconciled: string;
-   readonly forOpeningBalances: boolean;
-   readonly pricePrecision: number;
-   readonly sharesPrecision: number;
+   readonly priceScale: number;
+   readonly sharesScale: number;
    readonly parentId: AccountId | undefined;
    readonly accountType: string;
    parentAccount: Account | undefined;
@@ -43,13 +43,13 @@ export class Account {
       this.favorite = d.favorite;
       this.currencyId = d.currencyId;
       this.currencySymbol = d.currencySymbol;
+      this.currencyPrefixed = d.currencyPrefixed;
       this.accountType = d.accountType;
       this.closed = d.closed;
       this.iban = d.iban;
       this.lastReconciled = d.lastReconciled;
-      this.forOpeningBalances = d.forOpeningBalances;
-      this.pricePrecision = d.pricePrecision;
-      this.sharesPrecision = d.sharesPrecision;
+      this.priceScale = d.priceScale;
+      this.sharesScale = d.sharesScale;
       this.parentId = d.parent;
       this.institution = d.institution;
    }
@@ -122,14 +122,14 @@ export class AccountList {
          favorite: false,
          currencyId: 'unknown',
          currencySymbol: 'unknown',
+         currencyPrefixed: false,
          accountType: 'unknown',
          closed: false,
          iban: '',
          parent: undefined,
          lastReconciled: '',
-         forOpeningBalances: false,
-         pricePrecision: 0,
-         sharesPrecision: 0,
+         priceScale: 1,
+         sharesScale: 1,
          institution: 'Unknown',
       });
    }
