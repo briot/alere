@@ -36,3 +36,16 @@ class JSONView(View):
         if v is None:
             return default
         return bool(v) and v.lower() not in ('false', '0')
+
+    def as_time(self, params, name, default=None):
+        """
+        Return the given parameter as a datetime
+        """
+        v = params.get(name, default)
+        if v is None:
+            return None
+
+        return datetime.datetime \
+            .fromisoformat(v) \
+            .astimezone(datetime.timezone.utc)
+

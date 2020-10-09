@@ -181,6 +181,30 @@ class Migration(migrations.Migration):
                LEFT JOIN alr_institutions
                   ON (alr_accounts.institution_id=alr_institutions.id)
         ;
+
+        DROP VIEW IF EXISTS alr_splits_with_value;
+        CREATE VIEW alr_splits_with_value AS
+            SELECT
+               row_number() OVER () as id,   --  for django's sake
+               alr_splits.*,
+               alr_price_history.target_id as value_currency_id,
+               CAST(
+                  alr_price_history.scaled_price * alr_splits.scaled_qty
+                  AS FLOAT
+               ) / source.price_scale / source.price_scale
+               AS value
+            FROM
+               alr_splits
+               JOIN alr_accounts ON (alr_splits.account_id=alr_accounts.id)
+               JOIN alr_commodities source
+                  ON (alr_accounts.commodity_id=source.id)
+               JOIN alr_price_history
+                  ON (alr_price_history.origin_id=source.id)
+               JOIN alr_commodities target
+                  ON (alr_price_history.target_id=target.id
+                      and target.kind='C')
+        ;
+
         """
         )
     ]

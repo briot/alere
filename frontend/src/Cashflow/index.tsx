@@ -2,30 +2,33 @@ import * as React from 'react';
 import { DateRange, monthCount, rangeDisplay, rangeToHttp } from 'Dates';
 import { SetHeader } from 'Header';
 import Numeric from 'Numeric';
+import Table from 'List';
 import usePrefs from 'services/usePrefs';
 import './Cashflow.css';
 
 interface Metric {
    income: number;
    passive_income: number;
+   work_income: number;
    expenses: number;
-   active: number;
-   passive: number;
-   liquid_assets: number;
    income_taxes: number;
    other_taxes: number;
+   networth: number;
+   networth_start: number;
+   liquid_assets: number;
 }
 
 const useFetchPL = (range: DateRange, currencyId: string) => {
    const [data, setData] = React.useState<Metric>({
       income: NaN,
+      passive_income: NaN,
       expenses: NaN,
-      active: NaN,
-      passive: NaN,
+      work_income: NaN,
+      networth: NaN,
+      networth_start: NaN,
       liquid_assets: NaN,
       income_taxes: NaN,
       other_taxes: NaN,
-      passive_income: NaN,
    });
 
    React.useEffect(
@@ -48,9 +51,9 @@ interface MetricsProps {
    name: string;
    descr: string | React.ReactNode;
    value: number | React.ReactNode;
-   ideal: number;
-   compare: string;
-   suffix: string;
+   ideal?: number;
+   compare?: string;
+   suffix?: string;
    tooltip?: string;
 }
 
@@ -71,7 +74,7 @@ const Metrics: React.FC<MetricsProps> = p => {
          }
          <div className="values" >
             {
-               !isNaN(p.ideal)  &&
+               p.ideal !== undefined && !isNaN(p.ideal)  &&
                <span className="recommended">
                   (recommended {p.compare}
                      <Numeric
@@ -121,9 +124,83 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
    );
 
    const months = monthCount(p.range);
-   const monthly_expenses = -pl.expenses / months;
-   const networth = pl.active + pl.passive;
-   const cashflow = pl.income + pl.expenses;
+   const monthly_expenses = pl.expenses / months;
+   const networth_delta = pl.networth - pl.networth_start;
+   const cashflow = pl.income - pl.expenses;
+
+   const flowrow = (p: {
+      head: string,
+      amount: number,
+      title?: string,
+      bold?: boolean,
+      border?: boolean,
+      padding?: number,
+   }) => (
+      <Table.TR
+         title={p.title}
+         style={{borderTop: p.border ? "1px solid var(--table-color)" : ""}}
+      >
+        {p.bold ? (
+           <>
+              <Table.TH>{p.head}</Table.TH>
+              <Table.TH className="amount">
+                 <Numeric amount={p.amount} unit={prefs.currencyId} />
+              </Table.TH>
+              <Table.TH className="amount">
+                 <Numeric amount={p.amount / months} unit={prefs.currencyId} />
+              </Table.TH>
+           </>
+        ) : (
+           <>
+              <Table.TD
+                 style={{paddingLeft: (p.padding ?? 0) * 20}}
+              >
+                 {p.head}
+              </Table.TD>
+              <Table.TD className="amount">
+                 <Numeric amount={p.amount} unit={prefs.currencyId} />
+              </Table.TD>
+              <Table.TD className="amount">
+                 <Numeric amount={p.amount / months} unit={prefs.currencyId} />
+              </Table.TD>
+           </>
+         )}
+      </Table.TR>
+   );
+
+   const assetrow = (p: {
+      head: string,
+      amount: number,
+      title?: string,
+      bold?: boolean,
+      padding?: number
+   }) => (
+      <Table.TR
+         title={p.title}
+      >
+         {p.bold ? (
+            <>
+               <Table.TH>
+                  {p.head}
+               </Table.TH>
+               <Table.TH className="amount">
+                  <Numeric amount={p.amount} unit={prefs.currencyId} />
+               </Table.TH>
+            </>
+         ): (
+            <>
+               <Table.TD
+                  style={{paddingLeft: (p.padding ?? 0) * 20}}
+               >
+                  {p.head}
+               </Table.TD>
+               <Table.TD className="amount">
+                  <Numeric amount={p.amount} unit={prefs.currencyId} />
+               </Table.TD>
+            </>
+         )}
+      </Table.TR>
+   );
 
    return (
       <div className="cashflow">
@@ -132,7 +209,7 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
          {/* thepoorswiss.com/11-best-personal-finance-metrics/ */}
          <Metrics
             name="Savings rate"
-            descr="How much of your income you are saving"
+            descr="How much of your income you are saving (not including how much the stock prices have changed)"
             value={cashflow / pl.income * 100}
             tooltip={`cashflow ${cashflow.toFixed(0)} / income ${pl.income.toFixed(0)}`}
             ideal={24}
@@ -164,8 +241,8 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
          <Metrics
             name="Wealth"
             descr="How many months worth of expenses you own, total"
-            value={networth / monthly_expenses}
-            tooltip={`Networth ${networth.toFixed(0)} / Monthly expenses ${monthly_expenses.toFixed(0)}`}
+            value={pl.networth / monthly_expenses}
+            tooltip={`Networth ${pl.networth.toFixed(0)} / Monthly expenses ${monthly_expenses.toFixed(0)}`}
             ideal={6}
             compare=">"
             suffix="months"
@@ -173,8 +250,8 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
          <Metrics
             name="Return on Investment"
             descr="How much passive income your whole networth provides"
-            value={pl.passive_income / networth * 100}
-            tooltip={`Passive income ${pl.passive_income.toFixed(0)} / Networth ${networth.toFixed(0)}`}
+            value={pl.passive_income / pl.networth * 100}
+            tooltip={`Passive income ${pl.passive_income.toFixed(0)} / Networth ${pl.networth.toFixed(0)}`}
             ideal={4}
             compare=">"
             suffix="%"
@@ -201,9 +278,9 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
 
          <Metrics
             name="Financial independence"
-            descr="Part of your expenses covered by passive income (investments, rents,...)"
-            value={pl.passive_income / -pl.expenses * 100}
-            tooltip={`Passive income ${pl.passive_income.toFixed(0)} / Expenses ${-pl.expenses.toFixed(0)}`}
+            descr="Part of your expenses covered by passive income (dividends, rents,...)"
+            value={pl.passive_income / pl.expenses * 100}
+            tooltip={`Passive income ${pl.passive_income.toFixed(0)} / Expenses ${pl.expenses.toFixed(0)}`}
             ideal={100}
             compare=">"
             suffix="%"
@@ -226,147 +303,134 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
             suffix={prefs.currencyId}
          />
 
-         <h3>Metrics</h3>
+         <h3>Cashflow</h3>
 
-         <Metrics
-            name="Cashflow"
-            descr={
-               <div>
-                  <div>
-                     Total income (
-                     <Numeric amount={pl.income} unit={prefs.currencyId} />
-                     {
-                        !isNaN(months) &&
-                        <>
-                           ,&nbsp;
-                           <Numeric
-                              amount={pl.income / months}
-                              unit={prefs.currencyId}
-                              suffix=" / month"
-                           />
-                        </>
-                     }
-                  )
-                  </div>
-                  <div>
-                     - Total expenses (
-                     <Numeric amount={-pl.expenses} unit={prefs.currencyId} />
-                     {
-                        !isNaN(months) &&
-                        <>
-                           ,&nbsp;
-                           <Numeric
-                              amount={-pl.expenses / months}
-                              unit={prefs.currencyId}
-                              suffix=" / month"
-                           />
-                        </>
-                     }
-                  )
-                  </div>
-               </div>
-            }
-            value={
-               <div>
-                  <div>
-                     {
-                        !isNaN(months) &&
-                        <Numeric
-                           amount={cashflow}
-                           unit={prefs.currencyId}
-                           suffix={` / ${months} months`}
-                        />
-                     }
-                  </div>
-                  {
-                     !isNaN(months) &&
-                     <div>
-                        <Numeric
-                           amount={cashflow / months}
-                           unit={prefs.currencyId}
-                           suffix=" / month"
-                        />
-                     </div>
-                  }
-               </div>
-            }
-            ideal={NaN}
-            compare=">"
-            suffix=""
-         />
+         <div className='table' style={{height: 'auto'}}>
+            <div className="thead">
+               <Table.TR>
+                 <Table.TH />
+                 <Table.TH className="amount">Period</Table.TH>
+                 <Table.TH className="amount">/ month</Table.TH>
+               </Table.TR>
+            </div>
+            <div className="tbody">
+               {
+                  flowrow({
+                     head: 'Total income',
+                     amount: pl.income,
+                     title: "Cumulated income (passive + from work)",
+                     bold:  true})
+               }
+               {
+                  flowrow({
+                     head: '  Income from work',
+                     amount: pl.work_income,
+                     title: "Sum of all income from work"
+                       + " (salaries, unemployment,...) during that period",
+                     padding: 1,
+                  })
+               }
+               {
+                  flowrow({
+                     head: '  Passive income',
+                     amount: pl.passive_income,
+                     title: "Income that would remain if you stopped working"
+                      + " (dividends, rents,...)",
+                     padding: 1,
+                  })
+               }
+               {
+                  flowrow({
+                     head: 'Total expenses',
+                     amount: -pl.expenses,
+                     title: "Sum of all expenses during that period",
+                     bold: true,
+                  })
+               }
+               {
+                  flowrow({
+                     head: 'Income taxes',
+                     amount: -pl.income_taxes,
+                     padding: 1,
+                  })
+               }
+               {
+                  flowrow({
+                     head: 'Other taxes',
+                     amount: -pl.other_taxes,
+                     padding: 1,
+                  })
+               }
+               {
+                  flowrow({
+                     head: 'Other expenses',
+                     amount: -pl.expenses + pl.income_taxes + pl.other_taxes,
+                     padding: 1,
+                  })
+               }
+               {
+                  flowrow({
+                     head: 'Cashflow',
+                     amount: cashflow,
+                     title: "Income minus expenses, not counting the delta in the valuation of stocks",
+                     bold: true,
+                     border: true,
+                  })
+               }
+               {
+                  flowrow({
+                     head: 'Unrealized gains',
+                     amount: networth_delta - cashflow,
+                     title: "Variation in the price of your investments",
+                     padding: 1,
+                  })
+               }
+               {
+                  flowrow({
+                     head: 'Networth change',
+                     amount: networth_delta,
+                     title: "How much your total networth change during that period",
+                     bold: true,
+                     border: true,
+                  })
+               }
+            </div>
+         </div>
 
-         <Metrics
-            name="Networth"
-            descr={
-               <div>
-                  At the end of the selected period,
-                  <div>
-                     how much you own (
-                     <Numeric amount={pl.active} unit={prefs.currencyId} />
-                     )
-                  </div>
-                  <div>
-                     - how much you owe (
-                     <Numeric amount={-pl.passive} unit={prefs.currencyId} />
-                  )
-                  </div>
-               </div>
-            }
-            value={
-               <Numeric amount={networth} unit={prefs.currencyId} />
-            }
-            ideal={NaN}
-            compare=">"
-            suffix=""
-         />
+         <h3>Assets</h3>
 
-         <Metrics
-            name="Passive income"
-            descr="Income that would remain if you stopped working"
-            value={
-               <Numeric amount={pl.passive_income} unit={prefs.currencyId} />
+         <div className='table' style={{height: 'auto'}}>
+            <div className="thead">
+               <Table.TR>
+                 <Table.TH />
+                 <Table.TH className="amount">Total</Table.TH>
+               </Table.TR>
+            </div>
+            {
+               assetrow({
+                  head: 'Networth',
+                  amount: pl.networth,
+                  title: 'How much you own minus how much you how at the end of the period',
+                  bold: true
+               })
             }
-            ideal={NaN}
-            compare=">"
-            suffix=""
-         />
-
-         <Metrics
-            name="Liquid assets"
-            descr="The part of your assets in savings, checkings, investments and stocks"
-            value={
-               <Numeric amount={pl.liquid_assets} unit={prefs.currencyId} />
+            {
+               assetrow({
+                  head: 'Liquid assets',
+                  amount: pl.liquid_assets,
+                  title: "The part of your assets in savings, checkings, investments and stocks",
+                  padding: 1,
+               })
             }
-            ideal={NaN}
-            compare=">"
-            suffix=""
-         />
-
-         <Metrics
-            name="Taxes"
-            descr="How much taxes you paid in that period"
-            value={
-               <div>
-                  <div>
-                     Income:&nbsp;
-                     <Numeric
-                        amount={pl.income_taxes}
-                        unit={prefs.currencyId}
-                     />
-                  </div>
-                  <div>
-                     Other:&nbsp;
-                     <Numeric
-                        amount={pl.other_taxes}
-                        unit={prefs.currencyId}
-                     />
-                  </div>
-               </div>
+            {
+               assetrow({
+                  head: 'Other assets',
+                  amount: pl.networth - pl.liquid_assets,
+                  title: "The part of your assets that cannot be sold quickly, like real-estate, jewels,..",
+                  padding: 1,
+               })
             }
-            ideal={NaN}
-            compare=">"
-            suffix=""
-         />
+         </div>
       </div>
    );
 }

@@ -66,10 +66,11 @@ class Commodities(AlereModel):
     # for AAPL is set to 100, information in the split is stored as:
     #     split1: account AAPL,       qty = 23  (commodity is AAPL)
     #     split2: account investment, qty=12000 (commodity is USD)
+    #
+    # The accounts themselves potentially use a different commodity_scu
 
     price_scale = models.IntegerField(default=100)
-    # Scaling used in the Prices table. The accounts themselves potentially
-    # use a different commodity_scu
+    # Scaling used in the Prices table.
 
     quote_source = models.ForeignKey(
         PriceSources, on_delete=models.CASCADE, null=True)
@@ -343,6 +344,45 @@ class Price_History(AlereModel):
     class Meta:
         managed = False
         db_table = prefix + "price_history"
+
+
+class Splits_With_Value(AlereModel):
+    """
+    Similar to Splits, but includes the value (number of shares * price at
+    the time).
+    This is different from looking at other splits in the same transaction
+    to find their impact on the user's assets (which might be in a different
+    currency altogether.
+    """
+
+    # ??? fields from Splits
+    transaction = models.ForeignKey(
+        Transactions, on_delete=models.CASCADE, related_name='+',
+    )
+    account     = models.ForeignKey(
+        Accounts, on_delete=models.CASCADE, related_name='+',
+    )
+    currency = models.ForeignKey(
+        Commodities, on_delete=models.CASCADE, related_name='+')
+    scaled_price = models.IntegerField()
+    scaled_qty = models.IntegerField()
+    reconcile = models.CharField(
+        max_length=1,
+        choices=ReconcileKinds.choices,
+        default=ReconcileKinds.NEW
+    )
+    reconcile_date = models.DateTimeField(null=True)
+    post_date   = models.DateTimeField()
+
+
+    value_currency = models.ForeignKey(
+        Commodities, on_delete=models.DO_NOTHING, related_name='+')
+    value = models.FloatField()
+    # The value of the split given in value_currency
+
+    class Meta:
+        managed = False
+        db_table = prefix + "splits_with_value"
 
 
 class Balances(AlereModel):

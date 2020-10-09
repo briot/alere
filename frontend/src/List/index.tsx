@@ -69,6 +69,7 @@ interface TRProps {
    style?: React.CSSProperties;
    className?: string;
    isOdd?: boolean;  // to alternate row colors
+   title?: string;
 
    onClick?: () => void;
 
@@ -87,7 +88,7 @@ const TR: React.FC<TRProps> = p => {
          && (p.expanded ? 'expandable expanded' : 'expandable collapsed'),
    );
    return (
-      <div className={n} style={p.style} onClick={p.onClick} >
+      <div className={n} style={p.style} onClick={p.onClick} title={p.title} >
          {p.children}
       </div>
    );
