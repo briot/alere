@@ -13,7 +13,7 @@ import { Account, AccountId, AccountIdList } from 'services/useAccounts';
 import './Ledger.css';
 
 const SPLIT = '--split--';
-const SPLIT_ID: AccountId = "";
+const SPLIT_ID: AccountId = -1;
 type MAIN_TYPE = "main";
 const MAIN: MAIN_TYPE = 'main';
 

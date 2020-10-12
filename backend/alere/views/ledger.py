@@ -1,169 +1,89 @@
 from .json import JSONView
-from typing import List, Union
-from .kmm import kmm, do_query
-import alere.models
-
-class Split:
-    def __init__(
-            self, accountId: Union[int, str], amount: int,
-            shares: int, price: float, reconcile='n', payee='',
-            currency='', memo='', checknum=None):
-        self.accountId = accountId
-        self.amount = amount
-        self.reconcile = reconcile
-        self.currency = currency
-        self.memo = memo
-        self.shares = shares
-        self.payee = payee
-        self.price = price
-        self.checknum = checknum
-
-    def to_json(self):
-        return {
-            "accountId": self.accountId,
-            "amount": self.amount,
-            "reconcile": self.reconcile,
-            "currency": self.currency,
-            "memo": self.memo,
-            "shares": self.shares,
-            "payee": self.payee,
-            "price": self.price,
-            "checknum": self.checknum,
-        }
-
-
-class Transaction:
-    def __init__(
-            self, id: Union[int, str], date,
-            balance: int,
-            balanceShares: int,
-            splits: List[Split],
-            memo=''):
-        self.id = id
-        self.date = date
-        self.balance = balance
-        self.balanceShares = balanceShares
-        self.splits = splits
-        self.memo = memo
-
-    def to_json(self):
-        return {"id": self.id,
-                "date": self.date,
-                "balance": self.balance,
-                "balanceShares": self.balanceShares,
-                "splits": self.splits,
-                "memo": self.memo
-               }
+import alere
 
 
 class LedgerView(JSONView):
 
     def get_json(self, params, id: str):
-        accounts = id
-        maxdate = params.get('maxdate', None)
-        mindate = params.get('mindate', None)
+        maxdate = self.as_time(params, 'maxdate')
+        mindate = self.as_time(params, 'mindate')
+
+        # When querying a single account, we'll compute the balance
+        try:
+            single_id = int(id)
+        except:
+            single_id = None
 
         if id:
-            # ??? Basic security, very wrong
-            if ';' in id:
-               return None
-            accounts = id.split(',')
-            if len(accounts) < 1:
-                accounts = id
+            # Find all splits that apply to the selected accounts
+            tr = alere.models.Splits.objects \
+                .values_list('transaction_id', flat=True) \
+                .filter(account_id__in=[int(i) for i in id.split(',')])
+        else:
+            tr = None
 
-        check_date = ''
+        # Finally, from the transactions we can get all their splits. This
+        # includes the ones we found in splits_in_accounts, but also the
+        # splits that apply to other accounts (used to show target accounts
+        # in the GUI)
+
+        q = alere.models.Splits_With_Value.objects \
+            .select_related('transaction', 'account') \
+            .order_by('transaction__timestamp', 'transaction_id')
+
+        if tr:
+            q = q.filter(transaction_id__in=tr)
+
+        if mindate:
+            # ??? To compute balance we should not skip old splits
+            q = q.filter(post_date__gte=mindate)
         if maxdate:
-            check_date = "AND s.postDate <= :maxdate"
-
-        # ??? Should use kmm._query_detailed_splits
-        query = (f"""
-        SELECT
-           t.id as transactionId,
-           COALESCE (payee.name, s.action) as payee,
-           (CASE s.reconcileFlag
-               WHEN '2' then 'R'
-               WHEN '1' then 'C'
-               ELSE ''
-            END) as reconcile,
-           {kmm._to_float('s.value')} as value,
-           {kmm._to_float('s.shares')} as shares,
-           {kmm._to_float('s.price')} as price,
-           t.memo as transactionMemo,
-           s.accountId,
-           s.checkNumber,
-           s.memo,
-           s.postDate as date,
-           t.postDate as transactionDate
-        FROM kmmTransactions t
-           JOIN kmmSplits s on (s.transactionId = t.id)
-           LEFT JOIN kmmPayees payee on (s.payeeId = payee.id)
-        WHERE
-           t.id IN (
-               SELECT DISTINCT s2.transactionId
-               FROM kmmSplits s2
-               WHERE TRUE {kmm._test_accounts('s2', accounts)}
-           ) {check_date}
-        ORDER BY transactionDate, transactionId
-        """)
-
-        params = {
-            'maxdate': maxdate,
-        }
+            q = q.filter(post_date__lte=maxdate)
 
         balance = 0.0
-        balanceShares = 0.0
+        scaledBalanceShares = 0.0
         result = []
         current = None
 
-        for row in do_query(query, params):
-            # We can only skip now, because early rows are needed to compute
-            # the balance
-            if mindate and row.date < mindate:
-                continue
+        for s in q:
+            # Compute the balance when there is a single account
+            if s.account_id == single_id:
+                balance += s.value
+                scaledBalanceShares += s.scaled_qty
 
-            if row.accountId == id:
-                # ??? need to handle shares * price
-                balance += row.value
-                balanceShares += row.shares
-
-            if current is not None and row.transactionId != current.id:
+            if current is not None and s.transaction_id != current["id"]:
+                current["balance"] = balance
+                current["balanceShares"] = \
+                    scaledBalanceShares / s.account.commodity_scu,
                 result.append(current)
                 current = None
 
             if current is None:
-                current = Transaction(
-                    id=row.transactionId,
-                    date=row.transactionDate,
-                    balance=balance,
-                    balanceShares=balanceShares,
-                    memo=row.transactionMemo,
-                    splits=[]
-                )
+                current = {
+                    "id": s.transaction_id,
+                    "date": s.transaction.timestamp.strftime("%Y-%m-%d"),
+                    "balance": 0,
+                    "balanceShares": 0,
+                    "memo": s.transaction.memo,
+                    "payee": s.transaction.payee,
+                    "checknum": s.transaction.check_number,
+                    "splits": [],
+                }
 
-            current.splits.append(Split(
-                accountId=row.accountId,
-                amount=row.value,
-                reconcile=row.reconcile,
-                shares=row.shares,
-                price=
-                   float(row.price)
-                   if row.price
-                   else None,
-
-                # workaround issue in kmymoney, which always uses "BUY" for
-                # action even though it was a SELL
-                payee=
-                  ("Sell"
-                   if row.payee == "Buy" and row.shares < 0
-                   else row.payee),
-
-                memo=row.memo,
-                checknum=row.checkNumber,
-            ))
-            current.balance = balance
-            current.balanceShares = balanceShares
+            current["splits"].append({
+                "accountId": s.account_id,
+                "date": s.post_date.strftime("%Y-%m-%d"),
+                "amount": s.value,
+                "reconcile": s.reconcile,
+                "currency": s.account.commodity_id,
+                "shares": s.scaled_qty / s.account.commodity_scu,
+                "price": s.computed_price,
+            })
 
         if current is not None:
+            current["balance"] = balance
+            current["balanceShares"] = \
+                scaledBalanceShares / s.account.commodity_scu,
             result.append(current)
 
         return result

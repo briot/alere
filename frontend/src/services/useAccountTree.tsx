@@ -28,7 +28,7 @@ const useAccountTree = <T extends DataWithAccount> (
    mode: TreeMode = TreeMode.USER_DEFINED,
 ): TreeNode<T>[] => {
    const { accounts } = useAccounts();
-   const getParent: ((a: Account) => AccountId|undefined) = React.useMemo(
+   const getParent: ((a: Account) => AccountId|string|undefined) = React.useMemo(
       () => mode === TreeMode.FLAT
          ? (a: Account) => undefined
          : mode === TreeMode.USER_DEFINED
@@ -59,7 +59,7 @@ const useAccountTree = <T extends DataWithAccount> (
          nodes.forEach(n => {
             if (n.data.account.parentId) {
                let parentId = getParent(n.data.account);
-               if (parentId !== undefined) {
+               if (parentId !== undefined && typeof parentId === 'number') {
                   let pnode = nodes.get(parentId);
 
                   // Create missing parents

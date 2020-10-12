@@ -192,7 +192,9 @@ class Migration(migrations.Migration):
                   alr_price_history.scaled_price * alr_splits.scaled_qty
                   AS FLOAT
                ) / source.price_scale / source.price_scale
-               AS value
+               AS value,
+               CAST(alr_price_history.scaled_price AS FLOAT)
+                  / source.price_scale as computed_price
             FROM
                alr_splits
                JOIN alr_accounts ON (alr_splits.account_id=alr_accounts.id)

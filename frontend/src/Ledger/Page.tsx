@@ -42,7 +42,8 @@ interface LedgerPageProps {
 }
 const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
    const { setHeader } = p;
-   const { accountId } = useParams();
+   let { accountId } = useParams();
+   accountId = Number(accountId);
    const history = useRouterHistory();
    const { accounts } = useAccounts();
    const { pushAccount } = useHistory();

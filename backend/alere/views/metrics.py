@@ -1,8 +1,6 @@
-from django.db.models import Sum, F
+from django.db.models import Sum
 from .json import JSONView
-from .kmm import kmm, do_query, fetchone
 import alere
-import django.db
 
 class MetricsView(JSONView):
 

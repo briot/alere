@@ -1,10 +1,10 @@
 import * as React from 'react';
 
-export type AccountId = string|number;
+export type AccountId = number;
 export type AccountIdList = AccountId[] | 'all' | 'assets';
 
 interface AccountJSON {
-   id: AccountId;
+   id: string|number;
    name: string;
    favorite: boolean;
    currencyId: string|number;
@@ -38,7 +38,7 @@ export class Account {
    private institution: string | null;
 
    constructor(d: AccountJSON) {
-      this.id = d.id;
+      this.id = Number(d.id);
       this.name = d.name;
       this.favorite = d.favorite;
       this.currencyId = d.currencyId;
@@ -103,7 +103,7 @@ export class AccountList {
 
    constructor(acc: AccountJSON[]) {
       this.accounts = new Map();
-      acc.forEach(a => this.accounts.set(a.id, new Account(a)));
+      acc.forEach(a => this.accounts.set(Number(a.id), new Account(a)));
       this.accounts.forEach(a =>
          a.parentAccount = a.parentId === undefined
             ? undefined

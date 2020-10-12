@@ -290,7 +290,7 @@ class Splits(AlereModel):
     # With these definition, the total amount of money spent in currency is
     # always   scaled_price * scaled_qty
     # The total increase or decrease of the account's commodity is
-    # always   scaled_qty
+    # always   scaled_qty \
 
     scaled_qty = models.IntegerField()
     # The amount is in account's commodity, scaled by account's commodity_scu
@@ -324,6 +324,17 @@ class Splits(AlereModel):
 
     class Meta:
         db_table = prefix + "splits"
+
+    def __str__(self):
+        return "Splits(transaction=%s, account=%s, post_date=%s price=%s %s qty=%s)" % (
+                self.transaction_id,
+                self.account_id,
+                self.post_date,
+                self.currency_id,
+                self.scaled_price,
+                self.scaled_qty,
+            )
+
 
 
 class Price_History(AlereModel):
@@ -374,11 +385,13 @@ class Splits_With_Value(AlereModel):
     reconcile_date = models.DateTimeField(null=True)
     post_date   = models.DateTimeField()
 
-
     value_currency = models.ForeignKey(
         Commodities, on_delete=models.DO_NOTHING, related_name='+')
     value = models.FloatField()
     # The value of the split given in value_currency
+
+    computed_price = models.FloatField()
+    # The price of one share at the time of the transaction
 
     class Meta:
         managed = False
