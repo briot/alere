@@ -487,3 +487,23 @@ class Balances_Currency(AlereModel):
             self.balance,
             self.mindate,
             self.maxdate)
+
+
+class By_Month(AlereModel):
+    """
+    Total of all splits, grouped by month and account kind
+    """
+
+    kind = models.ForeignKey(
+        AccountKinds,
+        on_delete=models.DO_NOTHING,
+        related_name='+',
+    )
+    date = models.DateField()
+    value = models.FloatField()
+
+    class Meta:
+        managed = False
+        db_table = prefix + "by_month"
+
+

@@ -10,6 +10,8 @@ class CustomJSONEncoder(json.JSONEncoder):
             return obj.to_json()
         elif isinstance(obj, datetime.datetime):
             return obj.strftime('%Y-%m-%d %H:%M:%s')
+        elif isinstance(obj, datetime.date):
+            return obj.strftime('%Y-%m-%d')
 
         return super().default(obj)
 
