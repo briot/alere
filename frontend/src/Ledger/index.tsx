@@ -61,18 +61,22 @@ interface TableRowData {
 const columnDate: Column<TableRowData> = {
    id: "date",
    head: "Date",
+   className: "date",
    compare: (a, b) => a.transaction.date.localeCompare(b.transaction.date),
-   cell: (d: TableRowData) => d.split === MAIN ? d.transaction.date : '',
+   cell: (d: TableRowData) =>
+      d.split === MAIN
+      ? d.transaction.date
+      : d.split.date,
 }
 
 const columnNum: Column<TableRowData> = {
    id: "num",
+   className: "num",
    head: "Check #",
    compare: (a, b) =>
-      (a.firstRowSplit.checknum ?? '').localeCompare(
-         b.firstRowSplit.checknum ?? ''),
-   cell: (d: TableRowData) =>
-      d.split === MAIN ? d.firstRowSplit.checknum : d.split.checknum,
+      (a.transaction.checknum ?? '').localeCompare(
+         b.transaction.checknum ?? ''),
+   cell: (d: TableRowData) => d.split === MAIN ? d.transaction.checknum : '',
 }
 
 const columnSummary: Column<TableRowData> = {
@@ -122,13 +126,13 @@ const columnPayee: Column<TableRowData> = {
    id: "Payee",
    className: "payee",
    compare: (a, b) =>
-      (a.firstRowSplit.payee ?? '').localeCompare(b.firstRowSplit.payee ?? ''),
+      (a.transaction.payee ?? '').localeCompare(b.transaction.payee ?? ''),
    cell: (d: TableRowData) =>
       d.split === MAIN
-      ? ( <Link to={`/payee/${d.firstRowSplit.payee}`}>
-             {d.firstRowSplit.payee}
+      ? ( <Link to={`/payee/${d.transaction.payee}`}>
+             {d.transaction.payee}
           </Link>
-      ) : `${d.split.memo || ''}${d.split.payee || ''}`
+      ) : ''
 }
 
 const columnFromTo: Column<TableRowData> = {
@@ -334,7 +338,7 @@ const computeFirstSplit = (p: BaseLedgerProps, t: Transaction) => {
       accountId: SPLIT_ID,
       account: undefined,
       reconcile: sa?.length ? sa[0].reconcile : 'n',
-      payee: sa?.filter(s => s.payee).reduce((a, s) => a + s.payee, ''),
+      date: sa?.[0]?.date ?? t.date,
       price:
          (p.accounts === undefined || p.accounts.length > 1)
          ? undefined

@@ -54,14 +54,15 @@
     * CSS (firefox), or -webkit specific ones (Chrome + Safari)
     *    https://alligator.io/css/css-scrollbars/
     */
+//   .tbody .tr {
+//      width: 100%;
+//   }
    .thead .tr,
+   .tbody .tr,
    .tfoot .tr {
       // Thanks to box-sizing, we do not have to take into account
       // exp-padding-left when we compute the size
       width: calc(100% - var(--scrollbar-width));
-   }
-   .tbody .tr {
-      width: 100%;
    }
    .tbody > div {
       scrollbar-color: var(--scrollbar-fg) var(--scrollbar-bg);  /* firefox */

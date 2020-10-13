@@ -287,8 +287,10 @@ def __import_transactions(cur, accounts, commodities):
            kmmTransactions.postDate as transPostDate,
            kmmTransactions.memo as transMemo,
            kmmTransactions.currencyId as transCurrency,
-           kmmSplits.*
+           kmmSplits.*,
+           kmmPayees.name as payee
         FROM kmmTransactions, kmmSplits
+           LEFT JOIN kmmPayees ON (kmmSplits.payeeId=kmmPayees.id)
         WHERE kmmTransactions.id=kmmSplits.transactionId
         ORDER BY transactionId
         """
@@ -299,6 +301,9 @@ def __import_transactions(cur, accounts, commodities):
     for row in cur:
         trans_id = row['transactionId']
         if trans_id != prev_trans_id:
+            if trans:
+                trans.save()
+
             trans = models.Transactions.objects.create(
                 timestamp=__time(row['transPostDate']),
                 memo=row['transMemo'] or "",
@@ -338,10 +343,13 @@ def __import_transactions(cur, accounts, commodities):
         )
 
         # ??? Should lookup in Payee table
-        if row['payeeId']:
-            trans.payee = row['payeeId']
+        if row['payee']:
+            trans.payee = row['payee']
         trans.memo = trans.memo + (row['memo'] or "")
         trans.check_number = trans.check_number + (row['checkNumber'] or "")
+
+    if trans:
+        trans.save()
 
     # transaction.entryDate:  not needed
     # ??? transaction.bankId: ???

@@ -14,24 +14,17 @@ class LedgerView(JSONView):
         except:
             single_id = None
 
-        if id:
-            # Find all splits that apply to the selected accounts
-            tr = alere.models.Splits.objects \
-                .values_list('transaction_id', flat=True) \
-                .filter(account_id__in=[int(i) for i in id.split(',')])
-        else:
-            tr = None
-
-        # Finally, from the transactions we can get all their splits. This
-        # includes the ones we found in splits_in_accounts, but also the
-        # splits that apply to other accounts (used to show target accounts
-        # in the GUI)
-
         q = alere.models.Splits_With_Value.objects \
             .select_related('transaction', 'account') \
             .order_by('transaction__timestamp', 'transaction_id')
 
-        if tr:
+        if id:
+            # Find all splits that apply to the selected accounts. We want to
+            # get all splits of involved transactions, so that the GUI can
+            # display "other accounts" involved in the transaction.
+            tr = alere.models.Splits.objects \
+                .values_list('transaction_id', flat=True) \
+                .filter(account_id__in=[int(i) for i in id.split(',')])
             q = q.filter(transaction_id__in=tr)
 
         if mindate:

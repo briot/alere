@@ -5,26 +5,26 @@ export type TransactionId = string;
 export interface Split {
    accountId: AccountId;
    reconcile?: string;
+   date: string;     // date the split was completed
    amount: number;
    shares?: number;  //  for stock accounts
-   payee?: string;
    currency?: string;
    price?: number;
-   memo?: string;
-   checknum?: string;
 
    account: Account|undefined;   // not sent via JSON
 }
 
 export interface Transaction {
    id: TransactionId;
-   date: string;
+   date: string;     // date the user initiated the transaction
    balance: number;  // balance after the transaction
    balanceShares?: number;  //  for stock accounts
    splits: Split[];  // at least one (there are two in the database, but here
                      // we might be seeing a partial view specific to one
                      // account only).
    memo?: string;
+   checknum?: string;
+   payee?: string;   // the third party involved in the transaction
 }
 
 /**
