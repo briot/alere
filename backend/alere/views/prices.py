@@ -1,38 +1,21 @@
 from .json import JSONView
-from .kmm import kmm, do_query
-
-class Price:
-    def __init__(self, date: str, price: float):
-        self.date = date
-        self.price = price
-
-    def to_json(self):
-        return {
-            "date": self.date,
-            "price": self.price,
-        }
+import alere
 
 
 class PriceHistory(JSONView):
 
     def get_json(self, params, accountId):
-        query = f"""
-        SELECT
-           kmmPrices.priceDate,
-           {kmm._to_float('kmmPrices.price')} as price
-        FROM kmmPrices, kmmAccounts
-        WHERE kmmAccounts.currencyId = kmmPrices.fromId
-          AND kmmPrices.toId = :currency
-          AND kmmAccounts.id = :account
-        ORDER BY kmmPrices.priceDate"""
+        currency = params.get("currency", "EUR")
 
-        p = {
-            "account": accountId,
-            "currency": params.get("currency", "EUR"),
-        }
+        query = alere.models.Prices.objects \
+            .select_related('origin') \
+            .filter(target__iso_code=currency,
+                    origin__accounts=accountId)
 
         return [
-            Price(date=row.priceDate, price=row.price)
-            for row in do_query(query, p)
+           {
+               "date": row.date.strftime('%Y-%m-%d'),
+               "price": row.scaled_price / row.origin.price_scale,
+           }
+           for row in query
         ]
-

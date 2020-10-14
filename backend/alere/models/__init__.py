@@ -100,12 +100,16 @@ class Prices(AlereModel):
 
     scaled_price = models.IntegerField()
     # Price of 1 from_id in to_id currency.
-    # This is scaled by from_id's price_scale
+    # This is scaled by origin's price_scale
 
     source  = models.ForeignKey(PriceSources, on_delete=models.CASCADE)
 
     class Meta:
         db_table = prefix + "prices"
+
+    def __str__(self):
+        return "Price(origin=%s, target=%s, date=%s, price=%s)" % (
+                self.origin_id, self.target_id, self.date, self.scaled_price)
 
 
 class AccountKinds(AlereModel):
@@ -170,7 +174,8 @@ class Accounts(AlereModel):
     )
     closed = models.BooleanField(default=False)
 
-    commodity = models.ForeignKey(Commodities, on_delete=models.CASCADE)
+    commodity = models.ForeignKey(
+        Commodities, on_delete=models.CASCADE, related_name='accounts')
     # What is the unit for prices ? This will most often be a currency like
     # "EUR", but for stock accounts it would be the name of the stock like
     # "AAPL". An account has all its operations written in that currency. It is

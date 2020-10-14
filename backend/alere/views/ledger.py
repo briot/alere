@@ -82,5 +82,4 @@ class LedgerView(JSONView):
             current["balanceShares"] = scaledBalanceShares
             result.append(current)
 
-        print(django.db.connection.queries[-2:])
         return result
