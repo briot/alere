@@ -240,6 +240,7 @@ const columnSharesBalance: Column<TableRowData> = {
 const columnBalance: Column<TableRowData> = {
    id: "Balance",
    className: "amount",
+   title: "Current worth at the time of the transaction. For stock accounts, this is the number of stocks times their price at the time (not the cumulated amount you have bought or sold for)",
    cell: (d: TableRowData) =>
       d.split === MAIN &&
       <Numeric amount={d.transaction.balance} />
@@ -297,14 +298,14 @@ const useTotal = (
    React.useEffect(
       () => setTotal(() => {
          const v = {...nullTotal};
-         v.future = transactions?.[transactions.length - 1]?.balance;
+         v.future = transactions?.[transactions.length - 1]?.balanceShares;
 
          const formatted = dateToString("today");
          if (transactions) {
             const addSplit = (s: Split) => {
                switch (s.reconcile) {
-                  case 'R': v.reconciled += s.amount; break;
-                  case 'C': v.cleared += s.amount; break;
+                  case 'R': v.reconciled += s.shares ?? s.amount; break;
+                  case 'C': v.cleared += s.shares ?? s.amount; break;
                   default: break;
                }
             }
@@ -312,7 +313,7 @@ const useTotal = (
             for (let j = transactions.length - 1; j >= 0; j--) {
                const t = transactions[j];
                if (v.present === undefined && t.date <= formatted) {
-                  v.present = t.balance;
+                  v.present = t.balanceShares;
                }
                if (accounts === undefined) {
                   t.splits.forEach(addSplit);
@@ -597,8 +598,8 @@ const Ledger: React.FC<BaseLedgerProps & ExtraProps> = p => {
 
    const columns = [
       columnDate,
-      columnNum,
-      columnPayee,
+      isStock         ? undefined           : columnNum,
+      isStock         ? undefined           : columnPayee,
       p.notes_mode === NotesMode.COLUMN ? columnMemo : undefined,
       columnFromTo,
       p.hideReconcile ? undefined           : columnReconcile,

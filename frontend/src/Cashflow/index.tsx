@@ -128,6 +128,10 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
    const networth_delta = pl.networth - pl.networth_start;
    const cashflow = pl.income - pl.expenses;
 
+   const non_work_income =
+      //  pl.passive_income
+      networth_delta + pl.expenses - pl.work_income;
+
    const flowrow = (p: {
       head: string,
       amount: number,
@@ -250,8 +254,8 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
          <Metrics
             name="Return on Investment"
             descr="How much passive income your whole networth provides"
-            value={pl.passive_income / pl.networth * 100}
-            tooltip={`Passive income ${pl.passive_income.toFixed(0)} / Networth ${pl.networth.toFixed(0)}`}
+            value={non_work_income / pl.networth * 100}
+            tooltip={`Passive income ${non_work_income.toFixed(0)} / Networth ${pl.networth.toFixed(0)}`}
             ideal={4}
             compare=">"
             suffix="%"
@@ -259,8 +263,8 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
          <Metrics
             name="Return on Investment for liquid assets"
             descr="How much passive income your liquid assets provides"
-            value={pl.passive_income / pl.liquid_assets * 100}
-            tooltip={`Passive income ${pl.passive_income.toFixed(0)} / Liquid assets ${pl.liquid_assets.toFixed(0)}`}
+            value={non_work_income / pl.liquid_assets * 100}
+            tooltip={`Passive income ${non_work_income.toFixed(0)} / Liquid assets ${pl.liquid_assets.toFixed(0)}`}
             ideal={4}
             compare=">"
             suffix="%"
@@ -279,8 +283,8 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
          <Metrics
             name="Financial independence"
             descr="Part of your expenses covered by passive income (dividends, rents,...)"
-            value={pl.passive_income / pl.expenses * 100}
-            tooltip={`Passive income ${pl.passive_income.toFixed(0)} / Expenses ${pl.expenses.toFixed(0)}`}
+            value={non_work_income / pl.expenses * 100}
+            tooltip={`Passive income ${non_work_income.toFixed(0)} / Expenses ${pl.expenses.toFixed(0)}`}
             ideal={100}
             compare=">"
             suffix="%"
@@ -288,8 +292,8 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
          <Metrics
             name="Passive income"
             descr="What part of the total income comes from sources other than the result of our work (salary,...)"
-            value={pl.passive_income / pl.income * 100}
-            tooltip={`Passive income ${pl.passive_income.toFixed(0)} / Total Income ${pl.income.toFixed(0)}`}
+            value={non_work_income / pl.income * 100}
+            tooltip={`Passive income ${non_work_income.toFixed(0)} / Total Income ${pl.income.toFixed(0)}`}
             ideal={50}
             compare=">"
             suffix="%"

@@ -1,5 +1,6 @@
 from .json import JSONView
 import alere
+import django.db
 
 
 class LedgerView(JSONView):
@@ -39,17 +40,20 @@ class LedgerView(JSONView):
         current = None
 
         for s in q:
-            # Compute the balance when there is a single account
-            if s.account_id == single_id:
-                balance += s.value
-                scaledBalanceShares += s.scaled_qty
-
             if current is not None and s.transaction_id != current["id"]:
                 current["balance"] = balance
-                current["balanceShares"] = \
-                    scaledBalanceShares / s.account.commodity_scu,
+                current["balanceShares"] = scaledBalanceShares
                 result.append(current)
                 current = None
+
+            # Compute the balance when there is a single account
+            if s.account_id == single_id:
+                # balance += s.value
+
+                # ??? Could we only divide at the end (but then the account
+                # might not be the same)
+                scaledBalanceShares += s.scaled_qty / s.account.commodity_scu
+                balance = scaledBalanceShares * s.computed_price
 
             if current is None:
                 current = {
@@ -75,8 +79,8 @@ class LedgerView(JSONView):
 
         if current is not None:
             current["balance"] = balance
-            current["balanceShares"] = \
-                scaledBalanceShares / s.account.commodity_scu,
+            current["balanceShares"] = scaledBalanceShares
             result.append(current)
 
+        print(django.db.connection.queries[-2:])
         return result

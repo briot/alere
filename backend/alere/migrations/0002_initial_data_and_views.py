@@ -201,7 +201,10 @@ class Migration(migrations.Migration):
                JOIN alr_commodities source
                   ON (alr_accounts.commodity_id=source.id)
                JOIN alr_price_history
-                  ON (alr_price_history.origin_id=source.id)
+                  ON (alr_price_history.origin_id=source.id
+                      AND alr_splits.post_date >= alr_price_history.mindate
+                      AND alr_splits.post_date < alr_price_history.maxdate
+                     )
                JOIN alr_commodities target
                   ON (alr_price_history.target_id=target.id
                       and target.kind='C')
