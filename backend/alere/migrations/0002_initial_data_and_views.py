@@ -6,32 +6,6 @@ from alere import models
 
 
 def create_views(apps, schema_editor):
-    # ??? Created in the application, or when importing
-#    models.AccountKinds.objects.create(
-#        name="Asset",
-#        name_for_positive="Deposit",
-#        name_for_negative="Paiement",
-#    )
-#    models.AccountKinds.objects.create(
-#        name="Liability",
-#        name_for_positive="Increase",
-#        name_for_negative="Decrease",
-#    )
-#    models.AccountKinds.objects.create(
-#        name="Equity",
-#        name_for_positive="Increase",
-#        name_for_negative="Decrease",
-#    )
-#    models.AccountKinds.objects.create(
-#        name="Income",
-#        name_for_positive="Increase",
-#        name_for_negative="Decrease",
-#    )
-#    models.AccountKinds.objects.create(
-#        name="Expense",
-#        name_for_positive="Increase",
-#        name_for_negative="Decrease",
-#    )
     models.PriceSources.objects.create(
         name="User",
     )
@@ -39,27 +13,6 @@ def create_views(apps, schema_editor):
         name="Yahoo Finance",
     )
 
-    # Compute total invested for each account, in each currency ever used
-    # for that account. This will be different from the current balance
-    # for stock accounts.
-    #
-    # CREATE VIEW alr_balances AS
-    #       SELECT
-    #          alr_accounts.id,
-    #          alr_commodities.id as value_commodity_id,
-    #          CAST(
-    #             sum(alr_splits.scaled_price * alr_splits.scaled_qty)
-    #             AS FLOAT
-    #          ) / (alr_commodities.price_scale
-    #               * alr_accounts.commodity_scu)
-    #          AS value,
-    #       FROM
-    #          alr_splits,
-    #          alr_accounts,
-    #          alr_commodities
-    #       WHERE alr_splits.account_id=alr_accounts.id
-    #         AND alr_splits.currency_id=alr_commodities.id
-    #       GROUP BY 1,2
 
 class Migration(migrations.Migration):
 
@@ -187,27 +140,18 @@ class Migration(migrations.Migration):
             SELECT
                row_number() OVER () as id,   --  for django's sake
                alr_splits.*,
-               alr_price_history.target_id as value_currency_id,
-               CAST(
-                  alr_price_history.scaled_price * alr_splits.scaled_qty
-                  AS FLOAT
-               ) / source.price_scale / source.price_scale
-               AS value,
-               CAST(alr_price_history.scaled_price AS FLOAT)
-                  / source.price_scale as computed_price
+               alr_splits.currency_id AS value_currency_id,
+               CAST(alr_splits.scaled_price * alr_splits.scaled_qty AS FLOAT)
+                  / alr_commodities.price_scale
+                  / alr_accounts.commodity_scu
+                  AS value,
+               CAST(alr_splits.scaled_price AS FLOAT)
+                  / alr_commodities.price_scale AS computed_price
             FROM
                alr_splits
                JOIN alr_accounts ON (alr_splits.account_id=alr_accounts.id)
-               JOIN alr_commodities source
-                  ON (alr_accounts.commodity_id=source.id)
-               JOIN alr_price_history
-                  ON (alr_price_history.origin_id=source.id
-                      AND alr_splits.post_date >= alr_price_history.mindate
-                      AND alr_splits.post_date < alr_price_history.maxdate
-                     )
-               JOIN alr_commodities target
-                  ON (alr_price_history.target_id=target.id
-                      and target.kind='C')
+               JOIN alr_commodities
+                  ON (alr_splits.currency_id=alr_commodities.id)
         ;
 
         DROP VIEW IF EXISTS alr_by_month;
@@ -222,6 +166,54 @@ class Migration(migrations.Migration):
             GROUP BY kind_id, date
         ;
 
+        DROP VIEW IF EXISTS alr_latest_price;
+        CREATE VIEW alr_latest_price AS
+            SELECT
+               alr_prices.*
+            FROM alr_prices,
+               (SELECT origin_id, MAX(date) as date
+                  FROM alr_prices GROUP BY origin_Id) latest
+            WHERE alr_prices.origin_id=latest.origin_id
+              AND alr_prices.date=latest.date
+        ;
+
+        --  Return all accounts that trade securities, along with the number of
+        --  shares (currently own and traded over time) and total amount spent,
+        --  so that we can compute average prices for instance.
+        DROP VIEW IF EXISTS alr_accounts_security;
+        CREATE VIEW alr_accounts_security AS
+           --  external query is only for the sake of django
+           SELECT
+              row_number() OVER () as id,   --  for django's sake
+              tmp.*
+           FROM (
+              SELECT
+                 splits_for_account.transaction_id,
+                 splits_for_account.account_id,
+                 currency.commodity_id as currency_id,
+                 currency.commodity_scu as scale,
+                 SUM(all_splits.scaled_qty) as scaled_qty
+              FROM
+                 alr_splits splits_for_account
+                 JOIN alr_transactions t
+                    ON (splits_for_account.transaction_id=t.id)
+                 JOIN alr_splits all_splits
+                    ON (all_splits.transaction_id=t.id)
+                 JOIN alr_accounts currency
+                    ON (currency.id=all_splits.account_id)
+                 JOIN alr_account_kinds
+                    ON (currency.kind_id=alr_account_kinds.id)
+              WHERE
+                 --  Only money to or from user accounts, since otherwise the
+                 --  sum is 0
+                 alr_account_kinds.name IN ("Asset", "Investment", "Stock",
+                    "Checking", "Liability", "Savings")
+              GROUP BY currency.commodity_id, scale,
+                 splits_for_account.transaction_id,
+                 splits_for_account.account_id
+           ) tmp
+           ORDER BY transaction_id
+           ;
         """
         )
     ]

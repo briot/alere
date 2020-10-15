@@ -74,7 +74,7 @@ class Commodities(AlereModel):
 
     quote_source = models.ForeignKey(
         PriceSources, on_delete=models.CASCADE, null=True)
-    quote_symbol = models.TextField(null=True)
+    quote_symbol = models.TextField(null=True)  # ??? ticker
     # For online quotes. The source refers to one of the plugins available in
     # ALERE, quote_symbol is the ticker
 
@@ -295,7 +295,9 @@ class Splits(AlereModel):
     # With these definition, the total amount of money spent in currency is
     # always   scaled_price * scaled_qty
     # The total increase or decrease of the account's commodity is
-    # always   scaled_qty \
+    # always   scaled_qty
+    # Note that this amount does not include any fees, for this you need to
+    # look at the transaction itself and its other splits.
 
     scaled_qty = models.IntegerField()
     # The amount is in account's commodity, scaled by account's commodity_scu
@@ -511,4 +513,39 @@ class By_Month(AlereModel):
         managed = False
         db_table = prefix + "by_month"
 
+
+class Latest_Price(AlereModel):
+    """
+    For each commodity, the latest known price
+    """
+    origin = models.OneToOneField(
+        Commodities, on_delete=models.DO_NOTHING,
+        related_name='latest_price')
+    target = models.ForeignKey(
+        Commodities, on_delete=models.DO_NOTHING,
+        related_name='+')
+    date = models.DateTimeField()
+    scaled_price = models.IntegerField()
+    source  = models.ForeignKey(PriceSources, on_delete=models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = prefix + "latest_price"
+
+
+class Accounts_Security(AlereModel):
+    transaction = models.ForeignKey(
+        Transactions, on_delete=models.DO_NOTHING, related_name='+')
+    currency = models.ForeignKey(
+        Commodities, on_delete=models.DO_NOTHING, related_name='+')
+    account = models.ForeignKey(
+        Accounts, on_delete=models.DO_NOTHING, related_name='+')
+    scale = models.IntegerField()
+
+    scaled_qty = models.IntegerField()
+    # Sum of the values of all splits performed in `currency`
+
+    class Meta:
+        managed = False
+        db_table = prefix + "accounts_security"
 

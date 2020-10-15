@@ -12,6 +12,8 @@ def __import_key_values(cur):
     sources = {}
     securityId = {}
 
+    ignored = {}
+
     cur.execute(
         """
         SELECT
@@ -19,7 +21,7 @@ def __import_key_values(cur):
             kmmKeyValuePairs.kvpKey as key,
             kmmKeyValuePairs.kvpData as data
         FROM kmmKeyValuePairs
-            JOIN kmmAccounts
+            LEFT JOIN kmmAccounts
             ON (kmmKeyValuePairs.kvpId=kmmAccounts.id)
         """
     )
@@ -51,8 +53,10 @@ def __import_key_values(cur):
                 'StatementKey',
                 'lastImportedTransactionDate',
             ):
-            print('Ignored keyValue: account=%s  key=%s  value=%s' %
-                    (id, key, data))
+            if key not in ignored:
+                ignored[key] = True
+                print('Ignored keyValue: account=%s  key=%s  value=%s (may have others with same key)' %
+                        (id, key, data))
         elif key == 'kmm-online-source':
             sources[id] = data
         elif key == 'kmm-security-id':
@@ -148,7 +152,8 @@ def __import_currencies(cur, commodities, sources, security_id):
         # ??? pricePrecision
 
 
-def __import_securities(cur, commodities, sources, security_id):
+def __import_securities(
+        cur, commodities, sources, security_id, price_sources):
     """
     Import securities used in the kmymoney file
     """
@@ -165,7 +170,7 @@ def __import_securities(cur, commodities, sources, security_id):
         qty_scale = int(row['smallestAccountFraction'])
 
         try:
-            old = models.Commodities.objects.get(symbol__exact=row['symbol'])
+            old = models.Commodities.objects.get(symbol=row['symbol'])
             commodities[row['id']] = old
 
             if old.name != row['name']:
@@ -197,21 +202,13 @@ def __import_securities(cur, commodities, sources, security_id):
         except models.Commodities.DoesNotExist:
             commodities[row['id']] = models.Commodities.objects.create(
                 name=row['name'],
-                symbol=row['symbol'],
+                symbol=security_id.get(row['id'], row['symbol']),
                 prefixed=False,
                 kind=kind,
                 qty_scale=int(row['smallestAccountFraction']),
                 price_scale=price_scale,
-                quote_source=(
-                    models.PriceSources.get(sources[row['id']])
-                    if row['id'] in sources
-                    else None
-                ),
-                quote_symbol=(
-                    models.PriceSources.get(security_id[row['id']])
-                    if row['id'] in security_id
-                    else None
-                ),
+                quote_source=price_sources.get(sources.get(row['id']), None),
+                quote_symbol=row['symbol'],   # ticker
             )
             # ??? ignored: pricePrecision
             # ??? ignored: tradingMarket
@@ -261,7 +258,7 @@ def __scaled_price(text, scale: int):
     return int(int(num) * (scale / int(den)))
 
 
-def __import_prices(cur, commodities, sources):
+def __import_prices(cur, commodities, price_sources):
     cur.execute(
         """
         SELECT kmmPrices.* FROM kmmPrices
@@ -276,7 +273,7 @@ def __import_prices(cur, commodities, sources):
                 row['price'],
                 scale=commodities.get(row['fromId']).price_scale,
             ),
-            source=sources[row['priceSource']],
+            source=price_sources[row['priceSource']],
         )
 
 
@@ -374,11 +371,12 @@ def import_kmymoney(filename):
                     __import_key_values(cur)
             account_types = __import_account_types(cur)
             inst = __import_institutions(cur)
-            sources = __import_price_sources(cur)
+            price_sources = __import_price_sources(cur)
 
             commodities = {}
             __import_currencies(cur, commodities, sources, security_id)
-            __import_securities(cur, commodities, sources, security_id)
+            __import_securities(
+                cur, commodities, sources, security_id, price_sources)
 
             accounts = {}
             parents = {}
@@ -415,5 +413,5 @@ def import_kmymoney(filename):
                     accounts[child].parent = accounts[parent]
                     accounts[child].save()
 
-            __import_prices(cur, commodities, sources)
+            __import_prices(cur, commodities, price_sources)
             __import_transactions(cur, accounts, commodities)

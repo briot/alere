@@ -250,7 +250,7 @@ const AccTicker: React.FC<AccTickerProps> = p => {
    const a = p.acc;
    const account = p.accounts.getAccount(a.account);
    const pr = p.ticker.prices;
-   const close = pr[pr.length - 1]?.[1] || NaN;
+   const close = pr[pr.length - 1]?.[1] || p.ticker.storedprice || NaN;
    const weighted_avg = a.absvalue / a.absshares;
    const avg_cost = a.value / a.shares;
    return (
@@ -276,7 +276,7 @@ const AccTicker: React.FC<AccTickerProps> = p => {
               ? (
               <tr>
                  <th
-                    title="Weighted Average: average price at which you sold or bought shares. It does not include shares added or subtracted with no paiement."
+                    title="Weighted Average: average price at which you sold or bought shares. It does not include shares added or subtracted with no paiement, nor dividends."
                  >
                     Weighted Average:
                  </th>
@@ -284,7 +284,7 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                     <Numeric
                        amount={weighted_avg}
                        className={
-                          weighted_avg >= close ? 'negative' : 'positive'
+                          weighted_avg > close ? 'negative' : 'positive'
                        }
                        unit={p.ticker.currency}
                     />
@@ -311,7 +311,7 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                     <Numeric
                        amount={avg_cost}
                        className={
-                          avg_cost >= close ? 'negative' : 'positive'
+                          avg_cost > close ? 'negative' : 'positive'
                        }
                        unit={p.ticker.currency}
                     />
