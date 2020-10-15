@@ -112,6 +112,95 @@ class Prices(AlereModel):
                 self.origin_id, self.target_id, self.date, self.scaled_price)
 
 
+#######################
+# WARNING: changing these flags require recreating the alr_accounts_security
+# view
+#######################
+
+class AccountFlags(models.TextChoices):
+    PASSIVE_INCOME = 'IP'
+    WORK_INCOME = 'IW'
+    MISC_INCOME = 'IM'
+    UNREALIZED_GAINS = 'IU'
+    # These flags are used for accounts that represent income (i.e. not actual
+    # bank accounts but categories).
+    # * Passive income includes dividends, rents, ...)
+    # * Unrealized gains is the result of your assets' value changing other
+    #   time, like stock prices, real-estate,...
+    # * Work income includes result of work (salary, unemployment,...)
+    #   that would disappear if you stopped working.
+
+    EXPENSE = 'EX'
+    # It is possible for the amount of a transaction to be either positive or
+    # negative. For instance, buying food is an expense, but if you get
+    # reimbursed for one of your purchases, you would still store that
+    # reimbursement as an EXPENSE, although with a positive value.
+
+    INCOME_TAX = 'TI'
+    MISC_TAX = 'TM'
+    # Used for accounts that represent taxes
+
+    LIABILITY = 'L'
+    # Anything owed by the user (credit card, loan,...)
+
+    STOCK = 'S'
+    # An account used to trade one security
+
+    ASSET = 'A'
+    # A non-monetary asset (real-estate, car,...) that you want to track
+
+    BANK = 'B'
+    # A bank account (saving, checking, investment,...)
+
+    EQUITY = 'EQ'
+    # Money used to initial the database. This will typically contain opening
+    # balances for accounts opened before you started using this software.
+
+    @classmethod
+    def expenses(klass):
+        return (
+            klass.EXPENSE,
+            klass.INCOME_TAX,
+            klass.MISC_TAX,
+        )
+
+    @classmethod
+    def all_income(klass):
+        return (
+            klass.PASSIVE_INCOME,
+            klass.WORK_INCOME,
+            klass.MISC_INCOME,
+            klass.UNREALIZED_GAINS,
+        )
+
+    @classmethod
+    def actual_income(klass):
+        """All but unrealized gains"""
+        return (
+            klass.PASSIVE_INCOME,
+            klass.WORK_INCOME,
+            klass.MISC_INCOME,
+        )
+
+    @classmethod
+    def networth(klass):
+        """All accounts used to compute networth"""
+        return (
+            klass.BANK,
+            klass.ASSET,
+            klass.STOCK,
+            klass.LIABILITY,
+        )
+
+    @classmethod
+    def liquid(klass):
+        """All accounts that can easily be converted to currency"""
+        return (
+            klass.BANK,
+            klass.STOCK,
+            klass.LIABILITY,
+        )
+
 class AccountKinds(AlereModel):
     """
     The high-level types of accounts.
@@ -124,9 +213,17 @@ class AccountKinds(AlereModel):
        - deltaExpenses
     """
 
+    flag = models.TextField(
+        primary_key=True,
+        max_length=2,
+        choices=AccountFlags.choices,
+    )
+
     name = models.TextField()
-    name_for_positive = models.TextField()   # credit / increase / ...
-    name_for_negative = models.TextField()   # debit  / decrease / ...
+    # The name used for display purposes only
+
+    name_when_positive = models.TextField()   # credit / increase / ...
+    name_when_negative = models.TextField()   # debit  / decrease / ...
 
     class Meta:
         db_table = prefix + "account_kinds"
@@ -196,7 +293,16 @@ class Accounts(AlereModel):
     last_reconciled = models.DateTimeField(null=True)
     # When has the user last reconciled this account with the bank statements
 
-    # ??? opening_date
+    opening_date = models.DateField(null=True)
+    # When was the account opened
+
+    is_work_income = models.BooleanField(default=False)
+    is_passive_income = models.BooleanField(default=False)
+    is_misc_income = models.BooleanField(default=False)
+    # True if this is an income account, either from work or passive
+
+
+
     # ??? interest_rate  (though this should be date-dependent)
     # ??? last_modified  (for account data themselves)
     # ??? hidden         (in gnucash, is this similar to closed)

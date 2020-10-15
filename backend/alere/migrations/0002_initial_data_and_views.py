@@ -5,12 +5,88 @@ import django.db
 from alere import models
 
 
+networth_flags = ",".join("'%s'" % f for f in models.AccountFlags.networth())
+
+
 def create_views(apps, schema_editor):
     models.PriceSources.objects.create(
         name="User",
     )
     models.PriceSources.objects.create(
         name="Yahoo Finance",
+    )
+
+    models.AccountKinds.objects.create(
+        name="Passive income",
+        flag=models.AccountFlags.PASSIVE_INCOME,
+        name_when_positive='Income',
+        name_when_negative='Expense',
+    )
+    models.AccountKinds.objects.create(
+        name="Work income",
+        flag=models.AccountFlags.WORK_INCOME,
+        name_when_positive='Income',
+        name_when_negative='Expense',
+    )
+    models.AccountKinds.objects.create(
+        name="Misc income",
+        flag=models.AccountFlags.MISC_INCOME,
+        name_when_positive='Income',
+        name_when_negative='Expense',
+    )
+    models.AccountKinds.objects.create(
+        name="Unrealized gains",
+        flag=models.AccountFlags.UNREALIZED_GAINS,
+        name_when_positive='Increase',
+        name_when_negative='Decrease',
+    )
+    models.AccountKinds.objects.create(
+        name="Expense",
+        flag=models.AccountFlags.EXPENSE,
+        name_when_positive='Income',
+        name_when_negative='Expense',
+    )
+    models.AccountKinds.objects.create(
+        name="Income tax",
+        flag=models.AccountFlags.INCOME_TAX,
+        name_when_positive='Increase',
+        name_when_negative='Decrease',
+    )
+    models.AccountKinds.objects.create(
+        name="Other taxes",
+        flag=models.AccountFlags.MISC_TAX,
+        name_when_positive='Increase',
+        name_when_negative='Decrease',
+    )
+    models.AccountKinds.objects.create(
+        name="Liability",
+        flag=models.AccountFlags.LIABILITY,
+        name_when_positive='Increase',
+        name_when_negative='Decrease',
+    )
+    models.AccountKinds.objects.create(
+        name="Stock trading",
+        flag=models.AccountFlags.STOCK,
+        name_when_positive='Add',
+        name_when_negative='Remove',
+    )
+    models.AccountKinds.objects.create(
+        name="Asset",
+        flag=models.AccountFlags.ASSET,
+        name_when_positive='Increase',
+        name_when_negative='Decrease',
+    )
+    models.AccountKinds.objects.create(
+        name="Bank account",
+        flag=models.AccountFlags.BANK,
+        name_when_positive='Deposit',
+        name_when_negative='Paiement',
+    )
+    models.AccountKinds.objects.create(
+        name="Equity",
+        flag=models.AccountFlags.EQUITY,
+        name_when_positive='Increase',
+        name_when_negative='Decrease',
     )
 
 
@@ -23,7 +99,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunPython(create_views),
         migrations.RunSQL(
-        """
+        f"""
         DROP VIEW IF EXISTS alr_price_history;
         CREATE VIEW alr_price_history AS
            SELECT alr_prices.origin_id,
@@ -201,13 +277,10 @@ class Migration(migrations.Migration):
                     ON (all_splits.transaction_id=t.id)
                  JOIN alr_accounts currency
                     ON (currency.id=all_splits.account_id)
-                 JOIN alr_account_kinds
-                    ON (currency.kind_id=alr_account_kinds.id)
               WHERE
                  --  Only money to or from user accounts, since otherwise the
                  --  sum is 0
-                 alr_account_kinds.name IN ("Asset", "Investment", "Stock",
-                    "Checking", "Liability", "Savings")
+                 currency.kind_id IN ({networth_flags})
               GROUP BY currency.commodity_id, scale,
                  splits_for_account.transaction_id,
                  splits_for_account.account_id

@@ -38,10 +38,9 @@ class NetworthView(JSONView):
             for acc in alere.models.Balances_Currency.objects \
                    .filter(commodity__iso_code=currency,
                            mindate__lte=dt,
-                           maxdate__gt=dt
-                   ).exclude(account__kind__name__in=(
-                       # ??? Should let users select accounts
-                           'Income', 'Expense', 'Equity')):
+                           maxdate__gt=dt,
+                           account__kind__in=
+                           alere.models.AccountFlags.networth()):
 
                 s = shares.setdefault(acc.account_id, [0] * len(dates))
                 s[d_idx] = acc.shares

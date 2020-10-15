@@ -1,6 +1,7 @@
-from django.db.models import F, Window, Avg, RowRange
+from django.db.models import F, Window, Avg, RowRange, Sum, Subquery, OuterRef
 from .json import JSONView
 import alere
+import django.db
 
 
 class MeanView(JSONView):
@@ -13,28 +14,41 @@ class MeanView(JSONView):
         after = int(params.get('after', 6))
 
         if expenses:
-            kinds = ('Expense', )
+            flags = alere.models.AccountFlags.expenses()
             sign = 1.0
         else:
-            kinds = ('Income', )
+            flags = alere.models.AccountFlags.all_income()
             sign = -1.0
 
-        query = alere.models.By_Month.objects \
-            .filter(date__gte=mindate,
-                    date__lte=maxdate,
-                    kind__name__in=kinds) \
-            .values('date', 'value') \
-            .annotate(average=Window(
-                expression=Avg('value'),
-                order_by=[F('date')],
-                frame=RowRange(start=-prior, end=after),
-            ))
+        kinds = ",".join("'%s'" % f for f in flags)
 
-        return [
-            {
-                "date": r['date'],
-                "value": r['value'] * sign,
-                "average": r['average'] * sign,
-            }
-            for r in query
-        ]
+        query = (
+            f"""
+            SELECT
+               date,
+               total,
+               AVG(total) OVER
+                   (ORDER BY date
+                    ROWS BETWEEN {prior} PRECEDING AND {after} FOLLOWING
+                   ) AS average
+            FROM (
+                SELECT date, SUM(value) as total
+                FROM alr_by_month
+                WHERE date >= %s
+                  AND date <= %s
+                  AND kind_id in ({kinds})
+                GROUP BY date
+            ) tmp
+            """
+        )
+
+        with django.db.connection.cursor() as cur:
+            cur.execute(query, [mindate, maxdate])
+            return [
+                {
+                    "date": r[0],
+                    "value": r[1] * sign,
+                    "average": r[2] * sign,
+                }
+                for r in cur.fetchall()
+            ]

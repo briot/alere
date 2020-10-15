@@ -217,23 +217,32 @@ def __import_securities(
 
 
 def __import_account_types(cur):
-    account_types = {}
+    flag = {}
+    for f in models.AccountFlags:
+        flag[f] = models.AccountKinds.objects.get(flag=f)
+
+    mapped = {
+        "Asset": flag[models.AccountFlags.ASSET],
+        "Liability": flag[models.AccountFlags.LIABILITY],
+        "Expense": flag[models.AccountFlags.EXPENSE],
+        "Income": flag[models.AccountFlags.MISC_INCOME],
+        "Equity": flag[models.AccountFlags.EQUITY],
+        "Investment": flag[models.AccountFlags.BANK],
+        "Stock": flag[models.AccountFlags.STOCK],
+        "Checking": flag[models.AccountFlags.BANK],
+        "Savings": flag[models.AccountFlags.BANK],
+    }
+
     cur.execute(
         """
         SELECT distinct kmmAccounts.accountTypeString
         FROM kmmAccounts
         """
     )
-    for row in cur:
-        t = row['accountTypeString']
-        np = ('Deposit' if t == 'Asset' else 'Increase')
-        nn = ('Paiement' if t == 'Asset' else 'Decrease')
-        account_types[t] = models.AccountKinds.objects.create(
-            name=t,
-            name_for_positive=np,
-            name_for_negative=nn,
-        )
-    return account_types
+    return {
+        row['accountTypeString']: mapped[row['accountTypeString']]
+        for row in cur
+    }
 
 
 def __time(val):
@@ -399,6 +408,7 @@ def import_kmymoney(filename):
                     commodity=commodities[row['currencyId']],
                     commodity_scu=commodities[row['currencyId']].qty_scale,
                     last_reconciled=__time(row['lastReconciled']),
+                    opening_date=__time(row['openingDate']),
                 )
                 parents[row['id']] = row['parentId']
 
