@@ -13,7 +13,7 @@ const useAccountIds = (
          accountIds === 'all'
          ? accounts.allAccounts()
          : accountIds === 'assets'
-         ? accounts.allAccounts().filter(a => a.isAsset())
+         ? accounts.allAccounts().filter(a => a.is_asset)
          : accountIds.map(a => accounts.getAccount(a))
             .filter(a => a !== undefined),
       [accountIds, accounts]

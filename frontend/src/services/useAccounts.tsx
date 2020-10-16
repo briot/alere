@@ -18,6 +18,9 @@ interface AccountJSON {
    priceScale: number;
    sharesScale: number;
    institution: string | null;
+   is_stock: boolean;
+   is_asset: boolean;
+   is_income_expense: boolean;
 }
 
 export class Account {
@@ -33,6 +36,9 @@ export class Account {
    readonly priceScale: number;
    readonly sharesScale: number;
    readonly parentId: AccountId | undefined;
+   readonly is_stock: boolean;
+   readonly is_asset: boolean;
+   readonly is_income_expense: boolean;
    readonly accountType: string;
    parentAccount: Account | undefined;
    private institution: string | null;
@@ -52,22 +58,9 @@ export class Account {
       this.sharesScale = d.sharesScale;
       this.parentId = d.parent;
       this.institution = d.institution;
-   }
-
-   isStock(): boolean {
-      return this.accountType === "Stock";
-   }
-
-   isIncomeExpense(): boolean {
-      return this.accountType === "Income" || this.accountType === "Expense";
-   }
-
-   isAsset(): boolean {
-      return this.accountType === "Asset"
-         || this.accountType === "Stock"
-         || this.accountType === "Investment"
-         || this.accountType === "Savings"
-         || this.accountType === "Checking";
+      this.is_stock = d.is_stock;
+      this.is_asset = d.is_asset;
+      this.is_income_expense = d.is_income_expense;
    }
 
    /**
@@ -131,6 +124,9 @@ export class AccountList {
          priceScale: 1,
          sharesScale: 1,
          institution: 'Unknown',
+         is_stock: false,
+         is_asset: false,
+         is_income_expense: false,
       });
    }
 

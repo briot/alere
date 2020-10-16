@@ -43,6 +43,12 @@ class AccountLists(alere.models.AlereModel):
             "sharesScale": self.commodity.qty_scale,
             "priceScale": self.price_scale,
             "institution": self.institution,
+            "is_stock": self.kind_id == alere.models.AccountFlags.STOCK,
+            "is_asset": self.kind_id in alere.models.AccountFlags.networth(),
+            "is_income_expense":
+               self.kind_id in alere.models.AccountFlags.expenses()
+               or
+               self.kind_id in alere.models.AccountFlags.all_income(),
         }
 
 

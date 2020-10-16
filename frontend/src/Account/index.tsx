@@ -73,7 +73,7 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
    const { accounts } = useAccounts();
    const filteredTree = useAccountTree(
       accounts.allAccounts()
-         .filter(a => p.showStock || !a.isStock())
+         .filter(a => p.showStock || !a.is_stock)
          .map(account => ({ account })),
       createDummyParent,
    );
