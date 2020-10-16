@@ -41,7 +41,7 @@ def create_views(apps, schema_editor):
         name_when_negative='Decrease',
     )
     models.AccountKinds.objects.create(
-        name="Expense",
+        name="Expenses",
         flag=models.AccountFlags.EXPENSE,
         name_when_positive='Income',
         name_when_negative='Expense',
@@ -65,19 +65,19 @@ def create_views(apps, schema_editor):
         name_when_negative='Decrease',
     )
     models.AccountKinds.objects.create(
-        name="Stock trading",
+        name="Stocks",
         flag=models.AccountFlags.STOCK,
         name_when_positive='Add',
         name_when_negative='Remove',
     )
     models.AccountKinds.objects.create(
-        name="Asset",
+        name="Assets",
         flag=models.AccountFlags.ASSET,
         name_when_positive='Increase',
         name_when_negative='Decrease',
     )
     models.AccountKinds.objects.create(
-        name="Bank account",
+        name="Bank accounts",
         flag=models.AccountFlags.BANK,
         name_when_positive='Deposit',
         name_when_negative='Paiement',

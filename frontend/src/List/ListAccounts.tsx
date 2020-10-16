@@ -11,8 +11,8 @@ const useListFromAccount = <T extends DataWithAccount> (
       () => {
          const toLogicalRows = (list: TreeNode<T>[]) =>
             list
-            .map(n => ({
-               key: n.data.account.id,
+            .map((n, idx) => ({
+               key: n.data.account?.id || -idx,
                data: n.data,
                getChildren: () => toLogicalRows(n.children),
             }));

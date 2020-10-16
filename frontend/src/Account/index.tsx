@@ -9,7 +9,14 @@ import useListFromAccount from 'List/ListAccounts';
 import List from 'List';
 import "./Account.css";
 
-const createDummyParent = (account: Account) => ({ account });
+
+interface TreeNode {
+   account: Account | undefined;
+   name: string;
+}
+
+const createDummyParent = (account: Account|undefined, name: string) =>
+   ({ account, name });
 
 interface SelectAccountProps {
    text?: string;
@@ -22,8 +29,8 @@ export const SelectAccount: React.FC<SelectAccountProps> = p => {
    const { onChange } = p;
    const { accounts } = useAccounts();
 
-   const tree = useAccountTree(
-      accounts.allAccounts().map(account => ({ account })),
+   const tree = useAccountTree<TreeNode>(
+      accounts.allAccounts().map(account => ({ account, name: '' })),
       createDummyParent,
    );
 
@@ -43,8 +50,8 @@ export const SelectAccount: React.FC<SelectAccountProps> = p => {
          items.push({value: 'divider'});
       }
       items.push({
-         value: r.data.account.id,
-         text: r.data.account.name,
+         value: r.data.account?.id ?? -1,
+         text: r.data.account?.name ?? r.data.name,
          style: {paddingLeft: 20 * r.depth}
       });
    });
@@ -71,45 +78,47 @@ interface MultiAccountSelectProps {
 }
 export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
    const { accounts } = useAccounts();
-   const filteredTree = useAccountTree(
+   const filteredTree = useAccountTree<TreeNode>(
       accounts.allAccounts()
          .filter(a => p.showStock || !a.is_stock)
-         .map(account => ({ account })),
+         .map(account => ({ account, name: '' })),
       createDummyParent,
    );
 
    const rows = useListFromAccount(filteredTree);
 
-   const localChange = (account: Account, checked: boolean) => {
+   const localChange = (node: TreeNode, checked: boolean) => {
       const cp = p.value
          ? p.value.map(a => a.id)
-         : filteredTree.map(a => a.data.account.id);
-      if (checked) {
-         if (!cp.includes(account.id)) {
+         : filteredTree.map(a => a.data.account?.id || -1);
+      if (!node.account) {
+      } else if (checked) {
+         if (!cp.includes(node.account.id)) {
             if (cp.length === filteredTree.length - 1) {
                p.onChange('all');
             } else {
-               p.onChange([...cp, account.id]);
+               p.onChange([...cp, node.account.id]);
             }
          }
       } else {
-         cp.splice(cp.indexOf(account.id), 1);
+         cp.splice(cp.indexOf(node.account.id), 1);
          p.onChange(cp);
       }
    };
 
-   const columnAccountName: Column<{ account: Account }> = {
+   const columnAccountName: Column<TreeNode> = {
       id: 'Account',
-      cell: (account: { account: Account} ) => {
-         return (
+      cell: (n: TreeNode) => {
+         return n.account ? (
             <Checkbox
-               text={account.account.name}
-               checked={!p.value || p.value.includes(account.account)}
-               onChange={(checked: boolean) =>
-                  localChange(account.account, checked)
+               text={n.account.name}
+               checked={!p.value || p.value.includes(n.account)}
+               onChange={(checked: boolean) => localChange(n, checked)
                }
             />
-         );
+         ) : (
+            n.name
+         )
       }
    };
 

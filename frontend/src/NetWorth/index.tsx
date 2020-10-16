@@ -8,15 +8,21 @@ import useBalanceWithThreshold, {
    BalanceWithAccount } from 'services/useBalanceWithThreshold';
 import usePrefs from 'services/usePrefs';
 import { Account } from 'services/useAccounts';
-import useAccountTree, { TreeMode, TreeNode } from 'services/useAccountTree';
+import useAccountTree, { TreeMode } from 'services/useAccountTree';
 import useListFromAccount from 'List/ListAccounts';
 import ListWithColumns, {
    AlternateRows, Column, LogicalRow, RowDetails } from 'List/ListWithColumns';
 import "./NetWorth.css";
 
-const columnAccountName: Column<BalanceWithAccount> = {
+interface LocalTreeNode extends BalanceWithAccount {
+   name?: string;
+}
+
+const columnAccountName: Column<LocalTreeNode> = {
    id: 'Account',
-   cell: d => <AccountName id={d.accountId} account={d.account} />,
+   cell: d => d.account
+      ? <AccountName id={d.accountId} account={d.account} />
+      : d.name || '',
    foot: () => "Total",
 };
 
@@ -24,7 +30,7 @@ const columnShares = (base: BalanceList, date_idx: number) => ({
    id: `Shares${date_idx}`,
    head: 'Shares',
    className: 'price',
-   cell: (d: BalanceWithAccount, details: RowDetails<BalanceWithAccount>) =>
+   cell: (d: LocalTreeNode, details: RowDetails<LocalTreeNode>) =>
       details.isExpanded === false
       ? ''
       : (
@@ -39,7 +45,7 @@ const columnPrice = (base: BalanceList, date_idx: number) => ({
    id: `Price${date_idx}`,
    head: 'Price',
    className: 'price',
-   cell: (d: BalanceWithAccount, details: RowDetails<BalanceWithAccount>) =>
+   cell: (d: LocalTreeNode, details: RowDetails<LocalTreeNode>) =>
       details.isExpanded === false
       ? ''
       : (
@@ -51,7 +57,7 @@ const columnPrice = (base: BalanceList, date_idx: number) => ({
 });
 
 const cumulatedValue = (
-   logic: LogicalRow<BalanceWithAccount>,
+   logic: LogicalRow<LocalTreeNode>,
    date_idx: number,
    isExpanded: boolean | undefined,
 ): number => {
@@ -69,7 +75,7 @@ const columnValue = (base: BalanceList, date_idx: number) => ({
    id: `Value${date_idx}`,
    head: dateToString(base.dates[date_idx]),
    className: 'amount',
-   cell: (d: BalanceWithAccount, details: RowDetails<BalanceWithAccount>) =>
+   cell: (d: LocalTreeNode, details: RowDetails<LocalTreeNode>) =>
       <Numeric
          amount={cumulatedValue(details.logic, date_idx, details.isExpanded)}
          unit={base.currencyId}
@@ -85,7 +91,7 @@ const columnPercent = (base: BalanceList, date_idx: number) => ({
    id: `Percent${date_idx}`,
    head: '% total',
    className: 'percent',
-   cell: (d: BalanceWithAccount, details: RowDetails<BalanceWithAccount>) =>
+   cell: (d: LocalTreeNode, details: RowDetails<LocalTreeNode>) =>
       <Numeric
          amount={
             cumulatedValue(details.logic, date_idx, details.isExpanded)
@@ -104,7 +110,7 @@ const columnDelta = (
       head,
       title,
       className: 'percent',
-      cell: (d: BalanceWithAccount, details: RowDetails<BalanceWithAccount>) => {
+      cell: (d: LocalTreeNode, details: RowDetails<LocalTreeNode>) => {
          const m = cumulatedValue(details.logic, date_idx, details.isExpanded);
          const delta =
             Math.abs(m) < 1e-10
@@ -147,14 +153,15 @@ const Networth: React.FC<NetworthProps & SetHeader> = p => {
    });
 
    const createDummyParent = React.useCallback(
-      (account: Account): BalanceWithAccount => (
+      (account: Account|undefined, name: string): LocalTreeNode => (
          { account,
-           accountId: account.id,
+           accountId: account?.id || -1,
            atDate: [],
+           name,
          }),
       []
    );
-   const tree: TreeNode<BalanceWithAccount>[] = useAccountTree(
+   const tree = useAccountTree<LocalTreeNode>(
       data,
       createDummyParent,
       p.treeMode,
