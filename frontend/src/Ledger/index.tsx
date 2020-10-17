@@ -207,7 +207,7 @@ const columnShares: Column<TableRowData> = {
       d.split === MAIN &&
       <Numeric
          amount={d.firstRowSplit.shares}
-         scale={d.account?.sharesScale}
+         scale={d.account?.commodity.qty_scale}
       />
 }
 
@@ -233,7 +233,7 @@ const columnSharesBalance: Column<TableRowData> = {
       d.split === MAIN &&
       <Numeric
           amount={d.transaction?.balanceShares}
-          scale={d.account?.sharesScale}
+          scale={d.account?.commodity.qty_scale}
       />
 }
 
@@ -369,7 +369,7 @@ const computeFirstSplit = (p: BaseLedgerProps, t: Transaction) => {
             // Find the split not for the account, to get the target account
             for (const s3 of t.splits) {
                if (p.accounts === undefined) {
-                  if (s3.account?.is_income_expense) {
+                  if (s3.account?.kind.is_income_expense) {
                      s2.accountId = s3.accountId;
                      s2.account = s3.account;
                      break;
@@ -594,7 +594,7 @@ const Ledger: React.FC<BaseLedgerProps & ExtraProps> = p => {
       (p.accounts !== undefined && p.accounts.length === 1
        ? p.accounts[0]
        : undefined);
-   const isStock = singleAccount?.is_stock;
+   const isStock = singleAccount?.kind.is_stock;
 
    const columns = [
       columnDate,

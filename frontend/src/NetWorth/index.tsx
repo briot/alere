@@ -36,7 +36,7 @@ const columnShares = (base: BalanceList, date_idx: number) => ({
       : (
          <Numeric
             amount={d.atDate[date_idx]?.shares}
-            scale={d.account?.sharesScale}
+            scale={d.account?.commodity.qty_scale}
          />
       ),
 });

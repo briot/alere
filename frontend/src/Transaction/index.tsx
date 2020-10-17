@@ -31,7 +31,7 @@ export interface Transaction {
  * All splits involving an income or expense account
  */
 export const incomeExpenseSplits = (t: Transaction) =>
-   t.splits.filter(s => s.account?.is_income_expense);
+   t.splits.filter(s => s.account?.kind.is_income_expense);
 
 export const amountIncomeExpense = (t: Transaction) =>
    incomeExpenseSplits(t).reduce((a, s) => a - s.amount, 0);

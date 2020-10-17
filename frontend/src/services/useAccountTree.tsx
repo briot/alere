@@ -35,7 +35,7 @@ const useAccountTree = <T extends DataWithAccount> (
          ? (a: Account) => a.parentId
          : mode === TreeMode.INSTITUTION
          ? (a: Account) => a.getInstitution()
-         : (a: Account) => a.accountType,
+         : (a: Account) => a.kind.name,
       [mode]
    );
 

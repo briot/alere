@@ -31,28 +31,45 @@ class AccountLists(alere.models.AlereModel):
             "id": self.id,
             "name": self.name,
             "favorite": False,   # ???
-            "currencyId": self.commodity_id,
-            "currencySymbol": self.commodity.symbol,
-            "currencyPrefixed": self.commodity.prefixed,
-            "accountType": self.kind.name,
+            "commodityId": self.commodity_id,
+            "kindId": self.kind_id,
             "closed": self.closed,
             "iban": self.iban,
             "parent": self.parent_id,
             "lastReconciled": self.last_reconciled,
-            # "forOpeningBalances": self.forOpeningBalances,
-            "sharesScale": self.commodity.qty_scale,
             "priceScale": self.price_scale,
             "institution": self.institution,
-            "is_stock": self.kind_id == alere.models.AccountFlags.STOCK,
-            "is_asset": self.kind_id in alere.models.AccountFlags.networth(),
-            "is_income_expense":
-               self.kind_id in alere.models.AccountFlags.expenses()
-               or
-               self.kind_id in alere.models.AccountFlags.all_income(),
         }
 
 
 class AccountList(JSONView):
     def get_json(self, params):
-        return list(AccountLists.objects
+        accounts = list(AccountLists.objects
             .select_related('kind', 'commodity').all())
+
+        commodities = [
+            {
+                "id": c.id,
+                "symb": c.symbol,
+                "prefixed": c.prefixed,
+                "qty_scale": c.qty_scale,
+            }
+            for c in alere.models.Commodities.objects.all()
+        ]
+
+        account_kinds = [
+            {
+                "id": a.flag,
+                "name": a.name,
+                "positive": a.name_when_positive,
+                "negative": a.name_when_negative,
+                "is_stock": a.flag == alere.models.AccountFlags.STOCK,
+                "is_asset": a.flag in alere.models.AccountFlags.networth(),
+                "is_income_expense":
+                   a.flag in alere.models.AccountFlags.expenses()
+                   or a.flag in alere.models.AccountFlags.all_income(),
+            }
+            for a in alere.models.AccountKinds.objects.all()
+        ]
+
+        return accounts, commodities, account_kinds
