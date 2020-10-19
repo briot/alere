@@ -6,6 +6,8 @@ import { SetHeader } from 'Header';
 import { Checkbox, NumberInput } from 'Form';
 import { ComposedChart, XAxis, YAxis, CartesianGrid, Area,
          Line, Tooltip } from 'recharts';
+import { CommodityId } from 'services/useAccounts';
+import usePrefs from 'services/usePrefs';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import './Mean.css';
 
@@ -20,6 +22,7 @@ const useMeanHistory = (
    prior: number,
    after: number,
    expenses: boolean,
+   currencyId: CommodityId,
 ) => {
    const [points, setPoints] = React.useState<Point[]>([]);
 
@@ -28,14 +31,14 @@ const useMeanHistory = (
          const doFetch = async() => {
             const resp = await window.fetch(
                `/api/mean?${rangeToHttp(range)}&prior=${prior}&after=${after}`
-               + `&expenses=${expenses}`
+               + `&expenses=${expenses}&currency=${currencyId}`
             );
             const data: Point[] = await resp.json();
             setPoints(data);
          }
          doFetch();
       },
-      [range, prior, after, expenses]
+      [range, prior, after, expenses, currencyId]
    );
 
    return points;
@@ -51,7 +54,9 @@ interface MeanProps {
 }
 const Mean: React.FC<MeanProps & SetHeader> = p => {
    const { setHeader } = p;
-   const points = useMeanHistory(p.range, p.prior, p.after, p.expenses);
+   const { prefs } = usePrefs();
+   const points = useMeanHistory(
+      p.range, p.prior, p.after, p.expenses, prefs.currencyId);
 
    React.useEffect(
       () => setHeader({

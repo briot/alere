@@ -36,7 +36,7 @@ const columnShares = (base: BalanceList, date_idx: number) => ({
       : (
          <Numeric
             amount={d.atDate[date_idx]?.shares}
-            scale={d.account?.commodity.qty_scale}
+            commodity={d.account?.commodity}
          />
       ),
 });
@@ -51,7 +51,7 @@ const columnPrice = (base: BalanceList, date_idx: number) => ({
       : (
          <Numeric
             amount={d.atDate[date_idx]?.price}
-            unit={base.currencyId}
+            commodity={base.currencyId}
          />
       )
 });
@@ -78,12 +78,12 @@ const columnValue = (base: BalanceList, date_idx: number) => ({
    cell: (d: LocalTreeNode, details: RowDetails<LocalTreeNode>) =>
       <Numeric
          amount={cumulatedValue(details.logic, date_idx, details.isExpanded)}
-         unit={base.currencyId}
+         commodity={base.currencyId}
       />,
    foot: () =>
       <Numeric
          amount={base.totalValue[date_idx]}
-         unit={base.currencyId}
+         commodity={base.currencyId}
       />
 });
 
@@ -97,7 +97,7 @@ const columnPercent = (base: BalanceList, date_idx: number) => ({
             cumulatedValue(details.logic, date_idx, details.isExpanded)
             / base.totalValue[date_idx] * 100
          }
-         unit="%"
+         suffix="%"
       />,
 });
 
@@ -117,14 +117,14 @@ const columnDelta = (
             ? NaN
             : (cumulatedValue(details.logic, ref, details.isExpanded) / m - 1
               ) * 100;
-         return <Numeric amount={delta} unit="%" />;
+         return <Numeric amount={delta} suffix="%" />;
       },
       foot: () =>
          <Numeric
             amount={
                (base.totalValue[ref] / base.totalValue[date_idx] - 1) * 100
             }
-            unit="%"
+            suffix="%"
          />
 }};
 

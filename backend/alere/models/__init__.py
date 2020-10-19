@@ -39,17 +39,13 @@ class Commodities(AlereModel):
     # The name as displayed in selection boxes in the GUI. For instance, it
     # could be "EUR" (iso code for currencies), "Apple Inc.",...
 
-    symbol = models.TextField()
+    symbol_before = models.TextField()
+    symbol_after = models.TextField()
     # The symbol to display the commodity. For instance, it could be
     # the EURO sign, or "AAPL".
 
     iso_code = models.TextField(null=True)
     # for currencies
-
-    prefixed = models.BooleanField(default=False)
-    # Set to True if the symbol should be displayed before the value, False
-    # to display after. For instance  "$ 100" uses prefixed=True, whereas
-    # "100 AAPL" uses prefixed=False
 
     kind = models.CharField(
         max_length=1,
@@ -614,6 +610,8 @@ class By_Month(AlereModel):
     )
     date = models.DateField()
     value = models.FloatField()
+    value_currency = models.ForeignKey(
+        Commodities, on_delete=models.DO_NOTHING, related_name='+')
 
     class Meta:
         managed = False

@@ -6,10 +6,11 @@ import alere
 class CategoryPlotView(JSONView):
 
     def get_json(self, params, expenses: str):
+        currency = self.as_commodity_id(params, 'currency')
+
         is_expenses = expenses == "expenses"
 
         accounts = None
-        currency = "EUR"
         maxdate = self.as_time(params, 'maxdate')
         mindate = self.as_time(params, 'mindate')
 
@@ -23,6 +24,7 @@ class CategoryPlotView(JSONView):
         query = alere.models.Splits_With_Value.objects \
             .filter(post_date__gte=mindate,
                     post_date__lte=maxdate,
+                    value_currency_id=currency,
                     account__kind__in=flags) \
             .values('account_id') \
             .annotate(Sum('value')) \

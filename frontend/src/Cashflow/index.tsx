@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { DateRange, monthCount, rangeDisplay, rangeToHttp } from 'Dates';
 import { SetHeader } from 'Header';
+import { CommodityId } from 'services/useAccounts';
 import Numeric from 'Numeric';
 import Table from 'List';
 import usePrefs from 'services/usePrefs';
@@ -18,7 +19,7 @@ interface Metric {
    liquid_assets: number;
 }
 
-const useFetchPL = (range: DateRange, currencyId: string) => {
+const useFetchPL = (range: DateRange, currencyId: CommodityId) => {
    const [data, setData] = React.useState<Metric>({
       income: NaN,
       passive_income: NaN,
@@ -53,6 +54,7 @@ interface MetricsProps {
    value: number | React.ReactNode;
    ideal?: number;
    compare?: string;
+   commodity?: CommodityId;
    suffix?: string;
    tooltip?: string;
 }
@@ -79,8 +81,8 @@ const Metrics: React.FC<MetricsProps> = p => {
                   (recommended {p.compare}
                      <Numeric
                         amount={p.ideal}
-                        scale={1 /* show no decimal digits */}
-                        unit={p.suffix}
+                        commodity={p.commodity}
+                        suffix={p.suffix}
                      />
                   )
                </span>
@@ -96,7 +98,8 @@ const Metrics: React.FC<MetricsProps> = p => {
                <span className="value" title={p.tooltip}>
                   <Numeric
                      amount={p.value as number}
-                     unit={p.suffix}
+                     commodity={p.commodity}
+                     suffix={p.suffix}
                   />
                </span>
                )
@@ -113,7 +116,8 @@ export interface CashflowProps {
 
 const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
    const { prefs } = usePrefs();
-   const pl = useFetchPL(p.range, prefs.currencyId);
+   const currency = prefs.currencyId;
+   const pl = useFetchPL(p.range, currency);
 
    const { setHeader } = p;
    React.useEffect(
@@ -148,10 +152,10 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
            <>
               <Table.TH>{p.head}</Table.TH>
               <Table.TH className="amount">
-                 <Numeric amount={p.amount} unit={prefs.currencyId} />
+                 <Numeric amount={p.amount} commodity={currency} />
               </Table.TH>
               <Table.TH className="amount">
-                 <Numeric amount={p.amount / months} unit={prefs.currencyId} />
+                 <Numeric amount={p.amount / months} commodity={currency} />
               </Table.TH>
            </>
         ) : (
@@ -162,10 +166,10 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
                  {p.head}
               </Table.TD>
               <Table.TD className="amount">
-                 <Numeric amount={p.amount} unit={prefs.currencyId} />
+                 <Numeric amount={p.amount} commodity={currency} />
               </Table.TD>
               <Table.TD className="amount">
-                 <Numeric amount={p.amount / months} unit={prefs.currencyId} />
+                 <Numeric amount={p.amount / months} commodity={currency} />
               </Table.TD>
            </>
          )}
@@ -188,7 +192,7 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
                   {p.head}
                </Table.TH>
                <Table.TH className="amount">
-                  <Numeric amount={p.amount} unit={prefs.currencyId} />
+                  <Numeric amount={p.amount} commodity={currency} />
                </Table.TH>
             </>
          ): (
@@ -199,7 +203,7 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
                   {p.head}
                </Table.TD>
                <Table.TD className="amount">
-                  <Numeric amount={p.amount} unit={prefs.currencyId} />
+                  <Numeric amount={p.amount} commodity={currency} />
                </Table.TD>
             </>
          )}
@@ -304,7 +308,7 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
             value={NaN}
             ideal={0}
             compare="="
-            suffix={prefs.currencyId}
+            commodity={currency}
          />
 
          <h3>Cashflow</h3>

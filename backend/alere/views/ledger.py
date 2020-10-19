@@ -72,7 +72,6 @@ class LedgerView(JSONView):
                 "date": s.post_date.strftime("%Y-%m-%d"),
                 "amount": s.value,
                 "reconcile": s.reconcile,
-                "currency": s.account.commodity_id,
                 "shares": s.scaled_qty / s.account.commodity_scu,
                 "price": s.computed_price,
             })

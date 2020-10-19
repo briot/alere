@@ -7,17 +7,21 @@ export type CommodityId = number;
 export type AccountKindId = string;
 // an AccountFlag, though it should be treated as opaque
 
-interface CommodityJSON {
+export interface Commodity {
    id: CommodityId;
-   symb: string;
-   prefixed: boolean;
+   name: string;
+   symbol_before: string;
+   symbol_after: string;
    qty_scale: number;
+   is_currency: boolean;
 }
-const nullCommodity: CommodityJSON = {
+const nullCommodity: Commodity = {
    id: -1,
-   symb: "???",
-   prefixed: false,
+   symbol_before: "???",
+   symbol_after: "???",
+   name: "???",
    qty_scale: 1,
+   is_currency: false,
 };
 
 interface AccountKindJSON {
@@ -44,12 +48,12 @@ interface AccountJSON {
    name: string;
    favorite: boolean;
    commodityId: CommodityId;
+   commodity_scu: number;
    kindId: AccountKindId;
    closed: boolean;
    iban: string;
    parent: AccountId | undefined;
    lastReconciled: string;
-   priceScale: number;
    institution: string | null;
 }
 const nullAccountJSON: AccountJSON = {
@@ -57,12 +61,12 @@ const nullAccountJSON: AccountJSON = {
    name: "",
    favorite: false,
    commodityId: nullCommodity.id,
+   commodity_scu: 1,
    kindId: nullAccountKind.id,
    closed: true,
    iban: "",
    parent: undefined,
    lastReconciled: "",
-   priceScale: 1,
    institution: null,
 }
 
@@ -70,29 +74,30 @@ export class Account {
    readonly id: AccountId;
    readonly name: string;
    readonly favorite: boolean;
-   readonly commodity: CommodityJSON;
+   readonly commodity: Commodity;
+   readonly commodity_scu: number;
    readonly kind: AccountKindJSON;
    readonly closed: boolean;
    readonly iban: string;
    readonly lastReconciled: string;
-   readonly priceScale: number;
    readonly parentId: AccountId | undefined;
    parentAccount: Account | undefined;
    private institution: string | null;
 
-   static allCommodities: { [id: number /*CommodityId*/]: CommodityJSON } = {};
-   static allAccountKinds: { [id: string /*AccountKindId*/]: AccountKindJSON } = {};
-
-   constructor(d: AccountJSON) {
+   constructor(
+      d: AccountJSON,
+      allCommodities: { [id: number /*CommodityId*/]: Commodity},
+      allAccountKinds: { [id: string /*AccountKindId*/]: AccountKindJSON },
+   ) {
       this.id = Number(d.id);
       this.name = d.name;
       this.favorite = d.favorite;
-      this.commodity = Account.allCommodities[d.commodityId] ?? nullCommodity;
-      this.kind = Account.allAccountKinds[d.kindId] ?? nullAccountKind;
+      this.commodity = allCommodities[d.commodityId] ?? nullCommodity;
+      this.commodity_scu = d.commodity_scu
+      this.kind = allAccountKinds[d.kindId] ?? nullAccountKind;
       this.closed = d.closed;
       this.iban = d.iban;
       this.lastReconciled = d.lastReconciled;
-      this.priceScale = d.priceScale;
       this.parentId = d.parent;
       this.institution = d.institution;
    }
@@ -121,24 +126,35 @@ export class Account {
 
 export class AccountList {
    private accounts: Map<AccountId, Account>;
+   allCommodities: { [id: number /*CommodityId*/]: Commodity};
+   allAccountKinds: { [id: string /*AccountKindId*/]: AccountKindJSON };
 
    static async fetch() {
       const resp = await window.fetch('/api/account/list');
-      const acc: [AccountJSON[], CommodityJSON[], AccountKindJSON[]] =
+      const acc: [AccountJSON[], Commodity[], AccountKindJSON[]] =
          await resp.json();
 
-      Account.allCommodities = {};
-      acc[1].forEach(c => Account.allCommodities[c.id] = c);
+      const comm: { [id: number /*CommodityId*/]: Commodity} = {};
+      acc[1].forEach(c => comm[c.id] = c);
 
-      Account.allAccountKinds = {}
-      acc[2].forEach(c => Account.allAccountKinds[c.id] = c);
+      const kinds: { [id: string /*AccountKindId*/]: AccountKindJSON } = {};
+      acc[2].forEach(c => kinds[c.id] = c);
 
-      return new AccountList(acc[0]);
+      return new AccountList(acc[0], comm, kinds);
    }
 
-   constructor(acc: AccountJSON[]) {
+   constructor(
+      acc: AccountJSON[],
+      allCommodities: { [id: number /*CommodityId*/]: Commodity},
+      allAccountKinds: { [id: string /*AccountKindId*/]: AccountKindJSON },
+   ) {
+      this.allCommodities = allCommodities;
+      this.allAccountKinds = allAccountKinds;
+
       this.accounts = new Map();
-      acc.forEach(a => this.accounts.set(Number(a.id), new Account(a)));
+      acc.forEach(a => this.accounts.set(
+         Number(a.id),
+         new Account(a, this.allCommodities, this.allAccountKinds)));
       this.accounts.forEach(a =>
          a.parentAccount = a.parentId === undefined
             ? undefined
@@ -154,7 +170,7 @@ export class AccountList {
       return this.accounts.get(id) || new Account({
          ...nullAccountJSON,
          name: id.toString(),
-      });
+      }, this.allCommodities, this.allAccountKinds);
    }
 
    accountsFromCurrency(commodityId: CommodityId): Account[] {
@@ -189,7 +205,7 @@ interface IAccountsContext {
 }
 
 const noContext: IAccountsContext = {
-   accounts: new AccountList([]),
+   accounts: new AccountList([], {}, {}),
    refresh: () => {},
 }
 

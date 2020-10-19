@@ -12,6 +12,7 @@ class MeanView(JSONView):
         mindate = self.as_time(params, 'mindate')
         prior = int(params.get('prior', 6))
         after = int(params.get('after', 6))
+        currency = self.as_commodity_id(params, 'currency')
 
         if expenses:
             flags = alere.models.AccountFlags.expenses()
@@ -37,13 +38,14 @@ class MeanView(JSONView):
                 WHERE date >= %s
                   AND date <= %s
                   AND kind_id in ({kinds})
+                  AND value_currency_id=%s
                 GROUP BY date
             ) tmp
             """
         )
 
         with django.db.connection.cursor() as cur:
-            cur.execute(query, [mindate, maxdate])
+            cur.execute(query, [mindate, maxdate, currency])
             return [
                 {
                     "date": r[0],

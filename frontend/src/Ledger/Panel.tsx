@@ -5,14 +5,17 @@ import { SetHeader } from 'Header';
 import { rangeDisplay } from 'Dates';
 import useAccountIds from 'services/useAccountIds';
 import useTransactions from 'services/useTransactions';
+import { Transaction } from 'Transaction';
 
 const LedgerPanel: React.FC<
    BaseLedgerProps & SetHeader & SaveData<BaseLedgerProps>
+   & { transactions?: Transaction[] }
 > = p => {
    const { setHeader } = p;
    const accounts = useAccountIds(p.accountIds);
    const computedIds = accounts?.map(a => a.id);
-   const transactions = useTransactions(computedIds, p.range, p.transactions);
+   const transactions =
+      useTransactions(computedIds, p.range, p.transactions);
 
    React.useEffect(
       () => {

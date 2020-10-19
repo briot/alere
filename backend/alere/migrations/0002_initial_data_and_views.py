@@ -201,7 +201,7 @@ class Migration(migrations.Migration):
                '2000-01-01 00:00:00' as last_reconciled,
                alr_accounts.kind_id,
                alr_accounts.commodity_id,
-               alr_accounts.commodity_scu as price_scale,
+               alr_accounts.commodity_scu,
                alr_institutions.name as institution,
                alr_accounts.closed,
                alr_accounts.iban
@@ -234,6 +234,7 @@ class Migration(migrations.Migration):
         CREATE VIEW alr_by_month AS
             SELECT
                alr_accounts.kind_id as kind_id,
+               alr_splits_with_value.value_currency_id,
                strftime("%Y-%m-01", alr_splits_with_value.post_date) as date,
                SUM(alr_splits_with_value.value) as value
             FROM alr_splits_with_value

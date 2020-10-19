@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { AccountId } from 'services/useAccounts';
+import { AccountId, CommodityId } from 'services/useAccounts';
 import { RelativeDate, dateToString } from 'Dates';
 
 /**
@@ -29,13 +29,13 @@ export interface Balance {
  */
 
 export interface BalanceList {
-   currencyId: string;
+   currencyId: CommodityId;
    dates: RelativeDate[];
    list: Balance[];   // indexed on date
    totalValue: number[];  // indexed on date
 }
 const noBalanceList: BalanceList = {
-   list: [], dates: [], totalValue: [], currencyId: ''};
+   list: [], dates: [], totalValue: [], currencyId: -1};
 
 /**
  * As fetched from the server
@@ -56,7 +56,7 @@ interface JSONBalance {
  */
 
 const useBalance = (p: {
-   currencyId: string;
+   currencyId: CommodityId;
    dates: RelativeDate[];
 }): BalanceList => {
    const [ data, setData ] = React.useState(noBalanceList);

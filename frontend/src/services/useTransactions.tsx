@@ -11,7 +11,7 @@ const useTransactions = (
    accountIds: AccountId[] | undefined,  // undefined for all accounts
    range?: DateRange|undefined,  // undefined, to see forever
    precomputed?: Transaction[],  // use this if set, instead of fetching
-) => {
+): Transaction[] => {
    const { accounts } = useAccounts();
    const [baseTrans, setBaseTrans] = React.useState<Transaction[]>([]);
    const idsForQuery = accountIds === undefined

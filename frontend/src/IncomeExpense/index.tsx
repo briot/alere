@@ -68,13 +68,12 @@ const CustomTooltip = (p: TooltipProps & {data: DataType} ) => {
            <div>
               <Numeric
                  amount={value}
-                 scale={pay.payload.account.priceScale}
-                 unit={pay.payload.account.currencySymbol}
+                 commodity={pay.payload.account.commodity}
               />
            </div>
            <Numeric
                amount={value / total * 100}
-               unit="%"
+               suffix="%"
            />
        </div>
      ) : null;
@@ -97,7 +96,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps & SetHeader> = p => {
          const dofetch = async () => {
             const resp = await window.fetch(
                `/api/plots/category/${p.expenses ? 'expenses' : 'income'}`
-               + `?${rangeToHttp(p.range)}`
+               + `?${rangeToHttp(p.range)}&currency=${prefs.currencyId}`
             );
             const d: DataType = await resp.json();
 
@@ -110,7 +109,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps & SetHeader> = p => {
          }
          dofetch();
       },
-      [p.expenses, p.range]
+      [p.expenses, p.range, prefs.currencyId]
    );
 
    const data: DataType = React.useMemo(
@@ -137,7 +136,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps & SetHeader> = p => {
               &nbsp;(
                   <Numeric
                      amount={data.items[index].value}
-                     unit={prefs.currencyId}
+                     commodity={prefs.currencyId}
                   />
                )
            </span>

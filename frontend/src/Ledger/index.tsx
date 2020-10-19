@@ -9,7 +9,8 @@ import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
 import Numeric from 'Numeric';
 import ListWithColumns, {
    AlternateRows, Column, LogicalRow } from 'List/ListWithColumns';
-import { Account, AccountId, AccountIdList } from 'services/useAccounts';
+import { Account, AccountId,
+   AccountIdList, CommodityId } from 'services/useAccounts';
 import './Ledger.css';
 
 const SPLIT = '--split--';
@@ -45,13 +46,15 @@ export interface BaseLedgerProps {
    hideReconcile?: boolean;
    alternateColors?: boolean;
    sortOn?: string;  // +colid  or -colid
+}
 
-   accounts: Account[] | undefined;         // computed from accountIds
-   transactions: Transaction[] | undefined, // use it instead of fetching
+export interface ComputedBaseLedgerProps extends BaseLedgerProps {
+   accounts: Account[];          // computed from accountIds
+   transactions: Transaction[]; // use it instead of fetching
 }
 
 interface TableRowData {
-   settings: BaseLedgerProps;
+   settings: ComputedBaseLedgerProps;
    transaction: Transaction;
    firstRowSplit: Split;         //  simulated split for the first row
    account: undefined|Account;   // destination account
@@ -89,7 +92,10 @@ const columnSummary: Column<TableRowData> = {
          : amountForAccounts(d.transaction, d.settings.accounts!);
       return (
          <>
-            <Numeric amount={amount} />
+            <Numeric
+               amount={amount}
+               commodity={d.firstRowSplit?.account?.commodity}
+            />
             &nbsp;=&nbsp;
             {
                d.transaction.splits.map((s, index) =>
@@ -98,7 +104,10 @@ const columnSummary: Column<TableRowData> = {
                      || !d.settings.accounts.includes(s.account)
                   ) ? <span key={index}>
                      <span>{ s.amount >= 0 ? ' - ' : ' + ' }</span>
-                     <Numeric amount={Math.abs(s.amount)} />
+                     <Numeric
+                        amount={Math.abs(s.amount)}
+                        commodity={s.account?.commodity}
+                     />
                      &nbsp;(
                         <AccountName
                             id={s.accountId}
@@ -173,6 +182,12 @@ const columnAmount: Column<TableRowData> = {
    cell: (d: TableRowData) =>
       <Numeric
          amount={d.split === MAIN ? d.firstRowSplit.amount : d.split.amount}
+         hideCommodity={true}
+         commodity={
+            d.split === MAIN
+            ? d.firstRowSplit.account?.commodity
+            : d.split.account?.commodity
+         }
       />
 }
 
@@ -182,9 +197,18 @@ const columnWidthdraw: Column<TableRowData> = {
    compare: (a, b) => a.firstRowSplit.amount - b.firstRowSplit.amount,
    cell: (d: TableRowData) =>
       d.split === MAIN
-      ? (d.firstRowSplit.amount < 0
-           && <Numeric amount={Math.abs(d.firstRowSplit.amount)} />)
-      : (d.split.amount < 0 && <Numeric amount={Math.abs(d.split.amount)} />)
+      ? (d.firstRowSplit.amount < 0 &&
+          <Numeric
+             amount={Math.abs(d.firstRowSplit.amount)}
+             commodity={d.firstRowSplit.account?.commodity}
+             hideCommodity={true}
+           />)
+      : (d.split.amount < 0 &&
+          <Numeric
+             amount={Math.abs(d.split.amount)}
+             commodity={d.split.account?.commodity}
+             hideCommodity={true}
+          />)
 }
 
 const columnDeposit: Column<TableRowData> = {
@@ -193,9 +217,18 @@ const columnDeposit: Column<TableRowData> = {
    compare: (a, b) => a.firstRowSplit.amount - b.firstRowSplit.amount,
    cell: (d: TableRowData) =>
       d.split === MAIN
-      ? (d.firstRowSplit.amount >= 0
-           && <Numeric amount={d.firstRowSplit.amount} />)
-      : (d.split.amount >= 0 && <Numeric amount={d.split.amount} />)
+      ? (d.firstRowSplit.amount >= 0 &&
+         <Numeric
+            amount={d.firstRowSplit.amount}
+            commodity={d.firstRowSplit.account?.commodity}
+            hideCommodity={true}
+         />)
+      : (d.split.amount >= 0 &&
+         <Numeric
+            amount={d.split.amount}
+            commodity={d.split.account?.commodity}
+            hideCommodity={true}
+         />)
 }
 
 const columnShares: Column<TableRowData> = {
@@ -207,7 +240,8 @@ const columnShares: Column<TableRowData> = {
       d.split === MAIN &&
       <Numeric
          amount={d.firstRowSplit.shares}
-         scale={d.account?.commodity.qty_scale}
+         commodity={d.account?.commodity}  //  the account's commodity
+         hideCommodity={true}
       />
 }
 
@@ -217,11 +251,13 @@ const columnPrice: Column<TableRowData> = {
    compare: (a, b) =>
       (a.firstRowSplit.price ?? 0) - (b.firstRowSplit.price ?? 0),
    title: "Price of one share at the time of the transaction",
+         /* scale={d.account?.priceScale} */
    cell: (d: TableRowData) =>
       d.split === MAIN &&
       <Numeric
          amount={d.firstRowSplit.price}
-         scale={d.account?.priceScale}
+         commodity={d.firstRowSplit.account?.commodity}
+         hideCommodity={true}
       />
 }
 
@@ -232,8 +268,9 @@ const columnSharesBalance: Column<TableRowData> = {
    cell: (d: TableRowData) =>
       d.split === MAIN &&
       <Numeric
-          amount={d.transaction?.balanceShares}
-          scale={d.account?.commodity.qty_scale}
+         amount={d.transaction?.balanceShares}
+         commodity={d.account?.commodity}  //  the account's commodity
+         hideCommodity={true}
       />
 }
 
@@ -243,7 +280,10 @@ const columnBalance: Column<TableRowData> = {
    title: "Current worth at the time of the transaction. For stock accounts, this is the number of stocks times their price at the time (not the cumulated amount you have bought or sold for)",
    cell: (d: TableRowData) =>
       d.split === MAIN &&
-      <Numeric amount={d.transaction.balance} />
+      <Numeric
+         amount={d.transaction.balance}
+         commodity={d.firstRowSplit.account?.commodity}
+      />
 }
 
 const columnTotal = (v: Totals): Column<TableRowData> => ({
@@ -252,23 +292,38 @@ const columnTotal = (v: Totals): Column<TableRowData> => ({
       <>
          {
             v.selected &&
-            <Table.TD>selected: <Numeric amount={v.selected} /></Table.TD>
+            <Table.TD>
+               selected:
+               <Numeric amount={v.selected} commodity={v.commodity} />
+            </Table.TD>
          }
          {
             v.reconciled &&
-            <Table.TD>reconciled: <Numeric amount={v.reconciled} /></Table.TD>
+            <Table.TD>
+               reconciled:
+               <Numeric amount={v.reconciled} commodity={v.commodity} />
+            </Table.TD>
          }
          {
             v.cleared &&
-            <Table.TD>cleared: <Numeric amount={v.cleared} /></Table.TD>
+            <Table.TD>
+               cleared:
+               <Numeric amount={v.cleared} commodity={v.commodity} />
+            </Table.TD>
          }
          {
             v.present &&
-            <Table.TD>present: <Numeric amount={v.present} /></Table.TD>
+            <Table.TD>
+               present:
+               <Numeric amount={v.present} commodity={v.commodity} />
+            </Table.TD>
          }
          {
             v.future && v.future !== v.present &&
-            <Table.TD>future: <Numeric amount={v.future} /></Table.TD>
+            <Table.TD>
+               future:
+               <Numeric amount={v.future} commodity={v.commodity} />
+            </Table.TD>
          }
       </>
    )
@@ -278,6 +333,7 @@ const columnTotal = (v: Totals): Column<TableRowData> => ({
  * Compute totals
  */
 interface Totals {
+   commodity: CommodityId|undefined;
    future: number|undefined;
    present: number|undefined;
    reconciled: number;
@@ -285,19 +341,31 @@ interface Totals {
    selected: number;
 }
 const nullTotal: Totals = {
+   commodity: undefined,
    future: undefined, present: undefined, reconciled: 0,
    cleared: 0, selected: 0,
 };
 
 const useTotal = (
    transactions: Transaction[] | undefined,
-   accounts: Account[] | undefined,
+   accounts: Account[],
 ) => {
    const [total, setTotal] = React.useState(nullTotal);
 
    React.useEffect(
       () => setTotal(() => {
          const v = {...nullTotal};
+
+         // If the accounts do not all have the same commodity, we cannot
+         // compute the total.
+
+         v.commodity = accounts[0].commodity.id;
+         for (const a of accounts) {
+            if (a.commodity.id !== v.commodity) {
+               return v;
+            }
+         }
+
          v.future = transactions?.[transactions.length - 1]?.balanceShares;
 
          const formatted = dateToString("today");
@@ -322,6 +390,7 @@ const useTotal = (
                }
             }
          }
+
          return v;
       }),
       [transactions, accounts]
@@ -333,23 +402,31 @@ const useTotal = (
  * Compute a dummy Split to be shown on the first line of a transaction
  */
 
-const computeFirstSplit = (p: BaseLedgerProps, t: Transaction) => {
+const computeFirstSplit = (p: ComputedBaseLedgerProps, t: Transaction) => {
    const sa = p.accounts ? splitsForAccounts(t, p.accounts) : undefined;
    let s: Split = {
       accountId: SPLIT_ID,
-      account: undefined,
+
+      // Set the account so that we display the currency in the first --split--
+      // line.
+      // ??? But then it is wrong for the Shares column or the Amount column,
+      // since they do not use the same currency anyway.
+      // ??? What if not all accounts use the same currency ? We have a wrong
+      // total anyway below
+      account: undefined, // p.accounts[0],
+
       reconcile: sa?.length ? sa[0].reconcile : 'n',
       date: sa?.[0]?.date ?? t.date,
       price:
-         (p.accounts === undefined || p.accounts.length > 1)
+         p.accounts.length > 1
          ? undefined
          : priceForAccounts(t, p.accounts) || undefined,
       shares:
-         (p.accounts === undefined || p.accounts.length > 1)
+         p.accounts.length > 1
          ? undefined
          : sharesForAccounts(t, p.accounts) || undefined,
       amount:
-         (p.accounts === undefined || p.accounts.length > 1)
+         p.accounts.length > 1
          ? amountIncomeExpense(t)
          : amountForAccounts(t, p.accounts),
    };
@@ -361,20 +438,14 @@ const computeFirstSplit = (p: BaseLedgerProps, t: Transaction) => {
          if (t.splits.length < 3) {
             // Find the split for the account itself, to get balance
             const splits =
-               (p.accounts === undefined || p.accounts.length > 1)
+               p.accounts.length > 1
                ? incomeExpenseSplits(t)[0]
                : sa![0];
             const s2 = {...splits};
 
             // Find the split not for the account, to get the target account
             for (const s3 of t.splits) {
-               if (p.accounts === undefined) {
-                  if (s3.account?.kind.is_income_expense) {
-                     s2.accountId = s3.accountId;
-                     s2.account = s3.account;
-                     break;
-                  }
-               } else if (s3.account && !p.accounts.includes(s3.account)) {
+               if (s3.account && !p.accounts.includes(s3.account)) {
                   s2.account = s3.account;
                   s2.accountId = s3.accountId;
                   break;
@@ -385,13 +456,11 @@ const computeFirstSplit = (p: BaseLedgerProps, t: Transaction) => {
          }
          break;
       case SplitMode.OTHERS:
-         if (p.accounts !== undefined) {
-            const d = splitsNotForAccounts(t, p.accounts)
-            if (d.length === 1) {
-               s = {...s,
-                    account: d[0].account,
-                    accountId: d[0].accountId};
-            }
+         const d = splitsNotForAccounts(t, p.accounts)
+         if (d.length === 1) {
+            s = {...s,
+                 account: d[0].account,
+                 accountId: d[0].accountId};
          }
          break;
       case SplitMode.MULTILINE:
@@ -588,7 +657,7 @@ const getChildren = (d: TableRowData) => {
 interface ExtraProps {
    setSortOn?: (on: string) => void; //  called when user wants to sort
 }
-const Ledger: React.FC<BaseLedgerProps & ExtraProps> = p => {
+const Ledger: React.FC<ComputedBaseLedgerProps & ExtraProps> = p => {
    const total = useTotal(p.transactions, p.accounts);
    const singleAccount =
       (p.accounts !== undefined && p.accounts.length === 1

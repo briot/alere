@@ -1,66 +1,85 @@
 from django.db.models import Sum
 from .json import JSONView
 import alere
+import math
 
 class MetricsView(JSONView):
 
     def get_json(self, params):
         maxdate = self.as_time(params, 'maxdate')
         mindate = self.as_time(params, 'mindate')
-        currency = params['currency']
+        currency = self.as_commodity_id(params, 'currency')
 
         over_period = alere.models.Splits_With_Value.objects \
             .filter(post_date__gte=mindate,
                     post_date__lte=maxdate,
-                    value_currency__iso_code=currency)
+                    value_currency=currency)
 
         at_start = alere.models.Balances_Currency.objects \
             .filter(mindate__lte=mindate,
                     maxdate__gt=mindate,
-                    commodity__iso_code=currency)
+                    commodity_id=currency)
 
         at_end = alere.models.Balances_Currency.objects \
             .filter(mindate__lte=maxdate,
                     maxdate__gt=maxdate,
-                    commodity__iso_code=currency)
+                    commodity_id=currency)
 
 
-        income = -over_period \
+        income = -(
+            over_period \
             .filter(
                 account__kind__in=alere.models.AccountFlags.actual_income()) \
             .aggregate(value=Sum('value'))['value']
+            or math.nan)
 
-        passive_income = -over_period \
+        passive_income = -(
+            over_period \
             .filter(account__kind=alere.models.AccountFlags.PASSIVE_INCOME) \
             .aggregate(value=Sum('value'))['value']
+            or math.nan)
 
-        work_income = -over_period \
+        work_income = -(
+            over_period \
             .filter(account__kind=alere.models.AccountFlags.WORK_INCOME) \
             .aggregate(value=Sum('value'))['value']
+            or math.nan)
 
-        expense = over_period \
+        expense = (
+            over_period \
             .filter(account__kind__in=alere.models.AccountFlags.expenses()) \
             .aggregate(value=Sum('value'))['value']
+            or math.nan)
 
-        other_taxes = over_period \
+        other_taxes = (
+            over_period \
             .filter(account__kind=alere.models.AccountFlags.MISC_TAX) \
             .aggregate(value=Sum('value'))['value']
+            or math.nan)
 
-        income_taxes = over_period \
+        income_taxes = (
+            over_period \
             .filter(account__kind=alere.models.AccountFlags.INCOME_TAX) \
             .aggregate(value=Sum('value'))['value']
+            or math.nan)
 
-        networth = at_end \
+        networth = (
+            at_end \
             .filter(account__kind__in=alere.models.AccountFlags.networth()) \
             .aggregate(value=Sum('balance'))['value']
+            or math.nan)
 
-        networth_start = at_start \
+        networth_start = (
+            at_start \
             .filter(account__kind__in=alere.models.AccountFlags.networth()) \
             .aggregate(value=Sum('balance'))['value']
+            or math.nan)
 
-        liquid_assets = at_end \
+        liquid_assets = (
+            at_end \
             .filter(account__kind__in=alere.models.AccountFlags.liquid()) \
             .aggregate(value=Sum('balance'))['value']
+            or math.nan)
 
 
         return {

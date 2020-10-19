@@ -54,11 +54,15 @@
     * CSS (firefox), or -webkit specific ones (Chrome + Safari)
     *    https://alligator.io/css/css-scrollbars/
     */
-//   .tbody .tr {
-//      width: 100%;
-//   }
+
+   // ??? Behavior in firefox is inconsistent: sometimes the scrollbar overlaps
+   // the tbody, sometimes it is displayed besides it.
+   .tbody .tr {
+      width: 100%;
+   }
+//   .tbody .tr,
+
    .thead .tr,
-   .tbody .tr,
    .tfoot .tr {
       // Thanks to box-sizing, we do not have to take into account
       // exp-padding-left when we compute the size

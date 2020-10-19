@@ -8,7 +8,6 @@ export interface Split {
    date: string;     // date the split was completed
    amount: number;
    shares?: number;  //  for stock accounts
-   currency?: string;
    price?: number;
 
    account: Account|undefined;   // not sent via JSON

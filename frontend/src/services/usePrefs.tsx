@@ -1,12 +1,13 @@
 import * as React from 'react';
+import { CommodityId } from 'services/useAccounts';
 
 export interface Preferences {
    dark_mode: boolean;
-   currencyId: string;
+   currencyId: CommodityId;
 }
 
 const defaultPref: Preferences = {
-   currencyId: "EUR",
+   currencyId: 1,   // First available currency ?
    dark_mode: true,
 }
 

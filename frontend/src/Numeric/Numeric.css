@@ -5,6 +5,9 @@
    white-space: nowrap;
    font-size-adjust: 0.438;
 }
-.numeric span {
+.numeric span.prefix {
+   margin-right: 3px;
+}
+.numeric span.suffix {
    margin-left: 3px;
 }

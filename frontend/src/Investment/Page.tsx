@@ -6,8 +6,11 @@ import { SetHeader } from 'Header';
 import RoundButton from 'RoundButton';
 import Dropdown from '../Form/Dropdown';
 import useSettings from '../services/useSettings';
+import usePrefs from '../services/usePrefs';
 
 const InvestmentPage: React.FC<SetHeader> = p => {
+   const { prefs } = usePrefs();
+
    const state = useSettings<InvestmentsPanelProps>(
       'investments',
       {
@@ -32,13 +35,13 @@ const InvestmentPage: React.FC<SetHeader> = p => {
       () => {
          const dofetch = async () => {
             const resp = await window.fetch(
-               `/api/quotes?update=${update}`);
+               `/api/quotes?update=${update}&currency=${prefs.currencyId}`);
             const data: TickerList = await resp.json();
             setResponse(data);
          }
          dofetch();
       },
-      [update, refresh]
+      [update, refresh, prefs.currencyId]
    );
 
    const { setHeader } = p;

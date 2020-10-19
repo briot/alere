@@ -5,7 +5,8 @@ import * as d3Array from 'd3-array';
 import { DateDisplay } from 'Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
-import useAccounts, { AccountId, AccountList } from 'services/useAccounts';
+import useAccounts, {
+   AccountId, CommodityId, AccountList } from 'services/useAccounts';
 import AccountName from 'Account';
 import Spinner from 'Spinner';
 import { AreaChart, XAxis, YAxis, Area, Tooltip,
@@ -23,7 +24,7 @@ interface Ticker {
    name: string;
    ticker: string;
    source: string;
-   currency: string;
+   commodity: CommodityId;
 
    storedtime: string;   // timestamp of last stored price
    storedprice: number|null;
@@ -60,7 +61,7 @@ interface PastValue  {
    fromPrice: number;
    toPrice: number;
    number_of_days: number;
-   currency: string;
+   commodity: CommodityId;
 }
 
 const pastValue = (
@@ -82,7 +83,7 @@ const pastValue = (
       toPrice: close,
       number_of_days: now === null || ts === null ? NaN
          : Math.floor((now - ts) / DAY_MS),
-      currency: ticker.currency,
+      commodity: ticker.commodity,
    };
 }
 
@@ -92,7 +93,7 @@ const Past: React.FC<PastValue> = p => {
       !isNaN(perf)
       ? (
       <td>
-         <Numeric amount={perf} colored={true} unit="%"/>
+         <Numeric amount={perf} colored={true} suffix="%"/>
          <div className="tooltip">
             <div>
                From <DateDisplay when={p.fromDate} />
@@ -100,9 +101,9 @@ const Past: React.FC<PastValue> = p => {
                <DateDisplay when={p.toDate} />
             </div>
             <div>
-               <Numeric amount={p.fromPrice} unit={p.currency} />
+               <Numeric amount={p.fromPrice} commodity={p.commodity} />
                &nbsp;->&nbsp;
-               <Numeric amount={p.toPrice} unit={p.currency} />
+               <Numeric amount={p.toPrice} commodity={p.commodity} />
             </div>
          </div>
       </td>
@@ -207,7 +208,7 @@ const History: React.FC<HistoryProps> = p => {
 
       <div className="prices">
          Closing price:
-         <Numeric amount={close} unit={p.ticker.currency} />
+         <Numeric amount={close} commodity={p.ticker.commodity} />
          on <DateDisplay when={ts === null ? undefined : new Date(ts)} />
       </div>
 
@@ -286,12 +287,12 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                        className={
                           weighted_avg > close ? 'negative' : 'positive'
                        }
-                       unit={p.ticker.currency}
+                       commodity={p.ticker.commodity}
                     />
                     &nbsp;(
                     <Numeric
                        amount={(close / weighted_avg - 1) * 100}
-                       unit="%"
+                       suffix="%"
                     />
                     )
                  </td>
@@ -313,12 +314,12 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                        className={
                           avg_cost > close ? 'negative' : 'positive'
                        }
-                       unit={p.ticker.currency}
+                       commodity={p.ticker.commodity}
                     />
                     &nbsp;(
                     <Numeric
                        amount={(close / avg_cost - 1) * 100}
-                       unit="%"
+                       suffix="%"
                     />
                     )
                  </td>
@@ -331,14 +332,14 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                  <td>
                     <Numeric
                         amount={p.ticker.storedprice}
-                        unit={p.ticker.currency}
+                        commodity={p.ticker.commodity}
                     />
                     &nbsp;on&nbsp;
                     <DateDisplay when={new Date(p.ticker.storedtime)} />
                     &nbsp;(
                     <Numeric
                        amount={(close / (p.ticker.storedprice || NaN) - 1) * 100}
-                       unit="%"
+                       suffix="%"
                     />
                     )
                  </td>

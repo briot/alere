@@ -99,6 +99,7 @@ const Dropdown: React.FC<DropdownProps> = p => {
                window.document.removeEventListener('mouseup', onMouse, true);
             };
          }
+         return undefined;
       },
       [onMouse, visible]
    );

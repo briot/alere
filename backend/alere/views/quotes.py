@@ -16,7 +16,7 @@ class QuotesView(JSONView):
             q = alere.models.Prices.objects \
                 .select_related('origin') \
                 .filter(origin__in=ids,
-                        target__iso_code=currency)
+                        target_id=currency)
 
             for row in q:
                 symbols[row.origin_id]['prices'].append(
@@ -121,13 +121,13 @@ class QuotesView(JSONView):
 
     def get_json(self, params):
         update = self.as_bool(params, 'update', False)
-        currency = params.get("currency", "EUR")
+        currency = self.as_commodity_id(params, 'currency')
 
         #########
         # First step: find all commodities we trade.
 
         query = alere.models.Commodities.objects \
-            .filter(latest_price__target__iso_code=currency) \
+            .filter(latest_price__target_id=currency) \
             .select_related(
                 'latest_price', 'latest_price__origin', 'quote_source')
 

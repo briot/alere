@@ -2,6 +2,7 @@ import datetime
 from django.http import HttpResponse
 from django.views.generic import View
 import json
+import math
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -12,6 +13,8 @@ class CustomJSONEncoder(json.JSONEncoder):
             return obj.strftime('%Y-%m-%d %H:%M:%s')
         elif isinstance(obj, datetime.date):
             return obj.strftime('%Y-%m-%d')
+        elif math.isnan(obj):
+            return None
 
         return super().default(obj)
 
@@ -29,6 +32,9 @@ class JSONView(View):
     def get(self, request, *args, **kwargs):
         resp = self.get_json(request.GET, *args, **kwargs)
         return HttpResponse(self.to_json(resp), content_type="application/json")
+
+    def as_commodity_id(self, params, name):
+        return int(params[name])
 
     def as_bool(self, params, name, default=False):
         """

@@ -27,7 +27,7 @@ class NetworthView(JSONView):
 
     def get_json(self, params):
         dates = params.get('dates', '').split(',')
-        currency = params['currency']
+        currency = self.as_commodity_id(params, 'currency')
 
         shares = {}
         prices = {}
@@ -36,7 +36,7 @@ class NetworthView(JSONView):
                     datetime.timezone.utc)
 
             for acc in alere.models.Balances_Currency.objects \
-                   .filter(commodity__iso_code=currency,
+                   .filter(commodity_id=currency,
                            mindate__lte=dt,
                            maxdate__gt=dt,
                            account__kind__in=

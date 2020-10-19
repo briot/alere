@@ -112,11 +112,11 @@ def __import_currencies(cur, commodities, sources, security_id):
         price_scale = int(row['smallestCashFraction'])
 
         try:
-            old = models.Commodities.objects.get(symbol=row['symbolString'])
+            old = models.Commodities.objects.get(iso_code=row['ISOcode'])
             commodities[row['ISOcode']] = old
 
             if (old.name != row['name']
-                    or old.symbol != row['symbolString']
+                    or old.symbol_after != row['symbolString']
                     or old.qty_scale != qty_scale
                     or old.price_scale != price_scale
                 ):
@@ -128,9 +128,9 @@ def __import_currencies(cur, commodities, sources, security_id):
         except models.Commodities.DoesNotExist:
             commodities[row['ISOcode']] = models.Commodities.objects.create(
                 name=row['name'],
-                symbol=row['symbolString'],
+                symbol_before="",
+                symbol_after=row['symbolString'],
                 iso_code=row['ISOcode'],
-                prefixed=False,
                 kind=models.CommodityKinds.CURRENCY,
                 qty_scale=qty_scale,
                 price_scale=price_scale,
@@ -170,7 +170,7 @@ def __import_securities(
         qty_scale = int(row['smallestAccountFraction'])
 
         try:
-            old = models.Commodities.objects.get(symbol=row['symbol'])
+            old = models.Commodities.objects.get(name=row['name'])
             commodities[row['id']] = old
 
             if old.name != row['name']:
@@ -178,11 +178,11 @@ def __import_securities(
                     'Error: Security %s (%s) already exists'
                     ' but has different name: %s' % (
                         row['id'], row['name'], old.name))
-            elif old.symbol != row['symbol']:
+            elif old.symbol_after != row['symbol']:
                 print(
                     'Error: Security %s (%s) already exists'
                     ' but has different symbol: %s' % (
-                        row['id'], row['name'], old.symbol))
+                        row['id'], row['name'], old.symbol_after))
             elif old.kind != kind:
                 print(
                     'Error: Security %s (%s) already exists'
@@ -202,8 +202,8 @@ def __import_securities(
         except models.Commodities.DoesNotExist:
             commodities[row['id']] = models.Commodities.objects.create(
                 name=row['name'],
-                symbol=security_id.get(row['id'], row['symbol']),
-                prefixed=False,
+                symbol_before="",
+                symbol_after=security_id.get(row['id'], row['symbol']),
                 kind=kind,
                 qty_scale=int(row['smallestAccountFraction']),
                 price_scale=price_scale,

@@ -6,7 +6,7 @@ import useAccounts, { Account, AccountIdList } from 'services/useAccounts';
  */
 const useAccountIds = (
    accountIds: AccountIdList,
-): Account[] | undefined => {    //  undefined, if all accounts
+): Account[] => {
    const { accounts } = useAccounts();
    const allAcc = React.useMemo(
       () =>
@@ -18,7 +18,7 @@ const useAccountIds = (
             .filter(a => a !== undefined),
       [accountIds, accounts]
    );
-   const allAccounts = allAcc as Account[] | undefined;
+   const allAccounts = allAcc as Account[];
    return allAccounts;
 }
 export default useAccountIds;

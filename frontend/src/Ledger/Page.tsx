@@ -7,7 +7,7 @@ import useDashboard from 'services/useDashboard';
 import { SetHeader } from 'Header';
 import { Dashboard } from 'Dashboard';
 import { BaseProps } from 'Dashboard/Module';
-import { SplitMode, NotesMode } from 'Ledger';
+import { ComputedBaseLedgerProps, SplitMode, NotesMode } from 'Ledger';
 import { Account } from 'services/useAccounts';
 import { SelectAccount } from 'Account';
 import { LedgerPanelProps } from 'Ledger/Module';
@@ -17,14 +17,12 @@ const defaultPanels: BaseProps[] = [
    {
       type: 'pricehistory',
       accountId: 0,  // overridden later
-      transactions: undefined,  // overridden later
       rowspan: 1,
       colspan: 4,
    } as PriceHistoryModuleProps,
    {
       type: 'ledger',
       accountIds: 'all',  // overridden later
-      transactions: undefined,  // overridden later
       notes_mode: NotesMode.ONE_LINE,
       split_mode: SplitMode.COLLAPSED,
       borders: false,
@@ -92,7 +90,8 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
                accountIds: [accountId],
                transactions: transactions,
                range: "forever",
-            }}
+              } as Partial<ComputedBaseLedgerProps>
+            }
          />
       </div>
    );

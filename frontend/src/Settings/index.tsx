@@ -3,14 +3,17 @@ import usePrefs from 'services/usePrefs';
 import RoundButton from 'RoundButton';
 import Dropdown from '../Form/Dropdown';
 import { Checkbox, Select } from 'Form';
+import useAccounts, { CommodityId } from 'services/useAccounts';
 
 interface SettingsProps {
 }
 
 const Settings: React.FC<SettingsProps> = p => {
+   const { accounts } = useAccounts();
    const { prefs, updatePrefs } = usePrefs();
    const changeDark = (dark_mode: boolean) => updatePrefs({ dark_mode });
-   const changeCurrency = (currencyId: string) => updatePrefs({ currencyId });
+   const changeCurrency =
+      (currencyId: CommodityId) => updatePrefs({ currencyId });
 
    return (
       <Dropdown
@@ -38,10 +41,11 @@ const Settings: React.FC<SettingsProps> = p => {
                       text="Display Currency"
                       onChange={changeCurrency}
                       value={prefs.currencyId}
-                      options={[
-                         {value: "EUR"},
-                         {value: "USD"},
-                      ]}
+                      options={
+                         Object.values(accounts.allCommodities)
+                            .filter(c => c.is_currency)
+                            .map(c => ({value: c.id, text: c.name}))
+                      }
                   />
 
                </fieldset>

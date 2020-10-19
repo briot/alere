@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { AccountId } from 'services/useAccounts';
+import { AccountId, CommodityId } from 'services/useAccounts';
 
 interface Price {
    date: string;
@@ -8,7 +8,7 @@ interface Price {
 
 const useFetchPrices = (
    accountId: AccountId,
-   currencyId: string,
+   currencyId: CommodityId,
 ): Price[] => {
    const [prices, setPrices] = React.useState<Price[]>([]);
    React.useEffect(
