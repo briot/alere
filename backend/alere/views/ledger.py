@@ -1,6 +1,7 @@
 from .json import JSONView
 import alere
 import django.db
+import math
 
 
 class LedgerView(JSONView):
@@ -53,7 +54,12 @@ class LedgerView(JSONView):
                 # ??? Could we only divide at the end (but then the account
                 # might not be the same)
                 scaledBalanceShares += s.scaled_qty / s.account.commodity_scu
-                balance = scaledBalanceShares * s.computed_price
+
+                balance = (
+                    scaledBalanceShares * s.computed_price
+                    if s.computed_price is not None
+                    else None
+                )
 
             if current is None:
                 current = {

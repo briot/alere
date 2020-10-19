@@ -329,7 +329,11 @@ def __import_transactions(cur, accounts, commodities):
         )
         shares = __scaled_price(row['shares'], scale=acc.commodity_scu)
 
-        if row['price'] is None:
+        if row['action'] == 'Dividend':
+            # kmymoney sets "1.00" for the price, which does not reflect the
+            # current price of the share at the time, so better have nothing
+            price = None
+        elif row['price'] is None:
             # for non-stock account. In kmymoney, foreign currencies are not
             # supported in transactions.
             price = currency.price_scale

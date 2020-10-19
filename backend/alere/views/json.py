@@ -13,13 +13,11 @@ class CustomJSONEncoder(json.JSONEncoder):
             return obj.strftime('%Y-%m-%d %H:%M:%s')
         elif isinstance(obj, datetime.date):
             return obj.strftime('%Y-%m-%d')
-        elif math.isnan(obj):
-            return None
 
         return super().default(obj)
 
 
-coder = CustomJSONEncoder()
+coder = CustomJSONEncoder(allow_nan=True)
 
 
 class JSONView(View):

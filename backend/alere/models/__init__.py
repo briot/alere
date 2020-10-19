@@ -380,7 +380,7 @@ class Splits(AlereModel):
     # ??? Those two fields are the primary key, or do we need a splitId
 
     currency = models.ForeignKey(Commodities, on_delete=models.CASCADE)
-    scaled_price = models.IntegerField()
+    scaled_price = models.IntegerField(null=True)
     # The value of the split expressed in currency, scaled by
     # currency's price_scale.
     #
