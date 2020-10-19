@@ -1,11 +1,20 @@
 import * as React from 'react';
 import { DateRange, monthCount, rangeDisplay, rangeToHttp } from 'Dates';
 import { SetHeader } from 'Header';
-import { CommodityId } from 'services/useAccounts';
+import { Commodity, CommodityId } from 'services/useAccounts';
 import Numeric from 'Numeric';
 import Table from 'List';
 import usePrefs from 'services/usePrefs';
 import './Cashflow.css';
+
+const commMonths: Commodity = {
+   id: -2,
+   name: "month",
+   symbol_before: '',
+   symbol_after: 'months',
+   qty_scale: 1,
+   is_currency: false,
+}
 
 interface Metric {
    income: number;
@@ -54,7 +63,7 @@ interface MetricsProps {
    value: number | React.ReactNode;
    ideal?: number;
    compare?: string;
-   commodity?: CommodityId;
+   commodity?: CommodityId|Commodity;
    suffix?: string;
    tooltip?: string;
 }
@@ -232,7 +241,7 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
             tooltip={`liquid assets ${pl.liquid_assets.toFixed(0)} / monthly expenses ${monthly_expenses.toFixed(0)}`}
             ideal={4}
             compare=">"
-            suffix="months"
+            commodity={commMonths}
          />
          <Metrics
             name="Actual income tax rate"
@@ -253,7 +262,7 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
             tooltip={`Networth ${pl.networth.toFixed(0)} / Monthly expenses ${monthly_expenses.toFixed(0)}`}
             ideal={6}
             compare=">"
-            suffix="months"
+            commodity={commMonths}
          />
          <Metrics
             name="Return on Investment"

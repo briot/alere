@@ -359,7 +359,7 @@ const useTotal = (
          // If the accounts do not all have the same commodity, we cannot
          // compute the total.
 
-         v.commodity = accounts[0].commodity.id;
+         v.commodity = accounts[0]?.commodity.id;
          for (const a of accounts) {
             if (a.commodity.id !== v.commodity) {
                return v;

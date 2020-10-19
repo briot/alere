@@ -24,15 +24,15 @@
    flex-flow: column nowrap;
 }
 
-.col1 { grid-column: span 1; }
-.col2 { grid-column: span 2; }
-.col3 { grid-column: span 4; }
-.col4 { grid-column: span 4; }
+.col1 { grid-column: auto / span 1; }
+.col2 { grid-column: auto / span 2; }
+.col3 { grid-column: auto / span 4; }
+.col4 { grid-column: auto / span 4; }
 
-.row1 { grid-row: span 1; }
-.row2 { grid-row: span 2; }
-.row3 { grid-row: span 3; }
-.row4 { grid-row: span 4; }
+.row1 { grid-row: auto / span 1; }
+.row2 { grid-row: auto / span 2; }
+.row3 { grid-row: auto / span 3; }
+.row4 { grid-row: auto / span 4; }
 
 .panel .settingsMenu {
    position: relative;
