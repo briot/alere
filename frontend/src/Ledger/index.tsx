@@ -295,35 +295,55 @@ const columnTotal = (v: Totals): Column<TableRowData> => ({
             v.selected &&
             <Table.TD>
                selected:
-               <Numeric amount={v.selected} commodity={v.commodity} />
+               <Numeric
+                  amount={v.selected}
+                  commodity={v.commodity}
+                  hideCommodity={true}
+               />
             </Table.TD>
          }
          {
             v.reconciled &&
             <Table.TD>
                reconciled:
-               <Numeric amount={v.reconciled} commodity={v.commodity} />
+               <Numeric
+                  amount={v.reconciled}
+                  commodity={v.commodity}
+                  hideCommodity={true}
+               />
             </Table.TD>
          }
          {
             v.cleared &&
             <Table.TD>
                cleared:
-               <Numeric amount={v.cleared} commodity={v.commodity} />
+               <Numeric
+                  amount={v.cleared}
+                  commodity={v.commodity}
+                  hideCommodity={true}
+               />
             </Table.TD>
          }
          {
             v.present &&
             <Table.TD>
                present:
-               <Numeric amount={v.present} commodity={v.commodity} />
+               <Numeric
+                  amount={v.present}
+                  commodity={v.commodity}
+                  hideCommodity={true}
+               />
             </Table.TD>
          }
          {
             v.future && v.future !== v.present &&
             <Table.TD>
                future:
-               <Numeric amount={v.future} commodity={v.commodity} />
+               <Numeric
+                  amount={v.future}
+                  commodity={v.commodity}
+                  hideCommodity={true}
+               />
             </Table.TD>
          }
       </>
@@ -348,7 +368,7 @@ const nullTotal: Totals = {
 };
 
 const useTotal = (
-   transactions: Transaction[] | undefined,
+   transactions: Transaction[],
    accounts: Account[],
 ) => {
    const [total, setTotal] = React.useState(nullTotal);
@@ -448,12 +468,29 @@ const computeFirstSplit = (
                : sa![0];
             const s2 = {...splits};
 
-            // Find the split not for the account, to get the target account
-            for (const s3 of t.splits) {
-               if (s3.account && !accounts.accounts.includes(s3.account)) {
-                  s2.account = s3.account;
-                  s2.accountId = s3.accountId;
-                  break;
+            // If we have a single account selected for the ledger, then we
+            // display the target account in the first line.
+            // But if we have multiple accounts, like "all income", we want to
+            // show which one of them resulted in the transaction being
+            // selected so we show that account.
+            // ??? Perhaps should have a "from" and a "to" column, when we have
+            // multiple accounts
+
+            if (accounts.accounts.length === 1) {
+               for (const s3 of t.splits) {
+                  if (s3.account && !accounts.accounts.includes(s3.account)) {
+                     s2.account = s3.account;
+                     s2.accountId = s3.accountId;
+                     break;
+                  }
+               }
+            } else {
+               for (const s3 of t.splits) {
+                  if (s3.account && accounts.accounts.includes(s3.account)) {
+                     s2.account = s3.account;
+                     s2.accountId = s3.accountId;
+                     break;
+                  }
                }
             }
 
@@ -669,25 +706,25 @@ const Ledger: React.FC<ComputedBaseLedgerProps & ExtraProps> = p => {
 
    const columns = [
       columnDate,
-      isStock         ? undefined           : columnNum,
-      isStock         ? undefined           : columnPayee,
+      isStock                           ? undefined           : columnNum,
+      isStock                           ? undefined           : columnPayee,
       p.notes_mode === NotesMode.COLUMN ? columnMemo : undefined,
-      columnFromTo,
-      p.hideReconcile ? undefined           : columnReconcile,
-      p.valueColumn   ? columnAmount        : undefined,
-      p.valueColumn   ? undefined           : columnWidthdraw,
-      p.valueColumn   ? undefined           : columnDeposit,
-      isStock         ? columnShares        : undefined,
-      isStock         ? columnPrice         : undefined,
-      isStock         ? columnSharesBalance : undefined,
-      p.hideBalance   ? undefined           : columnBalance,
+                                          columnFromTo,
+      p.hideReconcile                   ? undefined           : columnReconcile,
+      p.valueColumn                     ? columnAmount        : undefined,
+      p.valueColumn                     ? undefined           : columnWidthdraw,
+      p.valueColumn                     ? undefined           : columnDeposit,
+      isStock                           ? columnShares        : undefined,
+      isStock                           ? columnPrice         : undefined,
+      isStock && singleAccount          ? columnSharesBalance : undefined,
+      p.hideBalance || !singleAccount   ? undefined           : columnBalance,
    ];
 
-   const footColumns = p.accountIds.length !== 1
-      ? []
-      : [
+   const footColumns = singleAccount
+      ? [
          columnTotal(total),
-      ];
+      ]
+      : [];
 
    const rows: LogicalRow<TableRowData>[] = React.useMemo(
       () => p.transactions?.flatMap(t => [
