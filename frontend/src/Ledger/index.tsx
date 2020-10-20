@@ -37,7 +37,6 @@ export enum NotesMode {
 
 export interface BaseLedgerProps {
    accountIds: AccountIdSet;    // which subset of the accounts to show
-   kinds?: string;              // which kinds to display
    range?: DateRange|undefined; // undefined, to see forever
    notes_mode: NotesMode;
    split_mode: SplitMode;

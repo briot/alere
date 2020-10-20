@@ -10,7 +10,6 @@ import { Transaction, incomeExpenseSplits } from 'Transaction';
 const useTransactions = (
    accountList: Account[],
    range?: DateRange|undefined,   // undefined, to see forever
-   kinds?: string|null|undefined, // subset of account kinds
    precomputed?: Transaction[],   // use this if set, instead of fetching
 ): Transaction[] => {
    const { accounts } = useAccounts();
@@ -22,18 +21,20 @@ const useTransactions = (
       () => {
          const dofetch = async () => {
             const resp = await window.fetch(
-               `/api/ledger/${idsForQuery}?${rangeToHttp(range)}&kinds=${kinds ?? ''}`
+               `/api/ledger/${idsForQuery}?${rangeToHttp(range)}`
             );
             const data: Transaction[] = await resp.json();
             setBaseTrans(data);
          }
          if (precomputed) {
             setBaseTrans(precomputed);
-         } else {
+         } else if (idsForQuery) {
             dofetch();
+         } else {
+            setBaseTrans([]);
          }
       },
-      [idsForQuery, range, precomputed, kinds]
+      [idsForQuery, range, precomputed]
    );
 
    const transactions: Transaction[] = React.useMemo(

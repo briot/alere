@@ -13,7 +13,12 @@ export type AccountIdSet =
    AccountId[]    // explicit list of ids
    | string       // from a URL, comma-separated list of ids
    | 'all'
-   | 'assets';
+   | 'assets'
+   | 'expenses'
+   | 'income_tax'
+   | 'other_taxes'
+   | 'passive_income'
+   | 'work_income';
 
 export interface AccountList {
    accounts: Account[];
@@ -34,6 +39,41 @@ const useAccountIds = (ids: AccountIdSet): AccountList => {
                accounts: accounts.allAccounts().filter(a => a.kind.is_asset),
                title: 'All assets',
             };
+         }
+
+         if (ids === 'work_income') {
+            return {
+               accounts: accounts.allAccounts().filter(a => a.kind.is_work_income),
+               title: 'All work income',
+            }
+         }
+
+         if (ids === 'passive_income') {
+            return {
+               accounts: accounts.allAccounts().filter(a => a.kind.is_passive_income),
+               title: 'All passive income',
+            }
+         }
+
+         if (ids === 'expenses') {
+            return {
+               accounts: accounts.allAccounts().filter(a => a.kind.is_expense),
+               title: 'All expenses',
+            }
+         }
+
+         if (ids === 'income_taxes') {
+            return {
+               accounts: accounts.allAccounts().filter(a => a.kind.is_income_tax),
+               title: 'All income taxes',
+            }
+         }
+
+         if (ids === 'other_taxes') {
+            return {
+               accounts: accounts.allAccounts().filter(a => a.kind.is_other_tax),
+               title: 'All other taxes',
+            }
          }
 
          const numids = typeof(ids) === 'string'

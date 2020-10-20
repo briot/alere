@@ -28,18 +28,20 @@ interface AccountKindJSON {
    name: string;
    positive: string;
    negative: string;
-   is_stock: boolean;
-   is_asset: boolean;
-   is_income_expense: boolean;
+   is_stock?: boolean;
+   is_asset?: boolean;
+   is_income_expense?: boolean;
+   is_work_income?: boolean;
+   is_passive_income?: boolean;
+   is_expense?: boolean;
+   is_income_tax?: boolean;
+   is_other_tax?: boolean;
 }
 const nullAccountKind: AccountKindJSON = {
    id: "",
    name: "",
    positive: "",
    negative: "",
-   is_stock: false,
-   is_asset: false,
-   is_income_expense: false,
 }
 
 interface AccountJSON {

@@ -5,6 +5,7 @@ import useAccountIds from 'services/useAccountIds';
 import useHistory from 'services/useHistory';
 import useTransactions from 'services/useTransactions';
 import useDashboard from 'services/useDashboard';
+import { DateRange } from 'Dates';
 import { SetHeader } from 'Header';
 import { Dashboard } from 'Dashboard';
 import { BaseProps } from 'Dashboard/Module';
@@ -51,13 +52,13 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
    const { accountIds } = useParams<LedgerPageRouteProps>();
    const { accounts, title } = useAccountIds(accountIds);
 
-   let { search } = useLocation();
+   const { search } = useLocation();
    const query = new URLSearchParams(search);
-   const kinds = query.get('kinds');
+   const range: DateRange = query.get('range') as DateRange|null || "forever";
 
    const history = useRouterHistory();
    const { pushAccount } = useHistory();
-   const transactions = useTransactions(accounts, "forever", kinds);
+   const transactions = useTransactions(accounts, range);
    const { panels, setPanels } = useDashboard('ledger', defaultPanels);
 
    const onAccountChange = React.useCallback(
@@ -100,9 +101,8 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
             setPanels={setPanels}
             defaults={{
                accountIds,
-               kinds,
                transactions: transactions,
-               range: "forever",
+               range,
               } as Partial<ComputedBaseLedgerProps>
             }
          />

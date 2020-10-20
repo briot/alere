@@ -161,8 +161,26 @@ class AccountFlags(models.TextChoices):
         )
 
     @classmethod
+    def income_tax(klass):
+        return (
+            klass.INCOME_TAX,
+        )
+
+    @classmethod
+    def misc_tax(klass):
+        return (
+            klass.MISC_TAX,
+        )
+
+    @classmethod
     def work_income(klass):
         return (klass.WORK_INCOME, )
+
+    @classmethod
+    def passive_income(klass):
+        return (
+            klass.PASSIVE_INCOME,
+        )
 
     @classmethod
     def all_income(klass):

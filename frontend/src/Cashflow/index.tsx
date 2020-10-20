@@ -347,7 +347,7 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
                      title: "Sum of all income from work"
                        + " (salaries, unemployment,...) during that period",
                      padding: 1,
-                     url: '/ledger/assets?kinds=work_income',
+                     url: `/ledger/work_income?range=${p.range}`,
                   })
                }
                {
@@ -357,6 +357,7 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
                      title: "Income that would remain if you stopped working"
                       + " (dividends, rents,...)",
                      padding: 1,
+                     url: `/ledger/passive_income?range=${p.range}`,
                   })
                }
                {
@@ -365,6 +366,7 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
                      amount: -pl.expenses,
                      title: "Sum of all expenses during that period",
                      bold: true,
+                     url: `/ledger/expenses?range=${p.range}`,
                   })
                }
                {
@@ -372,6 +374,7 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
                      head: 'Income taxes',
                      amount: -pl.income_taxes,
                      padding: 1,
+                     url: `/ledger/income_taxes?range=${p.range}`,
                   })
                }
                {
@@ -379,6 +382,7 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
                      head: 'Other taxes',
                      amount: -pl.other_taxes,
                      padding: 1,
+                     url: `/ledger/other_taxes?range=${p.range}`,
                   })
                }
                {

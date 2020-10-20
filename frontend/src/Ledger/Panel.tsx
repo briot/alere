@@ -5,7 +5,6 @@ import { SetHeader } from 'Header';
 import { rangeDisplay } from 'Dates';
 import useAccountIds from 'services/useAccountIds';
 import useTransactions from 'services/useTransactions';
-import useAccountKinds from 'services/useAccountKinds';
 import { Transaction } from 'Transaction';
 
 const LedgerPanel: React.FC<
@@ -14,16 +13,14 @@ const LedgerPanel: React.FC<
 > = p => {
    const { setHeader } = p;
    const { accounts, title } = useAccountIds(p.accountIds);
-   const { title: kindsTitle } = useAccountKinds(p.kinds);
-   const transactions =
-      useTransactions(accounts, p.range, p.kinds, p.transactions);
+   const transactions = useTransactions(accounts, p.range, p.transactions);
 
    React.useEffect(
       () => {
          const dates = p.range ? rangeDisplay(p.range) : '';
-         setHeader({title: `${title} ${dates} ${kindsTitle}` });
+         setHeader({title: `${title} ${dates}` });
       },
-      [title, setHeader, p.range, kindsTitle]
+      [title, setHeader, p.range]
    );
 
    const setSortOn = (sortOn: string) => p.setData({ sortOn });

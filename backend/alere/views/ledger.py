@@ -5,21 +5,12 @@ import django.db
 import math
 
 
-def as_account_kinds(params, name):
-    p = params.get(name)
-
-    if p == "work_income":
-        return alere.models.AccountFlags.work_income()
-
-    return None
-
-
 class LedgerView(JSONView):
 
     def get_json(self, params, ids: str):
         maxdate = self.as_time(params, 'maxdate')
         mindate = self.as_time(params, 'mindate')
-        kinds = as_account_kinds(params, 'kinds')
+        print('MANU maxdate=%s mindate=%s' % (maxdate, mindate))
 
         # When querying a single account, we'll compute the balance
         try:
@@ -40,11 +31,6 @@ class LedgerView(JSONView):
                 .filter(account_id__in=[int(i) for i in ids.split(',')])
 
             q = q.filter(transaction_id__in=tr)
-
-        if kinds:
-            q = q.filter(account__kind__in=kinds)
-
-        print(q.query)  # MANU
 
         if mindate:
             # ??? To compute balance we should not skip old splits
