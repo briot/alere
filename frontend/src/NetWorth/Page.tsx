@@ -1,7 +1,6 @@
 import * as React from 'react';
-import useDashboard from 'services/useDashboard';
 import { SetHeader } from 'Header';
-import { Dashboard } from 'Dashboard';
+import Dashboard from 'Dashboard';
 import { BaseProps } from 'Dashboard/Module';
 import { NetworthPanelProps } from 'NetWorth/Module';
 import { TreeMode } from 'services/useAccountTree';
@@ -20,24 +19,13 @@ const defaultPanels: BaseProps[] = [
 ];
 
 
-interface AccountsPageProps {
-}
-const AccountsPage: React.FC<AccountsPageProps & SetHeader> = p => {
-   const { setHeader } = p;
-   const { panels, setPanels } = useDashboard('accounts', defaultPanels);
-
-   React.useEffect(
-      () => setHeader({ title: "Accounts" }),
-      [setHeader]
-   );
-
+const AccountsPage: React.FC<{} & SetHeader> = p => {
    return (
-      <div className="main-area">
-         <Dashboard
-            panels={panels}
-            setPanels={setPanels}
-         />
-      </div>
+      <Dashboard
+         name="accounts"
+         defaultPanels={defaultPanels}
+         setHeader={p.setHeader}
+      />
    );
 }
 

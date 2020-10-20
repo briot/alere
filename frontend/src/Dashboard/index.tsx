@@ -5,33 +5,12 @@ import { SetHeader } from 'Header';
 import useDashboard from 'services/useDashboard';
 import './Dashboard.css';
 
-export interface DashboardProps {
-   panels: BaseProps[];
-   setPanels?: (p: (old: BaseProps[])=>BaseProps[]) => void;
-   defaults?: Object;    //  Overrides settings for the panels
-}
-export const Dashboard: React.FC<DashboardProps> = p => {
-   return (
-      <div className="dashboard main">
-         {
-            p.panels.map((p2, idx) =>
-               <DashboardPanel
-                  key={idx}
-                  panel={{...p2, ...p.defaults}}
-                  setPanels={p.setPanels}
-                  excludeFields={Object.keys(p.defaults ?? {})}
-                  index={idx} />
-            )
-         }
-      </div>
-   );
-}
-
-export interface DashboardFromNameProps {
+interface DashboardProps {
    name: string;     // dashboard name
    defaultPanels: BaseProps[],
+   overrides?: Object;    //  Overrides settings for the panels
 }
-const DashboardFromName: React.FC<DashboardFromNameProps & SetHeader> = p => {
+const Dashboard: React.FC<DashboardProps & SetHeader> = p => {
    const { setHeader } = p;
    const { panels, setPanels } = useDashboard(p.name, p.defaultPanels);
 
@@ -41,10 +20,18 @@ const DashboardFromName: React.FC<DashboardFromNameProps & SetHeader> = p => {
    );
 
    return (
-      <Dashboard
-         panels={panels}
-         setPanels={setPanels}
-      />
+      <div className="dashboard main">
+         {
+            panels.map((p2, idx) =>
+               <DashboardPanel
+                  key={idx}
+                  panel={{...p2, ...p.overrides}}
+                  setPanels={setPanels}
+                  excludeFields={Object.keys(p.overrides ?? {})}
+                  index={idx} />
+            )
+         }
+      </div>
    );
 }
-export default DashboardFromName;
+export default Dashboard;

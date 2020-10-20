@@ -1,6 +1,6 @@
 import React from 'react';
 import { Route, Switch } from "react-router-dom";
-import DashboardFromName from 'Dashboard';
+import Dashboard from 'Dashboard';
 import LeftSideBar from 'LeftSideBar';
 import RightSideBar from 'RightSideBar';
 import LedgerPage from 'Ledger/Page';
@@ -122,7 +122,7 @@ const App: React.FC<{}> = () => {
                       <InvestmentPage setHeader={setHeader} />
                    </Route>
                    <Route>
-                      <DashboardFromName
+                      <Dashboard
                          defaultPanels={defaultOverview}
                          setHeader={setHeader}
                          name='Overview'

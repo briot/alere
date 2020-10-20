@@ -4,10 +4,9 @@ import { useHistory as useRouterHistory,
 import useAccountIds from 'services/useAccountIds';
 import useHistory from 'services/useHistory';
 import useTransactions from 'services/useTransactions';
-import useDashboard from 'services/useDashboard';
 import { DateRange } from 'Dates';
 import { SetHeader } from 'Header';
-import { Dashboard } from 'Dashboard';
+import Dashboard from 'Dashboard';
 import { BaseProps } from 'Dashboard/Module';
 import { ComputedBaseLedgerProps, SplitMode, NotesMode } from 'Ledger';
 import { Account } from 'services/useAccounts';
@@ -59,7 +58,6 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
    const history = useRouterHistory();
    const { pushAccount } = useHistory();
    const transactions = useTransactions(accounts, range);
-   const { panels, setPanels } = useDashboard('ledger', defaultPanels);
 
    const onAccountChange = React.useCallback(
       (a: Account) => {
@@ -94,19 +92,21 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
       [setHeader, accounts, onAccountChange, title]
    );
 
+   const doNothing = React.useCallback(() => {}, []);
+
    return (
-      <div className="main-area">
-         <Dashboard
-            panels={panels}
-            setPanels={setPanels}
-            defaults={{
+      <Dashboard
+         name='ledger'
+         defaultPanels={defaultPanels}
+         setHeader={doNothing}
+         overrides={
+            {
                accountIds,
                transactions: transactions,
                range,
-              } as Partial<ComputedBaseLedgerProps>
-            }
-         />
-      </div>
+            } as Partial<ComputedBaseLedgerProps>
+         }
+      />
    );
 }
 
