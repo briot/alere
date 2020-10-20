@@ -2,6 +2,7 @@ import * as React from 'react';
 import { DateRange, monthCount, rangeDisplay, rangeToHttp } from 'Dates';
 import { SetHeader } from 'Header';
 import { Commodity, CommodityId } from 'services/useAccounts';
+import { Link } from 'react-router-dom';
 import Numeric from 'Numeric';
 import Table from 'List';
 import usePrefs from 'services/usePrefs';
@@ -59,7 +60,7 @@ const useFetchPL = (range: DateRange, currencyId: CommodityId) => {
 
 interface MetricsProps {
    name: string;
-   descr: string | React.ReactNode;
+   descr: string;
    value: number | React.ReactNode;
    ideal?: number;
    compare?: string;
@@ -78,11 +79,7 @@ const Metrics: React.FC<MetricsProps> = p => {
    return (
       <div className="metrics">
          <h5>{p.name}</h5>
-         {
-            React.isValidElement(p.descr)
-            ? p.descr
-            : <p className="descr">{p.descr}</p>
-         }
+            <p className="descr">{p.descr}</p>
          <div className="values" >
             {
                p.ideal !== undefined && !isNaN(p.ideal)  &&
@@ -152,6 +149,7 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
       bold?: boolean,
       border?: boolean,
       padding?: number,
+      url?: string,
    }) => (
       <Table.TR
          title={p.title}
@@ -172,7 +170,11 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
               <Table.TD
                  style={{paddingLeft: (p.padding ?? 0) * 20}}
               >
-                 {p.head}
+                 {
+                    p.url
+                    ? <Link to={p.url}>{p.head}</Link>
+                    : p.head
+                  }
               </Table.TD>
               <Table.TD className="amount">
                  <Numeric amount={p.amount} commodity={currency} />
@@ -345,6 +347,7 @@ const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
                      title: "Sum of all income from work"
                        + " (salaries, unemployment,...) during that period",
                      padding: 1,
+                     url: '/ledger/assets?kinds=work_income',
                   })
                }
                {

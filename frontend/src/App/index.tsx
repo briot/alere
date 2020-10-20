@@ -112,7 +112,7 @@ const App: React.FC<{}> = () => {
                <RightSideBar />
 
                <Switch>
-                   <Route path="/ledger/:accountId" >
+                   <Route path="/ledger/:accountIds" >
                       <LedgerPage setHeader={setHeader} />
                    </Route>
                    <Route path="/accounts">

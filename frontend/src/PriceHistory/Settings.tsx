@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { Checkbox } from 'Form';
 import { SettingsProps } from 'Dashboard/Module';
-import { AccountId } from 'services/useAccounts';
+import { AccountIdSet } from 'services/useAccountIds';
 import { DateRange, DateRangePicker } from 'Dates';
 
 export interface BasePriceHistoryProps {
-   accountId: AccountId;
+   accountIds: AccountIdSet;  // Nothing shown if undefined
    range?: DateRange|undefined   // undefined, to see forever
    hidePositions?: boolean;
    hidePrices?: boolean;

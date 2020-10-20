@@ -1,5 +1,5 @@
 import * as React from 'react';
-import useAccounts, { AccountId } from 'services/useAccounts';
+import useAccounts, { Account } from 'services/useAccounts';
 import { DateRange, rangeToHttp } from 'Dates';
 import { Transaction, incomeExpenseSplits } from 'Transaction';
 
@@ -8,22 +8,21 @@ import { Transaction, incomeExpenseSplits } from 'Transaction';
  */
 
 const useTransactions = (
-   accountIds: AccountId[] | undefined,  // undefined for all accounts
-   range?: DateRange|undefined,  // undefined, to see forever
-   precomputed?: Transaction[],  // use this if set, instead of fetching
+   accountList: Account[],
+   range?: DateRange|undefined,   // undefined, to see forever
+   kinds?: string|null|undefined, // subset of account kinds
+   precomputed?: Transaction[],   // use this if set, instead of fetching
 ): Transaction[] => {
    const { accounts } = useAccounts();
    const [baseTrans, setBaseTrans] = React.useState<Transaction[]>([]);
-   const idsForQuery = accountIds === undefined
-      ? ''
-      : accountIds.sort().join(',');
-   const queryKeepIE = accountIds === undefined || accountIds.length > 1;
+   const idsForQuery = accountList.map(a => a.id).sort().join(',');
+   const queryKeepIE = accountList.length > 1;
 
    React.useEffect(
       () => {
          const dofetch = async () => {
             const resp = await window.fetch(
-               `/api/ledger/${idsForQuery}?${rangeToHttp(range)}`
+               `/api/ledger/${idsForQuery}?${rangeToHttp(range)}&kinds=${kinds ?? ''}`
             );
             const data: Transaction[] = await resp.json();
             setBaseTrans(data);
@@ -34,7 +33,7 @@ const useTransactions = (
             dofetch();
          }
       },
-      [idsForQuery, range, precomputed]
+      [idsForQuery, range, precomputed, kinds]
    );
 
    const transactions: Transaction[] = React.useMemo(

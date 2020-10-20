@@ -39,4 +39,5 @@ export interface DashboardModule<T extends BaseProps> {
    // It receives the current properties of the module
 
    Content: React.FC<T & SetHeader & SaveData<T>>;
+   // What to show in the panel
 }

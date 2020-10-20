@@ -3,27 +3,30 @@ import { SetHeader } from 'Header';
 import { Transaction } from 'Transaction';
 import { BaseProps, DashboardModule } from 'Dashboard/Module';
 import useAccountIds from 'services/useAccountIds';
-import useTransactions from 'services/useTransactions';
 import PriceHistoryView from 'PriceHistory/View';
 import Settings, { BasePriceHistoryProps } from 'PriceHistory/Settings';
 
 
 interface HistoryPanelProps extends BasePriceHistoryProps {
-   transactions: Transaction[] | undefined, // use it instead of fetching
+   transactions: Transaction[],
 }
 const PriceHistoryPanel: React.FC<HistoryPanelProps & SetHeader> = p => {
    const { setHeader } = p;
-   const accounts = useAccountIds([p.accountId]);
-   const transactions = useTransactions([p.accountId], p.range, p.transactions);
+   const { accounts, title } = useAccountIds(p.accountIds);
    React.useEffect(
-      () => setHeader({ title: 'Price History' }),
-      [setHeader],
+      () => setHeader({ title: `Price History ${title}` }),
+      [setHeader, title],
    );
+
+   if (accounts.length !== 1) {
+      return null;
+   }
+
    return accounts?.[0] ? (
       <PriceHistoryView
          {...p}
          account={accounts?.[0]}
-         transactions={transactions}
+         transactions={p.transactions}
       />
    ) : null;
 }

@@ -1,7 +1,6 @@
 import * as React from 'react';
 
 export type AccountId = number;
-export type AccountIdList = AccountId[] | 'all' | 'assets';
 export type CommodityId = number;
 
 export type AccountKindId = string;

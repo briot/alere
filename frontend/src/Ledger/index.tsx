@@ -9,8 +9,9 @@ import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
 import Numeric from 'Numeric';
 import ListWithColumns, {
    AlternateRows, Column, LogicalRow } from 'List/ListWithColumns';
-import { Account, AccountId,
-   AccountIdList, CommodityId } from 'services/useAccounts';
+import { Account, AccountId, CommodityId } from 'services/useAccounts';
+import useAccountIds, {
+   AccountIdSet, AccountList } from 'services/useAccountIds';
 import './Ledger.css';
 
 const SPLIT = '--split--';
@@ -35,8 +36,9 @@ export enum NotesMode {
 }
 
 export interface BaseLedgerProps {
-   accountIds: AccountIdList;
-   range?: DateRange|undefined   // undefined, to see forever
+   accountIds: AccountIdSet;    // which subset of the accounts to show
+   kinds?: string;              // which kinds to display
+   range?: DateRange|undefined; // undefined, to see forever
    notes_mode: NotesMode;
    split_mode: SplitMode;
    borders: boolean;
@@ -49,12 +51,12 @@ export interface BaseLedgerProps {
 }
 
 export interface ComputedBaseLedgerProps extends BaseLedgerProps {
-   accounts: Account[];          // computed from accountIds
    transactions: Transaction[]; // use it instead of fetching
 }
 
 interface TableRowData {
    settings: ComputedBaseLedgerProps;
+   accounts: AccountList;
    transaction: Transaction;
    firstRowSplit: Split;         //  simulated split for the first row
    account: undefined|Account;   // destination account
@@ -89,7 +91,7 @@ const columnSummary: Column<TableRowData> = {
       const amount =
          d.account === undefined  //  not for one specific account
          ? amountIncomeExpense(d.transaction)
-         : amountForAccounts(d.transaction, d.settings.accounts!);
+         : amountForAccounts(d.transaction, d.accounts.accounts);
       return (
          <>
             <Numeric
@@ -99,9 +101,9 @@ const columnSummary: Column<TableRowData> = {
             &nbsp;=&nbsp;
             {
                d.transaction.splits.map((s, index) =>
-                  (d.settings.accounts === undefined
+                  (d.accounts.accounts === undefined
                      || !s.account
-                     || !d.settings.accounts.includes(s.account)
+                     || !d.accounts.accounts.includes(s.account)
                   ) ? <span key={index}>
                      <span>{ s.amount >= 0 ? ' - ' : ' + ' }</span>
                      <Numeric
@@ -157,13 +159,13 @@ const columnFromTo: Column<TableRowData> = {
          : <AccountName
              id={d.firstRowSplit.accountId}
              account={d.firstRowSplit.account}
-             noLinkIf={d.settings.accounts}
+             noLinkIf={d.accounts.accounts}
            />
       ) : (
         <AccountName
            id={d.split.accountId}
            account={d.split.account}
-           noLinkIf={d.settings.accounts}
+           noLinkIf={d.accounts.accounts}
         />
       )
 }
@@ -402,8 +404,12 @@ const useTotal = (
  * Compute a dummy Split to be shown on the first line of a transaction
  */
 
-const computeFirstSplit = (p: ComputedBaseLedgerProps, t: Transaction) => {
-   const sa = p.accounts ? splitsForAccounts(t, p.accounts) : undefined;
+const computeFirstSplit = (
+   p: ComputedBaseLedgerProps,
+   t: Transaction,
+   accounts: AccountList,
+) => {
+   const sa = splitsForAccounts(t, accounts.accounts);
    let s: Split = {
       accountId: SPLIT_ID,
 
@@ -418,17 +424,17 @@ const computeFirstSplit = (p: ComputedBaseLedgerProps, t: Transaction) => {
       reconcile: sa?.length ? sa[0].reconcile : 'n',
       date: sa?.[0]?.date ?? t.date,
       price:
-         p.accounts.length > 1
+         accounts.accounts.length > 1
          ? undefined
-         : priceForAccounts(t, p.accounts) || undefined,
+         : priceForAccounts(t, accounts.accounts) || undefined,
       shares:
-         p.accounts.length > 1
+         accounts.accounts.length > 1
          ? undefined
-         : sharesForAccounts(t, p.accounts) || undefined,
+         : sharesForAccounts(t, accounts.accounts) || undefined,
       amount:
-         p.accounts.length > 1
+         accounts.accounts.length > 1
          ? amountIncomeExpense(t)
-         : amountForAccounts(t, p.accounts),
+         : amountForAccounts(t, accounts.accounts),
    };
 
    switch (p.split_mode) {
@@ -438,14 +444,14 @@ const computeFirstSplit = (p: ComputedBaseLedgerProps, t: Transaction) => {
          if (t.splits.length < 3) {
             // Find the split for the account itself, to get balance
             const splits =
-               p.accounts.length > 1
+               accounts.accounts.length > 1
                ? incomeExpenseSplits(t)[0]
                : sa![0];
             const s2 = {...splits};
 
             // Find the split not for the account, to get the target account
             for (const s3 of t.splits) {
-               if (s3.account && !p.accounts.includes(s3.account)) {
+               if (s3.account && !accounts.accounts.includes(s3.account)) {
                   s2.account = s3.account;
                   s2.accountId = s3.accountId;
                   break;
@@ -456,7 +462,7 @@ const computeFirstSplit = (p: ComputedBaseLedgerProps, t: Transaction) => {
          }
          break;
       case SplitMode.OTHERS:
-         const d = splitsNotForAccounts(t, p.accounts)
+         const d = splitsNotForAccounts(t, accounts.accounts)
          if (d.length === 1) {
             s = {...s,
                  account: d[0].account,
@@ -523,9 +529,7 @@ const getChildren = (d: TableRowData) => {
          break;
 
       case SplitMode.OTHERS:
-         filterSplits = d.settings.accounts === undefined
-             ? t.splits
-             : splitsNotForAccounts(t, d.settings.accounts);
+         filterSplits = splitsNotForAccounts(t, d.accounts.accounts);
          break;
 
       case SplitMode.MULTILINE:
@@ -658,11 +662,10 @@ interface ExtraProps {
    setSortOn?: (on: string) => void; //  called when user wants to sort
 }
 const Ledger: React.FC<ComputedBaseLedgerProps & ExtraProps> = p => {
-   const total = useTotal(p.transactions, p.accounts);
+   const accounts = useAccountIds(p.accountIds);
+   const total = useTotal(p.transactions, accounts.accounts);
    const singleAccount =
-      (p.accounts !== undefined && p.accounts.length === 1
-       ? p.accounts[0]
-       : undefined);
+      (accounts.accounts.length === 1 ? accounts.accounts[0] : undefined);
    const isStock = singleAccount?.kind.is_stock;
 
    const columns = [
@@ -692,8 +695,9 @@ const Ledger: React.FC<ComputedBaseLedgerProps & ExtraProps> = p => {
             {
                data: {
                   settings: p,
+                  accounts,
                   transaction: t,
-                  firstRowSplit: computeFirstSplit(p, t),
+                  firstRowSplit: computeFirstSplit(p, t, accounts),
                   split: MAIN,
                   account: singleAccount,
                },
@@ -701,7 +705,7 @@ const Ledger: React.FC<ComputedBaseLedgerProps & ExtraProps> = p => {
                getChildren,
             }
          ]) ?? [],
-      [singleAccount, p]
+      [singleAccount, p, accounts]
    );
 
    return (

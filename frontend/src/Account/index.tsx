@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import useAccounts, {
-   Account, AccountId, AccountIdList } from 'services/useAccounts';
+import useAccounts, { Account, AccountId } from 'services/useAccounts';
+import { AccountIdSet } from 'services/useAccountIds';
 import useAccountTree from 'services/useAccountTree';
 import { Checkbox, Select, Option } from 'Form';
 import ListWithColumns, { AlternateRows, Column } from 'List/ListWithColumns';
@@ -73,7 +73,7 @@ interface MultiAccountSelectProps {
    value: Account[] | undefined;
 
    //  ??? Can we return an AccountIdList, including "assets", "all",...
-   onChange: (ids: AccountIdList) => void;
+   onChange: (ids: AccountIdSet) => void;
    showStock?: boolean;
 }
 export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {

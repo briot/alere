@@ -5,6 +5,7 @@ import { SetHeader } from 'Header';
 import { rangeDisplay } from 'Dates';
 import useAccountIds from 'services/useAccountIds';
 import useTransactions from 'services/useTransactions';
+import useAccountKinds from 'services/useAccountKinds';
 import { Transaction } from 'Transaction';
 
 const LedgerPanel: React.FC<
@@ -12,25 +13,17 @@ const LedgerPanel: React.FC<
    & { transactions?: Transaction[] }
 > = p => {
    const { setHeader } = p;
-   const accounts = useAccountIds(p.accountIds);
-   const computedIds = accounts?.map(a => a.id);
+   const { accounts, title } = useAccountIds(p.accountIds);
+   const { title: kindsTitle } = useAccountKinds(p.kinds);
    const transactions =
-      useTransactions(computedIds, p.range, p.transactions);
+      useTransactions(accounts, p.range, p.kinds, p.transactions);
 
    React.useEffect(
       () => {
-         const name =
-            p.accountIds === 'all' || !accounts
-            ? 'All accounts'
-            : p.accountIds === 'assets'
-            ? 'All assets'
-            : accounts.length === 1
-            ? accounts[0]?.name
-            : 'Multiple accounts';
          const dates = p.range ? rangeDisplay(p.range) : '';
-         setHeader({title: `${name} ${dates}` });
+         setHeader({title: `${title} ${dates} ${kindsTitle}` });
       },
-      [accounts, setHeader, p.range, p.accountIds]
+      [title, setHeader, p.range, kindsTitle]
    );
 
    const setSortOn = (sortOn: string) => p.setData({ sortOn });
@@ -38,7 +31,6 @@ const LedgerPanel: React.FC<
    return (
       <Ledger
          {...p}
-         accounts={accounts}
          transactions={transactions}
          setSortOn={setSortOn}
       />

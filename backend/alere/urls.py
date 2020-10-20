@@ -35,7 +35,7 @@ def static(request):
 urlpatterns = [
     # path('admin/', admin.site.urls),
     path('api/account/list', AccountList.as_view()),
-    path('api/ledger/<str:id>', LedgerView.as_view()),
+    path('api/ledger/<str:ids>', LedgerView.as_view()),
     path('api/prices/<str:accountId>', PriceHistory.as_view()),
     re_path('api/ledger/(<str:id>)?', LedgerView.as_view()),
     path('api/plots/category/<str:expenses>', CategoryPlotView.as_view()),

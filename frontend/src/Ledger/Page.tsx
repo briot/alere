@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { useHistory as useRouterHistory, useParams } from 'react-router-dom';
-import useAccounts from 'services/useAccounts';
+import { useHistory as useRouterHistory,
+   useLocation, useParams } from 'react-router-dom';
+import useAccountIds from 'services/useAccountIds';
 import useHistory from 'services/useHistory';
 import useTransactions from 'services/useTransactions';
 import useDashboard from 'services/useDashboard';
@@ -16,7 +17,8 @@ import { PriceHistoryModuleProps } from 'PriceHistory/Module';
 const defaultPanels: BaseProps[] = [
    {
       type: 'pricehistory',
-      accountId: 0,  // overridden later
+      accountIds: 'all',  // overridden later
+      transactions: [],       // overridden later
       rowspan: 1,
       colspan: 4,
    } as PriceHistoryModuleProps,
@@ -35,18 +37,27 @@ const defaultPanels: BaseProps[] = [
    } as LedgerPanelProps,
 ];
 
+interface LedgerPageRouteProps {
+   accountIds: string;
+}
+
 
 interface LedgerPageProps {
 }
 const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
    const { setHeader } = p;
-   let { accountId } = useParams();
-   accountId = Number(accountId);
+
+   // list of account ids
+   const { accountIds } = useParams<LedgerPageRouteProps>();
+   const { accounts, title } = useAccountIds(accountIds);
+
+   let { search } = useLocation();
+   const query = new URLSearchParams(search);
+   const kinds = query.get('kinds');
+
    const history = useRouterHistory();
-   const { accounts } = useAccounts();
    const { pushAccount } = useHistory();
-   const account = accounts.getAccount(accountId);
-   const transactions = useTransactions([accountId], "forever");
+   const transactions = useTransactions(accounts, "forever", kinds);
    const { panels, setPanels } = useDashboard('ledger', defaultPanels);
 
    const onAccountChange = React.useCallback(
@@ -57,28 +68,30 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
    );
 
    React.useEffect(
-      () => pushAccount(accountId),
-      [accountId, pushAccount ]
+      () => {
+         if (accounts.length === 1) {
+            pushAccount(accounts[0].id);
+         }
+      },
+      [accounts, pushAccount ]
    );
 
    React.useEffect(
       () => {
          setHeader({  /* Keep arrow next to account name */
-            title: (
-               <SelectAccount
-                  accountId={accountId}
-                  onChange={onAccountChange}
-                  hideArrow={false}
-               />
-            )
+            title:
+               accounts.length === 1
+               ? (
+                  <SelectAccount
+                     accountId={accounts[0].id}
+                     onChange={onAccountChange}
+                     hideArrow={false}
+                  />
+               ) : title,
          });
       },
-      [setHeader, accountId, onAccountChange]
+      [setHeader, accounts, onAccountChange, title]
    );
-
-   if (!account) {
-      return <div className="main-area">Unknown account</div>;
-   }
 
    return (
       <div className="main-area">
@@ -86,8 +99,8 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
             panels={panels}
             setPanels={setPanels}
             defaults={{
-               accountId: accountId,
-               accountIds: [accountId],
+               accountIds,
+               kinds,
                transactions: transactions,
                range: "forever",
               } as Partial<ComputedBaseLedgerProps>

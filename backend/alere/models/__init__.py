@@ -161,6 +161,10 @@ class AccountFlags(models.TextChoices):
         )
 
     @classmethod
+    def work_income(klass):
+        return (klass.WORK_INCOME, )
+
+    @classmethod
     def all_income(klass):
         return (
             klass.PASSIVE_INCOME,
