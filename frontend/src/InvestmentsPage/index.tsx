@@ -1,7 +1,7 @@
 import * as React from 'react';
 import InvestmentsPanel, {
    InvestmentsPanelProps, TickerList } from 'Investment/Panel';
-import Settings from 'Investment/Settings';
+import Settings from 'InvestmentsPage/Settings';
 import { SetHeader } from 'Header';
 import RoundButton from 'RoundButton';
 import Dropdown from '../Form/Dropdown';
