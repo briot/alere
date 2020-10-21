@@ -7,21 +7,21 @@ import useTransactions from 'services/useTransactions';
 import { DateRange } from 'Dates';
 import { SetHeader } from 'Header';
 import Dashboard from 'Dashboard';
-import { BaseProps } from 'Dashboard/Module';
-import { ComputedBaseLedgerProps, SplitMode, NotesMode } from 'Ledger';
+import { SplitMode, NotesMode } from 'Ledger/View';
 import { Account } from 'services/useAccounts';
 import { SelectAccount } from 'Account';
-import { LedgerPanelProps } from 'Ledger/Module';
-import { PriceHistoryModuleProps } from 'PriceHistory/Module';
+import { LedgerPanelProps } from 'Ledger/Panel';
+import { PriceHistoryPanelProps } from 'PriceHistory/Panel';
 
-const defaultPanels: BaseProps[] = [
+const defaultPanels = [
    {
       type: 'pricehistory',
       accountIds: 'all',  // overridden later
-      transactions: [],       // overridden later
+      transactions: [],   // overridden later
+      range: "forever",
       rowspan: 1,
       colspan: 4,
-   } as PriceHistoryModuleProps,
+   } as PriceHistoryPanelProps,
    {
       type: 'ledger',
       accountIds: 'all',  // overridden later
@@ -104,7 +104,7 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
                accountIds,
                transactions: transactions,
                range,
-            } as Partial<ComputedBaseLedgerProps>
+            }
          }
       />
    );

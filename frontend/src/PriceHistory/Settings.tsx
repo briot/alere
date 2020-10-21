@@ -1,40 +1,30 @@
 import * as React from 'react';
 import { Checkbox } from 'Form';
-import { SettingsProps } from 'Dashboard/Module';
-import { AccountIdSet } from 'services/useAccountIds';
+import { PanelProps } from 'Dashboard/Panel';
 import { DateRange, DateRangePicker } from 'Dates';
+import { PriceHistoryPanelProps } from 'PriceHistory/Panel';
 
-export interface BasePriceHistoryProps {
-   accountIds: AccountIdSet;  // Nothing shown if undefined
-   range?: DateRange|undefined   // undefined, to see forever
-   hidePositions?: boolean;
-   hidePrices?: boolean;
-   hideHoldings?: boolean;
-}
-
-const Settings: React.FC<
-   BasePriceHistoryProps & SettingsProps<BasePriceHistoryProps>
-> = p => {
-   const changeHidePos = (show: boolean) => p.setData({hidePositions: !show});
-   const changeHidePrices = (show: boolean) => p.setData({hidePrices: !show});
-   const changeHideHold = (show: boolean) => p.setData({hideHoldings: !show});
-   const changeRange = (range: DateRange) => p.setData({ range });
+const Settings: React.FC<PanelProps<PriceHistoryPanelProps>> = p => {
+   const changeHidePos = (show: boolean) => p.save({hidePositions: !show});
+   const changeHidePrices = (show: boolean) => p.save({hidePrices: !show});
+   const changeHideHold = (show: boolean) => p.save({hideHoldings: !show});
+   const changeRange = (range: DateRange) => p.save({ range });
 
    return (
       <fieldset>
          <legend>Price History</legend>
          <Checkbox
-            checked={!p.hidePositions}
+            checked={!p.props.hidePositions}
             onChange={changeHidePos}
             text="Show positions"
          />
          <Checkbox
-            checked={!p.hidePrices}
+            checked={!p.props.hidePrices}
             onChange={changeHidePrices}
             text="Show prices"
          />
          <Checkbox
-            checked={!p.hideHoldings}
+            checked={!p.props.hideHoldings}
             onChange={changeHideHold}
             text="Show holdings"
          />
@@ -42,7 +32,7 @@ const Settings: React.FC<
             !p.excludeFields?.includes("range") &&
             <DateRangePicker
                text="Time period"
-               value={p.range || 'forever'}
+               value={p.props.range || 'forever'}
                onChange={changeRange}
             />
          }

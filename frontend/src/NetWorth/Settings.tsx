@@ -1,67 +1,67 @@
 import * as React from 'react';
-import { NetworthProps } from 'NetWorth';
+import { NetworthPanelProps } from 'NetWorth/Panel';
 import { Checkbox, NumberInput, Select } from 'Form';
-import { SettingsProps } from 'Dashboard/Module';
 import { RelativeDate, MultiDatePicker } from 'Dates';
 import { TreeMode } from 'services/useAccountTree';
+import { PanelProps } from 'Dashboard/Panel';
 
-const Settings: React.FC<NetworthProps & SettingsProps<NetworthProps>> = p => {
-   const changeValue = (showValue: boolean) => p.setData({ showValue });
-   const changePrice = (showPrice: boolean) => p.setData({ showPrice });
-   const changeShares = (showShares: boolean) => p.setData({ showShares });
-   const changePercent = (showPercent: boolean) => p.setData({ showPercent });
-   const changeDeltaL = (showDeltaLast: boolean) => p.setData({ showDeltaLast });
-   const changeDeltaN = (showDeltaNext: boolean) => p.setData({ showDeltaNext });
-   const changedates = (dates: RelativeDate[]) => p.setData({ dates });
-   const changeBorders = (borders: boolean) => p.setData({ borders });
-   const changeThreshold = (threshold: number) => p.setData({ threshold });
-   const changeAlt = (alternateColors: boolean) => p.setData({ alternateColors });
-   const changeTreeMode = (treeMode: TreeMode) => p.setData({ treeMode });
+const Settings: React.FC<PanelProps<NetworthPanelProps>> = p => {
+   const changeValue = (showValue: boolean) => p.save({ showValue });
+   const changePrice = (showPrice: boolean) => p.save({ showPrice });
+   const changeShares = (showShares: boolean) => p.save({ showShares });
+   const changePercent = (showPercent: boolean) => p.save({ showPercent });
+   const changeDeltaL = (showDeltaLast: boolean) => p.save({ showDeltaLast });
+   const changeDeltaN = (showDeltaNext: boolean) => p.save({ showDeltaNext });
+   const changedates = (dates: RelativeDate[]) => p.save({ dates });
+   const changeBorders = (borders: boolean) => p.save({ borders });
+   const changeThreshold = (threshold: number) => p.save({ threshold });
+   const changeAlt = (alternateColors: boolean) => p.save({ alternateColors });
+   const changeTreeMode = (treeMode: TreeMode) => p.save({ treeMode });
    return (
       <fieldset>
          <legend>Networth</legend>
          <Checkbox
-             checked={p.borders}
+             checked={p.props.borders}
              onChange={changeBorders}
              text="Show borders"
          />
          <Checkbox
-             checked={p.alternateColors}
+             checked={p.props.alternateColors}
              onChange={changeAlt}
              text="Alternate background color"
          />
          <Checkbox
-            checked={p.showValue}
+            checked={p.props.showValue}
             onChange={changeValue}
             text="Show values"
          />
          <Checkbox
-            checked={p.showPrice}
+            checked={p.props.showPrice}
             onChange={changePrice}
             text="Show prices"
          />
          <Checkbox
-            checked={p.showShares}
+            checked={p.props.showShares}
             onChange={changeShares}
             text="Show shares"
          />
          <Checkbox
-            checked={p.showPercent}
+            checked={p.props.showPercent}
             onChange={changePercent}
             text="Show percent of total"
          />
          <Checkbox
-            checked={p.showDeltaNext}
+            checked={p.props.showDeltaNext}
             onChange={changeDeltaN}
             text="Show delta with next column"
          />
          <Checkbox
-            checked={p.showDeltaLast}
+            checked={p.props.showDeltaLast}
             onChange={changeDeltaL}
             text="Show delta with last column"
          />
          <NumberInput
-            value={p.threshold ?? 0}
+            value={p.props.threshold ?? 0}
             onChange={changeThreshold}
             required={true}
             text="Threshold"
@@ -70,7 +70,7 @@ const Settings: React.FC<NetworthProps & SettingsProps<NetworthProps>> = p => {
          <Select
              text="Group by"
              onChange={changeTreeMode}
-             value={p.treeMode}
+             value={p.props.treeMode}
              options={[
                 {text: "Flat list",      value: TreeMode.FLAT},
                 {text: "Parent account", value: TreeMode.USER_DEFINED},
@@ -81,7 +81,7 @@ const Settings: React.FC<NetworthProps & SettingsProps<NetworthProps>> = p => {
 
          <MultiDatePicker
             text="Columns"
-            value={p.dates}
+            value={p.props.dates}
             onChange={changedates}
          />
       </fieldset>

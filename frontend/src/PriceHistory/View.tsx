@@ -8,6 +8,8 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import usePrefs from 'services/usePrefs';
 import useFetchPrices from 'services/useFetchPrices';
 import RoundButton from 'RoundButton'
+import { DateRange } from 'Dates';
+import { AccountIdSet } from 'services/useAccountIds';
 import './PriceHistory.scss';
 
 interface Holding {
@@ -35,14 +37,18 @@ const nullState: State = {
 }
 
 export interface PriceHistoryProps {
-   account: Account;
+   accountIds: AccountIdSet;    // must have exactly one element
    transactions: Transaction[];
+   range: DateRange;
    hidePositions?: boolean;
    hidePrices?: boolean;
    hideHoldings?: boolean;
 }
+interface ExtraProps {
+   account: Account;
+}
 
-const PriceHistoryView: React.FC<PriceHistoryProps> = p => {
+const PriceHistory: React.FC<PriceHistoryProps & ExtraProps> = p => {
    const { prefs } = usePrefs();
    const prices = useFetchPrices(p.account.id, prefs.currencyId);
    const [data, setData] = React.useState<Holding[]>([]);
@@ -278,4 +284,4 @@ const PriceHistoryView: React.FC<PriceHistoryProps> = p => {
    );
 }
 
-export default PriceHistoryView;
+export default PriceHistory;

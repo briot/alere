@@ -2,7 +2,6 @@ import * as React from 'react';
 import { RelativeDate, dateToString } from 'Dates';
 import Numeric from 'Numeric';
 import AccountName from 'Account';
-import { SetHeader } from 'Header';
 import { BalanceList } from 'services/useBalance';
 import useBalanceWithThreshold, {
    BalanceWithAccount } from 'services/useBalanceWithThreshold';
@@ -145,7 +144,7 @@ export interface NetworthProps {
    // threshold (absolute value).
 }
 
-const Networth: React.FC<NetworthProps & SetHeader> = p => {
+const Networth: React.FC<NetworthProps> = p => {
    const { prefs } = usePrefs();
    const {baseData, data} = useBalanceWithThreshold({
       ...p,
@@ -189,14 +188,8 @@ const Networth: React.FC<NetworthProps & SetHeader> = p => {
                   'Delta between this column and the last column')
                : undefined,
          ])),
-      [p.dates, p.showShares, p.showPrice, p.showValue, baseData,
-       p.showPercent, p.showDeltaLast, p.showDeltaNext]
-   );
-
-   const { setHeader } = p;
-   React.useEffect(
-      () => setHeader({ title: 'Net worth' }),
-      [setHeader]
+      [p.dates, p.showShares, p.showPrice, p.showValue,
+       baseData, p.showPercent, p.showDeltaLast, p.showDeltaNext]
    );
 
    return (
@@ -208,9 +201,11 @@ const Networth: React.FC<NetworthProps & SetHeader> = p => {
          defaultExpand={true}
          borders={p.borders}
          alternate={
-            p.alternateColors ? AlternateRows.ROW : AlternateRows.NO_COLOR
+            p.alternateColors
+            ? AlternateRows.ROW : AlternateRows.NO_COLOR
          }
       />
    );
 }
+
 export default Networth;

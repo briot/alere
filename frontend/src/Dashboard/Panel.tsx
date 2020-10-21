@@ -2,50 +2,71 @@ import * as React from 'react';
 import { Select } from 'Form';
 import RoundButton from 'RoundButton';
 import Dropdown from 'Form/Dropdown';
-import { BaseProps } from 'Dashboard/Module';
-import { getModule } from 'services/useDashboard';
 import { HeaderProps } from 'Header';
 import classes from 'services/classes';
 import './Panel.css';
 
-interface PanelProps {
-   panel: BaseProps;
-   setPanels: undefined | ((p: (old: BaseProps[]) => BaseProps[]) => void);
-   index: number;
-   excludeFields?: string[]; // Do not allow configuring those fields
+/**
+ * Properties for a dashboard panel, as saved in local storage.
+ * This will be extended for each of our panel, in the View.tsx file.
+ */
+export interface PanelBaseProps {
+   type: Readonly<string>;
+   rowspan: number;
+   colspan: number;
 }
 
-const DashboardPanel: React.FC<PanelProps> = React.memo(p => {
-   const [header, setHeader] = React.useState<HeaderProps>({});
-   const { setPanels } = p;
+/**
+ * Properties for a panel component: the same as above, but also support for
+ * changing and saving properties interactively.
+ */
+export interface PanelProps <T extends PanelBaseProps> {
+   props: T;
 
-   const m = getModule(p.panel.type);
+   excludeFields: string[];
+   // List of fields with a forced value, that cannot be edited interactively
 
-   const localChange = React.useCallback(
-      (a: Partial<BaseProps>) =>
-         setPanels?.(old => {
-            const n = [...old];
-            n[p.index] = {...n[p.index], ...a};
-            return n;
-         }),
-      [setPanels, p.index]
-   );
-   const changeRows = (rowspan: number) => localChange({rowspan});
-   const changeCols = (colspan: number) => localChange({colspan});
+   save: (p: Partial<T>) => void;
+   // Saving the properties of the panel in local storage.
+}
+
+/**
+ * The list of registered modules. Every type you define a new type of panel,
+ * it should be registered in this object
+ */
+export const PANELS: {[name: string]: React.FC<PanelProps<any>>} = {};
+
+/**
+ * The Panel component wraps a view, providing a title bar, settings dialog,..
+ */
+
+// ??? cannot use React.FC here because this is a generic, so we do the
+// typing manually. The important part is that this component accepts
+// children.
+interface Props <T extends PanelBaseProps> extends PanelProps<T> {
+   header: HeaderProps;  // What header to show for the panel
+   Settings?: React.ReactElement|null;
+}
+
+function Panel<T extends PanelBaseProps>(
+   p : React.PropsWithChildren<Props<T>>
+): React.ReactElement|null {
+   const changeRows = (rowspan: number) => p.save({rowspan} as Partial<T>);
+   const changeCols = (colspan: number) => p.save({colspan} as Partial<T>);
 
    const c = classes(
       'panel',
-      p.panel.type,
-      `row${p.panel.rowspan}`,
-      `col${p.panel.colspan}`,
+      p.props.type,
+      `row${p.props.rowspan}`,
+      `col${p.props.colspan}`,
    );
 
    return (
       <div className={c} >
          <div className="header">
-            <h5>{header.title}</h5>
+            <h5>{p.header.title}</h5>
             <div className="group">
-               {header.buttons}
+               {p.header.buttons}
                <Dropdown
                   button={(visible: boolean) =>
                      <RoundButton fa='fa-bars' size='tiny' selected={visible} />
@@ -53,18 +74,13 @@ const DashboardPanel: React.FC<PanelProps> = React.memo(p => {
                   menu={
                      <form>
                         {
-                           m.Settings &&
-                           <m.Settings
-                              {...p.panel }
-                              setData={localChange}
-                              excludeFields={p.excludeFields}
-                           />
+                           p.Settings
                         }
                         <fieldset>
                            <legend>Layout</legend>
                            <Select
                               text="Rows"
-                              value={p.panel.rowspan}
+                              value={p.props.rowspan}
                               onChange={changeRows}
                               options={[
                                  {text: "one row",    value: 1},
@@ -76,7 +92,7 @@ const DashboardPanel: React.FC<PanelProps> = React.memo(p => {
 
                            <Select
                               text="Columns"
-                              value={p.panel.colspan}
+                              value={p.props.colspan}
                               onChange={changeCols}
                               options={[
                                  {text: "one column",    value: 1},
@@ -96,14 +112,10 @@ const DashboardPanel: React.FC<PanelProps> = React.memo(p => {
             </div>
          </div>
          <div className="content">
-            <m.Content
-               {...p.panel as any}
-               setHeader={setHeader}
-               setData={localChange}
-            />
+            {p.children}
          </div>
       </div>
    );
-});
+}
 
-export default DashboardPanel;
+export default Panel;

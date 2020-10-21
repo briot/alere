@@ -1,47 +1,46 @@
 import * as React from 'react';
-import { BaseLedgerProps, SplitMode, NotesMode } from 'Ledger';
+import { SplitMode, NotesMode } from 'Ledger/View';
+import { LedgerPanelProps } from 'Ledger/Panel';
 import { Checkbox, Select } from 'Form';
 import { DateRange, DateRangePicker } from 'Dates';
-import { SettingsProps } from 'Dashboard/Module';
 import { Account } from 'services/useAccounts';
 import { AccountIdSet } from 'services/useAccountIds';
 import { SelectMultiAccount } from 'Account';
 import useAccountIds from 'services/useAccountIds';
+import { PanelProps } from 'Dashboard/Panel';
 
-const Settings: React.FC<BaseLedgerProps & SettingsProps<BaseLedgerProps>>
-= p => {
-   const { accounts: allAccounts } = useAccountIds(p.accountIds);
+const Settings: React.FC<PanelProps<LedgerPanelProps>> = p => {
+   const { accounts: allAccounts } = useAccountIds(p.props.accountIds);
 
-   const changeRange = (range: DateRange) => p.setData({ range });
-   const changeAccount = (accountIds: AccountIdSet) => p.setData({ accountIds });
-   const changeTrans = (notes_mode: NotesMode) => p.setData({notes_mode});
-   const changeSplit = (split_mode: SplitMode) => p.setData({ split_mode });
-   const changeBorders = (borders: boolean) => p.setData({ borders });
-   const changeAlt = (alternateColors: boolean) => p.setData({ alternateColors });
-   const changeExpand = (defaultExpand: boolean) => p.setData({ defaultExpand });
-   const changeValueColumn = (valueColumn: boolean) =>
-      p.setData({ valueColumn });
+   const changeRange = (range: DateRange) => p.save({ range });
+   const changeAccount = (accountIds: AccountIdSet) => p.save({ accountIds });
+   const changeTrans = (notes_mode: NotesMode) => p.save({notes_mode});
+   const changeSplit = (split_mode: SplitMode) => p.save({ split_mode });
+   const changeBorders = (borders: boolean) => p.save({ borders });
+   const changeAlt = (alternateColors: boolean) => p.save({ alternateColors });
+   const changeExpand = (defaultExpand: boolean) => p.save({ defaultExpand });
+   const changeValueColumn = (valueColumn: boolean) => p.save({ valueColumn });
 
    return (
       <fieldset>
          <legend>Ledger</legend>
          <Checkbox
-             checked={p.borders}
+             checked={p.props.borders}
              onChange={changeBorders}
              text="Show borders"
          />
          <Checkbox
-             checked={p.alternateColors}
+             checked={p.props.alternateColors}
              onChange={changeAlt}
              text="Alternate background color"
          />
          <Checkbox
-             checked={p.valueColumn}
+             checked={p.props.valueColumn}
              onChange={changeValueColumn}
              text="Deposit and paiements in same column"
          />
          <Checkbox
-             checked={p.defaultExpand}
+             checked={p.props.defaultExpand}
              onChange={changeExpand}
              text="Expand rows by default"
          />
@@ -49,7 +48,7 @@ const Settings: React.FC<BaseLedgerProps & SettingsProps<BaseLedgerProps>>
          <Select
              text="Memos"
              onChange={changeTrans}
-             value={p.notes_mode}
+             value={p.props.notes_mode}
              options={[
                 {text: "Hide memos",              value: NotesMode.ONE_LINE},
                 {text: "Show memos if not empty", value: NotesMode.AUTO},
@@ -61,7 +60,7 @@ const Settings: React.FC<BaseLedgerProps & SettingsProps<BaseLedgerProps>>
          <Select
              text="Splits"
              onChange={changeSplit}
-             value={p.split_mode}
+             value={p.props.split_mode}
              options={[
                 {text: "Never show splits",              value: SplitMode.HIDE},
                 {text: "Show summary",                   value: SplitMode.SUMMARY},
@@ -99,7 +98,7 @@ const Settings: React.FC<BaseLedgerProps & SettingsProps<BaseLedgerProps>>
             !p.excludeFields?.includes("range") &&
             <DateRangePicker
                text="Time period"
-               value={p.range || 'forever'}
+               value={p.props.range || 'forever'}
                onChange={changeRange}
             />
          }

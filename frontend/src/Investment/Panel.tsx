@@ -11,6 +11,7 @@ import AccountName from 'Account';
 import Spinner from 'Spinner';
 import { AreaChart, XAxis, YAxis, Area, Tooltip,
          ReferenceLine } from 'recharts';
+import { PanelBaseProps } from 'Dashboard/Panel';
 import './Investment.scss';
 
 
@@ -395,7 +396,7 @@ const TickerView: React.FC<TickerViewProps> = p => {
    );
 }
 
-export interface InvestmentsPanelProps {
+export interface InvestmentsProps {
    hideIfNoShare: boolean;
    showWALine: boolean;
    showACLine: boolean;
@@ -404,7 +405,11 @@ interface DataProps {
    data: TickerList|undefined;
 }
 
-const InvestmentsPanel: React.FC<InvestmentsPanelProps & DataProps> = p => {
+export interface InvestmentsPanelProps extends PanelBaseProps, InvestmentsProps {
+   type: 'investments';
+}
+
+const InvestmentsPanel: React.FC<InvestmentsProps & DataProps> = p => {
    const { accounts } = useAccounts();
    const list = React.useRef<VariableSizeList>(null);
 

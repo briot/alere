@@ -14,6 +14,9 @@ const InvestmentPage: React.FC<SetHeader> = p => {
    const state = useSettings<InvestmentsPanelProps>(
       'investments',
       {
+         type: 'investments',
+         colspan: 1,
+         rowspan: 1,
          hideIfNoShare: true,
          showWALine: false,
          showACLine: true,
@@ -70,8 +73,9 @@ const InvestmentPage: React.FC<SetHeader> = p => {
                      menu={
                         <form>
                            <Settings
-                               {...state.val}
-                               setData={state.setPartial}
+                               props={state.val}
+                               save={state.setPartial}
+                               excludeFields={[]}
                            />
                         </form>
                      }

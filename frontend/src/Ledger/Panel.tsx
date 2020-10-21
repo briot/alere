@@ -1,36 +1,44 @@
 import * as React from 'react';
-import Ledger, { BaseLedgerProps } from 'Ledger';
-import { SaveData } from 'Dashboard/Module';
-import { SetHeader } from 'Header';
+import Ledger, { BaseLedgerProps } from 'Ledger/View';
 import { rangeDisplay } from 'Dates';
 import useAccountIds from 'services/useAccountIds';
 import useTransactions from 'services/useTransactions';
 import { Transaction } from 'Transaction';
+import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
+import Settings from 'Ledger/Settings';
+
+export interface LedgerPanelProps extends PanelBaseProps, BaseLedgerProps {
+   type: 'ledger';
+}
 
 const LedgerPanel: React.FC<
-   BaseLedgerProps & SetHeader & SaveData<BaseLedgerProps>
-   & { transactions?: Transaction[] }
+   PanelProps<LedgerPanelProps>
+   & { transactions?: Transaction[] } // possibly precomputed
 > = p => {
-   const { setHeader } = p;
-   const { accounts, title } = useAccountIds(p.accountIds);
-   const transactions = useTransactions(accounts, p.range, p.transactions);
-
-   React.useEffect(
-      () => {
-         const dates = p.range ? rangeDisplay(p.range) : '';
-         setHeader({title: `${title} ${dates}` });
-      },
-      [title, setHeader, p.range]
-   );
-
-   const setSortOn = (sortOn: string) => p.setData({ sortOn });
+   const { accounts, title } = useAccountIds(p.props.accountIds);
+   const transactions = useTransactions(
+      accounts, p.props.range, p.transactions);
+   const setSortOn = (sortOn: string) => p.save({ sortOn });
+   const dates = p.props.range ? rangeDisplay(p.props.range) : '';
 
    return (
-      <Ledger
+      <Panel
          {...p}
-         transactions={transactions}
-         setSortOn={setSortOn}
-      />
+         header={{ title: `${title} ${dates}` }}
+         Settings={
+            <Settings
+               props={p.props}
+               excludeFields={p.excludeFields}
+               save={p.save}
+            />
+         }
+      >
+         <Ledger
+            {...p.props}
+            transactions={transactions}
+            setSortOn={setSortOn}
+         />
+      </Panel>
    );
 }
-export default LedgerPanel;
+export const registerLedger = () => PANELS['ledger'] = LedgerPanel;

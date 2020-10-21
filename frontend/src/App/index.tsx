@@ -4,23 +4,31 @@ import Dashboard from 'Dashboard';
 import LeftSideBar from 'LeftSideBar';
 import RightSideBar from 'RightSideBar';
 import LedgerPage from 'Ledger/Page';
-import InvestmentPage from 'Investment/Page';
 import AccountsPage from 'NetWorth/Page';
+import InvestmentPage from 'Investment/Page';
 import usePrefs from 'services/usePrefs';
 import Header, { HeaderProps } from 'Header';
 import StyleGuide from 'StyleGuide';
-import { BaseProps } from 'Dashboard/Module';
-import { IncomeExpensePanelProps } from 'IncomeExpense/Module';
-import { NetworthPanelProps } from 'NetWorth/Module';
-import { LedgerPanelProps } from 'Ledger/Module';
-import { CashflowPanelProps } from 'Cashflow/Module';
-import { MeanModuleProps } from 'Mean';
-import { SplitMode, NotesMode } from 'Ledger';
+import { PanelBaseProps } from 'Dashboard/Panel';
+import { IncomeExpensePanelProps, registerIE } from 'IncomeExpense/Panel';
+import { NetworthPanelProps, registerNetworth } from 'NetWorth/Panel';
+import { LedgerPanelProps, registerLedger } from 'Ledger/Panel';
+import { CashflowPanelProps, registerCashflow } from 'Cashflow/Panel';
+import { MeanPanelProps, registerMean } from 'Mean/Panel';
+import { registerPriceHistory } from 'PriceHistory/Panel';
+import { SplitMode, NotesMode } from 'Ledger/View';
 import { TreeMode } from 'services/useAccountTree';
 import './App.css';
 import "font-awesome/css/font-awesome.min.css";
 
-const defaultOverview: BaseProps[] = [
+registerCashflow();
+registerIE();
+registerLedger();
+registerMean();
+registerNetworth();
+registerPriceHistory();
+
+const defaultOverview: PanelBaseProps[] = [
    {
       type: 'networth',
       rowspan: 2,
@@ -74,7 +82,7 @@ const defaultOverview: BaseProps[] = [
       expenses: true,
       rowspan: 1,
       colspan: 2,
-   } as MeanModuleProps,
+   } as MeanPanelProps,
    {
       type: 'mean',
       range: 'forever',
@@ -83,17 +91,7 @@ const defaultOverview: BaseProps[] = [
       expenses: false,
       rowspan: 1,
       colspan: 2,
-   } as MeanModuleProps,
-   // {
-   //    type: 'upcoming',
-   //    rowspan: 1,
-   //    colspan: 1,
-   // },
-   // {
-   //    type: 'quadrant',
-   //    rowspan: 1,
-   //    colspan: 2,
-   // } as QuadrantPanelProps,
+   } as MeanPanelProps,
 ];
 
 const App: React.FC<{}> = () => {

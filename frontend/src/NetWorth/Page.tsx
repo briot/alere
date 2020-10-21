@@ -1,11 +1,10 @@
 import * as React from 'react';
 import { SetHeader } from 'Header';
 import Dashboard from 'Dashboard';
-import { BaseProps } from 'Dashboard/Module';
-import { NetworthPanelProps } from 'NetWorth/Module';
+import { NetworthPanelProps } from 'NetWorth/Panel';
 import { TreeMode } from 'services/useAccountTree';
 
-const defaultPanels: BaseProps[] = [
+const defaultPanels = [
    {
       type: 'networth',
       showValue: true,
@@ -28,5 +27,4 @@ const AccountsPage: React.FC<{} & SetHeader> = p => {
       />
    );
 }
-
-export default AccountsPage
+export default AccountsPage;

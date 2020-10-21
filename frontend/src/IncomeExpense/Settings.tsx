@@ -1,25 +1,23 @@
 import * as React from 'react';
 import { DateRangePicker, DateRange } from 'Dates';
-import { IncomeExpenseProps } from 'IncomeExpense';
-import { SettingsProps } from 'Dashboard/Module';
+import { IncomeExpensePanelProps } from 'IncomeExpense/Panel';
 import { Checkbox } from 'Form';
+import { PanelProps } from 'Dashboard/Panel';
 
-const Settings: React.FC<
-   IncomeExpenseProps & SettingsProps<IncomeExpenseProps>
-> = p => {
-   const changeExp   = (expenses: boolean) => p.setData({ expenses });
-   const changeRange = (range: DateRange) => p.setData({ range });
+const Settings: React.FC<PanelProps<IncomeExpensePanelProps>> = p => {
+   const changeExp   = (expenses: boolean) => p.save({ expenses });
+   const changeRange = (range: DateRange) => p.save({ range });
    return (
       <fieldset>
          <legend>Income and Expenses</legend>
          <Checkbox
-            checked={p.expenses}
+            checked={p.props.expenses}
             onChange={changeExp}
             text="Show expenses"
          />
          <DateRangePicker
             text="Time period"
-            value={p.range}
+            value={p.props.range}
             onChange={changeRange}
          />
       </fieldset>

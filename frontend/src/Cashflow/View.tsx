@@ -1,6 +1,5 @@
 import * as React from 'react';
-import { DateRange, monthCount, rangeDisplay, rangeToHttp } from 'Dates';
-import { SetHeader } from 'Header';
+import { DateRange, monthCount, rangeToHttp } from 'Dates';
 import { Commodity, CommodityId } from 'services/useAccounts';
 import { Link } from 'react-router-dom';
 import Numeric from 'Numeric';
@@ -120,19 +119,10 @@ export interface CashflowProps {
    range: DateRange;
 }
 
-const Cashflow: React.FC<CashflowProps & SetHeader> = p => {
+const Cashflow: React.FC<CashflowProps> = p => {
    const { prefs } = usePrefs();
    const currency = prefs.currencyId;
    const pl = useFetchPL(p.range, currency);
-
-   const { setHeader } = p;
-   React.useEffect(
-      () => setHeader?.({
-         title: `Metrics ${rangeDisplay(p.range)}`,
-      }),
-      [setHeader, p.range]
-   );
-
    const months = monthCount(p.range);
    const monthly_expenses = pl.expenses / months;
    const networth_delta = pl.networth - pl.networth_start;
