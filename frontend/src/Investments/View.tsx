@@ -1,13 +1,46 @@
 import * as React from 'react';
 import usePrefs from '../services/usePrefs';
-import Spinner from 'Spinner';
-import TickerPanel from 'Ticker/Panel';
+import { TickerPanelProps } from 'Ticker/Panel';
+import { DashboardFromPanels } from 'Dashboard';
 import {
    accountsForTicker, THRESHOLD, Ticker, AccountTicker } from 'Ticker/View';
-import useAccounts from 'services/useAccounts';
+import { CommodityId } from 'services/useAccounts';
 import './Investments.scss';
 
 type TickerList = [Ticker[], AccountTicker[]];
+
+const useTickers = (
+   currencyId: CommodityId,
+   fromProviders?: boolean, // whether to load price history from source provides
+   hideIfNoShare?: boolean,
+) => {
+   const [tickers, setTickers] = React.useState<Ticker[]>([]);
+   const [acctick, setAcctick] = React.useState<AccountTicker[]>([]);
+
+   React.useEffect(
+      () => {
+         const dofetch = async () => {
+            const resp = await window.fetch(
+               `/api/quotes?update=${fromProviders}&currency=${currencyId}`);
+            const data: TickerList = await resp.json();
+            const accTick =
+               hideIfNoShare
+               ? data[1].filter(a => Math.abs(a.shares) > THRESHOLD)
+               : data[1];
+            setAcctick(accTick);
+            setTickers(
+               hideIfNoShare
+               ? data[0].filter(t => accountsForTicker(t, accTick).length > 0)
+               : data[0]
+            );
+         }
+         dofetch();
+      },
+      [fromProviders, currencyId, hideIfNoShare]
+   );
+
+   return {tickers, acctick};
+}
 
 /**
  * Show all the user's investments
@@ -28,61 +61,29 @@ interface ExtraProps {
 }
 const Investments: React.FC<InvestmentsProps & ExtraProps> = p => {
    const { prefs } = usePrefs();
-   const { accounts } = useAccounts();
-   const [tickers, setTickers] = React.useState<Ticker[]|undefined>(undefined);
-   const [acctick, setAcctick] = React.useState<AccountTicker[]>([]);
+   const { tickers, acctick } = useTickers(
+      prefs.currencyId, p.update, p.hideIfNoShare);
 
-   React.useEffect(
-      () => {
-         const dofetch = async () => {
-            const resp = await window.fetch(
-               `/api/quotes?update=${p.update}&currency=${prefs.currencyId}`);
-            const data: TickerList = await resp.json();
-            const accTick =
-               data === undefined
-               ? []
-               : p.hideIfNoShare
-               ? data[1].filter(a => Math.abs(a.shares) > THRESHOLD)
-               : data[1];
+   const doNothing = React.useCallback(() => {}, []);
 
-            setAcctick(accTick);
-            setTickers(
-               data === undefined
-               ? []
-               : p.hideIfNoShare
-               ? data[0].filter(t => accountsForTicker(t, accTick).length > 0)
-               : data[0]
-            );
-         }
-         dofetch();
-      },
-      [p.update, p.refresh, prefs.currencyId, p.hideIfNoShare]
-   );
+   const panels = tickers.map(t => (
+      {
+         type: 'ticker',
+         colspan: 1,
+         rowspan: 1,
+         ticker: t,
+         accountTickers: acctick,
+         showWALine: p.showWALine,
+         showACLine: p.showACLine,
+      } as TickerPanelProps
+   ));
 
    return (
-      <div className="investments">
-         {
-            tickers === undefined
-            ? <Spinner />
-            : tickers.map(t =>
-               <TickerPanel
-                  key={t.id}
-                  excludeFields={[]}
-                  save={() => {}}
-                  props={{
-                     type: 'ticker',
-                     colspan: 1,
-                     rowspan: 1,
-                     ticker: t,
-                     accounts,
-                     accountTickers: acctick,
-                     showWALine: p.showWALine,
-                     showACLine: p.showACLine,
-                  }}
-               />
-            )
-         }
-      </div>
+      <DashboardFromPanels
+         panels={panels}
+         setPanels={doNothing}
+         className="investments"
+      />
    );
 }
 export default Investments;

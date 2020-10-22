@@ -4,9 +4,9 @@ import { Checkbox } from 'Form';
 import { PanelProps } from 'Dashboard/Panel';
 
 const Settings: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
-   const changeHide = (hideIfNoShare: boolean) => p.save({ hideIfNoShare });
-   const changeWA = (showWALine: boolean) => p.save({ showWALine });
-   const changeAC = (showACLine: boolean) => p.save({ showACLine });
+   const changeHide = (hideIfNoShare: boolean) => p.save?.({ hideIfNoShare });
+   const changeWA = (showWALine: boolean) => p.save?.({ showWALine });
+   const changeAC = (showACLine: boolean) => p.save?.({ showACLine });
    return (
       <fieldset>
          <legend>Investments</legend>

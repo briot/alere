@@ -23,7 +23,7 @@ export interface PanelBaseProps {
 export interface PanelProps <T extends PanelBaseProps> {
    props: T;
 
-   excludeFields: string[];
+   excludeFields?: string[];
    // List of fields with a forced value, that cannot be edited interactively
 
    save: (p: Partial<T>) => void;
@@ -54,8 +54,8 @@ interface Props <T extends PanelBaseProps> extends PanelProps<T> {
 function Panel<T extends PanelBaseProps>(
    p : React.PropsWithChildren<Props<T>>
 ): React.ReactElement|null {
-   const changeRows = (rowspan: number) => p.save({rowspan} as Partial<T>);
-   const changeCols = (colspan: number) => p.save({colspan} as Partial<T>);
+   const changeRows = (rowspan: number) => p.save?.({rowspan} as Partial<T>);
+   const changeCols = (colspan: number) => p.save?.({colspan} as Partial<T>);
 
    const c = classes(
       'panel',

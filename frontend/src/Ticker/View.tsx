@@ -4,7 +4,8 @@ import * as d3Array from 'd3-array';
 import { DateDisplay } from 'Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
-import { AccountId, CommodityId, AccountList } from 'services/useAccounts';
+import useAccounts, {
+   AccountId, CommodityId, AccountList } from 'services/useAccounts';
 import AccountName from 'Account';
 import { AreaChart, XAxis, YAxis, Area, Tooltip,
          ReferenceLine } from 'recharts';
@@ -16,11 +17,10 @@ export const THRESHOLD = 0.00000001;
 type ClosePrice = [/*timestamp*/ number|null, /*close*/ number|null];
 
 export interface Ticker {
-   id: string;
+   id: CommodityId;
    name: string;
    ticker: string;
    source: string;
-   commodity: CommodityId;
 
    storedtime: string;   // timestamp of last stored price
    storedprice: number|null;
@@ -31,7 +31,7 @@ export interface Ticker {
 
 export interface AccountTicker {
    account: AccountId;
-   security: string;
+   security: CommodityId;
    absvalue: number;
    absshares: number;
    value: number;
@@ -77,7 +77,7 @@ const pastValue = (
       toPrice: close,
       number_of_days: now === null || ts === null ? NaN
          : Math.floor((now - ts) / DAY_MS),
-      commodity: ticker.commodity,
+      commodity: ticker.id,
    };
 }
 
@@ -202,7 +202,11 @@ const History: React.FC<HistoryProps> = p => {
 
       <div className="prices">
          Closing price:
-         <Numeric amount={close} commodity={p.ticker.commodity} />
+         <Numeric
+             amount={close}
+             commodity={p.ticker.id}
+             hideCommodity={true}
+         />
          on <DateDisplay when={ts === null ? undefined : new Date(ts)} />
       </div>
 
@@ -263,7 +267,7 @@ const AccTicker: React.FC<AccTickerProps> = p => {
             <tr>
                <th>Shares owned:</th>
                <td>
-                  <Numeric amount={a.shares} />
+                  <Numeric amount={a.shares} commodity={a.security} />
                </td>
             </tr>
            {
@@ -281,7 +285,8 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                        className={
                           weighted_avg > close ? 'negative' : 'positive'
                        }
-                       commodity={p.ticker.commodity}
+                       commodity={p.ticker.id}
+                       hideCommodity={true}
                     />
                     &nbsp;(
                     <Numeric
@@ -308,7 +313,8 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                        className={
                           avg_cost > close ? 'negative' : 'positive'
                        }
-                       commodity={p.ticker.commodity}
+                       commodity={p.ticker.id}
+                       hideCommodity={true}
                     />
                     &nbsp;(
                     <Numeric
@@ -326,7 +332,8 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                  <td>
                     <Numeric
                         amount={p.ticker.storedprice}
-                        commodity={p.ticker.commodity}
+                        commodity={p.ticker.id}
+                        hideCommodity={true}
                     />
                     &nbsp;on&nbsp;
                     <DateDisplay when={new Date(p.ticker.storedtime)} />
@@ -347,7 +354,6 @@ const AccTicker: React.FC<AccTickerProps> = p => {
 
 
 export interface TickerViewProps {
-   accounts: AccountList;
    ticker: Ticker;
    accountTickers: AccountTicker[];
    showWALine: boolean;
@@ -355,6 +361,7 @@ export interface TickerViewProps {
 }
 
 const TickerView: React.FC<TickerViewProps> = p => {
+   const { accounts } = useAccounts();
    const at = accountsForTicker(p.ticker, p.accountTickers);
    // ??? tooltip:   `Ticker: ${p.ticker.ticker}`
    return (
@@ -374,7 +381,7 @@ const TickerView: React.FC<TickerViewProps> = p => {
                   key={a.account}
                   ticker={p.ticker}
                   acc={a}
-                  accounts={p.accounts}
+                  accounts={accounts}
                />
             )
          }

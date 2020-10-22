@@ -2,6 +2,7 @@ import * as React from 'react';
 import { PanelBaseProps, PANELS } from 'Dashboard/Panel';
 import { SetHeader } from 'Header';
 import useSettings from 'services/useSettings';
+import classes from 'services/classes';
 import './Dashboard.css';
 
 
@@ -9,7 +10,10 @@ interface PanelWrapperProps {
    panel: PanelBaseProps;
    index: number;
    excludeFields: string[]; // Do not allow configuring those fields
+
    setPanels: React.Dispatch<React.SetStateAction<PanelBaseProps[]>>;
+   // settings are disabled when this is null, since there would be no way to
+   // save the changes.
 }
 const PanelWrapper: React.FC<PanelWrapperProps> = p => {
    const { setPanels } = p;
@@ -43,13 +47,13 @@ const PanelWrapper: React.FC<PanelWrapperProps> = p => {
    );
 }
 
-interface DashboardFromPanelProps {
+interface DashboardFromPanelsProps {
    panels: PanelBaseProps[];
-   setPanels?: React.Dispatch<React.SetState<PanelBaseProps[]>>;
+   setPanels: React.Dispatch<React.SetStateAction<PanelBaseProps[]>>;
    className?: string;
    overrides?: Object;    //  Overrides settings for the panels
 }
-export const DashboardFromPanelProps: React.FC<DashboardFromPanelProps> = p => {
+export const DashboardFromPanels: React.FC<DashboardFromPanelsProps> = p => {
    const c = classes(
       'dashboard',
       p.className,
