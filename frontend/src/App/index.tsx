@@ -16,6 +16,8 @@ import { LedgerPanelProps, registerLedger } from 'Ledger/Panel';
 import { CashflowPanelProps, registerCashflow } from 'Cashflow/Panel';
 import { MeanPanelProps, registerMean } from 'Mean/Panel';
 import { registerPriceHistory } from 'PriceHistory/Panel';
+import { registerInvestments } from 'Investments/Panel';
+import { registerTicker } from 'Ticker/Panel';
 import { SplitMode, NotesMode } from 'Ledger/View';
 import { TreeMode } from 'services/useAccountTree';
 import './App.css';
@@ -23,10 +25,12 @@ import "font-awesome/css/font-awesome.min.css";
 
 registerCashflow();
 registerIE();
+registerInvestments();
 registerLedger();
 registerMean();
 registerNetworth();
 registerPriceHistory();
+registerTicker();
 
 const defaultOverview: PanelBaseProps[] = [
    {

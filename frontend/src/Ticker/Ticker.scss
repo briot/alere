@@ -1,28 +1,13 @@
-.investment {
+.dash-ticker {
    --account-row-height: 75px;
-   --gap: 20px;
    --items-per-row: 4;
 
-   display: flex;
-   flex-flow: row wrap;
-   gap: var(--gap);
-   align-items: stretch;      // panels should all have the same length
+   width: calc(100% / var(--items-per-row) - var(--gap));
+   box-sizing: border-box;
+   transition: transform 0.3s;
 
-   font-size: 0.8rem;
-
-   width: 100%;               // Use all available space
-   height: 100%;               // Use all available space
-
-   overflow: auto;
-
-   .tickerPanel {
-      width: calc(100% / var(--items-per-row) - var(--gap));
-      box-sizing: border-box;
-      transition: transform 0.3s;
-
-      &:hover {
-         transform: scale(1.1);
-      }
+   &:hover {
+      transform: scale(1.1);
    }
 
    th {

@@ -1,12 +1,15 @@
 .panel {
-   background: var(--panel-background);
    color: var(--panel-fg);
    box-shadow: 6px 6px 10px 0 var(--shadow-color);
    border: 1px solid var(--shadow-color);
-   padding: 5px 10px;
 
    display: flex;
    flex-flow: column nowrap;
+}
+
+.panel .panel {
+   /* when nested, like Investments page */
+   margin-top: 5px;
 }
 
 .panel .header {
@@ -14,14 +17,22 @@
    flex-flow: row nowrap;
    justify-content: space-between;
    align-items: center;
-   margin-bottom: 10px;
+   padding: 5px 10px 5px 10px;
+   background: var(--panel-background);
+}
+.panel .header .group {
+   flex: 0;
+   display: flex;
+   justify-content: center;
+   align-items: stretch;
 }
 
 .panel > .content {
    flex: 1 1;
-
    display: flex;
    flex-flow: column nowrap;
+   padding: 0 10px 5px 10px;
+   background: var(--panel-background);
 }
 
 .col1 { grid-column: auto / span 1; }

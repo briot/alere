@@ -43,6 +43,34 @@ const PanelWrapper: React.FC<PanelWrapperProps> = p => {
    );
 }
 
+interface DashboardFromPanelProps {
+   panels: PanelBaseProps[];
+   setPanels?: React.Dispatch<React.SetState<PanelBaseProps[]>>;
+   className?: string;
+   overrides?: Object;    //  Overrides settings for the panels
+}
+export const DashboardFromPanelProps: React.FC<DashboardFromPanelProps> = p => {
+   const c = classes(
+      'dashboard',
+      p.className,
+   );
+   return (
+      <div className={c}>
+         {
+            p.panels.map((p2, idx) =>
+               <PanelWrapper
+                  key={idx}
+                  panel={{...p2, ...p.overrides}}
+                  setPanels={p.setPanels}
+                  excludeFields={Object.keys(p.overrides ?? {})}
+                  index={idx}
+               />
+            )
+         }
+      </div>
+   );
+}
+
 
 
 interface DashboardProps {

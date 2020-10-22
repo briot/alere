@@ -1,26 +1,21 @@
 import * as React from 'react';
-import { VariableSizeList } from 'react-window';
 import * as d3TimeFormat from 'd3-time-format';
 import * as d3Array from 'd3-array';
 import { DateDisplay } from 'Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
-import useAccounts, {
-   AccountId, CommodityId, AccountList } from 'services/useAccounts';
+import { AccountId, CommodityId, AccountList } from 'services/useAccounts';
 import AccountName from 'Account';
-import Spinner from 'Spinner';
 import { AreaChart, XAxis, YAxis, Area, Tooltip,
          ReferenceLine } from 'recharts';
-import { PanelBaseProps } from 'Dashboard/Panel';
-import './Investment.scss';
-
+import './Ticker.scss';
 
 //  When do we consider a number of shares to be zero (for rounding errors)
-const THRESHOLD = 0.00000001;
+export const THRESHOLD = 0.00000001;
 
 type ClosePrice = [/*timestamp*/ number|null, /*close*/ number|null];
 
-interface Ticker {
+export interface Ticker {
    id: string;
    name: string;
    ticker: string;
@@ -34,7 +29,7 @@ interface Ticker {
    prices: ClosePrice[];
 }
 
-interface AccountTicker {
+export interface AccountTicker {
    account: AccountId;
    security: string;
    absvalue: number;
@@ -43,13 +38,11 @@ interface AccountTicker {
    shares: number;
 }
 
-export type TickerList = [Ticker[], AccountTicker[]];
-
 const dateForm = d3TimeFormat.timeFormat("%Y-%m-%d");
 const priceForm = (v: number) => v.toFixed(2);
 const labelForm = (d: number|string) => <span>{dateForm(new Date(d))}</span>;
 
-const accountsForTicker = (t: Ticker, accTick: AccountTicker[]) =>
+export const accountsForTicker = (t: Ticker, accTick: AccountTicker[]) =>
      accTick.filter(a => a.security === t.id);
 
 const bisect = d3Array.bisector((d: ClosePrice) => d[0]).right;
@@ -353,7 +346,7 @@ const AccTicker: React.FC<AccTickerProps> = p => {
 }
 
 
-interface TickerViewProps {
+export interface TickerViewProps {
    accounts: AccountList;
    ticker: Ticker;
    accountTickers: AccountTicker[];
@@ -363,98 +356,29 @@ interface TickerViewProps {
 
 const TickerView: React.FC<TickerViewProps> = p => {
    const at = accountsForTicker(p.ticker, p.accountTickers);
+   // ??? tooltip:   `Ticker: ${p.ticker.ticker}`
    return (
-      <div className="tickerPanel panel" >
-         <div className="header">
-            <h5 title={`Ticker: ${p.ticker.ticker}`} >
-              {p.ticker.name}
-            </h5>
-         </div>
-         <div className="content">
-            {
-               p.ticker.prices.length > 0 &&
-               <History
-                  ticker={p.ticker}
-                  accs={at}
-                  showWALine={p.showWALine}
-                  showACLine={p.showACLine}
-               />
-            }
-
-            {
-               at.map(a =>
-                  <AccTicker
-                     key={a.account}
-                     ticker={p.ticker}
-                     acc={a}
-                     accounts={p.accounts}
-                  />
-               )
-            }
-         </div>
-      </div>
-   );
-}
-
-export interface InvestmentsProps {
-   hideIfNoShare: boolean;
-   showWALine: boolean;
-   showACLine: boolean;
-}
-interface DataProps {
-   data: TickerList|undefined;
-}
-
-export interface InvestmentsPanelProps extends PanelBaseProps, InvestmentsProps {
-   type: 'investments';
-}
-
-const InvestmentsPanel: React.FC<InvestmentsProps & DataProps> = p => {
-   const { accounts } = useAccounts();
-   const list = React.useRef<VariableSizeList>(null);
-
-   const accTick = React.useMemo(
-      () =>
-         p.data === undefined
-         ? undefined
-         : p.hideIfNoShare
-         ? p.data[1].filter(a => Math.abs(a.shares) > THRESHOLD)
-         : p.data[1],
-      [p.hideIfNoShare, p.data]
-   );
-   const tickers = React.useMemo(
-      () =>
-         p.data === undefined
-         ? undefined
-         : p.hideIfNoShare
-         ? p.data[0].filter(t => accountsForTicker(t, accTick!).length > 0)
-         : p.data[0],
-      [p.hideIfNoShare, accTick, p.data]
-   );
-
-   React.useEffect(
-      () => list.current?.resetAfterIndex(0),
-      [tickers]
-   );
-
-   return (
-      <div className="investment">
+      <>
          {
-            tickers === undefined
-            ? <Spinner />
-            : tickers.map(t =>
-               <TickerView
-                  key={t.id}
-                  ticker={t}
-                  accounts={accounts}
-                  accountTickers={accTick!}
-                  showWALine={p.showWALine}
-                  showACLine={p.showACLine}
+            p.ticker.prices.length > 0 &&
+            <History
+               ticker={p.ticker}
+               accs={at}
+               showWALine={p.showWALine}
+               showACLine={p.showACLine}
+            />
+         }
+         {
+            at.map(a =>
+               <AccTicker
+                  key={a.account}
+                  ticker={p.ticker}
+                  acc={a}
+                  accounts={p.accounts}
                />
             )
          }
-      </div>
+      </>
    );
 }
-
-export default InvestmentsPanel;
+export default TickerView;

@@ -45,7 +45,10 @@ export const PANELS: {[name: string]: React.FC<PanelProps<any>>} = {};
 // children.
 interface Props <T extends PanelBaseProps> extends PanelProps<T> {
    header: HeaderProps;  // What header to show for the panel
+
    Settings?: React.ReactElement|null;
+   // if null, no menu at all, not even the default one.
+   // if undefined, default menu only.
 }
 
 function Panel<T extends PanelBaseProps>(
@@ -56,7 +59,7 @@ function Panel<T extends PanelBaseProps>(
 
    const c = classes(
       'panel',
-      p.props.type,
+      `dash-${p.props.type}`,
       `row${p.props.rowspan}`,
       `col${p.props.colspan}`,
    );
@@ -67,44 +70,47 @@ function Panel<T extends PanelBaseProps>(
             <h5>{p.header.title}</h5>
             <div className="group">
                {p.header.buttons}
-               <Dropdown
-                  button={(visible: boolean) =>
-                     <RoundButton fa='fa-bars' size='tiny' selected={visible} />
-                  }
-                  menu={
-                     <form>
-                        {
-                           p.Settings
-                        }
-                        <fieldset>
-                           <legend>Layout</legend>
-                           <Select
-                              text="Rows"
-                              value={p.props.rowspan}
-                              onChange={changeRows}
-                              options={[
-                                 {text: "one row",    value: 1},
-                                 {text: "two rows",   value: 2},
-                                 {text: "three rows", value: 3},
-                                 {text: "four rows",  value: 4},
-                              ]}
-                           />
+               {
+                  p.Settings !== null &&
+                  <Dropdown
+                     button={(visible: boolean) =>
+                        <RoundButton fa='fa-bars' size='tiny' selected={visible} />
+                     }
+                     menu={
+                        <form>
+                           {
+                              p.Settings
+                           }
+                           <fieldset>
+                              <legend>Layout</legend>
+                              <Select
+                                 text="Rows"
+                                 value={p.props.rowspan}
+                                 onChange={changeRows}
+                                 options={[
+                                    {text: "one row",    value: 1},
+                                    {text: "two rows",   value: 2},
+                                    {text: "three rows", value: 3},
+                                    {text: "four rows",  value: 4},
+                                 ]}
+                              />
 
-                           <Select
-                              text="Columns"
-                              value={p.props.colspan}
-                              onChange={changeCols}
-                              options={[
-                                 {text: "one column",    value: 1},
-                                 {text: "two columns",   value: 2},
-                                 {text: "three columns", value: 3},
-                                 {text: "four columns",  value: 4},
-                              ]}
-                           />
-                        </fieldset>
-                     </form>
-                  }
-               />
+                              <Select
+                                 text="Columns"
+                                 value={p.props.colspan}
+                                 onChange={changeCols}
+                                 options={[
+                                    {text: "one column",    value: 1},
+                                    {text: "two columns",   value: 2},
+                                    {text: "three columns", value: 3},
+                                    {text: "four columns",  value: 4},
+                                 ]}
+                              />
+                           </fieldset>
+                        </form>
+                     }
+                  />
+               }
                {/*
                   <span className="fa fa-info-circle" />
                   <span className="fa fa-window-close" />

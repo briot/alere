@@ -335,17 +335,19 @@ const ListWithColumns = <T extends any> (
       </Table.TR>
    );
 
-   const footer = (
-      <Table.TR>
-      {
-         (p.footColumnsOverride ?? cols).map((c, idx) =>
-            <Table.TH key={idx} className={c.className} >
-               {typeof c.foot === "function" ? c.foot(p.rows) : c.foot}
-            </Table.TH>
-         )
-      }
-      </Table.TR>
-   );
+   const footerColumns = p.footColumnsOverride ?? cols;
+   const footer = footerColumns.length
+      ? (
+         <Table.TR>
+         {
+            footerColumns.map((c, idx) =>
+               <Table.TH key={idx} className={c.className} >
+                  {typeof c.foot === "function" ? c.foot(p.rows) : c.foot}
+               </Table.TH>
+            )
+         }
+         </Table.TR>
+      ) : null;
 
    return (
       <Table.Table

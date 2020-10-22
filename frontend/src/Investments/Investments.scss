@@ -1,0 +1,18 @@
+.investments {
+   --gap: 20px;
+
+   font-size: 0.8rem;
+   width: 100%;   // Use all available space
+   height: 100%;  // Use all available space
+
+   display: grid;
+   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+   grid-template-rows: repeat(auto-fit, minmax(var(--panel-height), auto));
+   grid-auto-flow: row;
+   grid-gap: 20px;
+   justify-items: stretch;
+}
+
+.dash-investments > .content {
+    background: none;
+}

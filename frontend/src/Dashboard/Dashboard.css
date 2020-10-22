@@ -17,4 +17,5 @@
 
 .dashboard .panel {
    min-height: var(--panel-height);
+   width: 100%;
 }

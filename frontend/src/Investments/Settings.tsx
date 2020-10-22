@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { InvestmentsPanelProps } from 'Investment/Panel';
+import { InvestmentsPanelProps } from 'Investments/Panel';
 import { Checkbox } from 'Form';
 import { PanelProps } from 'Dashboard/Panel';
 
