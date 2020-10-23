@@ -37,7 +37,7 @@
 
 .col1 { grid-column: auto / span 1; }
 .col2 { grid-column: auto / span 2; }
-.col3 { grid-column: auto / span 4; }
+.col3 { grid-column: auto / span 3; }
 .col4 { grid-column: auto / span 4; }
 
 .row1 { grid-row: auto / span 1; }

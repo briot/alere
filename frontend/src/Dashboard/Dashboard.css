@@ -7,6 +7,7 @@
    /* 200px is so that we have at most 4 columns */
    grid-template-columns: repeat(auto-fit, minmax(200px, 24%));
    grid-template-rows: repeat(auto-fit, minmax(var(--panel-height), auto));
+
    grid-auto-flow: row;  /* dense */
 
    grid-gap: 20px;

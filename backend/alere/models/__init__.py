@@ -675,3 +675,10 @@ class Accounts_Security(AlereModel):
         managed = False
         db_table = prefix + "accounts_security"
 
+    def __str__(self):
+        return "Accounts_Security(transaction=%s, currency=%s, account=%s)" % (
+            self.transaction_id,
+            self.currency_id,
+            self.account_id
+        )
+

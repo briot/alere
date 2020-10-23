@@ -122,6 +122,10 @@ class QuotesView(JSONView):
     def get_json(self, params):
         update = self.as_bool(params, 'update', False)
         currency = self.as_commodity_id(params, 'currency')
+        commodities = params.get('commodities', None)
+
+        if commodities:
+            commodities = [int(c) for c in commodities.split(',')]
 
         #########
         # First step: find all commodities we trade.
@@ -130,6 +134,9 @@ class QuotesView(JSONView):
             .filter(latest_price__target_id=currency) \
             .select_related(
                 'latest_price', 'latest_price__origin', 'quote_source')
+
+        if commodities:
+            query = query.filter(id__in=commodities)
 
         symbols = {
             c.id: {
@@ -171,8 +178,7 @@ class QuotesView(JSONView):
         # query, rather than do everything in the database.
 
         query2 = alere.models.Accounts_Security.objects \
-            .exclude(account__commodity__kind=
-                       alere.models.CommodityKinds.CURRENCY) \
+            .filter(account__commodity_id__in=symbols.keys()) \
             .select_related('currency', 'account')
 
         accs = {}
@@ -202,18 +208,22 @@ class QuotesView(JSONView):
 
         acc = None   # account the current transaction is applying to
         current_transaction = None
-        for trans in query2:
-            if trans.transaction_id != current_transaction:
-                acc = next_transaction(acc, trans)
-                current_transaction = trans.transaction_id
-                shares_for_trans = 0
-                money_for_trans = 0
+        try:
+            for trans in query2:
+                if trans.transaction_id != current_transaction:
+                    acc = next_transaction(acc, trans)
+                    current_transaction = trans.transaction_id
+                    shares_for_trans = 0
+                    money_for_trans = 0
 
-            if trans.currency.kind == alere.models.CommodityKinds.CURRENCY:
-                # Need '-' because this was for another account
-                money_for_trans += -trans.scaled_qty / trans.scale
-            else:
-                shares_for_trans += trans.scaled_qty / trans.scale
+                if trans.currency.kind == alere.models.CommodityKinds.CURRENCY:
+                    # Need '-' because this was for another account
+                    money_for_trans += -trans.scaled_qty / trans.scale
+                else:
+                    shares_for_trans += trans.scaled_qty / trans.scale
+
+        except django.core.exceptions.EmptyResultSet:
+            pass
 
         next_transaction(acc, None)
 

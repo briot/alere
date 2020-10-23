@@ -345,12 +345,14 @@ const AccTicker: React.FC<AccTickerProps> = p => {
 
 
 export interface TickerViewProps {
-   ticker: Ticker;
    showWALine: boolean;
    showACLine: boolean;
 }
+interface ExtraProps {
+   ticker: Ticker;
+}
 
-const TickerView: React.FC<TickerViewProps> = p => {
+const TickerView: React.FC<TickerViewProps & ExtraProps> = p => {
    // ??? tooltip:   `Ticker: ${p.ticker.ticker}`
    return (
       <>

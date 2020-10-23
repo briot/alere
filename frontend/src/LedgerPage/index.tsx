@@ -12,6 +12,7 @@ import { Account } from 'services/useAccounts';
 import { SelectAccount } from 'Account';
 import { LedgerPanelProps } from 'Ledger/Panel';
 import { PriceHistoryPanelProps } from 'PriceHistory/Panel';
+import { TickerPanelProps } from 'Ticker/Panel';
 
 const defaultPanels = [
    {
@@ -20,8 +21,16 @@ const defaultPanels = [
       transactions: [],   // overridden later
       range: "forever",
       rowspan: 1,
-      colspan: 4,
+      colspan: 3,
    } as PriceHistoryPanelProps,
+   {
+      type: 'ticker',
+      rowspan: 1,
+      colspan: 1,
+      showWALine: true,
+      showACLine: true,
+      ticker: undefined,
+   } as TickerPanelProps,
    {
       type: 'ledger',
       accountIds: 'all',  // overridden later
@@ -104,6 +113,13 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
                accountIds,
                transactions: transactions,
                range,
+
+               // for 'ticker' view
+               ticker: (
+                  accounts.length === 1 && accounts[0].commodity.id > 0
+                  ? accounts[0].commodity.id
+                  : undefined
+               ),
             }
          }
       />
