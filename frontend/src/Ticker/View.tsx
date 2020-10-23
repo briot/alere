@@ -4,8 +4,7 @@ import * as d3Array from 'd3-array';
 import { DateDisplay } from 'Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
-import useAccounts, {
-   AccountId, CommodityId, AccountList } from 'services/useAccounts';
+import { Account, CommodityId } from 'services/useAccounts';
 import AccountName from 'Account';
 import { AreaChart, XAxis, YAxis, Area, Tooltip,
          ReferenceLine } from 'recharts';
@@ -14,7 +13,15 @@ import './Ticker.scss';
 //  When do we consider a number of shares to be zero (for rounding errors)
 export const THRESHOLD = 0.00000001;
 
-type ClosePrice = [/*timestamp*/ number|null, /*close*/ number|null];
+export type ClosePrice = [/*timestamp*/ number|null, /*close*/ number|null];
+
+interface AccountForTicker {
+   account: Account;
+   absvalue: number;
+   absshares: number;
+   value: number;
+   shares: number;
+}
 
 export interface Ticker {
    id: CommodityId;
@@ -25,28 +32,15 @@ export interface Ticker {
    storedtime: string;   // timestamp of last stored price
    storedprice: number|null;
 
-   // sorted chronologically
+   // sorted chronologically, given in the currency used in the query
    prices: ClosePrice[];
-}
-
-export interface AccountTicker {
-   account: AccountId;
-   security: CommodityId;
-   absvalue: number;
-   absshares: number;
-   value: number;
-   shares: number;
+   accounts: AccountForTicker[];
 }
 
 const dateForm = d3TimeFormat.timeFormat("%Y-%m-%d");
 const priceForm = (v: number) => v.toFixed(2);
 const labelForm = (d: number|string) => <span>{dateForm(new Date(d))}</span>;
-
-export const accountsForTicker = (t: Ticker, accTick: AccountTicker[]) =>
-     accTick.filter(a => a.security === t.id);
-
 const bisect = d3Array.bisector((d: ClosePrice) => d[0]).right;
-
 const DAY_MS = 86400000;
 
 interface PastValue  {
@@ -108,7 +102,6 @@ const Past: React.FC<PastValue> = p => {
 
 interface HistoryProps {
    ticker: Ticker;
-   accs: AccountTicker[];
    showWALine?: boolean;
    showACLine?: boolean;
 }
@@ -159,7 +152,7 @@ const History: React.FC<HistoryProps> = p => {
                      />
                      {
                         p.showWALine &&
-                        p.accs.map(a =>
+                        p.ticker.accounts.map(a =>
                            <ReferenceLine
                                key={`${a.account}-wa`}
                                y={a.absvalue / a.absshares}
@@ -171,7 +164,7 @@ const History: React.FC<HistoryProps> = p => {
                      }
                      {
                         p.showACLine &&
-                        p.accs.map(a =>
+                        p.ticker.accounts.map(a =>
                            <ReferenceLine
                                key={`${a.account}-ac`}
                                y={a.value / a.shares}
@@ -241,13 +234,11 @@ const History: React.FC<HistoryProps> = p => {
 
 interface AccTickerProps {
    ticker: Ticker;
-   acc: AccountTicker;
-   accounts: AccountList;
+   acc: AccountForTicker;
 }
 
 const AccTicker: React.FC<AccTickerProps> = p => {
    const a = p.acc;
-   const account = p.accounts.getAccount(a.account);
    const pr = p.ticker.prices;
    const close = pr[pr.length - 1]?.[1] || p.ticker.storedprice || NaN;
    const weighted_avg = a.absvalue / a.absshares;
@@ -256,8 +247,8 @@ const AccTicker: React.FC<AccTickerProps> = p => {
    <div className="account">
       <div>
          <AccountName
-            id={a.account}
-            account={account}
+            id={a.account.id}
+            account={a.account}
             fullName={true}
          />
       </div>
@@ -267,7 +258,7 @@ const AccTicker: React.FC<AccTickerProps> = p => {
             <tr>
                <th>Shares owned:</th>
                <td>
-                  <Numeric amount={a.shares} commodity={a.security} />
+                  <Numeric amount={a.shares} commodity={a.account.commodity} />
                </td>
             </tr>
            {
@@ -355,14 +346,11 @@ const AccTicker: React.FC<AccTickerProps> = p => {
 
 export interface TickerViewProps {
    ticker: Ticker;
-   accountTickers: AccountTicker[];
    showWALine: boolean;
    showACLine: boolean;
 }
 
 const TickerView: React.FC<TickerViewProps> = p => {
-   const { accounts } = useAccounts();
-   const at = accountsForTicker(p.ticker, p.accountTickers);
    // ??? tooltip:   `Ticker: ${p.ticker.ticker}`
    return (
       <>
@@ -370,18 +358,16 @@ const TickerView: React.FC<TickerViewProps> = p => {
             p.ticker.prices.length > 0 &&
             <History
                ticker={p.ticker}
-               accs={at}
                showWALine={p.showWALine}
                showACLine={p.showACLine}
             />
          }
          {
-            at.map(a =>
+            p.ticker.accounts.map(a =>
                <AccTicker
-                  key={a.account}
+                  key={a.account.id}
                   ticker={p.ticker}
                   acc={a}
-                  accounts={accounts}
                />
             )
          }

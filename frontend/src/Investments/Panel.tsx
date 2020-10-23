@@ -10,15 +10,10 @@ export interface InvestmentsPanelProps extends PanelBaseProps, InvestmentsProps 
 
 const InvestmentsPanel: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
    const [update, setUpdate] = React.useState(false);
-   const [refresh, setRefresh] = React.useState(0);
    const forceUpdate = React.useCallback(
-      () => {
-         setUpdate(true);
-         setRefresh(old => old + 1);
-      },
+      () => setUpdate(true),
       []
    );
-
    return (
       <Panel
          {...p}
@@ -43,8 +38,7 @@ const InvestmentsPanel: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
       >
          <Investments
             {...p.props}
-            update={update}
-            refresh={refresh}
+            fromProviders={update}
          />
       </Panel>
    );

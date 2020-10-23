@@ -138,6 +138,7 @@ class QuotesView(JSONView):
                 "ticker": c.quote_symbol,
                 "source": c.quote_source.name if c.quote_source else None,
                 "prices": [],
+                "accounts": [],
                 "currency": currency,
                 "storedtime": c.latest_price.date.strftime("%Y-%m-%d"),
                 "storedprice": c.latest_price.scaled_price /
@@ -174,6 +175,8 @@ class QuotesView(JSONView):
                        alere.models.CommodityKinds.CURRENCY) \
             .select_related('currency', 'account')
 
+        accs = {}
+
         def next_transaction(acc, trans):
             if acc is not None:
                 acc['value'] += money_for_trans
@@ -183,18 +186,22 @@ class QuotesView(JSONView):
                     acc['absvalue'] += abs(money_for_trans)
 
             if trans is not None:
-                return accs.setdefault(trans.account_id, {
-                    "security": trans.account.commodity_id, # ??? do we need it
+                if trans.account_id in accs:
+                    return accs[trans.account_id]
+
+                a = {
                     "account": trans.account_id,
                     "absvalue": 0,
                     "absshares": 0,
                     "value": 0,
                     "shares": 0,
-                })
+                }
+                accs[trans.account_id] = a
+                symbols[trans.account.commodity_id]['accounts'].append(a)
+                return a
 
         acc = None   # account the current transaction is applying to
         current_transaction = None
-        accs = {}
         for trans in query2:
             if trans.transaction_id != current_transaction:
                 acc = next_transaction(acc, trans)
@@ -210,8 +217,5 @@ class QuotesView(JSONView):
 
         next_transaction(acc, None)
 
-        return (
-            sorted(symbols.values(), key=lambda r: r['name']),  # symbols
-            list(accs.values()),   # accounts
-        )
+        return sorted(symbols.values(), key=lambda r: r['name'])  # symbols
 
