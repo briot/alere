@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import useAccounts, { Account, AccountId } from 'services/useAccounts';
 import { AccountIdSet } from 'services/useAccountIds';
-import useAccountTree from 'services/useAccountTree';
+import useAccountTree, { TreeNode } from 'services/useAccountTree';
 import { Checkbox, Select, Option } from 'Form';
 import ListWithColumns, { AlternateRows, Column } from 'List/ListWithColumns';
 import useListFromAccount from 'List/ListAccounts';
@@ -10,7 +10,7 @@ import List from 'List';
 import "./Account.css";
 
 
-interface TreeNode {
+interface SelectTreeNode {
    account: Account | undefined;
    name: string;
 }
@@ -19,8 +19,8 @@ const createDummyParent = (account: Account|undefined, name: string) =>
    ({ account, name });
 
 interface SelectAccountProps {
-   text?: string;
-   accountId: AccountId;
+   text?: string;  // label
+   account: Account;
    onChange?: (account: Account) => void;
    hideArrow?: boolean;
    style?: React.CSSProperties;
@@ -29,7 +29,7 @@ export const SelectAccount: React.FC<SelectAccountProps> = p => {
    const { onChange } = p;
    const { accounts } = useAccounts();
 
-   const tree = useAccountTree<TreeNode>(
+   const tree = useAccountTree<SelectTreeNode>(
       accounts.allAccounts().map(account => ({ account, name: '' })),
       createDummyParent,
    );
@@ -45,22 +45,25 @@ export const SelectAccount: React.FC<SelectAccountProps> = p => {
    );
 
    const items: Option<AccountId>[] = []
-   tree.forEach(r => {
-      if (r.depth === 0 && items.length > 0) {
+   const addItem = (r: TreeNode<SelectTreeNode>, depth: number) => {
+      if (depth === 0 && items.length > 0) {
          items.push({value: 'divider'});
       }
       items.push({
          value: r.data.account?.id ?? -1,
          text: r.data.account?.name ?? r.data.name,
-         style: {paddingLeft: 20 * r.depth}
+         style: {paddingLeft: 20 * depth}
       });
-   });
+      r.children.forEach(c => addItem(c, depth + 1));
+   };
+
+   tree.forEach(r => addItem(r, 0));
 
    return (
       <Select
          onChange={localChange}
          text={p.text}
-         value={p.accountId}
+         value={p.account.id}
          hideArrow={p.hideArrow}
          style={p.style}
          options={items}
@@ -78,7 +81,7 @@ interface MultiAccountSelectProps {
 }
 export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
    const { accounts } = useAccounts();
-   const filteredTree = useAccountTree<TreeNode>(
+   const filteredTree = useAccountTree<SelectTreeNode>(
       accounts.allAccounts()
          .filter(a => p.showStock || !a.kind.is_stock)
          .map(account => ({ account, name: '' })),
@@ -87,7 +90,7 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
 
    const rows = useListFromAccount(filteredTree);
 
-   const localChange = (node: TreeNode, checked: boolean) => {
+   const localChange = (node: SelectTreeNode, checked: boolean) => {
       const cp = p.value
          ? p.value.map(a => a.id)
          : filteredTree.map(a => a.data.account?.id || -1);
@@ -106,9 +109,9 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
       }
    };
 
-   const columnAccountName: Column<TreeNode> = {
+   const columnAccountName: Column<SelectTreeNode> = {
       id: 'Account',
-      cell: (n: TreeNode) => {
+      cell: (n: SelectTreeNode) => {
          return n.account ? (
             <Checkbox
                text={n.account.name}

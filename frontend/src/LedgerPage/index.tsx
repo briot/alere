@@ -91,7 +91,7 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
                accounts.length === 1
                ? (
                   <SelectAccount
-                     accountId={accounts[0].id}
+                     account={accounts[0]}
                      onChange={onAccountChange}
                      hideArrow={false}
                   />

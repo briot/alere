@@ -11,7 +11,6 @@ export interface TreeNode <T extends DataWithAccount> {
    data: T; // undefined when we had to create a dummy parent
    children: TreeNode<T> [];
    parentNode: TreeNode<T> | undefined;
-   depth: number;  // 0 for root nodes, 1 for direct children, ...
 }
 
 export enum TreeMode {
@@ -51,7 +50,6 @@ const useAccountTree = <T extends DataWithAccount> (
                      data: a,
                      children: [],
                      parentNode: undefined,
-                     depth: 0,
                   }
                );
             }
@@ -74,7 +72,6 @@ const useAccountTree = <T extends DataWithAccount> (
                            ),
                            children: [],
                            parentNode: undefined,
-                           depth: 0,
                         };
                      } else {
                         pnode = {
@@ -84,7 +81,6 @@ const useAccountTree = <T extends DataWithAccount> (
                            ),
                            children: [],
                            parentNode: undefined,
-                           depth: 0,
                         };
                      }
 
