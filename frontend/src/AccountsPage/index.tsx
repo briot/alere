@@ -22,6 +22,7 @@ const AccountsPage: React.FC<{} & SetHeader> = p => {
    return (
       <Dashboard
          name="accounts"
+         className="main"
          defaultPanels={defaultPanels}
          setHeader={p.setHeader}
       />

@@ -1,6 +1,7 @@
 #rsidebar {
    grid-area: rsidebar;
 
+   /*
    display: flex;
    flex-flow: column nowrap;
    justify-content: flex-start;
@@ -12,8 +13,13 @@
 
    color: var(--panel-fg);
    font-size: var(--font-size-sidebar);
+   */
+}
+#rsidebar .dashboard {
+   grid-template-columns: 1fr;
 }
 
+/*
 #rsidebar .group {
    display: flex;
    flex-flow: row nowrap;
@@ -30,3 +36,4 @@
 #rsidebar h3:first-child {
    margin-top: 0;
 }
+*/

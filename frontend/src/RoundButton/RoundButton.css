@@ -44,11 +44,15 @@ a.roundButton:hover {
 .roundButton.small {
    --rb-width: 2rem;
    --rb-height: 2rem;
+}
+.roundButton.small .fa {
    font-size: 0.9em;
 }
 .roundButton.tiny {
    --rb-width: 1.4rem;
    --rb-height: 1.4rem;
+}
+.roundButton.tiny .fa {
    font-size: 0.8em;
 }
 

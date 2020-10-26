@@ -127,6 +127,7 @@ const App: React.FC<{}> = () => {
                       <Dashboard
                          defaultPanels={defaultOverview}
                          setHeader={setHeader}
+                         className="main"
                          name='Overview'
                       />
                    </Route>

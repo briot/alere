@@ -20,6 +20,7 @@ const InvestmentPage: React.FC<SetHeader> = p => {
    return (
       <Dashboard
           name='Investments'
+          className="main"
           defaultPanels={defaultPanels}
           setHeader={p.setHeader}
       />

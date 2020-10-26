@@ -3,19 +3,17 @@ import AccountName from 'Account';
 import useHistory from 'services/useHistory';
 import useAccounts from 'services/useAccounts';
 import RoundButton from 'RoundButton';
+import Dashboard from 'Dashboard';
+import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
 import './RightSideBar.css';
 
-interface RightSideBarProps {
+export interface HistoryProps {
 }
-
-const RightSideBar: React.FC<RightSideBarProps> = p => {
+const History: React.FC<HistoryProps> = p => {
    const { hist } = useHistory();
    const { accounts } = useAccounts();
-
    return (
-      <div id='rsidebar'>
-         <h3>Recent accounts</h3>
-
+      <div>
          {
             hist.map(h =>
                <RoundButton
@@ -30,8 +28,56 @@ const RightSideBar: React.FC<RightSideBarProps> = p => {
                </RoundButton>
             )
          }
+      </div>
+   );
+}
 
-         {/*
+export interface HistoryPanelProps extends PanelBaseProps, HistoryProps {
+   type: 'history';
+}
+const HistoryPanel: React.FC<PanelProps<HistoryPanelProps>> = p => {
+   return (
+      <Panel
+         {...p}
+         header={{title: "Recent accounts"}}
+      >
+         <History {...p.props} />
+      </Panel>
+   );
+}
+export const registerHistory = () => PANELS['history'] = HistoryPanel;
+
+
+registerHistory();
+
+
+const defaultPanels = [
+   {
+      type: 'history',
+      colspan: 1,
+      rowspan: 1,
+   } as HistoryPanelProps
+];
+
+
+
+interface RightSideBarProps {
+}
+
+const RightSideBar: React.FC<RightSideBarProps> = p => {
+   const doNothing = React.useCallback(() => {}, []);
+   return (
+      <div id='rsidebar'>
+         <Dashboard
+             name="rightside"
+             defaultPanels={defaultPanels}
+             setHeader={doNothing}
+         />
+      </div>
+   );
+}
+
+         /*
          <h3>Favorite accounts</h3>
          <AccountSummary
             name="Socgen commun"
@@ -48,9 +94,6 @@ const RightSideBar: React.FC<RightSideBarProps> = p => {
             amount={-300.12}
             logoUrl="/banque-postale.svg"
          />
-         */ }
-      </div>
-   );
-}
+         */
 
 export default RightSideBar;

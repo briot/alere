@@ -106,6 +106,7 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
    return (
       <Dashboard
          name='ledger'
+         className="main"
          defaultPanels={defaultPanels}
          setHeader={doNothing}
          overrides={

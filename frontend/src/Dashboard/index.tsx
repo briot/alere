@@ -81,6 +81,7 @@ interface DashboardProps {
    name: string;     // dashboard name
    defaultPanels: PanelBaseProps[],
    overrides?: Object;    //  Overrides settings for the panels
+   className?: string;
 }
 const Dashboard: React.FC<DashboardProps & SetHeader> = p => {
    const { setHeader } = p;
@@ -92,8 +93,13 @@ const Dashboard: React.FC<DashboardProps & SetHeader> = p => {
       [setHeader, p.name]
    );
 
+   const c = classes(
+      'dashboard',
+      p.className,
+   )
+
    return (
-      <div className="dashboard main">
+      <div className={c} >
          {
             val.map((p2, idx) =>
                <PanelWrapper
