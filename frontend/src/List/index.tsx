@@ -174,4 +174,5 @@ const Table: React.FC<
    );
 });
 
-export default { TR, TD, TH, Table, ROW_HEIGHT };
+const List = { TR, TD, TH, Table, ROW_HEIGHT };
+export default List;

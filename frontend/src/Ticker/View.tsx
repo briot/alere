@@ -90,7 +90,7 @@ const Past: React.FC<PastValue> = p => {
             </div>
             <div>
                <Numeric amount={p.fromPrice} commodity={p.commodity} />
-               &nbsp;->&nbsp;
+               &nbsp;-&gt;&nbsp;
                <Numeric amount={p.toPrice} commodity={p.commodity} />
             </div>
          </div>
