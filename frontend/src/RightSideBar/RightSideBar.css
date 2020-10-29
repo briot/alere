@@ -1,39 +1,9 @@
 #rsidebar {
    grid-area: rsidebar;
-
-   /*
-   display: flex;
-   flex-flow: column nowrap;
-   justify-content: flex-start;
-   align-items: stretch;
-   gap: 6px;
-
-   padding-right: 10px;
-   max-width: 200px;
-
-   color: var(--panel-fg);
-   font-size: var(--font-size-sidebar);
-   */
+   margin-right: var(--side-margin);
 }
 #rsidebar .dashboard {
-   grid-template-columns: 1fr;
+   grid-template-columns: 100%;
+   grid-template-rows: repeat(auto-fit, minmax(var(--panel-height), 1fr));
+   height: 100%;
 }
-
-/*
-#rsidebar .group {
-   display: flex;
-   flex-flow: row nowrap;
-   justify-content: flex-end;
-}
-
-#rsidebar h3 {
-   font-size: 1rem;
-   white-space: nowrap;
-   text-overflow: ellipsis;
-   overflow: hidden;
-   margin: 20px 0 16px 0;
-}
-#rsidebar h3:first-child {
-   margin-top: 0;
-}
-*/

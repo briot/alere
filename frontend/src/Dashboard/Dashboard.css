@@ -10,7 +10,9 @@
 
    grid-auto-flow: row;  /* dense */
 
-   grid-gap: 20px;
+   column-gap: var(--col-gap);
+   row-gap: var(--row-gap);
+
    justify-items: stretch;
 
    font-size: 0.8rem;

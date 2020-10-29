@@ -1,6 +1,6 @@
 #lsidebar {
    grid-area: lsidebar;
-   padding-left: 10px;
+   margin-left: var(--side-margin);
 
    display: flex;
    flex-flow: column nowrap;  /* desktop */
