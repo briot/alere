@@ -5,7 +5,7 @@ import AccountName from 'Account';
 import Table from 'List';
 import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
          incomeExpenseSplits, sharesForAccounts, priceForAccounts,
-         splitsNotForAccounts, Split, Transaction } from 'Transaction';
+         Split, Transaction } from 'Transaction';
 import Numeric from 'Numeric';
 import ListWithColumns, {
    AlternateRows, Column, LogicalRow } from 'List/ListWithColumns';
@@ -22,10 +22,7 @@ const MAIN: MAIN_TYPE = 'main';
 export enum SplitMode {
    HIDE,       // never show the splits
    SUMMARY,    // only one line for all splits (when more than two)
-   COLLAPSED,  // same as multiline, but do not show splits if there are only
-               // two accounts involved
-   OTHERS,     // same as multiline, but omit current account's splits
-   MULTILINE,  // one line per split in a transaction
+   COLLAPSED,  // one split per line, with a made up line on first line
 }
 
 export enum NotesMode {
@@ -46,6 +43,7 @@ export interface BaseLedgerProps {
    hideBalance?: boolean;
    hideReconcile?: boolean;
    alternateColors?: boolean;
+   restrictExpandArrow?: boolean; // if true, only show arrow if more than 2 splits
    sortOn?: string;  // +colid  or -colid
 }
 
@@ -497,16 +495,6 @@ const computeFirstSplit = (
             s = {...s2, amount: s.amount, shares: s.shares, price: s.price};
          }
          break;
-      case SplitMode.OTHERS:
-         const d = splitsNotForAccounts(t, accounts.accounts)
-         if (d.length === 1) {
-            s = {...s,
-                 account: d[0].account,
-                 accountId: d[0].accountId};
-         }
-         break;
-      case SplitMode.MULTILINE:
-         break;
    }
 
    return s;
@@ -547,33 +535,23 @@ const getChildren = (d: TableRowData) => {
 
    let filterSplits: undefined|Split[];
 
-   switch (d.settings.split_mode) {
-      case SplitMode.SUMMARY:
-         if (t.splits.length > 2) {
+   if (!d.settings.restrictExpandArrow || t.splits.length > 2) {
+      switch (d.settings.split_mode) {
+         case SplitMode.SUMMARY:
             result.push({
                key: `${t.id}-sum`,
                columnsOverride: [ columnSummary, ],
                data: d,
             });
-         }
-         break;
+            break;
 
-      case SplitMode.COLLAPSED:
-         if (t.splits.length > 2) {
+         case SplitMode.COLLAPSED:
             filterSplits = t.splits;
-         }
-         break;
+            break;
 
-      case SplitMode.OTHERS:
-         filterSplits = splitsNotForAccounts(t, d.accounts.accounts);
-         break;
-
-      case SplitMode.MULTILINE:
-         filterSplits = t.splits;
-         break;
-
-      default:  // SplitMode.HIDE
-         break;
+         default:  // SplitMode.HIDE
+            break;
+      }
    }
 
    if (filterSplits) {

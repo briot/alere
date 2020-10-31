@@ -20,6 +20,8 @@ const Settings: React.FC<PanelProps<LedgerPanelProps>> = p => {
    const changeAlt = (alternateColors: boolean) => p.save({ alternateColors });
    const changeExpand = (defaultExpand: boolean) => p.save({ defaultExpand });
    const changeValueColumn = (valueColumn: boolean) => p.save({ valueColumn });
+   const changeRestrict = (restrictExpandArrow: boolean) => 
+      p.save({ restrictExpandArrow });
 
    return (
       <fieldset>
@@ -44,6 +46,11 @@ const Settings: React.FC<PanelProps<LedgerPanelProps>> = p => {
              onChange={changeExpand}
              text="Expand rows by default"
          />
+         <Checkbox
+             checked={p.props.restrictExpandArrow}
+             onChange={changeRestrict}
+             text="Hide arrow if only 2 splits"
+         />
 
          <Select
              text="Memos"
@@ -62,11 +69,9 @@ const Settings: React.FC<PanelProps<LedgerPanelProps>> = p => {
              onChange={changeSplit}
              value={p.props.split_mode}
              options={[
-                {text: "Never show splits",              value: SplitMode.HIDE},
-                {text: "Show summary",                   value: SplitMode.SUMMARY},
-                {text: "Show if more than two accounts", value: SplitMode.COLLAPSED},
-                {text: "Multiple rows, no duplicate",    value: SplitMode.OTHERS},
-                {text: "Multiple rows",               value: SplitMode.MULTILINE},
+                {text: "Never show splits",           value: SplitMode.HIDE},
+                {text: "Show summary",                value: SplitMode.SUMMARY},
+                {text: "Multiple rows",               value: SplitMode.COLLAPSED},
              ]}
          />
 
