@@ -18,7 +18,7 @@ const InvestmentsPanel: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
       <Panel
          {...p}
          header={{
-            title: 'Investments',
+            name: 'Investments',
             buttons: (
                <RoundButton
                   fa='fa-refresh'

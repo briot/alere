@@ -3,6 +3,7 @@ import IncomeExpense, { IncomeExpenseProps } from 'IncomeExpense/View';
 import Settings from 'IncomeExpense/Settings';
 import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
 import { rangeDisplay } from 'Dates';
+import { capitalize } from 'services/utils';
 
 export interface IncomeExpensePanelProps
    extends PanelBaseProps, IncomeExpenseProps {
@@ -10,11 +11,13 @@ export interface IncomeExpensePanelProps
 }
 
 const IEPanel: React.FC<PanelProps<IncomeExpensePanelProps>> = p => {
-   const basetitle = p.props.expenses ? 'Expenses': 'Income';
+   const basetitle = p.props.expenses ? 'expenses': 'income';
+   const r = rangeDisplay(p.props.range);
    return (
       <Panel
          {...p}
-         header={{ title: `${basetitle} ${rangeDisplay(p.props.range)}`}}
+         header={{ name: capitalize(`${r.possessive}${basetitle}`),
+                   title: r.as_dates}}
          Settings={
             <Settings
                props={p.props}

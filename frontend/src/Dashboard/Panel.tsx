@@ -67,7 +67,7 @@ function Panel<T extends PanelBaseProps>(
    return (
       <div className={c} >
          <div className="header">
-            <h5>{p.header.title}</h5>
+            <h5 title={p.header.title}>{p.header.name}</h5>
             <div className="group">
                {p.header.buttons}
                {

@@ -3,7 +3,8 @@ import Settings from 'Settings';
 import './Header.css';
 
 export interface HeaderProps {
-   title?: string|React.ReactNode;
+   name?: string|React.ReactNode;
+   title?: string;  // tooltip
    buttons?: React.ReactNode|React.ReactNode[];
 }
 
@@ -18,8 +19,8 @@ export interface SetHeader {
 const Header: React.FC<HeaderProps> = p => {
    return (
       <div id='header'>
-         <div className='title'>
-             {p.title || ''}
+         <div className='title' title={p.title}>
+             {p.name ?? ''}
          </div>
 
          <div className='group'>

@@ -89,7 +89,7 @@ const Dashboard: React.FC<DashboardProps & SetHeader> = p => {
       useSettings<PanelBaseProps[]>(`dash-${p.name}`, p.defaultPanels);
 
    React.useEffect(
-      () => setHeader({title: p.name}),
+      () => setHeader({name: p.name}),
       [setHeader, p.name]
    );
 

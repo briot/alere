@@ -31,48 +31,51 @@ const useAccountIds = (ids: AccountIdSet): AccountList => {
    return React.useMemo(
       () => {
          if (ids === 'all') {
-            return { accounts: accounts.allAccounts(), title: 'All accounts' };
+            return {
+                accounts: accounts.allAccounts(),
+                title: 'all accounts'
+                };
          }
 
          if (ids === 'assets') {
             return {
                accounts: accounts.allAccounts().filter(a => a.kind.is_asset),
-               title: 'All assets',
+               title: 'all assets',
             };
          }
 
          if (ids === 'work_income') {
             return {
                accounts: accounts.allAccounts().filter(a => a.kind.is_work_income),
-               title: 'All work income',
+               title: 'all work income',
             }
          }
 
          if (ids === 'passive_income') {
             return {
                accounts: accounts.allAccounts().filter(a => a.kind.is_passive_income),
-               title: 'All passive income',
+               title: 'all passive income',
             }
          }
 
          if (ids === 'expenses') {
             return {
                accounts: accounts.allAccounts().filter(a => a.kind.is_expense),
-               title: 'All expenses',
+               title: 'all expenses',
             }
          }
 
          if (ids === 'income_taxes') {
             return {
                accounts: accounts.allAccounts().filter(a => a.kind.is_income_tax),
-               title: 'All income taxes',
+               title: 'all income taxes',
             }
          }
 
          if (ids === 'other_taxes') {
             return {
                accounts: accounts.allAccounts().filter(a => a.kind.is_other_tax),
-               title: 'All other taxes',
+               title: 'all other taxes',
             }
          }
 
@@ -85,7 +88,9 @@ const useAccountIds = (ids: AccountIdSet): AccountList => {
 
          return {
             accounts: acc,
-            title: acc.length === 1 ? acc[0]?.name : 'Multiple accounts',
+            title: acc.length === 1
+               ? acc[0]?.name
+               : 'multiple accounts',
          }
       },
       [ids, accounts]

@@ -18,7 +18,7 @@ const PriceHistoryPanel: React.FC<PanelProps<PriceHistoryPanelProps>> = p => {
    return (
       <Panel
          {...p}
-         header={{ title: `Price History ${title}` }}
+         header={{ name: `Price History ${title}` }}
          Settings={
             <Settings
                props={p.props}

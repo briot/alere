@@ -3,16 +3,19 @@ import Cashflow, { CashflowProps } from 'Cashflow/View';
 import Settings from 'Cashflow/Settings';
 import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
 import { rangeDisplay } from 'Dates';
+import { capitalize } from 'services/utils';
 
 export interface CashflowPanelProps extends PanelBaseProps, CashflowProps {
    type: 'metrics';
 }
 
 const CashflowPanel: React.FC<PanelProps<CashflowPanelProps>> = p => {
+   const r = rangeDisplay(p.props.range);
    return (
       <Panel
          {...p}
-         header={{ title: `Metrics ${rangeDisplay(p.props.range)}`}}
+         header={{ name: capitalize(`${r.possessive}metrics`),
+                   title: r.as_dates}}
          Settings={
             <Settings
                props={p.props}

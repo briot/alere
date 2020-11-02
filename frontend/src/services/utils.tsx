@@ -10,3 +10,10 @@ export const isNumeric = (str: any): boolean =>  {
              // string (`parseFloat` alone does not do this)...
           && !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
 }
+
+export const capitalize = (str: string): string => {
+   return (
+      str.charAt(0).toLocaleUpperCase()
+      + str.substring(1)
+   );
+}

@@ -165,6 +165,20 @@ const rangeToDate = (name: DateRange): [RelativeDate, RelativeDate] => {
    }
 }
 
+const rangeToString = (name: DateRange): string => {
+   switch (name) {
+      case '1day':          return "yesterday";
+      case '1month':        return "1-month";
+      case '3months':       return "3-month";
+      case '12months':      return "12-month";
+      case '24months':      return "24-month";
+      case '36months':      return "36-month";
+      case 'forever':       return "all";
+      case 'future':        return "upcoming";
+      default:              return name;
+   }
+}
+
 export const rangeToHttp = (name: DateRange|undefined): string => {
    if (!name) {
       return '';
@@ -175,16 +189,28 @@ export const rangeToHttp = (name: DateRange|undefined): string => {
    return `mindate=${min}&maxdate=${max}`;
 }
 
-export const rangeDisplay = (name: DateRange): string => {
+interface RangeDisplay {
+   as_dates: string;   // 'from x to y'
+   possessive: string; // "z's "
+}
+
+export const rangeDisplay = (name: DateRange): RangeDisplay => {
    if (name === 'forever') {
-      return 'for all dates';
-   } else if (name === "future") {
-      return ", upcoming";
+      return {
+         as_dates: 'for all dates',
+         possessive: "",
+      };
    }
    const r = rangeToDate(name);
    const min = dateToString(r[0]);
    const max = dateToString(r[1]);
-   return `from ${min} to ${max}`;
+
+   const s = rangeToString(name);
+
+   return {
+      as_dates: `from ${min} to ${max}`,
+      possessive: `${s}'s `,
+   }
 }
 
 export const monthCount = (name: DateRange): number => {

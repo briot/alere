@@ -11,7 +11,7 @@ const NetworthPanel: React.FC<PanelProps<NetworthPanelProps>> = p => {
    return (
       <Panel
          {...p}
-         header={{ title: 'Net worth' }}
+         header={{ name: 'Net worth' }}
          Settings={
             <Settings
                props={p.props}
