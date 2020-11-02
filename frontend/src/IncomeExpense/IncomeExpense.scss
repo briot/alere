@@ -5,7 +5,7 @@
       overflow-x: hidden !important;
       top: 0 !important;
 
-      width: 250px;
+      min-width: 300px;
       white-space: nowrap;
    }
 
@@ -21,7 +21,7 @@
 
             > span {
                display: flex;
-         
+
                span {
                   flex: 0 0 50px;
                   text-align: right;

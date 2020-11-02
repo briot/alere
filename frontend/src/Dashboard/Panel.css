@@ -20,6 +20,10 @@
    padding: 5px 10px 5px 10px;
    background: var(--panel-background);
 }
+
+.panel .header h5 {
+   font-variant: small-caps;
+}
 .panel .header .group {
    flex: 0;
    display: flex;
