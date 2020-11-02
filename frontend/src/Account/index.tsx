@@ -9,7 +9,6 @@ import useListFromAccount from 'List/ListAccounts';
 import List from 'List';
 import "./Account.css";
 
-
 interface SelectTreeNode {
    account: Account | undefined;
    name: string;
@@ -109,7 +108,7 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
       }
    };
 
-   const columnAccountName: Column<SelectTreeNode> = {
+   const columnAccountName: Column<SelectTreeNode, any > = {
       id: 'Account',
       cell: (n: SelectTreeNode) => {
          return n.account ? (
@@ -139,6 +138,7 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
             rows={rows}
             indentNested={true}
             defaultExpand={true}
+            settings={{}}
             alternate={AlternateRows.ROW}
          />
       </div>

@@ -17,6 +17,7 @@ const Settings: React.FC<PanelProps<NetworthPanelProps>> = p => {
    const changeThreshold = (threshold: number) => p.save({ threshold });
    const changeAlt = (alternateColors: boolean) => p.save({ alternateColors });
    const changeTreeMode = (treeMode: TreeMode) => p.save({ treeMode });
+   const changeRound = (roundValues: boolean) => p.save({ roundValues });
    return (
       <fieldset>
          <legend>Networth</legend>
@@ -59,6 +60,11 @@ const Settings: React.FC<PanelProps<NetworthPanelProps>> = p => {
             checked={p.props.showDeltaLast}
             onChange={changeDeltaL}
             text="Show delta with last column"
+         />
+         <Checkbox
+            checked={p.props.roundValues}
+            onChange={changeRound}
+            text="Round values"
          />
          <NumberInput
             value={p.props.threshold ?? 0}

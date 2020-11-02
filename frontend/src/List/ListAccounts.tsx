@@ -3,9 +3,9 @@ import { LogicalRow } from 'List/ListWithColumns';
 import { DataWithAccount, TreeNode } from 'services/useAccountTree';
 
 
-const useListFromAccount = <T extends DataWithAccount> (
+const useListFromAccount = <T extends DataWithAccount, SETTINGS> (
    tree: TreeNode<T>[],
-): LogicalRow<T>[] => {
+): LogicalRow<T, SETTINGS>[] => {
 
    const rows = React.useMemo(
       () => {

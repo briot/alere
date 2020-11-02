@@ -11,21 +11,26 @@ export enum AlternateRows {
    PARENT,     // color of a row depends on the top-level parent
 }
 
-export interface RowDetails<T> {
+export interface RowDetails<T, SETTINGS> {
    isExpanded: boolean|undefined,  // undefined if not expandable
-   logic: LogicalRow<T>,           // the matching logical row
+   logic: LogicalRow<T, SETTINGS>,           // the matching logical row
 }
 
 /**
  * Description for each column in the array
  */
-export interface Column<T> {
+export interface Column<T, SETTINGS> {
    id: string; // unique id for this column
-   head?: string | (() => React.ReactNode);  // defaults to id
+
+   head?: string | ((settings: SETTINGS) => React.ReactNode);
+   // defaults to id
+
    className?: string;
    title?: string;
-   cell?: (data: T, details: RowDetails<T>) => React.ReactNode;
-   foot?: string | ((data: LogicalRow<T>[]) => React.ReactNode);
+   cell?: (data: T, details: RowDetails<T, SETTINGS>, settings: SETTINGS)
+      => React.ReactNode;
+   foot?: string | ((data: LogicalRow<T, SETTINGS>[], settings: SETTINGS)
+      => React.ReactNode);
 
    compare?: (left: T, right: T) => number;
    // Used for sorting. The column is not sortable if this is undefined
@@ -36,12 +41,12 @@ export interface Column<T> {
  * A row can be expanded (like a tree) to reveal children rows (which themselves
  * can have children rows).
  */
-export interface LogicalRow<T> {
+export interface LogicalRow<T, SETTINGS> {
    key: any;    //  unique id for this row (used a index in a Map)
    data: T;
-   getChildren?: (d: T) => LogicalRow<T>[];
+   getChildren?: (d: T, settings: SETTINGS) => LogicalRow<T, SETTINGS>[];
 
-   columnsOverride?: Column<T>[];
+   columnsOverride?: Column<T, SETTINGS>[];
    // In case a row should display a different set of columns, those columns
    // can be set here. They might not be properly aligned with the others,
    // though !
@@ -53,21 +58,22 @@ export interface LogicalRow<T> {
  * works we need to create different rows to avoid having to create all the DOM
  * nodes upfront
  */
-interface PhysicalRow<T> {
-   logicalRow: LogicalRow<T>; // points to the logical row
+interface PhysicalRow<T, SETTINGS> {
+   logicalRow: LogicalRow<T, SETTINGS>; // points to the logical row
    topRowIndex: number; // index of the top parent row (for alternate colors)
    expandable: boolean;
    level: number;       // nesting level
 }
 
-const computePhysicalRows = <T extends any> (
-   r: LogicalRow<T>,
+const computePhysicalRows = <T extends any, SETTINGS> (
+   r: LogicalRow<T, SETTINGS>,
+   settings: SETTINGS,
    expanded: Map<number|string, boolean>,
    level: number,
    defaultExpand: boolean,
    topRowIndex: number,
-): PhysicalRow<T>[] => {
-   const children = r.getChildren?.(r.data);
+): PhysicalRow<T, SETTINGS>[] => {
+   const children = r.getChildren?.(r.data, settings);
    const isExpanded = expanded.get(r.key) ?? defaultExpand;
    const result = [{
       logicalRow: r,
@@ -81,7 +87,8 @@ const computePhysicalRows = <T extends any> (
          children
             ? children.flatMap(c =>
                computePhysicalRows(
-                  c, expanded, level + 1, defaultExpand, topRowIndex
+                  c, settings,
+                   expanded, level + 1, defaultExpand, topRowIndex
                ))
             : []
       );
@@ -91,32 +98,35 @@ const computePhysicalRows = <T extends any> (
 }
 
 
-interface PhysicalRows<T> {
-   rows: PhysicalRow<T>[];
+interface PhysicalRows<T, SETTINGS> {
+   rows: PhysicalRow<T, SETTINGS>[];
    expanded: Map<number|string, boolean>;
    expandableRows: boolean;  // at least one row is expandable
 }
 
 
-const usePhysicalRows = <T extends any> (
-   rows: LogicalRow<T>[],
+const usePhysicalRows = <T extends any, SETTINGS> (
+   rows: LogicalRow<T, SETTINGS>[],
+   settings: SETTINGS,
    defaultExpand: boolean,
 ) => {
    //  Compute the initial set of rows
-   const [phys, setPhys] = React.useState<PhysicalRows<T>|undefined>();
+   const [phys, setPhys] = React.useState<
+      PhysicalRows<T, SETTINGS>|undefined
+   >();
 
    React.useEffect(
       () => {
          const expanded = new Map();
          const r = rows.flatMap((c, idx) =>
-            computePhysicalRows(c, expanded, 0, defaultExpand, idx));
+            computePhysicalRows(c, settings, expanded, 0, defaultExpand, idx));
          setPhys({
             rows: r,
             expanded,
             expandableRows: r.filter(r => r.expandable).length !== 0,
          });
       },
-      [rows, defaultExpand]
+      [rows, defaultExpand, settings]
    );
 
    //  Whether the row is expanded
@@ -154,12 +164,12 @@ const usePhysicalRows = <T extends any> (
             return {
                ...old,
                rows: rows.flatMap((c, idx) =>
-                  computePhysicalRows(c, expanded, 0, defaultExpand, idx)),
+                  computePhysicalRows(c, settings, expanded, 0, defaultExpand, idx)),
                expanded,
             };
          });
       },
-      [defaultExpand, rows]
+      [defaultExpand, rows, settings]
    );
 
    return {phys: phys?.rows ?? [],
@@ -177,9 +187,9 @@ const usePhysicalRows = <T extends any> (
  *  - nesting of rows (to show a tree)
  */
 
-interface ListWithColumnsProps<T> {
-   columns: (undefined | Column<T>) [];
-   rows: LogicalRow<T> [];
+interface ListWithColumnsProps<T, SETTINGS> {
+   columns: (undefined | Column<T, SETTINGS>) [];
+   rows: LogicalRow<T, SETTINGS> [];
    className?: string;
    indentNested?: boolean;
    borders?: boolean;
@@ -192,19 +202,22 @@ interface ListWithColumnsProps<T> {
    scrollToBottom?: boolean;
    //  If true, automatically show bottom row by default
 
-   footColumnsOverride?: Column<T>[];
+   footColumnsOverride?: Column<T, SETTINGS>[];
    //  Columns to use for the footer, if the default columns are not
    //  appropriate
+
+   settings: SETTINGS;
 }
 
-const ListWithColumns = <T extends any> (
-   p: ListWithColumnsProps<T>,
+const ListWithColumns = <T extends any, SETTINGS> (
+   p: ListWithColumnsProps<T, SETTINGS>,
 ) => {
    const list = React.createRef<FixedSizeList>();
    const oldRowCount = React.useRef(p.rows.length);
 
    const cols = React.useMemo(
-      () => p.columns.filter(c => c !== undefined) as Column<T> [],
+      () => p.columns.filter(
+         c => c !== undefined) as Column<T, SETTINGS> [],
       [p.columns]
    );
    const sortedRows = React.useMemo(
@@ -224,7 +237,7 @@ const ListWithColumns = <T extends any> (
    );
 
    const {phys, expandableRows, isExpanded, toggleRow} =
-      usePhysicalRows(sortedRows, p.defaultExpand ?? false);
+      usePhysicalRows(sortedRows, p.settings, p.defaultExpand ?? false);
    const getKey = (idx: number) => phys[idx]!.logicalRow.key;
 
    // Scroll to bottom initially (when we had zero rows before and now have some)
@@ -284,7 +297,8 @@ const ListWithColumns = <T extends any> (
                         {
                            isExpanded: expanded,
                            logic,
-                        }
+                        },
+                        p.settings,
                      )}
                   </Table.TD>
                )
@@ -292,10 +306,11 @@ const ListWithColumns = <T extends any> (
             </Table.TR>
          );
       },
-      [phys, cols, isExpanded, toggleRow, p.indentNested, p.alternate]
+      [phys, cols, isExpanded, toggleRow, p.indentNested,
+       p.alternate, p.settings]
    );
 
-   const onSort = (col: Column<T>) => {
+   const onSort = (col: Column<T, SETTINGS>) => {
       let sortOn: string;
       if (p.sortOn !== undefined
           && p.sortOn.slice(1) === col.id
@@ -328,7 +343,9 @@ const ListWithColumns = <T extends any> (
                   : undefined
                }
             >
-               {typeof c.head  === "function" ? c.head() : c.head ?? c.id}
+               {typeof c.head  === "function"
+                  ? c.head(p.settings)
+                  : c.head ?? c.id}
             </Table.TH>
          )
       }
@@ -342,7 +359,9 @@ const ListWithColumns = <T extends any> (
          {
             footerColumns.map((c, idx) =>
                <Table.TH key={idx} className={c.className} >
-                  {typeof c.foot === "function" ? c.foot(p.rows) : c.foot}
+                  {typeof c.foot === "function"
+                    ? c.foot(p.rows, p.settings)
+                    : c.foot}
                </Table.TH>
             )
          }

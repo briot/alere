@@ -117,6 +117,7 @@ const Metrics: React.FC<MetricsProps> = p => {
 
 export interface CashflowProps {
    range: DateRange;
+   roundValues?: boolean;
 }
 
 const Cashflow: React.FC<CashflowProps> = p => {
@@ -132,7 +133,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
       //  pl.passive_income
       networth_delta + pl.expenses - pl.work_income;
 
-   const flowrow = (p: {
+   const flowrow = (r: {
       head: string,
       amount: number,
       title?: string,
@@ -142,42 +143,58 @@ const Cashflow: React.FC<CashflowProps> = p => {
       url?: string,
    }) => (
       <Table.TR
-         title={p.title}
-         style={{borderTop: p.border ? "1px solid var(--table-color)" : ""}}
+         title={r.title}
+         style={{borderTop: r.border ? "1px solid var(--table-color)" : ""}}
       >
-        {p.bold ? (
+        {r.bold ? (
            <>
-              <Table.TH>{p.head}</Table.TH>
+              <Table.TH>{r.head}</Table.TH>
               <Table.TH className="amount">
-                 <Numeric amount={p.amount} commodity={currency} />
+                 <Numeric
+                    amount={r.amount} 
+                    commodity={currency} 
+                    roundValues={p.roundValues}
+                 />
               </Table.TH>
               <Table.TH className="amount">
-                 <Numeric amount={p.amount / months} commodity={currency} />
+                 <Numeric 
+                    amount={r.amount / months} 
+                    commodity={currency} 
+                    roundValues={p.roundValues}
+                 />
               </Table.TH>
            </>
         ) : (
            <>
               <Table.TD
-                 style={{paddingLeft: (p.padding ?? 0) * 20}}
+                 style={{paddingLeft: (r.padding ?? 0) * 20}}
               >
                  {
-                    p.url
-                    ? <Link to={p.url}>{p.head}</Link>
-                    : p.head
+                    r.url
+                    ? <Link to={r.url}>{r.head}</Link>
+                    : r.head
                   }
               </Table.TD>
               <Table.TD className="amount">
-                 <Numeric amount={p.amount} commodity={currency} />
+                 <Numeric 
+                    amount={r.amount} 
+                    commodity={currency} 
+                    roundValues={p.roundValues}
+                 />
               </Table.TD>
               <Table.TD className="amount">
-                 <Numeric amount={p.amount / months} commodity={currency} />
+                 <Numeric 
+                    amount={r.amount / months}
+                    commodity={currency} 
+                    roundValues={p.roundValues}
+                 />
               </Table.TD>
            </>
          )}
       </Table.TR>
    );
 
-   const assetrow = (p: {
+   const assetrow = (r: {
       head: string,
       amount: number,
       title?: string,
@@ -185,26 +202,34 @@ const Cashflow: React.FC<CashflowProps> = p => {
       padding?: number
    }) => (
       <Table.TR
-         title={p.title}
+         title={r.title}
       >
-         {p.bold ? (
+         {r.bold ? (
             <>
                <Table.TH>
-                  {p.head}
+                  {r.head}
                </Table.TH>
                <Table.TH className="amount">
-                  <Numeric amount={p.amount} commodity={currency} />
+                  <Numeric
+                     amount={r.amount}
+                     commodity={currency}
+                     roundValues={p.roundValues}
+                  />
                </Table.TH>
             </>
          ): (
             <>
                <Table.TD
-                  style={{paddingLeft: (p.padding ?? 0) * 20}}
+                  style={{paddingLeft: (r.padding ?? 0) * 20}}
                >
-                  {p.head}
+                  {r.head}
                </Table.TD>
                <Table.TD className="amount">
-                  <Numeric amount={p.amount} commodity={currency} />
+                  <Numeric
+                     amount={r.amount} 
+                     commodity={currency} 
+                     roundValues={p.roundValues}
+                  />
                </Table.TD>
             </>
          )}

@@ -14,6 +14,7 @@ interface NumericProps {
 
    commodity?: Commodity | CommodityId;
    hideCommodity?: boolean;
+   roundValues?: boolean;
 }
 
 const Numeric: React.FC<NumericProps> = p => {
@@ -35,8 +36,11 @@ const Numeric: React.FC<NumericProps> = p => {
       p.colored && (p.amount >= 0 ? ' positive' : ' negative'),
    );
    const val = p.amount.toFixed(
-      commodity?.qty_scale === undefined
-      ? 2 : Math.log10(commodity.qty_scale));
+      p.roundValues 
+      ? 0
+      : commodity?.qty_scale === undefined
+      ? 2
+      : Math.log10(commodity.qty_scale));
 
    let str = val.split('.');  // separator used by toFixed
    if (str[0].length >= 4) {

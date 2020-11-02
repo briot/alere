@@ -84,6 +84,7 @@ const CustomTooltip = (p: TooltipProps & {data: DataType} ) => {
 export interface IncomeExpenseProps {
    expenses: boolean;
    range: DateRange;
+   roundValues?: boolean;
 }
 
 const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
@@ -137,6 +138,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
                   <Numeric
                      amount={data.items[index].value}
                      commodity={prefs.currencyId}
+                     roundValues={p.roundValues}
                   />
                   <Numeric
                      amount={data.items[index].value / data.total * 100}
@@ -159,6 +161,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
             <Numeric 
                amount={data.total}
                commodity={prefs.currencyId}
+               roundValues={p.roundValues}
             />
          </div>
          <div style={{ flex: '1 1 auto' }}>

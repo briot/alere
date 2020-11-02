@@ -52,7 +52,6 @@ export interface ComputedBaseLedgerProps extends BaseLedgerProps {
 }
 
 interface TableRowData {
-   settings: ComputedBaseLedgerProps;
    accounts: AccountList;
    transaction: Transaction;
    firstRowSplit: Split;         //  simulated split for the first row
@@ -60,7 +59,7 @@ interface TableRowData {
    split: MAIN_TYPE | Split;  // what kind of row we are showing
 }
 
-const columnDate: Column<TableRowData> = {
+const columnDate: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "date",
    head: "Date",
    className: "date",
@@ -71,7 +70,7 @@ const columnDate: Column<TableRowData> = {
       : d.split.date,
 }
 
-const columnNum: Column<TableRowData> = {
+const columnNum: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "num",
    className: "num",
    head: "Check #",
@@ -81,7 +80,7 @@ const columnNum: Column<TableRowData> = {
    cell: (d: TableRowData) => d.split === MAIN ? d.transaction.checknum : '',
 }
 
-const columnSummary: Column<TableRowData> = {
+const columnSummary: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "Summary",
    className: "summary",
    cell: (d: TableRowData) => {
@@ -121,7 +120,7 @@ const columnSummary: Column<TableRowData> = {
    }
 }
 
-const columnMemo: Column<TableRowData> = {
+const columnMemo: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "Memo",
    className: "memo",
    compare: (a, b) =>
@@ -130,7 +129,7 @@ const columnMemo: Column<TableRowData> = {
       d.transaction.memo ? d.transaction.memo : 'No memo'
 }
 
-const columnPayee: Column<TableRowData> = {
+const columnPayee: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "Payee",
    className: "payee",
    compare: (a, b) =>
@@ -143,7 +142,7 @@ const columnPayee: Column<TableRowData> = {
       ) : ''
 }
 
-const columnFromTo: Column<TableRowData> = {
+const columnFromTo: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "From/To",
    className: "transfer",
    compare: (a, b) =>
@@ -167,14 +166,14 @@ const columnFromTo: Column<TableRowData> = {
       )
 }
 
-const columnReconcile: Column<TableRowData> = {
+const columnReconcile: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "R",
    className: "reconcile",
    cell: (d: TableRowData) =>
       d.split === MAIN ? d.firstRowSplit.reconcile : d.split.reconcile,
 }
 
-const columnAmount: Column<TableRowData> = {
+const columnAmount: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "Amount",
    className: "amount",
    compare: (a, b) => a.firstRowSplit.amount - b.firstRowSplit.amount,
@@ -190,7 +189,7 @@ const columnAmount: Column<TableRowData> = {
       />
 }
 
-const columnWidthdraw: Column<TableRowData> = {
+const columnWidthdraw: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "Payment",
    className: "amount",
    compare: (a, b) => a.firstRowSplit.amount - b.firstRowSplit.amount,
@@ -210,7 +209,7 @@ const columnWidthdraw: Column<TableRowData> = {
           />)
 }
 
-const columnDeposit: Column<TableRowData> = {
+const columnDeposit: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "Deposit",
    className: "amount",
    compare: (a, b) => a.firstRowSplit.amount - b.firstRowSplit.amount,
@@ -230,7 +229,7 @@ const columnDeposit: Column<TableRowData> = {
          />)
 }
 
-const columnShares: Column<TableRowData> = {
+const columnShares: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "Shares",
    className: "shares",
    compare: (a, b) =>
@@ -244,7 +243,7 @@ const columnShares: Column<TableRowData> = {
       />
 }
 
-const columnPrice: Column<TableRowData> = {
+const columnPrice: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "Price",
    className: "amount",
    compare: (a, b) =>
@@ -260,7 +259,7 @@ const columnPrice: Column<TableRowData> = {
       />
 }
 
-const columnSharesBalance: Column<TableRowData> = {
+const columnSharesBalance: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "SBalance",
    className: "shares",
    title: "Balance of shares",
@@ -273,7 +272,7 @@ const columnSharesBalance: Column<TableRowData> = {
       />
 }
 
-const columnBalance: Column<TableRowData> = {
+const columnBalance: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "Balance",
    className: "amount",
    title: "Current worth at the time of the transaction. For stock accounts, this is the number of stocks times their price at the time (not the cumulated amount you have bought or sold for)",
@@ -285,7 +284,7 @@ const columnBalance: Column<TableRowData> = {
       />
 }
 
-const columnTotal = (v: Totals): Column<TableRowData> => ({
+const columnTotal = (v: Totals): Column<TableRowData, ComputedBaseLedgerProps> => ({
    id: "Total",
    foot: () => (
       <>
@@ -505,14 +504,14 @@ const computeFirstSplit = (
  * Compute the children rows
  */
 
-const getChildren = (d: TableRowData) => {
-   let result: LogicalRow<TableRowData>[] = [];
+const getChildren = (d: TableRowData, settings: ComputedBaseLedgerProps) => {
+   let result: LogicalRow<TableRowData, ComputedBaseLedgerProps>[] = [];
    const t = d.transaction;
 
    // Do we need a notes row ?
 
    let hasNotes: boolean;
-   switch (d.settings.notes_mode) {
+   switch (settings.notes_mode) {
       case NotesMode.ONE_LINE:
       case NotesMode.COLUMN:
          hasNotes = false;
@@ -535,8 +534,8 @@ const getChildren = (d: TableRowData) => {
 
    let filterSplits: undefined|Split[];
 
-   if (!d.settings.restrictExpandArrow || t.splits.length > 2) {
-      switch (d.settings.split_mode) {
+   if (!settings.restrictExpandArrow || t.splits.length > 2) {
+      switch (settings.split_mode) {
          case SplitMode.SUMMARY:
             result.push({
                key: `${t.id}-sum`,
@@ -704,11 +703,10 @@ const Ledger: React.FC<ComputedBaseLedgerProps & ExtraProps> = p => {
       ]
       : [];
 
-   const rows: LogicalRow<TableRowData>[] = React.useMemo(
+   const rows: LogicalRow<TableRowData, ComputedBaseLedgerProps>[] = React.useMemo(
       () => p.transactions?.flatMap(t => [
             {
                data: {
-                  settings: p,
                   accounts,
                   transaction: t,
                   firstRowSplit: computeFirstSplit(p, t, accounts),
@@ -733,6 +731,7 @@ const Ledger: React.FC<ComputedBaseLedgerProps & ExtraProps> = p => {
          scrollToBottom={true}
          sortOn={p.sortOn}
          setSortOn={p.setSortOn}
+         settings={p}
          alternate={
             p.alternateColors ? AlternateRows.PARENT : AlternateRows.NO_COLOR
          }
