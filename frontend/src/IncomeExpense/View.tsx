@@ -8,7 +8,7 @@ import Numeric from 'Numeric';
 import AccountName from 'Account';
 import useAccounts, { AccountId, Account } from 'services/useAccounts';
 import usePrefs from 'services/usePrefs';
-import './IncomeExpense.css';
+import './IncomeExpense.scss';
 
 const NAME_KEY = "nam";
 
@@ -22,8 +22,10 @@ interface DataType {
    items:   DataItemType[];
    mindate: string;
    maxdate: string;
+   total: number;
 }
-const noData: DataType = {items: [], mindate: 'today', maxdate: 'today'};
+const noData: DataType = {
+   items: [], mindate: 'today', maxdate: 'today', total: 0};
 
 const RADIAN = Math.PI / 180;
 
@@ -45,7 +47,7 @@ const renderCustomizedLabel = (p: PieLabelRenderProps) => {
          textAnchor={x > cx ? 'start' : 'end'}
          dominantBaseline="central"
       >
-         {`${((p.percent || 0) * 100).toFixed(0)}%`}
+         {`${((p.percent ?? 0) * 100).toFixed(0)}%`}
       </text>
   );
 };
@@ -99,10 +101,12 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
             const d: DataType = await resp.json();
 
             // Filter out negative data, which we cannot show in a pie graph
+            const items = d.items.filter(v => v.value > 0);
             setBaseData({
-               items: d.items.filter(v => v.value > 0),
+               items,
                mindate: d.mindate,
                maxdate: d.maxdate,
+               total: items.reduce((tot, v) => tot + v.value, 0),
             });
          }
          dofetch();
@@ -131,12 +135,16 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
                   id={data.items[index].accountId}
                   account={data.items[index].account}
               />
-              &nbsp;(
+
                   <Numeric
                      amount={data.items[index].value}
                      commodity={prefs.currencyId}
                   />
-               )
+                  <Numeric
+                     amount={data.items[index].value / data.total * 100}
+                     suffix='%'
+                  />
+
            </span>
          );
 
@@ -147,47 +155,62 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
          (index + 1) / data.items.length)
 
    return (
-      <AutoSizer>
-         {
-            ({width, height}) => (
-               <PieChart
-                  width={width}
-                  height={height}
-                  className="incomeexpense"
-               >
-                 <Legend
-                    align="right"
-                    formatter={legendItem}
-                    layout="vertical"
-                    verticalAlign="middle"
-                 />
-                 <Tooltip
-                    content={<CustomTooltip data={data} />}
-                 />
-                 <Pie
-                   data={data.items}
-                   cx="50%"
-                   cy="50%"
-                   isAnimationActive={false}
-                   labelLine={false}
-                   label={false && renderCustomizedLabel}
-                   outerRadius="80%"
-                   fill="#8884d8"
-                   dataKey="value"
-                   nameKey={NAME_KEY}
-                 >
-                   {
-                     data.items.map((entry, index) =>
-                        <Cell
-                           key={`cell-${index}`}
-                           fill={color(index)}
-                        />)
-                   }
-                 </Pie>
-               </PieChart>
-            )
-         }
-      </AutoSizer>
+      <div className="columns">
+         <div className="total">
+            <h4>Total</h4>
+            <Numeric 
+               amount={data.total}
+               commodity={prefs.currencyId}
+            />
+         </div>
+         <div style={{ flex: '1 1 auto' }}>
+            <AutoSizer>
+            {
+               ({width, height}) => (
+                  <PieChart
+                     width={width}
+                     height={height}
+                     className="incomeexpense"
+                  >
+                  {
+                     width >= 400 &&
+                     <Legend
+                        align="right"
+                        formatter={legendItem}
+                        layout="vertical"
+                        verticalAlign="top"
+                     />
+                  }
+                  <Tooltip
+                     content={<CustomTooltip data={data} />}
+                  />
+                  <Pie
+                     data={data.items}
+                     cx="50%"
+                     cy="50%"
+                     isAnimationActive={false}
+                     labelLine={false}
+                     label={false && renderCustomizedLabel}
+                     outerRadius="100%"
+                     innerRadius="60%"
+                     fill="#8884d8"
+                     dataKey="value"
+                     nameKey={NAME_KEY}
+                  >
+                     {
+                        data.items.map((entry, index) =>
+                           <Cell
+                              key={`cell-${index}`}
+                              fill={color(index)}
+                           />)
+                     }
+                  </Pie>
+                  </PieChart>
+               )
+            }
+            </AutoSizer>
+         </div>
+      </div>
    );
 }
 export default IncomeExpense;

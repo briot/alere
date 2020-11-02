@@ -1,0 +1,75 @@
+.dash-incomeexpenses {
+
+   .recharts-legend-wrapper {
+      height: 100% !important;
+      overflow-x: hidden !important;
+      top: 0 !important;
+
+      min-width: 250px;
+      //max-width: 50%;
+      white-space: nowrap;
+   }
+
+   .recharts-default-legend {
+      width: 100%;
+
+      li {
+         display: flex !important;
+
+         > .recharts-legend-item-text {
+            display: inline-block;
+            flex: 1 1; // use all width not occupied by SVG
+
+            > span {
+               display: flex;
+         
+               span {
+                  flex: 0 0 50px;
+                  text-align: right;
+               }
+               span:first-child {
+                  flex: 1 1;
+                  text-align: left;
+               }
+            }
+         }
+      }
+   }
+
+   .customTooltip {
+      background-color: var(--gray-400-80p);
+      border-radius: 10px;
+      border: 1px solid var(--gray-500);
+      box-shadow: 3px 3px 4px 0 var(--shadow-color);
+      padding: 10px;
+      font-size: 1rem;
+   }
+
+   .columns {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: flex-start;
+      align-items: stretch;
+      height: 100%;
+   }
+   .total {
+      flex: 0 0;
+
+      min-width: 100px;
+      display: flex;
+      flex-flow: column nowrap;
+      align-items: center;
+      justify-content: center;
+
+      h4 {
+         color: var(--gray-600);
+         text-align: center;
+         margin:0 0;
+      }
+
+      span {
+         font-weight: bold;
+         font-size: 1.1em;
+      }
+   }
+}
