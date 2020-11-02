@@ -18,7 +18,7 @@ class CategoryPlotView(JSONView):
             flags = alere.models.AccountFlags.expenses()
             order_by = '-value__sum'
         else:
-            flags = alere.models.AccountFlags.all_income()
+            flags = alere.models.AccountFlags.realized_income()
             order_by = 'value__sum'
 
         query = alere.models.Splits_With_Value.objects \

@@ -100,13 +100,11 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
             );
             const d: DataType = await resp.json();
 
-            // Filter out negative data, which we cannot show in a pie graph
-            const items = d.items.filter(v => v.value > 0);
             setBaseData({
-               items,
+               items: d.items,
                mindate: d.mindate,
                maxdate: d.maxdate,
-               total: items.reduce((tot, v) => tot + v.value, 0),
+               total: d.items.reduce((tot, v) => tot + v.value, 0),
             });
          }
          dofetch();

@@ -13,7 +13,7 @@ m = [
     (7,   models.AccountFlags.WORK_INCOME),        # salaire Manu
     (8,   models.AccountFlags.WORK_INCOME),        # salaire Marie
     (63,  models.AccountFlags.WORK_INCOME),        # chomage
-    (163, models.AccountFlags.WORK_INCOME),        # URSAFF
+    (163, models.AccountFlags.INCOME_TAX),         # URSAFF
     (25,  models.AccountFlags.INCOME_TAX),         # impots revenu
     (22,  models.AccountFlags.MISC_TAX),           # impots
     (23,  models.AccountFlags.MISC_TAX),           # taxe fonciere
