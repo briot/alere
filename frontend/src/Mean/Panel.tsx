@@ -11,13 +11,15 @@ export interface MeanPanelProps extends PanelBaseProps, MeanProps {
 
 const MeanPanel: React.FC<PanelProps<MeanPanelProps>> = p => {
    const r = rangeDisplay(p.props.range);
+   const title = [
+      p.props.showExpenses ? 'expenses' : undefined,
+      p.props.showIncome ? 'income' : undefined,
+   ].filter(v => v !== undefined).join(' and ');
+
    return (
       <Panel
          {...p}
-         header={{name: capitalize(
-            `${r.possessive}`
-            + `${p.props.expenses ? 'expense' : 'income'}`
-            + ` history`),
+         header={{name: capitalize(`${r.possessive}${title} history`),
                   title: r.as_dates}}
          Settings={
             <Settings

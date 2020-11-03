@@ -193,9 +193,10 @@ const Networth: React.FC<NetworthProps> = p => {
       createDummyParent,
       p.treeMode,
    );
-   const rows = useListFromAccount(tree);
+   const rows: LogicalRow<LocalTreeNode, NetworthProps>[] =
+      useListFromAccount(tree);
 
-   const columns = React.useMemo(
+   const columns: (undefined | Column<LocalTreeNode, NetworthProps>)[] = React.useMemo(
       () => [
             undefined,  /* typescript workaround */
             columnAccountName,

@@ -192,6 +192,12 @@ class AccountFlags(models.TextChoices):
         )
 
     @classmethod
+    def unrealized_income(klass):
+        return (
+            klass.UNREALIZED_GAINS,
+        )
+
+    @classmethod
     def realized_income(klass):
         return (
             klass.PASSIVE_INCOME,

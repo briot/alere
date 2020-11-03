@@ -41,7 +41,7 @@ class JSONView(View):
         v = params.get(name)
         if v is None:
             return default
-        return bool(v) and v.lower() not in ('false', '0')
+        return bool(v) and v.lower() not in ('false', '0', 'undefined')
 
     def as_time(self, params, name, default=None):
         """

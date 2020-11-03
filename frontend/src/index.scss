@@ -46,11 +46,23 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --#{$key}-200: #{$v-200};
    --#{$key}-300: #{$v-300};
    --#{$key}-300-10p: #{rgba($v-300, 0.1)};
+   --#{$key}-300-20p: #{rgba($v-300, 0.2)};
+   --#{$key}-300-30p: #{rgba($v-300, 0.3)};
+   --#{$key}-300-60p: #{rgba($v-300, 0.6)};
+   --#{$key}-300-80p: #{rgba($v-300, 0.8)};
    --#{$key}-400: #{$v-400};
+   --#{$key}-400-10p: #{rgba($v-400, 0.1)};
+   --#{$key}-400-20p: #{rgba($v-400, 0.2)};
+   --#{$key}-400-30p: #{rgba($v-400, 0.3)};
    --#{$key}-400-80p: #{rgba($v-400, 0.8)};
    --#{$key}-500: #{$base};
    --#{$key}-500-10p: #{rgba($base, 0.1)};
+   --#{$key}-500-20p: #{rgba($base, 0.2)};
    --#{$key}-500-30p: #{rgba($base, 0.3)};
+   --#{$key}-500-50p: #{rgba($base, 0.5)};
+   --#{$key}-500-60p: #{rgba($base, 0.6)};
+   --#{$key}-500-70p: #{rgba($base, 0.7)};
+   --#{$key}-500-80p: #{rgba($base, 0.8)};
    --#{$key}-600: #{$v-600};
    --#{$key}-700: #{$v-700};
    --#{$key}-800: #{$v-800};
@@ -117,11 +129,12 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --danger-fg: var(--fg-invalid-500);
 
    --positive-fg: var(--green-300);
+   --positive-fg2: var(--green-300-80p);
+   --positive-fg-border: var(--green-200);
    --negative-fg: var(--invalid-400);
+   --negative-fg-border: var(--invalid-300);
 
    --cartesian-grid: var(--gray-800);
-   --area-chart-fill: var(--color-800-20p);
-   --area-chart-stroke: var(--color-800-50p);
 
    --input-background: var(--gray-700);
    --input-foreground: var(--gray-fg-700);
@@ -170,8 +183,11 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --danger: var(--invalid-500);
    --danger-fg: var(--fg-invalid-500);
 
-   --positive-fg: var(--green-500);
+   --positive-fg: var(--green-300);
+   --positive-fg2: var(--green-300-80p);
+   --positive-fg-border: var(--green-200);
    --negative-fg: var(--invalid-500);
+   --negative-fg-border: var(--invalid-400);
 
    --input-background: white;
    --input-foreground: var(--white-fg);
@@ -185,8 +201,6 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --input-error-foreground: var(--fg-invalid-100);
 
    --cartesian-grid: var(--gray-300);
-   --area-chart-fill: var(--color-500-10p);
-   --area-chart-stroke: var(--color-500-30p);
 
    --neumorph-light: rgba(255,255,255,0.5);
    --neumorph-dark: rgba(70,70,70,.12);

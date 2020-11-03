@@ -147,7 +147,7 @@ export const Checkbox: React.FC<CheckboxProps> = p => {
    return (
       <SharedInput className="checkbox" textAfter={true} {...p}>
          <input
-            checked={p.checked}
+            checked={p.checked ?? false}
             disabled={p.disabled}
             ref={indetSetter}
             required={p.required}

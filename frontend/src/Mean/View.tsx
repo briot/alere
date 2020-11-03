@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { DateRange, rangeToHttp } from 'Dates';
-import { ComposedChart, XAxis, YAxis, CartesianGrid, Area,
+import { ComposedChart, XAxis, YAxis, CartesianGrid, Bar,
          Line, Tooltip } from 'recharts';
 import { CommodityId } from 'services/useAccounts';
 import usePrefs from 'services/usePrefs';
@@ -9,15 +9,23 @@ import './Mean.css';
 
 interface Point {
    date: string;
-   value: number;
-   average: number;
+   value_expenses?: number;
+   average_expenses?: number;
+   value_realized?: number;
+   average_realized?: number;
+   value_unrealized?: number;
+   average_unrealized?: number;
+
+   average_income?: number; // computed on the client
 }
 
 const useMeanHistory = (
    range: DateRange,
    prior: number,
    after: number,
-   expenses: boolean,
+   expenses: boolean|undefined,
+   income: boolean|undefined,
+   negateExpenses: boolean|undefined,
    currencyId: CommodityId,
 ) => {
    const [points, setPoints] = React.useState<Point[]>([]);
@@ -27,34 +35,76 @@ const useMeanHistory = (
          const doFetch = async() => {
             const resp = await window.fetch(
                `/api/mean?${rangeToHttp(range)}&prior=${prior}&after=${after}`
-               + `&expenses=${expenses}&currency=${currencyId}`
+               + `&expenses=${expenses}&income=${income}&currency=${currencyId}`
             );
             const data: Point[] = await resp.json();
+
+            if (negateExpenses && expenses) {
+               data.forEach(p => {
+                  p.value_expenses = -(p.value_expenses || 0);
+                  p.average_expenses = -(p.average_expenses || 0);
+               });
+            }
+
             setPoints(data);
          }
          doFetch();
       },
-      [range, prior, after, expenses, currencyId]
+      [range, prior, after, expenses, income, currencyId, negateExpenses]
    );
 
    return points;
 }
 
 
+const getArea = (key: string, fill: string,
+   stroke: string, stackId: string,
+) => (
+   <Bar
+      dataKey={key}
+      fill={fill}
+      stroke={stroke}
+      stackId={stackId}
+      isAnimationActive={false}
+   />
+)
+
+const getLine = (key: string, color: string) => (
+   <Line
+      type="linear"
+      dataKey={key}
+      stroke={color}
+      isAnimationActive={false}
+      dot={false}
+   />
+)
+
 export interface MeanProps {
    range: DateRange;
    prior: number;
    after: number;
    accountType?: string;
-   expenses: boolean;
+   showExpenses?: boolean;
+   showIncome?: boolean;
+   showUnrealized?: boolean;
+   negateExpenses?: boolean;
+   showMean?: boolean;
 }
 const Mean: React.FC<MeanProps> = p => {
    const { prefs } = usePrefs();
    const points = useMeanHistory(
-      p.range, p.prior, p.after, p.expenses, prefs.currencyId);
+      p.range, p.prior, p.after, p.showExpenses,
+      p.showIncome, p.negateExpenses, prefs.currencyId);
 
    const formatVal = (p: number|string|React.ReactText[]) =>
       (p as number).toFixed(0);
+
+   if (p.showUnrealized || p.showIncome) {
+      points.forEach(p =>
+         p.average_income = (p.average_realized || 0)
+            + (p.average_unrealized || 0)
+      );
+   }
 
    return (
       <div className='meanHistory'>
@@ -65,6 +115,12 @@ const Mean: React.FC<MeanProps> = p => {
                   width={width}
                   height={height}
                   data={points}
+                  barGap={0}
+                  barCategoryGap={
+                     p.showExpenses && p.showIncome
+                     ? "10%"
+                     : 0
+                  }
                >
                   <XAxis
                      dataKey="date"
@@ -81,20 +137,25 @@ const Mean: React.FC<MeanProps> = p => {
                      contentStyle={{backgroundColor: "var(--panel-background)"}}
                      formatter={formatVal}
                   />
-                  <Area
-                     type="step"
-                     dataKey="value"
-                     fill="var(--area-chart-fill)"
-                     stroke="var(--area-chart-stroke)"
-                     isAnimationActive={false}
-                  />
-                  <Line
-                     type="linear"
-                     dataKey="average"
-                     stroke="var(--color-500)"
-                     isAnimationActive={false}
-                     dot={false}
-                  />
+                  { p.showIncome &&
+                    getArea('value_realized',
+                            'var(--positive-fg)',
+                            'var(--positive-fg-border)',
+                            'income') }
+                  { p.showUnrealized &&
+                    getArea('value_unrealized',
+                            'var(--positive-fg2)',
+                            'var(--positive-fg-border)',
+                            'income') }
+                  { p.showExpenses &&
+                    getArea('value_expenses',
+                            'var(--negative-fg)',
+                            'var(--negative-fg-border)',
+                            'expenses') }
+                  { p.showIncome && p.showMean &&
+                    getLine('average_income', 'var(--positive-fg-border)') }
+                  { p.showExpenses && p.showMean &&
+                    getLine ('average_expenses', 'var(--negative-fg-border)') }
                </ComposedChart>
             )
          }
