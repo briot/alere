@@ -31,55 +31,55 @@ class MetricsView(JSONView):
             .filter(
                 account__kind__in=alere.models.AccountFlags.actual_income()) \
             .aggregate(value=Sum('value'))['value']
-            or math.nan)
+            or 0)
 
         passive_income = -(
             over_period \
             .filter(account__kind=alere.models.AccountFlags.PASSIVE_INCOME) \
             .aggregate(value=Sum('value'))['value']
-            or math.nan)
+            or 0)
 
         work_income = -(
             over_period \
             .filter(account__kind=alere.models.AccountFlags.WORK_INCOME) \
             .aggregate(value=Sum('value'))['value']
-            or math.nan)
+            or 0)
 
         expense = (
             over_period \
             .filter(account__kind__in=alere.models.AccountFlags.expenses()) \
             .aggregate(value=Sum('value'))['value']
-            or math.nan)
+            or 0)
 
         other_taxes = (
             over_period \
             .filter(account__kind=alere.models.AccountFlags.MISC_TAX) \
             .aggregate(value=Sum('value'))['value']
-            or math.nan)
+            or 0)
 
         income_taxes = (
             over_period \
             .filter(account__kind=alere.models.AccountFlags.INCOME_TAX) \
             .aggregate(value=Sum('value'))['value']
-            or math.nan)
+            or 0)
 
         networth = (
             at_end \
             .filter(account__kind__in=alere.models.AccountFlags.networth()) \
             .aggregate(value=Sum('balance'))['value']
-            or math.nan)
+            or 0)
 
         networth_start = (
             at_start \
             .filter(account__kind__in=alere.models.AccountFlags.networth()) \
             .aggregate(value=Sum('balance'))['value']
-            or math.nan)
+            or 0)
 
         liquid_assets = (
             at_end \
             .filter(account__kind__in=alere.models.AccountFlags.liquid()) \
             .aggregate(value=Sum('balance'))['value']
-            or math.nan)
+            or 0)
 
 
         return {

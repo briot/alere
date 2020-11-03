@@ -129,7 +129,7 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --danger-fg: var(--fg-invalid-500);
 
    --positive-fg: var(--green-300);
-   --positive-fg2: var(--green-300-80p);
+   --positive-fg2: var(--gray-300-80p);
    --positive-fg-border: var(--green-200);
    --negative-fg: var(--invalid-400);
    --negative-fg-border: var(--invalid-300);
@@ -184,7 +184,7 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --danger-fg: var(--fg-invalid-500);
 
    --positive-fg: var(--green-300);
-   --positive-fg2: var(--green-300-80p);
+   --positive-fg2: var(--gray-300-80p);
    --positive-fg-border: var(--green-200);
    --negative-fg: var(--invalid-500);
    --negative-fg-border: var(--invalid-400);

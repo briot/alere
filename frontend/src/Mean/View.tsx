@@ -11,12 +11,15 @@ interface Point {
    date: string;
    value_expenses?: number;
    average_expenses?: number;
+
    value_realized?: number;
    average_realized?: number;
-   value_unrealized?: number;
-   average_unrealized?: number;
+
+   value_networth_delta?: number;
+   average_networth_delta?: number;
 
    average_income?: number; // computed on the client
+   value_unrealized?: number; // computed on the client
 }
 
 const useMeanHistory = (
@@ -25,6 +28,7 @@ const useMeanHistory = (
    after: number,
    expenses: boolean|undefined,
    income: boolean|undefined,
+   unrealized: boolean|undefined,
    negateExpenses: boolean|undefined,
    currencyId: CommodityId,
 ) => {
@@ -35,22 +39,31 @@ const useMeanHistory = (
          const doFetch = async() => {
             const resp = await window.fetch(
                `/api/mean?${rangeToHttp(range)}&prior=${prior}&after=${after}`
-               + `&expenses=${expenses}&income=${income}&currency=${currencyId}`
+               + `&expenses=${expenses}&income=${income}`
+               + `&unrealized=${unrealized}&currency=${currencyId}`
             );
             const data: Point[] = await resp.json();
-
-            if (negateExpenses && expenses) {
-               data.forEach(p => {
+            data.forEach(p => {
+               if (unrealized || income) {
+                  p.average_income = (p.average_realized || 0)
+                     //+ (p.average_unrealized || 0)
+                     ;
+                  p.value_unrealized = (p.value_networth_delta || 0)
+                     - (p.value_realized || 0)
+                     - (p.value_expenses || 0)
+               }
+               if (negateExpenses) {
                   p.value_expenses = -(p.value_expenses || 0);
                   p.average_expenses = -(p.average_expenses || 0);
-               });
-            }
+               }
+            });
 
             setPoints(data);
          }
          doFetch();
       },
-      [range, prior, after, expenses, income, currencyId, negateExpenses]
+      [range, prior, after, expenses, income, currencyId, negateExpenses,
+       unrealized]
    );
 
    return points;
@@ -94,17 +107,10 @@ const Mean: React.FC<MeanProps> = p => {
    const { prefs } = usePrefs();
    const points = useMeanHistory(
       p.range, p.prior, p.after, p.showExpenses,
-      p.showIncome, p.negateExpenses, prefs.currencyId);
+      p.showIncome, p.showUnrealized, p.negateExpenses, prefs.currencyId);
 
    const formatVal = (p: number|string|React.ReactText[]) =>
       (p as number).toFixed(0);
-
-   if (p.showUnrealized || p.showIncome) {
-      points.forEach(p =>
-         p.average_income = (p.average_realized || 0)
-            + (p.average_unrealized || 0)
-      );
-   }
 
    return (
       <div className='meanHistory'>

@@ -133,6 +133,7 @@ export const dateToString = (when: RelativeDate): string =>
 export type DateRange =
    '1day'          |
    '1month'        |
+   '2months'       |
    '3months'       |
    '12months'      |
    '24months'      |
@@ -150,6 +151,7 @@ const rangeToDate = (name: DateRange): [RelativeDate, RelativeDate] => {
    switch (name) {
       case '1day':          return ['today', 'today'];
       case '1month':        return ['1 month ago', 'today'];
+      case '2months':       return ['2 months ago', 'today'];
       case '3months':       return ['3 months ago', 'today'];
       case '12months':      return ['12 months ago', 'today'];
       case '24months':      return ['24 months ago', 'today'];
@@ -169,6 +171,7 @@ const rangeToString = (name: DateRange): string => {
    switch (name) {
       case '1day':          return "yesterday";
       case '1month':        return "1-month";
+      case '2months':       return "2-month";
       case '3months':       return "3-month";
       case '12months':      return "12-month";
       case '24months':      return "24-month";
@@ -233,15 +236,6 @@ export const monthCount = (name: DateRange): number => {
       default:
          return NaN;
    }
-   // const r = rangeToDate(name);
-   // const r0 = dateToDate(r[0]);
-   // let r1 = dateToDate(r[1]);
-   // let count = 0;
-   // while (r1 >= r0) {
-   //    count ++;
-   //    r1.setMonth(r1.getMonth() - 1);
-   // }
-   // return count;
 }
 
 interface DateRangePickerProps {
@@ -264,6 +258,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = p => {
          options={[
             {text: "1 day",         value: "1day"},
             {text: "1 month",       value: "1month" },
+            {text: "2 months",      value: "2months" },
             {text: "3 months",      value: "3months" },
             {text: "12 months",     value: "12months" },
             {text: "24 months",     value: "24months" },

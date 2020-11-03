@@ -10,7 +10,6 @@ class LedgerView(JSONView):
     def get_json(self, params, ids: str):
         maxdate = self.as_time(params, 'maxdate')
         mindate = self.as_time(params, 'mindate')
-        print('MANU maxdate=%s mindate=%s' % (maxdate, mindate))
 
         # When querying a single account, we'll compute the balance
         try:

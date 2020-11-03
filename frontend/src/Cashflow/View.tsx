@@ -151,15 +151,15 @@ const Cashflow: React.FC<CashflowProps> = p => {
               <Table.TH>{r.head}</Table.TH>
               <Table.TH className="amount">
                  <Numeric
-                    amount={r.amount} 
-                    commodity={currency} 
+                    amount={r.amount}
+                    commodity={currency}
                     roundValues={p.roundValues}
                  />
               </Table.TH>
               <Table.TH className="amount">
-                 <Numeric 
-                    amount={r.amount / months} 
-                    commodity={currency} 
+                 <Numeric
+                    amount={r.amount / months}
+                    commodity={currency}
                     roundValues={p.roundValues}
                  />
               </Table.TH>
@@ -176,16 +176,16 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   }
               </Table.TD>
               <Table.TD className="amount">
-                 <Numeric 
-                    amount={r.amount} 
-                    commodity={currency} 
+                 <Numeric
+                    amount={r.amount}
+                    commodity={currency}
                     roundValues={p.roundValues}
                  />
               </Table.TD>
               <Table.TD className="amount">
-                 <Numeric 
+                 <Numeric
                     amount={r.amount / months}
-                    commodity={currency} 
+                    commodity={currency}
                     roundValues={p.roundValues}
                  />
               </Table.TD>
@@ -226,8 +226,8 @@ const Cashflow: React.FC<CashflowProps> = p => {
                </Table.TD>
                <Table.TD className="amount">
                   <Numeric
-                     amount={r.amount} 
-                     commodity={currency} 
+                     amount={r.amount}
+                     commodity={currency}
                      roundValues={p.roundValues}
                   />
                </Table.TD>
