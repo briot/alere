@@ -1,6 +1,7 @@
 from django.db.models import F, Window, Avg, RowRange, Sum, Subquery, OuterRef
 from .json import JSONView
 import alere
+import datetime
 import django.db
 
 
@@ -40,8 +41,8 @@ class MeanView(JSONView):
                     FROM (
                         SELECT date, SUM(value) as total
                         FROM alr_by_month
-                        WHERE date >= %s
-                          AND date <= %s
+                        WHERE date >= DATE(%s, '-{prior} months')
+                          AND date <= DATE(%s, '+{after} months')
                           AND kind_id in ({kinds})
                           AND value_currency_id=%s
                         GROUP BY date
@@ -51,13 +52,18 @@ class MeanView(JSONView):
                 cur.execute(query, [mindate, maxdate, currency])
 
                 for r in cur.fetchall():
-                    a = result.get(r[0], None)
-                    if a is None:
-                        a = result[r[0]] = {
-                            "date": r[0],
-                        }
+                    # The query used a larger range of dates to get the means
+                    # correct. But we should remove the extra dates in the
+                    # output
+                    d = datetime.date.fromisoformat(r[0])
+                    if d >= mindate.date() and d <= maxdate.date():
+                        a = result.get(r[0], None)
+                        if a is None:
+                            a = result[r[0]] = {
+                                "date": r[0],
+                            }
 
-                    a["value_%s" % key] = -r[1]
-                    a["average_%s" % key] = -r[2]
+                        a["value_%s" % key] = -r[1]
+                        a["average_%s" % key] = -r[2]
 
             return list(result.values())
