@@ -25,10 +25,11 @@ class MeanView(JSONView):
             # output
             d = datetime.date.fromisoformat(date)
             if d >= mindate.date() and d <= maxdate.date():
-                a = result.get(date, None)
+                index = date[:7]  # only yyyy-mm
+                a = result.get(index, None)
                 if a is None:
-                    a = result[date] = {
-                            "date": date,
+                    a = result[index] = {
+                            "date": index,
                     }
 
                 a["value_%s" % key] = -value
@@ -44,30 +45,44 @@ class MeanView(JSONView):
         with django.db.connection.cursor() as cur:
             for key, flags in queries:
                 kinds = ",".join("'%s'" % f for f in flags)
+
+                # Generate an explicit list of months, to avoid possible
+                # months with no value (for which we would get no mean either,
+                # and which would be skipped when computing rolling means)
                 query = (
                     f"""
+                    WITH RECURSIVE months (date) AS (
+                       SELECT strftime("%%Y-%%m-01", DATE(%s, '-{prior} MONTHS'))
+                       UNION SELECT DATE(m.date, "+1 MONTHS")
+                             FROM months m
+                             WHERE m.date < DATE(%s, "+{after} MONTHS")
+                    )
                     SELECT
-                       date,
+                       months.date,
                        total,
                        AVG(total) OVER
-                           (ORDER BY date
+                           (ORDER BY months.date
                             ROWS BETWEEN {prior} PRECEDING AND {after} FOLLOWING
                            ) AS average
-                    FROM (
-                        SELECT date, SUM(value) as total
-                        FROM alr_by_month
-                        WHERE date >= DATE(%s, '-{prior} months')
-                          AND date <= DATE(%s, '+{after} months')
-                          AND kind_id in ({kinds})
-                          AND value_currency_id=%s
-                        GROUP BY date
-                    ) tmp
-                    """
+                    FROM
+                       months
+                       LEFT JOIN (
+                          SELECT date, SUM(value) as total
+                          FROM alr_by_month
+                          WHERE date >= DATE(%s, '-{prior} months')
+                            AND date <= DATE(%s, '+{after} months')
+                            AND kind_id in ({kinds})
+                            AND value_currency_id=%s
+                          GROUP BY date
+                       ) tmp
+                       ON (tmp.date=months.date)
+                      """
                 )
-                cur.execute(query, [mindate, maxdate, currency])
+                cur.execute(query, [mindate, maxdate, mindate, maxdate, currency])
 
                 for r in cur.fetchall():
-                    merge(date=r[0], key=key, value=r[1], avg=r[2])
+                    print(r)
+                    merge(date=r[0], key=key, value=r[1] or 0, avg=r[2] or 0)
 
         if unrealized:
             # compute the networth at the end of each month. By removing
@@ -108,11 +123,12 @@ class MeanView(JSONView):
                           value=prev_nw - nw,   # sign is negated in merge()
                           avg=0)
 
-                    print('MANU d=%s  as_of=%s  nw=%s  delta=%s  flow=%s - %s' % (
-                        d.strftime("%Y-%m-%d"),
+                    print('MANU d=%s  as_of=%s  nw=%s  delta=%s  flow=%s - %s avg=%s' % (
+                        d.strftime("%Y-%m"),
                         end_of_month, nw, nw - (prev_nw or 0),
-                        result[d.strftime("%Y-%m-%d")].get('value_realized'),
-                        result[d.strftime("%Y-%m-%d")].get('value_expenses')
+                        result[d.strftime("%Y-%m")].get('value_realized'),
+                        result[d.strftime("%Y-%m")].get('value_expenses'),
+                        result[d.strftime("%Y-%m")].get('average_realized')
                         ))
 
                 d = end_of_month + datetime.timedelta(days=1)

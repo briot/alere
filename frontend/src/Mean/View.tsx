@@ -45,12 +45,12 @@ const useMeanHistory = (
             const data: Point[] = await resp.json();
             data.forEach(p => {
                if (unrealized || income) {
-                  p.average_income = (p.average_realized || 0)
-                     //+ (p.average_unrealized || 0)
-                     ;
                   p.value_unrealized = (p.value_networth_delta || 0)
                      - (p.value_realized || 0)
                      - (p.value_expenses || 0)
+                  p.average_income = (p.average_realized || 0)
+                     //+ (p.average_unrealized || 0)
+                     ;
                }
                if (negateExpenses) {
                   p.value_expenses = -(p.value_expenses || 0);
