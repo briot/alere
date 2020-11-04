@@ -17,6 +17,8 @@ export type RelativeDate =
    "start of last month"   |
    "end of last month"     |
    "end of 2 months ago"   |
+   "end of 3 months ago"   |
+   "end of 4 months ago"   |
    "start of year"         |
    "start of last year"    |
    "end of last year"      |
@@ -88,6 +90,8 @@ export const dateToDate = (when: RelativeDate): Date => {
       case "start of last month": startOfMonth(d, -1);  break;
       case "end of last month":   endOfMonth(d, -1);    break;
       case "end of 2 months ago": endOfMonth(d, -2);    break;
+      case "end of 3 months ago": endOfMonth(d, -3);    break;
+      case "end of 4 months ago": endOfMonth(d, -4);    break;
       case "1 month ago":         addMonth(d, -1);      break;
       case "2 months ago":        addMonth(d, -2);      break;
       case "3 months ago":        addMonth(d, -3);      break;
@@ -303,6 +307,8 @@ export const RelativeDatePicker: React.FC<RelativeDatePickerProps> = p => {
             {text: "start of last month",  value: "start of last month"},
             {text: "end of last month",    value: "end of last month"},
             {text: "end of 2 months ago",  value: "end of 2 months ago"},
+            {text: "end of 3 months ago",  value: "end of 3 months ago"},
+            {text: "end of 4 months ago",  value: "end of 4 months ago"},
             {text: "start of year",        value: "start of year"},
             {text: "start of last year",   value: "start of last year"},
             {text: "end of last year",     value: "end of last year"},
