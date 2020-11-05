@@ -6,4 +6,13 @@
    font-variant-numeric: oldstyle-nums tabular-nums;
    font-variant-numeric: lining-nums tabular-nums;
    font-size-adjust: 0.438;
+
+   .customTooltip {
+      tr td:first-child {
+         text-align: left;
+      }
+      td {
+         text-align: right;
+      }
+   }
 }

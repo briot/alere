@@ -1,11 +1,12 @@
 import * as React from 'react';
 import { DateRange, rangeToHttp } from 'Dates';
 import { ComposedChart, XAxis, YAxis, CartesianGrid, Bar,
-         Line, Tooltip } from 'recharts';
+         Line, Tooltip, TooltipProps } from 'recharts';
 import { CommodityId } from 'services/useAccounts';
+import Numeric from 'Numeric';
 import usePrefs from 'services/usePrefs';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import './Mean.css';
+import './Mean.scss';
 
 interface Point {
    date: string;
@@ -71,6 +72,124 @@ const useMeanHistory = (
    return points;
 }
 
+export interface MeanProps {
+   range: DateRange;
+   prior: number;
+   after: number;
+   accountType?: string;
+   showExpenses?: boolean;
+   showIncome?: boolean;
+   showUnrealized?: boolean;
+   negateExpenses?: boolean;
+   showMean?: boolean;
+}
+
+const formatVal = (p: number|string|React.ReactText[]) =>
+   (p as number).toFixed(0);
+
+const CustomTooltip = (
+   p: TooltipProps & {currency: CommodityId, props: MeanProps}
+) => {
+   const d = p.payload?.[0]?.payload;
+   if (!d) {
+      return null;
+   }
+
+   return d && p.active
+      ? (
+         <div className="customTooltip">
+            <h5>{d.date}</h5>
+            <table>
+               <tbody>
+                  {
+                     p.props.showIncome &&
+                     <>
+                        <tr>
+                           <th colSpan={2}>Income</th>
+                        </tr>
+                        <tr>
+                           <td>Monthly</td>
+                           <td>
+                              <Numeric
+                                 amount={d.value_realized}
+                                 commodity={p.currency}
+                              />
+                          </td>
+                        </tr>
+                        {
+                           p.props.showUnrealized &&
+                           <tr>
+                              <td>Stocks, real-estate,.. (unrealized)</td>
+                              <td>
+                                 <Numeric
+                                    amount={d.value_unrealized}
+                                    commodity={p.currency}
+                                 />
+                             </td>
+                           </tr>
+                        }
+                        {
+                           p.props.showUnrealized &&
+                           <tr>
+                              <td>Total</td>
+                              <td>
+                                 <Numeric
+                                    amount={d.value_realized
+                                       + (d.value_unrealized || 0)}
+                                    commodity={p.currency}
+                                 />
+                             </td>
+                           </tr>
+                        }
+                        {
+                           p.props.showMean &&
+                           <tr>
+                              <td>Average total</td>
+                              <td>
+                                 <Numeric
+                                    amount={d.average_income}
+                                    commodity={p.currency}
+                                 />
+                             </td>
+                           </tr>
+                        }
+                     </>
+                  }
+                  {
+                     p.props.showExpenses &&
+                     <>
+                        <tr>
+                           <th colSpan={2}>Expenses</th>
+                        </tr>
+                        <tr>
+                           <td>Monthly</td>
+                           <td>
+                              <Numeric
+                                 amount={d.value_expenses}
+                                 commodity={p.currency}
+                              />
+                          </td>
+                        </tr>
+                        {
+                           p.props.showMean &&
+                           <tr>
+                              <td>Average total</td>
+                              <td>
+                                 <Numeric
+                                    amount={d.average_expenses}
+                                    commodity={p.currency}
+                                 />
+                             </td>
+                           </tr>
+                        }
+                     </>
+                  }
+               </tbody>
+            </table>
+         </div>
+      )
+      : null;
+}
 
 const getArea = (key: string, fill: string,
    stroke: string, stackId: string,
@@ -94,25 +213,11 @@ const getLine = (key: string, color: string) => (
    />
 )
 
-export interface MeanProps {
-   range: DateRange;
-   prior: number;
-   after: number;
-   accountType?: string;
-   showExpenses?: boolean;
-   showIncome?: boolean;
-   showUnrealized?: boolean;
-   negateExpenses?: boolean;
-   showMean?: boolean;
-}
 const Mean: React.FC<MeanProps> = p => {
    const { prefs } = usePrefs();
    const points = useMeanHistory(
       p.range, p.prior, p.after, p.showExpenses,
       p.showIncome, p.showUnrealized, p.negateExpenses, prefs.currencyId);
-
-   const formatVal = (p: number|string|React.ReactText[]) =>
-      (p as number).toFixed(0);
 
    return (
       <div className='meanHistory'>
@@ -142,8 +247,12 @@ const Mean: React.FC<MeanProps> = p => {
                       stroke="var(--cartesian-grid)"
                   />
                   <Tooltip
-                     contentStyle={{backgroundColor: "var(--panel-background)"}}
-                     formatter={formatVal}
+                     content={
+                        <CustomTooltip
+                           currency={prefs.currencyId}
+                           props={p}
+                        />
+                     }
                   />
                   { p.showIncome &&
                     getArea('value_realized',
