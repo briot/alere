@@ -202,7 +202,7 @@ class Migration(migrations.Migration):
                alr_accounts.kind_id,
                alr_accounts.commodity_id,
                alr_accounts.commodity_scu,
-               alr_institutions.name as institution,
+               alr_institutions.id as institution_id,
                alr_accounts.closed,
                alr_accounts.iban
             FROM

@@ -12,18 +12,22 @@ const Recent: React.FC<RecentProps> = p => {
    return (
       <div>
          {
-            hist.map(h =>
-               <RoundButton
-                  img="/boursorama.svg"
-                  key={h.accountId}
-                  size="tiny"
-               >
-                  <AccountName
-                     id={h.accountId}
-                     account={accounts.getAccount(h.accountId)}
-                  />
-               </RoundButton>
-            )
+            hist.map(h => {
+               const a = accounts.getAccount(h.accountId);
+               return a.id >= 0
+                  ? (
+                     <RoundButton
+                        img={a.getInstitution()?.icon}
+                        key={h.accountId}
+                        size="tiny"
+                     >
+                        <AccountName
+                           id={h.accountId}
+                           account={a}
+                        />
+                     </RoundButton>
+                  ) : null;
+            })
          }
       </div>
    );

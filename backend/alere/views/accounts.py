@@ -18,7 +18,11 @@ class AccountLists(alere.models.AlereModel):
         on_delete=models.DO_NOTHING,
         related_name='+')
     commodity_scu = models.IntegerField()
-    institution = models.TextField()
+    institution = models.ForeignKey(
+        alere.models.Institutions,
+        on_delete=models.DO_NOTHING,
+        null=True,
+        related_name='+')
     closed = models.BooleanField()
     iban = models.TextField()
 
@@ -38,7 +42,7 @@ class AccountLists(alere.models.AlereModel):
             "iban": self.iban,
             "parent": self.parent_id,
             "lastReconciled": self.last_reconciled,
-            "institution": self.institution,
+            "institution": self.institution_id,
         }
 
 
@@ -57,6 +61,15 @@ class AccountList(JSONView):
                 "is_currency": c.kind == alere.models.CommodityKinds.CURRENCY,
             }
             for c in alere.models.Commodities.objects.all()
+        ]
+
+        institutions = [
+            {
+                "id": c.id,
+                "name": c.name,
+                "icon": c.icon,
+            }
+            for c in alere.models.Institutions.objects.all()
         ]
 
         account_kinds = [
@@ -81,4 +94,4 @@ class AccountList(JSONView):
             for a in alere.models.AccountKinds.objects.all()
         ]
 
-        return accounts, commodities, account_kinds
+        return accounts, commodities, account_kinds, institutions

@@ -270,6 +270,7 @@ class Institutions(AlereModel):
     address = models.TextField(null=True)
     phone = models.TextField(null=True)
     routing_code = models.TextField(null=True)
+    icon = models.TextField(null=True)
 
     class Meta:
         db_table = prefix + "institutions"

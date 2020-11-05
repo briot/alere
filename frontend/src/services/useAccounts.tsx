@@ -2,6 +2,7 @@ import * as React from 'react';
 
 export type AccountId = number;
 export type CommodityId = number;
+export type InstitutionId = number;
 
 export type AccountKindId = string;
 // an AccountFlag, though it should be treated as opaque
@@ -22,6 +23,12 @@ const nullCommodity: Commodity = {
    qty_scale: 1,
    is_currency: false,
 };
+
+interface InstitutionJSON {
+   id: InstitutionId;
+   name: string;
+   icon: string;
+}
 
 interface AccountKindJSON {
    id: AccountKindId;
@@ -55,7 +62,7 @@ interface AccountJSON {
    iban: string;
    parent: AccountId | undefined;
    lastReconciled: string;
-   institution: string | null;
+   institution: InstitutionId | undefined;
 }
 const nullAccountJSON: AccountJSON = {
    id: -1,
@@ -68,7 +75,7 @@ const nullAccountJSON: AccountJSON = {
    iban: "",
    parent: undefined,
    lastReconciled: "",
-   institution: null,
+   institution: undefined,
 }
 
 export class Account {
@@ -83,12 +90,13 @@ export class Account {
    readonly lastReconciled: string;
    readonly parentId: AccountId | undefined;
    parentAccount: Account | undefined;
-   private institution: string | null;
+   private institution: InstitutionJSON | undefined;
 
    constructor(
       d: AccountJSON,
       allCommodities: { [id: number /*CommodityId*/]: Commodity},
       allAccountKinds: { [id: string /*AccountKindId*/]: AccountKindJSON },
+      allInstitutions: { [id: string /*InstitutionId*/]: InstitutionJSON },
    ) {
       this.id = Number(d.id);
       this.name = d.name;
@@ -100,7 +108,8 @@ export class Account {
       this.iban = d.iban;
       this.lastReconciled = d.lastReconciled;
       this.parentId = d.parent;
-      this.institution = d.institution;
+      this.institution = d.institution === undefined
+         ? undefined : allInstitutions[d.institution];
    }
 
    /**
@@ -118,9 +127,8 @@ export class Account {
       this.parentAccount = parent;
    }
 
-   getInstitution(): string {
-      return (this.institution || this.parentAccount?.getInstitution())
-        ?? 'Unknown';
+   getInstitution(): InstitutionJSON|undefined {
+      return (this.institution ?? this.parentAccount?.getInstitution());
    }
 }
 
@@ -129,10 +137,12 @@ export class AccountList {
    private accounts: Map<AccountId, Account>;
    allCommodities: { [id: number /*CommodityId*/]: Commodity};
    allAccountKinds: { [id: string /*AccountKindId*/]: AccountKindJSON };
+   allInstitutions: { [id: string /* InstitutionId */]: InstitutionJSON };
 
    static async fetch() {
       const resp = await window.fetch('/api/account/list');
-      const acc: [AccountJSON[], Commodity[], AccountKindJSON[]] =
+      const acc: [AccountJSON[], Commodity[],
+                  AccountKindJSON[], InstitutionJSON[]] =
          await resp.json();
 
       const comm: { [id: number /*CommodityId*/]: Commodity} = {};
@@ -141,21 +151,26 @@ export class AccountList {
       const kinds: { [id: string /*AccountKindId*/]: AccountKindJSON } = {};
       acc[2].forEach(c => kinds[c.id] = c);
 
-      return new AccountList(acc[0], comm, kinds);
+      const inst: { [id: string /*InstitutionId*/]: InstitutionJSON } = {};
+      acc[3].forEach(c => inst[c.id] = c);
+
+      return new AccountList(acc[0], comm, kinds, inst);
    }
 
    constructor(
       acc: AccountJSON[],
       allCommodities: { [id: number /*CommodityId*/]: Commodity},
       allAccountKinds: { [id: string /*AccountKindId*/]: AccountKindJSON },
+      allInstitutions: { [id: string /* InstitutionId */]: InstitutionJSON },
    ) {
       this.allCommodities = allCommodities;
       this.allAccountKinds = allAccountKinds;
+      this.allInstitutions = allInstitutions;
 
       this.accounts = new Map();
       acc.forEach(a => this.accounts.set(
          Number(a.id),
-         new Account(a, this.allCommodities, this.allAccountKinds)));
+         new Account(a, allCommodities, allAccountKinds, allInstitutions)));
       this.accounts.forEach(a =>
          a.parentAccount = a.parentId === undefined
             ? undefined
@@ -171,7 +186,7 @@ export class AccountList {
       return this.accounts.get(id) || new Account({
          ...nullAccountJSON,
          name: id.toString(),
-      }, this.allCommodities, this.allAccountKinds);
+      }, this.allCommodities, this.allAccountKinds, this.allInstitutions);
    }
 
    accountsFromCurrency(commodityId: CommodityId): Account[] {
@@ -206,7 +221,7 @@ interface IAccountsContext {
 }
 
 const noContext: IAccountsContext = {
-   accounts: new AccountList([], {}, {}),
+   accounts: new AccountList([], {}, {}, {}),
    refresh: () => {},
 }
 

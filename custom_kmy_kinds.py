@@ -25,3 +25,15 @@ for i, f in m:
     a = models.Accounts.objects.get(id=i)
     a.kind_id = f
     a.save()
+
+inst = models.Institutions.objects.get(name="Boursorama")
+inst.icon = "/boursorama.svg";
+inst.save()
+
+inst = models.Institutions.objects.get(name="Banque Postale")
+inst.icon = "/banque-postale.svg";
+inst.save()
+
+inst = models.Institutions.objects.get(name="Societe Generale")
+inst.icon = "/societe-generale.png";
+inst.save()
