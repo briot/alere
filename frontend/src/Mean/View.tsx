@@ -21,14 +21,14 @@ interface Point {
 
    average_income?: number; // computed on the client
    value_unrealized?: number; // computed on the client
+   value_exp?: number;        // computed on the client
+   avg_exp?: number;          // computed on the client
 }
 
 const useMeanHistory = (
    range: DateRange,
    prior: number,
    after: number,
-   expenses: boolean|undefined,
-   income: boolean|undefined,
    unrealized: boolean|undefined,
    negateExpenses: boolean|undefined,
    currencyId: CommodityId,
@@ -40,7 +40,6 @@ const useMeanHistory = (
          const doFetch = async() => {
             const resp = await window.fetch(
                `/api/mean?${rangeToHttp(range)}&prior=${prior}&after=${after}`
-               + `&expenses=${expenses}&income=${income}`
                + `&unrealized=${unrealized}&currency=${currencyId}`
             );
             const data: Point[] = await resp.json();
@@ -56,8 +55,11 @@ const useMeanHistory = (
                }
 
                if (negateExpenses) {
-                  p.value_expenses = -(p.value_expenses || 0);
-                  p.average_expenses = -(p.average_expenses || 0);
+                  p.value_exp = -(p.value_expenses || 0);
+                  p.avg_exp = -(p.average_expenses || 0);
+               } else {
+                  p.value_exp = p.value_expenses || 0;
+                  p.avg_exp = p.average_expenses || 0;
                }
             });
 
@@ -65,8 +67,7 @@ const useMeanHistory = (
          }
          doFetch();
       },
-      [range, prior, after, expenses, income, currencyId, negateExpenses,
-       unrealized]
+      [range, prior, after, currencyId, negateExpenses, unrealized]
    );
 
    return points;
@@ -217,8 +218,8 @@ const getLine = (key: string, color: string) => (
 const Mean: React.FC<MeanProps> = p => {
    const { prefs } = usePrefs();
    const points = useMeanHistory(
-      p.range, p.prior, p.after, p.showExpenses,
-      p.showIncome, p.showUnrealized, p.negateExpenses, prefs.currencyId);
+      p.range, p.prior, p.after,
+      p.showUnrealized, p.negateExpenses, prefs.currencyId);
 
    return (
       <div className='meanHistory'>
@@ -266,14 +267,14 @@ const Mean: React.FC<MeanProps> = p => {
                             'var(--positive-fg-border)',
                             'income') }
                   { p.showExpenses &&
-                    getArea('value_expenses',
+                    getArea('value_exp',
                             'var(--negative-fg)',
                             'var(--negative-fg-border)',
                             'expenses') }
                   { p.showIncome && p.showMean &&
                     getLine('average_income', 'var(--positive-fg-border)') }
                   { p.showExpenses && p.showMean &&
-                    getLine ('average_expenses', 'var(--negative-fg-border)') }
+                    getLine ('avg_exp', 'var(--negative-fg-border)') }
                </ComposedChart>
             )
          }

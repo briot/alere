@@ -230,19 +230,6 @@ class Migration(migrations.Migration):
                   ON (alr_splits.currency_id=alr_commodities.id)
         ;
 
-        DROP VIEW IF EXISTS alr_by_month;
-        CREATE VIEW alr_by_month AS
-            SELECT
-               alr_accounts.kind_id as kind_id,
-               alr_splits_with_value.value_currency_id,
-               strftime("%Y-%m-01", alr_splits_with_value.post_date) as date,
-               SUM(alr_splits_with_value.value) as value
-            FROM alr_splits_with_value
-               JOIN alr_accounts
-                 ON (alr_splits_with_value.account_id=alr_accounts.id)
-            GROUP BY kind_id, date
-        ;
-
         DROP VIEW IF EXISTS alr_latest_price;
         CREATE VIEW alr_latest_price AS
             SELECT

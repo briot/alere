@@ -635,26 +635,6 @@ class Balances_Currency(AlereModel):
             self.maxdate)
 
 
-class By_Month(AlereModel):
-    """
-    Total of all splits, grouped by month and account kind
-    """
-
-    kind = models.ForeignKey(
-        AccountKinds,
-        on_delete=models.DO_NOTHING,
-        related_name='+',
-    )
-    date = models.DateField()
-    value = models.FloatField()
-    value_currency = models.ForeignKey(
-        Commodities, on_delete=models.DO_NOTHING, related_name='+')
-
-    class Meta:
-        managed = False
-        db_table = prefix + "by_month"
-
-
 class Latest_Price(AlereModel):
     """
     For each commodity, the latest known price
