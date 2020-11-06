@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { DateRange, rangeToHttp } from 'Dates';
-import { ComposedChart, XAxis, YAxis, CartesianGrid, Bar,
+import { ComposedChart, XAxis, YAxis, CartesianGrid, Bar, ReferenceLine,
          Line, Tooltip, TooltipProps } from 'recharts';
 import { CommodityId } from 'services/useAccounts';
 import Numeric from 'Numeric';
@@ -247,6 +247,12 @@ const Mean: React.FC<MeanProps> = p => {
                   <CartesianGrid
                       strokeDasharray="5 5"
                       stroke="var(--cartesian-grid)"
+                  />
+                  <ReferenceLine
+                     alwaysShow={true}
+                     isFront={true}
+                     y={9}
+                     stroke="var(--cartesian-grid)"
                   />
                   <Tooltip
                      content={
