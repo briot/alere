@@ -241,7 +241,7 @@ const Mean: React.FC<MeanProps> = p => {
                      dataKey="date"
                   />
                   <YAxis
-                     domain={['dataMin', 'dataMax']}
+                     domain={['auto', 'auto']}
                      tickFormatter={formatVal}
                   />
                   <CartesianGrid

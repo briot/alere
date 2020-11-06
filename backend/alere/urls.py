@@ -11,6 +11,7 @@ from .views.ledger import LedgerView
 from .views.means import MeanView
 from .views.metrics import MetricsView
 from .views.networth import NetworthView
+from .views.networth_history import NetworthHistoryView
 from .views.plots import CategoryPlotView
 from .views.prices import PriceHistory
 from .views.quotes import QuotesView
@@ -40,6 +41,7 @@ urlpatterns = [
     re_path('api/ledger/(<str:id>)?', LedgerView.as_view()),
     path('api/plots/category/<str:expenses>', CategoryPlotView.as_view()),
     path('api/plots/networth', NetworthView.as_view()),
+    path('api/networth_history', NetworthHistoryView.as_view()),
     path('api/metrics', MetricsView.as_view()),
     path('api/mean', MeanView.as_view()),
     path('api/quotes', QuotesView.as_view()),

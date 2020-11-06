@@ -26,7 +26,7 @@ class MeanView(JSONView):
         }
 
         if unrealized:
-            for date, diff, average in m.networth_history():
+            for date, diff, average, value in m.networth_history():
                 index = date[:7]  # only yyyy-mm
                 if index in result:
                     result[index]["value_networth_delta"] = diff or 0

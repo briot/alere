@@ -19,6 +19,8 @@ import { registerPriceHistory } from 'PriceHistory/Panel';
 import { registerInvestments } from 'Investments/Panel';
 import { registerTicker } from 'Ticker/Panel';
 import { registerRecent } from 'Recent/Panel';
+import { NetworthHistoryPanelProps,
+   registerNetworthHistory } from 'NWHistory/Panel';
 import { SplitMode, NotesMode } from 'Ledger/View';
 import { TreeMode } from 'services/useAccountTree';
 import './App.css';
@@ -30,6 +32,7 @@ registerInvestments();
 registerLedger();
 registerMean();
 registerNetworth();
+registerNetworthHistory();
 registerPriceHistory();
 registerRecent();
 registerTicker();
@@ -68,7 +71,7 @@ const defaultOverview: PanelBaseProps[] = [
       type: 'metrics',
       range: "12months",
       roundValues: true,
-      rowspan: 3,
+      rowspan: 4,
       colspan: 2,
    } as CashflowPanelProps,
    {
@@ -98,6 +101,14 @@ const defaultOverview: PanelBaseProps[] = [
       rowspan: 2,
       colspan: 2,
    } as MeanPanelProps,
+   {
+      type: 'nwhist',
+      range: 'forever',
+      prior: 2,
+      after: 2,
+      rowspan: 1,
+      colspan: 2,
+   } as NetworthHistoryPanelProps,
 ];
 
 const App: React.FC<{}> = () => {

@@ -30,15 +30,60 @@ class Mean:
         """
         return f"""months (date) AS (
             SELECT
-               --  end of first month
-               date('{self.start}', '-{self.prior:d} MONTHS', 'start of month',
-                    '+1 month', '-1 day')
+               --  end of first month (though no need to go past the oldest
+               --  known date in the data
+               date(MAX(user.d1, user.d2), '+1 month', '-1 day')
+               FROM
+                  (SELECT
+                      date('{self.start}',
+                           '-{self.prior:d} MONTHS', 'start of month') as d1,
+                      MIN(alr_balances_currency.mindate) as d2
+                   FROM alr_balances_currency
+                  ) user
+
             UNION
-               --  end of next month
+               --  end of next month, though no need to go past the last known
+               --  date in the data
                SELECT date(m.date, "start of month", "+2 months", "-1 day")
-               FROM months m
+               FROM months m,
+                  (SELECT MAX(alr_balances_currency.mindate) as date
+                   FROM alr_balances_currency) range
                WHERE m.date < DATE('{self.end}', "+{self.after:d} MONTHS")
+                  and m.date <= range.date
          )"""
+
+    @staticmethod
+    def query_networth():
+        """
+        Create a query that returns the networth as computed for a set of
+        dates. These dates must be found in the "months(date)" table, which
+        typically will be provided as a common table expression.
+
+        This query also accepts one parameter, the currency_id for the result.
+        """
+        nw_kinds = ",".join(
+            "'%s'" % f for f in alere.models.AccountFlags.networth())
+        return f"""
+           SELECT
+              months.date,
+              SUM(alr_balances_currency.balance) AS value
+           FROM months,
+              alr_balances_currency,
+              alr_accounts
+           WHERE
+              --  sqlite compares date as strings, so we need to add
+              --  the time. Otherwise, 2020-11-30 is less than
+              --  2020-11-30 00:00:00 and we do not get transactions
+              --  on the last day of the month
+              strftime("%%Y-%%m-%%d", alr_balances_currency.mindate)
+                 <= strftime("%%Y-%%m-%%d", months.date)
+              AND strftime("%%Y-%%m-%%d", months.date)
+                 < strftime("%%Y-%%m-%%d", alr_balances_currency.maxdate)
+              AND alr_balances_currency.commodity_id=%s
+              AND alr_balances_currency.account_id = alr_accounts.id
+              AND alr_accounts.kind_id IN ({nw_kinds})
+           GROUP BY months.date
+        """
 
     def networth_history(self):
         """
@@ -48,8 +93,6 @@ class Mean:
         It also includes the diff between the current row and the previous one,
         and the mean of those diffs.
         """
-        nw_kinds = ",".join(
-            "'%s'" % f for f in alere.models.AccountFlags.networth())
         query = f"""WITH RECURSIVE {self._cte_list_of_dates()}
             SELECT
                tmp2.date,
@@ -57,38 +100,20 @@ class Mean:
                AVG(tmp2.diff) OVER
                    (ORDER BY tmp2.date
                     ROWS BETWEEN {self.prior:d} PRECEDING
-                    AND {self.after:d} FOLLOWING) AS average
+                    AND {self.after:d} FOLLOWING) AS average,
+               tmp2.value
             FROM
-               (
-               SELECT
+               (SELECT
                   tmp.date,
-                  tmp.value - LAG(tmp.value) OVER (ORDER BY tmp.date) as diff
-               FROM
-                  (
-                     SELECT
-                        months.date,
-                        SUM(alr_balances_currency.balance) AS value
-                     FROM months,
-                        alr_balances_currency,
-                        alr_accounts
-                     WHERE
-                        --  sqlite compares date as strings, so we need to add
-                        --  the time. Otherwise, 2020-11-30 is less than
-                        --  2020-11-30 00:00:00 and we do not get transactions
-                        --  on the last day of the month
-                        alr_balances_currency.mindate <= (months.date || ' 00:00:00')
-                        AND (months.date || ' 00:00:00') < alr_balances_currency.maxdate
-                        AND alr_balances_currency.commodity_id=%s
-                        AND alr_balances_currency.account_id = alr_accounts.id
-                        AND alr_accounts.kind_id IN ({nw_kinds})
-                     GROUP BY months.date
-                   ) tmp
+                  tmp.value - LAG(tmp.value) OVER (ORDER BY tmp.date) as diff,
+                  tmp.value
+                FROM ({self.query_networth()}) tmp
                ) tmp2"""
 
         with django.db.connection.cursor() as cur:
             cur.execute(query, [self.currency_id])
-            for date, diff, average in cur.fetchall():
-                yield date, diff, average
+            for date, diff, average, value in cur.fetchall():
+                yield date, diff, average, value
 
     def monthly_cashflow(self):
         """

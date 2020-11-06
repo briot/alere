@@ -1,26 +1,6 @@
 import alere
 import datetime
 from .json import JSONView
-from typing import List, Union
-
-
-class NetworthLine:
-    def __init__(
-            self,
-            accountId: Union[str,int],
-            shares: List[float],
-            price: List[Union[float, None]],
-        ):
-        self.accountId = accountId
-        self.shares = shares
-        self.price = price
-
-    def to_json(self):
-        return {
-            "accountId": self.accountId,
-            "shares": self.shares,
-            "price": self.price,
-        }
 
 
 class NetworthView(JSONView):
@@ -31,6 +11,7 @@ class NetworthView(JSONView):
 
         shares = {}
         prices = {}
+
         for d_idx, d in enumerate(dates):
             dt = datetime.datetime.fromisoformat(d).astimezone(
                     datetime.timezone.utc)
@@ -48,15 +29,11 @@ class NetworthView(JSONView):
                 p = prices.setdefault(acc.account_id, [0] * len(dates))
                 p[d_idx] = acc.computed_price
 
-        # ??? Perhaps let front-end reorganize things, and just send a list
-        result = []
-        for a in shares.keys():
-            result.append(
-                NetworthLine(
-                    accountId=a,
-                    shares=shares[a],
-                    price=prices[a],
-                )
-            )
-
-        return result
+        return [
+            {
+                "accountId": acc,
+                "shares": s,
+                "price": prices[acc],
+            }
+            for acc, s in shares.items()
+        ]
