@@ -72,8 +72,12 @@ class Mean:
                         alr_balances_currency,
                         alr_accounts
                      WHERE
-                        alr_balances_currency.mindate <= months.date
-                        AND months.date < alr_balances_currency.maxdate
+                        --  sqlite compares date as strings, so we need to add
+                        --  the time. Otherwise, 2020-11-30 is less than
+                        --  2020-11-30 00:00:00 and we do not get transactions
+                        --  on the last day of the month
+                        alr_balances_currency.mindate <= (months.date || ' 00:00:00')
+                        AND (months.date || ' 00:00:00') < alr_balances_currency.maxdate
                         AND alr_balances_currency.commodity_id=%s
                         AND alr_balances_currency.account_id = alr_accounts.id
                         AND alr_accounts.kind_id IN ({nw_kinds})

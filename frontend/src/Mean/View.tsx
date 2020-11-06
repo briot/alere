@@ -250,7 +250,7 @@ const Mean: React.FC<MeanProps> = p => {
                   />
                   <ReferenceLine
                      alwaysShow={true}
-                     isFront={true}
+                     isFront={false}
                      y={9}
                      stroke="var(--cartesian-grid)"
                   />
