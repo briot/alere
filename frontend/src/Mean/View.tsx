@@ -102,58 +102,59 @@ const CustomTooltip = (
             <table>
                <tbody>
                   {
+                     (p.props.showIncome || p.props.showUnrealized) &&
+                     <tr>
+                        <th colSpan={2}>Income</th>
+                     </tr>
+                  }
+                  {
                      p.props.showIncome &&
-                     <>
-                        <tr>
-                           <th colSpan={2}>Income</th>
-                        </tr>
-                        <tr>
-                           <td>Monthly</td>
-                           <td>
-                              <Numeric
-                                 amount={d.value_realized}
-                                 commodity={p.currency}
-                              />
-                          </td>
-                        </tr>
-                        {
-                           p.props.showUnrealized &&
-                           <tr>
-                              <td>Stocks, real-estate,.. (unrealized)</td>
-                              <td>
-                                 <Numeric
-                                    amount={d.value_unrealized}
-                                    commodity={p.currency}
-                                 />
-                             </td>
-                           </tr>
-                        }
-                        {
-                           p.props.showUnrealized &&
-                           <tr>
-                              <td>Total</td>
-                              <td>
-                                 <Numeric
-                                    amount={d.value_realized
-                                       + (d.value_unrealized || 0)}
-                                    commodity={p.currency}
-                                 />
-                             </td>
-                           </tr>
-                        }
-                        {
-                           p.props.showMean &&
-                           <tr>
-                              <td>Average total</td>
-                              <td>
-                                 <Numeric
-                                    amount={d.average_income}
-                                    commodity={p.currency}
-                                 />
-                             </td>
-                           </tr>
-                        }
-                     </>
+                     <tr>
+                        <td>Monthly</td>
+                        <td>
+                           <Numeric
+                              amount={d.value_realized}
+                              commodity={p.currency}
+                           />
+                       </td>
+                     </tr>
+                  }
+                  {
+                     p.props.showUnrealized &&
+                     <tr>
+                        <td>Stocks, real-estate,.. (unrealized)</td>
+                        <td>
+                           <Numeric
+                              amount={d.value_unrealized}
+                              commodity={p.currency}
+                           />
+                       </td>
+                     </tr>
+                  }
+                  {
+                     p.props.showUnrealized && p.props.showIncome &&
+                     <tr>
+                        <td>Total</td>
+                        <td>
+                           <Numeric
+                              amount={d.value_realized
+                                 + (d.value_unrealized || 0)}
+                              commodity={p.currency}
+                           />
+                       </td>
+                     </tr>
+                  }
+                  {
+                     p.props.showMean &&
+                     <tr>
+                        <td>Average total</td>
+                        <td>
+                           <Numeric
+                              amount={d.average_income}
+                              commodity={p.currency}
+                           />
+                       </td>
+                     </tr>
                   }
                   {
                      p.props.showExpenses &&
