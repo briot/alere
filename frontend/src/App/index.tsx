@@ -57,7 +57,7 @@ const defaultOverview: PanelBaseProps[] = [
       colspan: 2,
       expenses: true,
       roundValues: true,
-      range: '12months',
+      range: '1year',
    } as IncomeExpensePanelProps,
    {
       type: 'incomeexpenses',
@@ -65,11 +65,11 @@ const defaultOverview: PanelBaseProps[] = [
       colspan: 2,
       expenses: false,
       roundValues: true,
-      range: '12months',
+      range: '1year',
    } as IncomeExpensePanelProps,
    {
       type: 'metrics',
-      range: "12months",
+      range: "1year",
       roundValues: true,
       rowspan: 4,
       colspan: 2,
@@ -90,7 +90,7 @@ const defaultOverview: PanelBaseProps[] = [
    } as LedgerPanelProps,
    {
       type: 'mean',
-      range: '12months',
+      range: '1year',
       prior: 2,
       after: 2,
       showExpenses: true,

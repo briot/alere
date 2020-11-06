@@ -89,7 +89,7 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
  */
 
 :root {
-   @include generate-color-vars(color, $blue);
+   @include generate-color-vars(color, $green);
    @include generate-color-vars(invalid, $red);
    @include generate-color-vars(green, $green);
    @include generate-color-vars(gray, #adb5bd);
@@ -184,7 +184,7 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --danger: var(--invalid-500);
    --danger-fg: var(--fg-invalid-500);
 
-   --positive-fg: var(--green-300);
+   --positive-fg: var(--green-400);
    --positive-fg2: var(--gray-300-80p);
    --positive-fg-border: var(--green-200);
    --negative-fg: var(--invalid-500);

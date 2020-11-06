@@ -9,9 +9,11 @@ export type RelativeDate =
    "1 month ago"           |
    "2 months ago"          |
    "3 months ago"          |
-   "12 months ago"         |
-   "24 months ago"         |
-   "36 months ago"         |
+   "1 year ago"            |
+   "2 years ago"           |
+   "3 years ago"           |
+   "4 years ago"           |
+   "5 years ago"           |
    "start of month"        |
    "end of month"          |
    "start of last month"   |
@@ -95,9 +97,11 @@ export const dateToDate = (when: RelativeDate): Date => {
       case "1 month ago":         addMonth(d, -1);      break;
       case "2 months ago":        addMonth(d, -2);      break;
       case "3 months ago":        addMonth(d, -3);      break;
-      case "12 months ago":       addMonth(d, -12);     break;
-      case "24 months ago":       addMonth(d, -24);     break;
-      case "36 months ago":       addMonth(d, -36);     break;
+      case "1 year ago":          addMonth(d, -12);     break;
+      case "2 years ago":         addMonth(d, -24);     break;
+      case "3 years ago":         addMonth(d, -36);     break;
+      case "4 years ago":         addMonth(d, -48);     break;
+      case "5 years ago":         addMonth(d, -60);     break;
       case "start of year":
          d.setDate(1);
          d.setMonth(0);
@@ -139,9 +143,11 @@ export type DateRange =
    '1month'        |
    '2months'       |
    '3months'       |
-   '12months'      |
-   '24months'      |
-   '36months'      |
+   '1year'         |
+   '2years'        |
+   '3years'        |
+   '4years'        |
+   '5years'        |
    'current month' |
    'month so far'  |
    'last month'    |
@@ -157,9 +163,11 @@ const rangeToDate = (name: DateRange): [RelativeDate, RelativeDate] => {
       case '1month':        return ['1 month ago', 'today'];
       case '2months':       return ['2 months ago', 'today'];
       case '3months':       return ['3 months ago', 'today'];
-      case '12months':      return ['12 months ago', 'today'];
-      case '24months':      return ['24 months ago', 'today'];
-      case '36months':      return ['36 months ago', 'today'];
+      case '1year':         return ['1 year ago', 'today'];
+      case '2years':        return ['2 years ago', 'today'];
+      case '3years':        return ['3 years ago', 'today'];
+      case '4years':        return ['4 years ago', 'today'];
+      case '5years':        return ['5 years ago', 'today'];
       case 'current month': return ['start of month', 'end of month'];
       case 'month so far':  return ['start of month', 'today'];
       case 'last month':    return ['start of last month', 'end of last month'];
@@ -171,15 +179,17 @@ const rangeToDate = (name: DateRange): [RelativeDate, RelativeDate] => {
    }
 }
 
-const rangeToString = (name: DateRange): string => {
+const possessive = (name: DateRange): string => {
    switch (name) {
-      case '1day':          return "yesterday";
-      case '1month':        return "1-month";
-      case '2months':       return "2-month";
-      case '3months':       return "3-month";
-      case '12months':      return "12-month";
-      case '24months':      return "24-month";
-      case '36months':      return "36-month";
+      case '1day':          return "yesterday's";
+      case '1month':        return "1 month";
+      case '2months':       return "2 months";
+      case '3months':       return "3 months";
+      case '1year':         return "1 year";
+      case '2years':        return "2 years";
+      case '3years':        return "3 years";
+      case '4years':        return "4 years";
+      case '5years':        return "5 years";
       case 'forever':       return "all";
       case 'future':        return "upcoming";
       default:              return name;
@@ -212,11 +222,9 @@ export const rangeDisplay = (name: DateRange): RangeDisplay => {
    const min = dateToString(r[0]);
    const max = dateToString(r[1]);
 
-   const s = rangeToString(name);
-
    return {
       as_dates: `from ${min} to ${max}`,
-      possessive: `${s}'s `,
+      possessive: `${possessive(name)} `,
    }
 }
 
@@ -229,14 +237,18 @@ export const monthCount = (name: DateRange): number => {
          return 1;
       case '3months':
          return 3;
-      case '12months':
+      case '1year':
       case 'current year':
       case 'last year':
          return 12;
-      case '24months':
+      case '2years':
          return 24;
-      case '36months':
+      case '3years':
          return 36;
+      case '4years':
+         return 48;
+      case '5years':
+         return 60;
       default:
          return NaN;
    }
@@ -264,9 +276,11 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = p => {
             {text: "1 month",       value: "1month" },
             {text: "2 months",      value: "2months" },
             {text: "3 months",      value: "3months" },
-            {text: "12 months",     value: "12months" },
-            {text: "24 months",     value: "24months" },
-            {text: "36 months",     value: "36months" },
+            {text: "1 year",        value: "1year" },
+            {text: "2 years",       value: "2years" },
+            {text: "3 years",       value: "3years" },
+            {text: "4 years",       value: "4years" },
+            {text: "5 years",       value: "5years" },
             {text: "Last month",    value: "last month" },
             {text: "Current month", value: "current month" },
             {text: "Month so far",  value: "month so far" },
@@ -301,7 +315,11 @@ export const RelativeDatePicker: React.FC<RelativeDatePickerProps> = p => {
             {text: "1 month ago",          value: "1 month ago"},
             {text: "2 months ago",         value: "2 months ago"},
             {text: "3 months ago",         value: "3 months ago"},
-            {text: "12 months ago",        value: "12 months ago"},
+            {text: "1 year ago",           value: "1 year ago"},
+            {text: "2 year ago",           value: "2 year ago"},
+            {text: "3 year ago",           value: "3 year ago"},
+            {text: "4 year ago",           value: "4 year ago"},
+            {text: "5 year ago",           value: "5 year ago"},
             {text: "start of month",       value: "start of month"},
             {text: "end of month",         value: "end of month"},
             {text: "start of last month",  value: "start of last month"},
