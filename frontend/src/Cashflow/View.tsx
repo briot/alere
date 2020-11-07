@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import Numeric from 'Numeric';
 import Table from 'List';
 import usePrefs from 'services/usePrefs';
-import './Cashflow.css';
+import './Cashflow.scss';
 
 const commMonths: Commodity = {
    id: -2,
@@ -77,10 +77,13 @@ const Metrics: React.FC<MetricsProps> = p => {
 
    return (
       <div className="metrics">
-         <h5>{p.name}</h5>
+         <div>
+            <h5>{p.name}</h5>
             <p className="descr">{p.descr}</p>
+         </div>
          <div className="values" >
             {
+               /*
                p.ideal !== undefined && !isNaN(p.ideal)  &&
                <span className="recommended">
                   (recommended {p.compare}
@@ -91,6 +94,7 @@ const Metrics: React.FC<MetricsProps> = p => {
                      />
                   )
                </span>
+               */
             }
             {
                React.isValidElement(p.value)
@@ -113,6 +117,8 @@ const Metrics: React.FC<MetricsProps> = p => {
       </div>
    );
 }
+
+const SectionHeader: React.FC<{}> = (p: {}) => null; // <h3>{s}</h3>
 
 
 export interface CashflowProps {
@@ -238,12 +244,12 @@ const Cashflow: React.FC<CashflowProps> = p => {
 
    return (
       <div className="cashflow">
-         <h3>Security</h3>
+         <SectionHeader>Security</SectionHeader>
 
          {/* thepoorswiss.com/11-best-personal-finance-metrics/ */}
          <Metrics
             name="Savings rate"
-            descr="How much of your income you are saving (not including how much the stock prices have changed)"
+            descr="How much of your realized income you are saving"
             value={cashflow / pl.income * 100}
             tooltip={`cashflow ${cashflow.toFixed(0)} / income ${pl.income.toFixed(0)}`}
             ideal={24}
@@ -253,7 +259,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
          {/* www.doughroller.net/personal-finance/3-step-financial-checkup/ */}
          <Metrics
             name="Emergency Fund Ratio"
-            descr="How many months worth of expenses can be funded through liquid assets, including investments and stocks"
+            descr="How many months worth of expenses can be funded through liquid assets"
             value={pl.liquid_assets / monthly_expenses}
             tooltip={`liquid assets ${pl.liquid_assets.toFixed(0)} / monthly expenses ${monthly_expenses.toFixed(0)}`}
             ideal={4}
@@ -262,7 +268,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
          />
          <Metrics
             name="Actual income tax rate"
-            descr="How much of your income you spend on taxes. This only includes income taxes, not other taxes"
+            descr="How much of your income you spend on income taxes"
             value={pl.income_taxes / pl.income * 100}
             tooltip={`Income taxes ${pl.income_taxes.toFixed(0)} / Total income ${pl.income.toFixed(0)}`}
             ideal={10}
@@ -270,11 +276,11 @@ const Cashflow: React.FC<CashflowProps> = p => {
             suffix="%"
          />
 
-         <h3>Comfort</h3>
+         <SectionHeader>Comfort</SectionHeader>
 
          <Metrics
             name="Wealth"
-            descr="How many months worth of expenses you own, total"
+            descr="How many months worth of expenses you own in total"
             value={pl.networth / monthly_expenses}
             tooltip={`Networth ${pl.networth.toFixed(0)} / Monthly expenses ${monthly_expenses.toFixed(0)}`}
             ideal={6}
@@ -308,11 +314,11 @@ const Cashflow: React.FC<CashflowProps> = p => {
             suffix="%"
          />
 
-         <h3>Wealth</h3>
+         <SectionHeader>Wealth</SectionHeader>
 
          <Metrics
             name="Financial independence"
-            descr="Part of your expenses covered by passive income (dividends, rents,...)"
+            descr="Part of your expenses covered by passive income"
             value={non_work_income / pl.expenses * 100}
             tooltip={`Passive income ${non_work_income.toFixed(0)} / Expenses ${pl.expenses.toFixed(0)}`}
             ideal={100}
@@ -321,7 +327,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
          />
          <Metrics
             name="Passive income"
-            descr="What part of the total income comes from sources other than the result of our work (salary,...)"
+            descr="What part of the total income comes from sources other than the result of our work"
             value={non_work_income / pl.income * 100}
             tooltip={`Passive income ${non_work_income.toFixed(0)} / Total Income ${pl.income.toFixed(0)}`}
             ideal={50}
@@ -337,7 +343,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
             commodity={currency}
          />
 
-         <h3>Cashflow</h3>
+         <h4>Cashflow</h4>
 
          <div className='table' style={{height: 'auto'}}>
             <div className="thead">
@@ -436,7 +442,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
             </div>
          </div>
 
-         <h3>Assets</h3>
+         <h4>Assets</h4>
 
          <div className='table' style={{height: 'auto'}}>
             <div className="thead">
