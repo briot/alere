@@ -1,0 +1,56 @@
+.panel {
+   color: var(--panel-fg);
+   box-shadow: 6px 6px 10px 0 var(--shadow-color);
+   border: 1px solid var(--shadow-color);
+
+   display: flex;
+   flex-flow: column nowrap;
+
+   .panel {
+      /* when nested, like Investments page */
+      margin-top: 5px;
+   }
+
+   .header {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 10px 5px 10px;
+      background: var(--panel-background);
+
+      h5 {
+         flex: 1 1;
+         font-variant: small-caps;
+      }
+      .group {
+         flex: 0 0;
+         display: flex;
+         justify-content: center;
+         align-items: stretch;
+      }
+   }
+
+   > .content {
+      flex: 1 1;
+      display: flex;
+      flex-flow: column nowrap;
+      padding: 0 10px 5px 10px;
+      background: var(--panel-background);
+   }
+
+   .settingsMenu {
+      position: relative;
+      cursor: pointer;
+   }
+}
+
+.col1 { grid-column: auto / span 1; }
+.col2 { grid-column: auto / span 2; }
+.col3 { grid-column: auto / span 3; }
+.col4 { grid-column: auto / span 4; }
+
+.row1 { grid-row: auto / span 1; }
+.row2 { grid-row: auto / span 2; }
+.row3 { grid-row: auto / span 3; }
+.row4 { grid-row: auto / span 4; }

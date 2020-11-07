@@ -4,7 +4,7 @@ import RoundButton from 'RoundButton';
 import Dropdown from 'Form/Dropdown';
 import { HeaderProps } from 'Header';
 import classes from 'services/classes';
-import './Panel.css';
+import './Panel.scss';
 
 /**
  * Properties for a dashboard panel, as saved in local storage.
