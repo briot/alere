@@ -1,6 +1,7 @@
 from .json import JSONView
 import alere
 import datetime
+from django.db.models import Q
 import math
 import yfinance as yf
 
@@ -177,10 +178,6 @@ class QuotesView(JSONView):
         # (with no money) transactions. So we post-process the result of the
         # query, rather than do everything in the database.
 
-        query2 = alere.models.Accounts_Security.objects \
-            .filter(account__commodity_id__in=symbols.keys()) \
-            .select_related('currency', 'account')
-
         accs = {}
 
         def next_transaction(acc, trans):
@@ -203,11 +200,30 @@ class QuotesView(JSONView):
                     "shares": 0,
                 }
                 accs[trans.account_id] = a
+
+                if trans.account.commodity_id not in symbols:
+                    symbols[trans.account.commodity_id] = {
+                        "id": trans.account.commodity_id,
+                        "name": "???",
+                        "ticker": "???",
+                        "source": None,
+                        "prices": [],
+                        "accounts": [],
+                        "currency": currency,
+                        "storedtime": None,
+                        "storedprice": None,
+                    }
+
                 symbols[trans.account.commodity_id]['accounts'].append(a)
                 return a
 
         acc = None   # account the current transaction is applying to
         current_transaction = None
+        query2 = alere.models.Accounts_Security.objects \
+            .filter(Q(account__commodity_id__in=symbols.keys())
+                    | Q(account__kind_id=alere.models.AccountFlags.INVESTMENT))\
+            .select_related('currency', 'account')
+
         try:
             for trans in query2:
                 if trans.transaction_id != current_transaction:
@@ -226,6 +242,7 @@ class QuotesView(JSONView):
             pass
 
         next_transaction(acc, None)
+
 
         return sorted(symbols.values(), key=lambda r: r['name'])  # symbols
 
