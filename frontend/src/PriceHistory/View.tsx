@@ -211,8 +211,8 @@ const PriceHistory: React.FC<PriceHistoryProps & ExtraProps> = p => {
                             type="stepAfter"
                             dataKey="position"
                             legendType="square"
-                            fill="var(--area-chart-fill)"
-                            stroke="var(--area-chart-stroke)"
+                            fill="var(--color-500-20p)"
+                            stroke="var(--color-400)"
                             isAnimationActive={false}
                             yAxisId="leftPos"
                         />
