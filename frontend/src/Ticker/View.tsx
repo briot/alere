@@ -5,6 +5,7 @@ import { DateDisplay } from 'Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
 import { Account, CommodityId } from 'services/useAccounts';
+import usePrefs from 'services/usePrefs';
 import AccountName from 'Account';
 import { AreaChart, XAxis, YAxis, Area, Tooltip,
          ReferenceLine } from 'recharts';
@@ -238,11 +239,16 @@ interface AccTickerProps {
 }
 
 const AccTicker: React.FC<AccTickerProps> = p => {
+   const { prefs } = usePrefs();
+   const currencyId = prefs.currencyId;
+
    const a = p.acc;
    const pr = p.ticker.prices;
    const close = pr[pr.length - 1]?.[1] || p.ticker.storedprice || NaN;
    const weighted_avg = a.absvalue / a.absshares;
    const avg_cost = a.value / a.shares;
+   const current_worth = (p.ticker?.storedprice || NaN) * a.shares;
+
    return (
    <div className="account">
       <div>
@@ -294,7 +300,7 @@ const AccTicker: React.FC<AccTickerProps> = p => {
               ? (
               <tr>
                  <th
-                    title="Average Cost: equivalent price for the remaining shares you own, taking into account dividends, added and removed shares,..."
+                    title="Average Cost: equivalent price for the remaining shares you own, taking into account reinvested dividends, added and removed shares,..."
                  >
                     Average Cost:
                  </th>
@@ -317,26 +323,46 @@ const AccTicker: React.FC<AccTickerProps> = p => {
               </tr>
               ) : null
            }
-           {
-              <tr>
-                 <th>Latest in database:</th>
-                 <td>
-                    <Numeric
-                        amount={p.ticker.storedprice}
-                        commodity={p.ticker.id}
-                        hideCommodity={true}
-                    />
-                    &nbsp;on&nbsp;
-                    <DateDisplay when={new Date(p.ticker.storedtime)} />
-                    &nbsp;(
-                    <Numeric
-                       amount={(close / (p.ticker.storedprice || NaN) - 1) * 100}
-                       suffix="%"
-                    />
-                    )
-                 </td>
-               </tr>
-           }
+           <tr>
+              <th>Latest in database:</th>
+              <td>
+                 <Numeric
+                     amount={p.ticker.storedprice}
+                     commodity={p.ticker.id}
+                     hideCommodity={true}
+                 />
+                 &nbsp;on&nbsp;
+                 <DateDisplay when={new Date(p.ticker.storedtime)} />
+                 &nbsp;(
+                 <Numeric
+                    amount={(close / (p.ticker.storedprice || NaN) - 1) * 100}
+                    suffix="%"
+                 />
+                 )
+              </td>
+            </tr>
+           <tr>
+              <th
+                 title="Total invested, minus total withdrawn and dividends"
+              >
+                 Total invested:
+              </th>
+              <td>
+                 <Numeric
+                     amount={a.value}
+                     commodity={currencyId}
+                 />
+              </td>
+            </tr>
+           <tr>
+              <th>Current worth:</th>
+              <td>
+                 <Numeric
+                     amount={current_worth}
+                     commodity={currencyId}
+                 />
+              </td>
+            </tr>
          </tbody>
       </table>
    </div>
