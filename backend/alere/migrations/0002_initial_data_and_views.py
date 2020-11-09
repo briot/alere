@@ -3,6 +3,7 @@
 from django.db import migrations
 import django.db
 from alere import models
+import sys
 
 
 networth_flags = ",".join("'%s'" % f for f in models.AccountFlags.networth())
@@ -16,78 +17,102 @@ def create_views(apps, schema_editor):
         name="Yahoo Finance",
     )
 
-    models.AccountKinds.objects.create(
-        name="Passive income",
-        flag=models.AccountFlags.PASSIVE_INCOME,
-        name_when_positive='Income',
-        name_when_negative='Expense',
-    )
-    models.AccountKinds.objects.create(
-        name="Work income",
-        flag=models.AccountFlags.WORK_INCOME,
-        name_when_positive='Income',
-        name_when_negative='Expense',
-    )
-    models.AccountKinds.objects.create(
-        name="Misc income",
-        flag=models.AccountFlags.MISC_INCOME,
-        name_when_positive='Income',
-        name_when_negative='Expense',
-    )
-    models.AccountKinds.objects.create(
-        name="Unrealized gains",
-        flag=models.AccountFlags.UNREALIZED_GAINS,
-        name_when_positive='Increase',
-        name_when_negative='Decrease',
-    )
-    models.AccountKinds.objects.create(
-        name="Expenses",
-        flag=models.AccountFlags.EXPENSE,
-        name_when_positive='Income',
-        name_when_negative='Expense',
-    )
-    models.AccountKinds.objects.create(
-        name="Income tax",
-        flag=models.AccountFlags.INCOME_TAX,
-        name_when_positive='Increase',
-        name_when_negative='Decrease',
-    )
-    models.AccountKinds.objects.create(
-        name="Other taxes",
-        flag=models.AccountFlags.MISC_TAX,
-        name_when_positive='Increase',
-        name_when_negative='Decrease',
-    )
-    models.AccountKinds.objects.create(
-        name="Liability",
-        flag=models.AccountFlags.LIABILITY,
-        name_when_positive='Increase',
-        name_when_negative='Decrease',
-    )
-    models.AccountKinds.objects.create(
-        name="Stocks",
-        flag=models.AccountFlags.STOCK,
-        name_when_positive='Add',
-        name_when_negative='Remove',
-    )
-    models.AccountKinds.objects.create(
-        name="Assets",
-        flag=models.AccountFlags.ASSET,
-        name_when_positive='Increase',
-        name_when_negative='Decrease',
-    )
-    models.AccountKinds.objects.create(
-        name="Bank accounts",
-        flag=models.AccountFlags.BANK,
-        name_when_positive='Deposit',
-        name_when_negative='Paiement',
-    )
-    models.AccountKinds.objects.create(
-        name="Equity",
-        flag=models.AccountFlags.EQUITY,
-        name_when_positive='Increase',
-        name_when_negative='Decrease',
-    )
+    for f in models.AccountFlags:
+        if f == models.AccountFlags.PASSIVE_INCOME:
+            models.AccountKinds.objects.create(
+                name="Passive income",
+                flag=models.AccountFlags.PASSIVE_INCOME,
+                name_when_positive='Income',
+                name_when_negative='Expense',
+            )
+        elif f == models.AccountFlags.WORK_INCOME:
+            models.AccountKinds.objects.create(
+                name="Work income",
+                flag=models.AccountFlags.WORK_INCOME,
+                name_when_positive='Income',
+                name_when_negative='Expense',
+            )
+        elif f == models.AccountFlags.MISC_INCOME:
+            models.AccountKinds.objects.create(
+                name="Misc income",
+                flag=models.AccountFlags.MISC_INCOME,
+                name_when_positive='Income',
+                name_when_negative='Expense',
+            )
+        elif f == models.AccountFlags.UNREALIZED_GAINS:
+            models.AccountKinds.objects.create(
+                name="Unrealized gains",
+                flag=models.AccountFlags.UNREALIZED_GAINS,
+                name_when_positive='Increase',
+                name_when_negative='Decrease',
+            )
+        elif f == models.AccountFlags.EXPENSE:
+            models.AccountKinds.objects.create(
+                name="Expenses",
+                flag=models.AccountFlags.EXPENSE,
+                name_when_positive='Income',
+                name_when_negative='Expense',
+            )
+        elif f == models.AccountFlags.INCOME_TAX:
+            models.AccountKinds.objects.create(
+                name="Income tax",
+                flag=models.AccountFlags.INCOME_TAX,
+                name_when_positive='Increase',
+                name_when_negative='Decrease',
+            )
+        elif f == models.AccountFlags.MISC_TAX:
+            models.AccountKinds.objects.create(
+                name="Other taxes",
+                flag=models.AccountFlags.MISC_TAX,
+                name_when_positive='Increase',
+                name_when_negative='Decrease',
+            )
+        elif f == models.AccountFlags.LIABILITY:
+            models.AccountKinds.objects.create(
+                name="Liability",
+                flag=models.AccountFlags.LIABILITY,
+                name_when_positive='Increase',
+                name_when_negative='Decrease',
+            )
+        elif f == models.AccountFlags.STOCK:
+            models.AccountKinds.objects.create(
+                name="Stocks",
+                flag=models.AccountFlags.STOCK,
+                name_when_positive='Add',
+                name_when_negative='Remove',
+            )
+        elif f == models.AccountFlags.ASSET:
+            models.AccountKinds.objects.create(
+                name="Assets",
+                flag=models.AccountFlags.ASSET,
+                name_when_positive='Increase',
+                name_when_negative='Decrease',
+            )
+        elif f == models.AccountFlags.BANK:
+            models.AccountKinds.objects.create(
+                name="Bank accounts",
+                flag=models.AccountFlags.BANK,
+                name_when_positive='Deposit',
+                name_when_negative='Paiement',
+            )
+        elif f == models.AccountFlags.EQUITY:
+            models.AccountKinds.objects.create(
+                name="Equity",
+                flag=models.AccountFlags.EQUITY,
+                name_when_positive='Increase',
+                name_when_negative='Decrease',
+            )
+        elif f == models.AccountFlags.INVESTMENT:
+            models.AccountKinds.objects.create(
+                name="Investment",
+                flag=models.AccountFlags.INVESTMENT,
+                name_when_positive='Deposit',
+                name_when_negative='Paiement',
+            )
+        else:
+            print('\n\nNo AccountKind for flag %s\n\n' % f)
+            sys.exit(1)
+
 
 
 class Migration(migrations.Migration):

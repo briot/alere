@@ -219,7 +219,10 @@ def __import_securities(
 def __import_account_types(cur):
     flag = {}
     for f in models.AccountFlags:
-        flag[f] = models.AccountKinds.objects.get(flag=f)
+        try:
+            flag[f] = models.AccountKinds.objects.get(flag=f)
+        except models.AccountKinds.DoesNotExist:
+            flag[f] = None
 
     mapped = {
         "Asset": flag[models.AccountFlags.ASSET],

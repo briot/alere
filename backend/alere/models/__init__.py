@@ -146,7 +146,12 @@ class AccountFlags(models.TextChoices):
     # A non-monetary asset (real-estate, car,...) that you want to track
 
     BANK = 'B'
-    # A bank account (saving, checking, investment,...)
+    # A bank account (saving, checking,...)
+
+    INVESTMENT = 'I'
+    # An investment account. These will in general be used to trade stocks,
+    # though occasionally it can be used for other accounts that you want to
+    # see in the investments page.
 
     EQUITY = 'EQ'
     # Money used to initial the database. This will typically contain opening
@@ -221,6 +226,7 @@ class AccountFlags(models.TextChoices):
             klass.BANK,
             klass.ASSET,
             klass.STOCK,
+            klass.INVESTMENT,
             klass.LIABILITY,
         )
 
@@ -230,6 +236,7 @@ class AccountFlags(models.TextChoices):
         return (
             klass.BANK,
             klass.STOCK,
+            klass.INVESTMENT,
             klass.LIABILITY,
         )
 

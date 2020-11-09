@@ -19,6 +19,10 @@ m = [
     (23,  models.AccountFlags.MISC_TAX),           # taxe fonciere
     (24,  models.AccountFlags.MISC_TAX),           # taxe habitation
     (156, models.AccountFlags.MISC_TAX),           # CSG
+    (160, models.AccountFlags.INVESTMENT),         # assurance-vie Anaelle
+    (125, models.AccountFlags.INVESTMENT),         # assurance-vie Manu Bourso
+    (128, models.AccountFlags.INVESTMENT),         # solesio
+
 ]
 
 for i, f in m:
