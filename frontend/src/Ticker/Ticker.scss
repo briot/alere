@@ -16,12 +16,14 @@
 
    .tooltip {
       display: none;
-      white-space: nowrap;
       text-align: left;
+      width: 250px;
+      white-space: normal;
    }
-   td:hover .tooltip {
+   tr:hover .tooltip {
       display: block;
       position: absolute;
+      margin-top: 20px;
       background: var(--page-background);
       color: var(--panel-fg);
       border: 1px solid var(--shadow-color);

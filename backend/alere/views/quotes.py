@@ -1,9 +1,78 @@
 from .json import JSONView
 import alere
 import datetime
-from django.db.models import Q
+import django.db
+from django.db.models import Max, Min
 import math
 import yfinance as yf
+
+
+class Account:
+    """
+    Details on an investment account
+    """
+    def __init__(self, account_id):
+        self.account_id = account_id
+        self.absvalue = 0
+        self.absshares = 0
+        self.value = 0
+        self.shares = 0
+        self.balance = None
+        self.oldest = None
+        self.latest = None
+
+    def to_json(self):
+        return {
+            "account": self.account_id,
+            "absvalue": self.absvalue,
+            "absshares": self.absshares,
+            "value": self.value,
+            "shares": self.shares,
+            "balance": self.balance,
+            "oldest": self.oldest,
+            "latest": self.latest,
+        }
+
+
+class Symbol:
+    """
+    Details on a traded symbol
+    """
+    def __init__(self, commodity_id, commodity_name, ticker, currency_id,
+            stored_time: datetime.datetime,
+            source: str = None,
+            stored_price: float = None,
+            is_currency=False,
+        ):
+        self.id = commodity_id
+        self.prices = []
+        self.source = source
+        self.commodity_name = commodity_name
+        self.ticker = ticker
+        self.accounts = []
+        self.currency_id = currency_id
+        self.stored_time = stored_time.strftime("%Y-%m-%d"),
+        self.stored_price = stored_price
+        self.oldest = None
+        self.is_currency = is_currency
+
+    def add_account(self, acc: Account):
+        self.accounts.append(acc)
+        return acc
+
+    def to_json(self):
+        return {
+            "id": self.id,
+            "name": self.commodity_name,
+            "ticker": self.ticker,
+            "source": self.source,
+            "prices": self.prices,
+            "accounts": self.accounts,
+            "currency": self.currency_id,
+            "storedtime": self.stored_time,
+            "storedprice": self.stored_price,
+            "is_currency": self.is_currency,
+        }
 
 
 class QuotesView(JSONView):
@@ -12,7 +81,7 @@ class QuotesView(JSONView):
         """
         Fetch prices from database, for symbols that do not have prices yet.
         """
-        ids = [int(s['id']) for s in symbols.values() if not s['prices']]
+        ids = [int(s.id) for s in symbols.values() if not s.prices]
         if ids:
             q = alere.models.Prices.objects \
                 .select_related('origin') \
@@ -20,20 +89,20 @@ class QuotesView(JSONView):
                         target_id=currency)
 
             for row in q:
-                symbols[row.origin_id]['prices'].append(
+                symbols[row.origin_id].prices.append(
                     (row.date.timestamp() * 1e3,
                      row.scaled_price / row.origin.price_scale)
                 )
 
             for id in ids:
-                symbols[id]['source'] = 'database'
+                symbols[id].source = 'database'
 
     def from_yahoo(self, symbols):
         """
         Fetch prices from Yahoo
         """
-        tickers = [s['ticker'] for s in symbols.values()
-                   if s['source'] == "Yahoo Finance"]
+        tickers = [s.ticker for s in symbols.values()
+                   if s.source == "Yahoo Finance"]
         if tickers:
             data = yf.download(
                 tickers,
@@ -44,81 +113,13 @@ class QuotesView(JSONView):
             )
             d = data['Adj Close'].to_dict()
             for s in symbols.values():
-                if s['ticker'] in d:
-                    s['prices'] = [
+                if s.ticker in d:
+                    s.prices = [
                         (timestamp.timestamp() * 1e3, val)
-                        for timestamp, val in d[s['ticker']].items()
+                        for timestamp, val in d[s.ticker].items()
                         if not math.isnan(val)
                     ]
-                    s['prices'].sort(key=lambda v: v[0]) # order by timestamp
-
-    def roi_from_balance(self, symbols, currency):
-        """
-        For accounts that do not use prices (mutual funds,...) we simply compute
-        performance by computing the balance from the account.
-        """
-        ids = [s.id for s in symbols.values() if not s.prices]
-        if not ids:
-            return;
-
-        ids_str = ','.join(f"'{id}'" for id in ids)
-
-        q = f"""
-        WITH RECURSIVE
-        first_split_dates AS (
-            SELECT MIN(kmmSplits.postDate) as mindate,
-               kmmSplits.accountId as accountId,
-               kmmAccounts.currencyId as currencyId
-            FROM kmmSplits, kmmAccounts
-            WHERE kmmAccounts.currencyId IN ({ids_str})
-              AND kmmSplits.accountId=kmmAccounts.id
-            GROUP BY kmmSplits.accountId
-        ),
-        all_dates AS (
-            SELECT first_split_dates.accountId,
-               first_split_dates.currencyId,
-               first_split_dates.mindate as date
-               FROM first_split_dates
-            UNION ALL
-            SELECT all_dates.accountId,
-                  all_dates.currencyId,
-                  DATE(all_dates.date, "+1 MONTHS")
-               FROM all_dates
-               WHERE all_dates.date < CURRENT_DATE
-        ),
-        {kmm._price_history(currency)}
-
-        SELECT
-           all_dates.accountId,
-           all_dates.currencyId,
-           all_dates.date,
-           coalesce(price_history.computedPrice, 1) as computedPrice,
-           SUM({kmm._to_float('s.shares')}) as balanceShares,
-           SUM(CASE
-              WHEN s.action IN ('Buy', 'Sell') THEN
-                 {kmm._to_float('s.value')}   --  doesn't include fees
-              ELSE 0
-              END) as invested
-        FROM
-           kmmSplits s,
-           all_dates
-           LEFT JOIN price_history
-              ON (price_history.fromId = all_dates.currencyId
-                  AND all_dates.date >= price_history.priceDate
-                  AND all_dates.date < price_history.maxDate)
-        WHERE all_dates.accountId=s.accountId
-           AND s.postDate <= all_dates.date
-        GROUP BY all_dates.accountId, all_dates.date, computedPrice
-
-        ORDER BY all_dates.accountId, all_dates.date
-        """
-
-        for row in do_query(q):
-            symbols[row.currencyId].prices.append(
-                (datetime.datetime.fromisoformat(row.date).timestamp() * 1e3,
-                row.computedPrice * row.balanceShares - row.invested)
-            )
-
+                    s.prices.sort(key=lambda v: v[0]) # order by timestamp
 
     def get_json(self, params):
         update = self.as_bool(params, 'update', False)
@@ -140,18 +141,16 @@ class QuotesView(JSONView):
             query = query.filter(id__in=commodities)
 
         symbols = {
-            c.id: {
-                "id": c.id,
-                "name": c.name,
-                "ticker": c.quote_symbol,
-                "source": c.quote_source.name if c.quote_source else None,
-                "prices": [],
-                "accounts": [],
-                "currency": currency,
-                "storedtime": c.latest_price.date.strftime("%Y-%m-%d"),
-                "storedprice": c.latest_price.scaled_price /
+            c.id: Symbol(
+                commodity_id=c.id,
+                commodity_name=c.name,
+                ticker=c.quote_symbol,
+                currency_id=currency,
+                source=c.quote_source.name if c.quote_source else None,
+                stored_time=c.latest_price.date,
+                stored_price=c.latest_price.scaled_price /
                    c.latest_price.origin.price_scale,
-            }
+            )
             for c in query
         }
 
@@ -160,7 +159,6 @@ class QuotesView(JSONView):
 
         if update:
             self.from_yahoo(symbols)
-        # self.roi_from_balance(symbols, currency=currency)
         self.from_database(symbols, currency=currency)
 
         ########
@@ -182,46 +180,24 @@ class QuotesView(JSONView):
 
         def next_transaction(acc, trans):
             if acc is not None:
-                acc['value'] += money_for_trans
-                acc['shares'] += shares_for_trans
+                acc.value += money_for_trans
+                acc.shares += shares_for_trans
                 if money_for_trans != 0 and shares_for_trans != 0:
-                    acc['absshares'] += abs(shares_for_trans)
-                    acc['absvalue'] += abs(money_for_trans)
+                    acc.absshares += abs(shares_for_trans)
+                    acc.absvalue += abs(money_for_trans)
 
             if trans is not None:
                 if trans.account_id in accs:
                     return accs[trans.account_id]
-
-                a = {
-                    "account": trans.account_id,
-                    "absvalue": 0,
-                    "absshares": 0,
-                    "value": 0,
-                    "shares": 0,
-                }
+                a = symbols[trans.account.commodity_id].add_account(
+                    Account(trans.account_id))
                 accs[trans.account_id] = a
-
-                if trans.account.commodity_id not in symbols:
-                    symbols[trans.account.commodity_id] = {
-                        "id": trans.account.commodity_id,
-                        "name": "???",
-                        "ticker": "???",
-                        "source": None,
-                        "prices": [],
-                        "accounts": [],
-                        "currency": currency,
-                        "storedtime": None,
-                        "storedprice": None,
-                    }
-
-                symbols[trans.account.commodity_id]['accounts'].append(a)
                 return a
 
         acc = None   # account the current transaction is applying to
         current_transaction = None
         query2 = alere.models.Accounts_Security.objects \
-            .filter(Q(account__commodity_id__in=symbols.keys())
-                    | Q(account__kind_id=alere.models.AccountFlags.INVESTMENT))\
+            .filter(account__commodity_id__in=symbols.keys()) \
             .select_related('currency', 'account')
 
         try:
@@ -234,7 +210,7 @@ class QuotesView(JSONView):
 
                 if trans.currency.kind == alere.models.CommodityKinds.CURRENCY:
                     # Need '-' because this was for another account
-                    money_for_trans += -trans.scaled_qty / trans.scale
+                    money_for_trans -= trans.scaled_qty / trans.scale
                 else:
                     shares_for_trans += trans.scaled_qty / trans.scale
 
@@ -243,6 +219,95 @@ class QuotesView(JSONView):
 
         next_transaction(acc, None)
 
+        # Add the investments accounts that are not related to a specific
+        # security.
 
-        return sorted(symbols.values(), key=lambda r: r['name'])  # symbols
+        flags = ",".join("'%s'" % f
+            for f in alere.models.AccountFlags.networth()
+                + (alere.models.AccountFlags.EQUITY, ))
+
+        query3 = f"""
+            SELECT
+               invest.commodity_id,
+               invest.id,
+               SUM(s.value),
+               alr_commodities.name,
+               alr_commodities.iso_code
+            FROM
+               alr_accounts invest
+               JOIN alr_splits for_account ON (invest.id=for_account.account_id)
+               JOIN alr_transactions t ON (t.id=for_account.transaction_id)
+               JOIN alr_splits_with_value s ON (s.transaction_id=t.id)
+               JOIN alr_accounts ON (alr_accounts.id=s.account_id)
+               JOIN alr_commodities ON (alr_commodities.id=invest.commodity_id)
+            WHERE
+               invest.kind_id = '{alere.models.AccountFlags.INVESTMENT}'
+               AND s.account_id != invest.id
+               AND alr_accounts.kind_id IN ({flags})
+               AND s.value_currency_id=%s
+            GROUP BY invest.commodity_id, invest.id
+        """
+
+        invest = []
+        current_account = Account(-1)
+        now = datetime.datetime.now().astimezone(datetime.timezone.utc)
+
+        with django.db.connection.cursor() as cur:
+            cur.execute(query3, [currency])
+            for cur_id, account_id, value, com_name, iso in cur.fetchall():
+                if cur_id not in symbols:
+                    symbols[cur_id] = Symbol(
+                        commodity_id=cur_id,
+                        commodity_name=com_name,
+                        ticker=iso,
+                        currency_id=currency,
+                        stored_price=None,
+                        stored_time=now,
+                        is_currency=True,
+                    )
+                invest.append(account_id)
+                a = Account(account_id)
+                accs[account_id] = a
+
+                a.value = -value
+                symbols[cur_id].add_account(a)
+
+        # compute current networth for the investment accounts
+        query4 = alere.models.Balances_Currency.objects.filter(
+            account_id__in=invest,
+            commodity_id=currency,
+            mindate__lte=now,
+            maxdate__gt=now,
+        )
+        for b in query4:
+            accs[b.account_id].balance = b.balance
+
+        # Compute oldest transaction date for all accounts. These are the
+        # transactions to or from other bank accounts (so that for instance
+        # we ignore "unrealized gains")
+
+        syds = ",".join("%d" % s for s in accs)
+        query5 = f"""
+            SELECT
+               alr_splits.account_id,
+               MIN(s.post_date) as oldest,
+               MAX(s.post_date) as latest
+            FROM
+               alr_splits
+               JOIN alr_transactions t ON (t.id=alr_splits.transaction_id)
+               JOIN alr_splits s ON (s.transaction_id=t.id)
+               JOIN alr_accounts ON (alr_accounts.id=s.account_id)
+            WHERE
+               alr_splits.account_id IN ({syds})
+               AND s.account_id != alr_splits.account_id
+               AND alr_accounts.kind_id IN ({flags})
+            GROUP BY alr_splits.account_id
+        """
+        with django.db.connection.cursor() as cur:
+            cur.execute(query5)
+            for a, oldest, latest in cur.fetchall():
+                accs[a].oldest = datetime.datetime.fromisoformat(oldest).timestamp()
+                accs[a].latest = datetime.datetime.fromisoformat(latest).timestamp()
+
+        return sorted(symbols.values(), key=lambda r: r.commodity_name)
 

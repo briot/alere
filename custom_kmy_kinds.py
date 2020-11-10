@@ -22,6 +22,7 @@ m = [
     (160, models.AccountFlags.INVESTMENT),         # assurance-vie Anaelle
     (125, models.AccountFlags.INVESTMENT),         # assurance-vie Manu Bourso
     (128, models.AccountFlags.INVESTMENT),         # solesio
+    (127, models.AccountFlags.EQUITY),             # reconciliation
 
 ]
 

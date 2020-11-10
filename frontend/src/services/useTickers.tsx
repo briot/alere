@@ -7,6 +7,7 @@ interface TickerJSON {
    name: string;
    ticker: string;
    source: string;
+   is_currency: boolean;
 
    storedtime: string;   // timestamp of last stored price
    storedprice: number|null;
@@ -20,6 +21,9 @@ interface TickerJSON {
       absshares: number;
       value: number;
       shares: number;
+      oldest: number;
+      latest: number;
+      balance?: number;  // computed automatically if needed
    }[];
 }
 
@@ -59,8 +63,11 @@ const useTickers = (
             accounts: t.accounts.map(a => ({
                ...a,
                account: accounts.getAccount(a.account),
+               balance: a.balance ?? (a.shares * (t.storedprice || NaN)),
             }))
-            .filter(a => !hideIfNoShare || Math.abs(a.shares) > THRESHOLD)
+            .filter(a => !hideIfNoShare
+               || t.is_currency
+               || Math.abs(a.shares) > THRESHOLD)
          })).filter(t => !hideIfNoShare || t.accounts.length > 0);
 
          setTickers(accs);

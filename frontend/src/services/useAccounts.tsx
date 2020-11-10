@@ -215,6 +215,7 @@ export const cmpAccounts = (a : Account|undefined, b: Account|undefined) => {
 
 interface IAccountsContext {
    accounts: AccountList;
+   commodities: { [id: number /*CommodityId*/]: Commodity};
 
    refresh: () => void;
    // Call refresh() to request a refresh of the list of accounts
@@ -222,6 +223,7 @@ interface IAccountsContext {
 
 const noContext: IAccountsContext = {
    accounts: new AccountList([], {}, {}, {}),
+   commodities: {},
    refresh: () => {},
 }
 
@@ -233,7 +235,9 @@ export const AccountsProvider: React.FC<{}> = p => {
    const refresh = React.useCallback(
       async () => {
          const accounts = await AccountList.fetch();
-         setCtx({accounts, refresh});
+         setCtx({accounts,
+                 commodities: accounts.allCommodities,
+                 refresh});
       },
       []
    );

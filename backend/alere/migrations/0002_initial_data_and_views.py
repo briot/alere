@@ -202,7 +202,7 @@ class Migration(migrations.Migration):
                alr_commodities,
                alr_commodities source
             WHERE
-               --  price from: the account's comodity
+               --  price from: the account's commodity
                source.id = alr_balances.commodity_id
                AND alr_balances.commodity_id=alr_price_history.origin_id
 
@@ -242,6 +242,7 @@ class Migration(migrations.Migration):
                row_number() OVER () as id,   --  for django's sake
                alr_splits.*,
                alr_splits.currency_id AS value_currency_id,
+               alr_accounts.commodity_id,
                CAST(alr_splits.scaled_price * alr_splits.scaled_qty AS FLOAT)
                   / alr_commodities.price_scale
                   / alr_accounts.commodity_scu
