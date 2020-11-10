@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { ClosePrice, THRESHOLD, Ticker } from 'Ticker/View';
 import useAccounts, { AccountId, CommodityId } from 'services/useAccounts';
+import useAccountIds, { AccountIdSet } from 'services/useAccountIds';
 
 interface TickerJSON {
    id: CommodityId;
@@ -30,6 +31,7 @@ interface TickerJSON {
 const useTickers = (
    currencyId: CommodityId,  // what currency should prices be given in
    fromProviders: boolean,   // whether to load prices from source provides
+   accountIds: AccountIdSet, // restrict to a specific set of accounts
    hideIfNoShare?: boolean,  // ignore commodities not owned by user
    commodity?: CommodityId,  // restrict to some specific commodities
    skip?: boolean,           // if true, do not fetch anything
@@ -37,6 +39,8 @@ const useTickers = (
    const { accounts } = useAccounts();
    const [json, setJson] = React.useState<TickerJSON[]>([]);
    const [tickers, setTickers] = React.useState<Ticker[]>([]);
+   const accs = useAccountIds(accountIds);
+   const ids = accs.accounts.map(a => a.id).sort().join(',');
 
    React.useEffect(
       () => {
@@ -44,6 +48,7 @@ const useTickers = (
             const resp = await window.fetch(
                `/api/quotes?update=${fromProviders}&currency=${currencyId}`
                + (commodity ? `&commodities=${commodity}` : '')
+               + (ids ? `&accounts=${ids}` : '')
             );
             const data: TickerJSON[] = await resp.json();
             setJson(data);
@@ -53,7 +58,7 @@ const useTickers = (
             dofetch();
          }
       },
-      [fromProviders, currencyId, commodity, skip]
+      [fromProviders, currencyId, commodity, skip, ids]
    );
 
    React.useEffect(

@@ -17,13 +17,16 @@ export interface InvestmentsProps {
 }
 const Investments: React.FC<InvestmentsProps> = p => {
    const { prefs } = usePrefs();
-   const tickers = useTickers(prefs.currencyId, p.fromProviders, p.hideIfNoShare);
+   const tickers = useTickers(
+      prefs.currencyId, p.fromProviders,
+      'all' /* accountIds */, p.hideIfNoShare);
    const doNothing = React.useCallback(() => {}, []);
    const panels = tickers.map(t => ({
          type: 'ticker',
          colspan: 1,
          rowspan: 1,
          ticker: t,
+         accountIds: 'all',
          showWALine: p.showWALine,
          showACLine: p.showACLine,
       } as TickerPanelProps

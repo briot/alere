@@ -456,7 +456,6 @@ interface ExtraProps {
 }
 
 const TickerView: React.FC<TickerViewProps & ExtraProps> = p => {
-   // ??? tooltip:   `Ticker: ${p.ticker.ticker}`
    return (
       <>
          {

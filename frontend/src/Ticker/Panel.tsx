@@ -2,6 +2,7 @@ import * as React from 'react';
 import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
 import TickerView, { Ticker, TickerViewProps } from './View';
 import { CommodityId } from 'services/useAccounts';
+import { AccountIdSet } from 'services/useAccountIds';
 import useTickers from 'services/useTickers';
 import usePrefs from 'services/usePrefs';
 import { isNumeric } from 'services/utils';
@@ -13,6 +14,9 @@ export interface TickerPanelProps extends PanelBaseProps, TickerViewProps {
    // instance to pre-load a large number of commodities) or loaded as needed
    // if you provide a CommodityId.
    // If undefined, nothing is shown.
+
+   accountIds: AccountIdSet;
+   // Restrict to one specific account
 }
 
 const TickerPanel: React.FC<PanelProps<TickerPanelProps>> = p => {
@@ -22,9 +26,10 @@ const TickerPanel: React.FC<PanelProps<TickerPanelProps>> = p => {
    const downloaded = useTickers(
       prefs.currencyId /* currencyId */,
       false            /* fromProvides */,
+      p.props.accountIds  /* accountIds */,
       false            /* hideIfNoShare */,
       isNumeric(p.props.ticker) ? p.props.ticker as number : undefined,
-      p.props.ticker === undefined || !isNumeric(p.props.ticker)  /* skip */
+      p.props.ticker === undefined || !isNumeric(p.props.ticker), /* skip */
    );
 
    const tk =

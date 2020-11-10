@@ -125,6 +125,10 @@ class QuotesView(JSONView):
         update = self.as_bool(params, 'update', False)
         currency = self.as_commodity_id(params, 'currency')
         commodities = params.get('commodities', None)
+        accounts = params.get('accounts')  # comma-separate list of ids
+
+        if accounts:
+            accounts = [int(c) for c in accounts.split(',')]
 
         if commodities:
             commodities = [int(c) for c in commodities.split(',')]
@@ -200,6 +204,9 @@ class QuotesView(JSONView):
             .filter(account__commodity_id__in=symbols.keys()) \
             .select_related('currency', 'account')
 
+        if accounts:
+            query2 = query2.filter(account_id__in=accounts)
+
         try:
             for trans in query2:
                 if trans.transaction_id != current_transaction:
@@ -255,22 +262,23 @@ class QuotesView(JSONView):
         with django.db.connection.cursor() as cur:
             cur.execute(query3, [currency])
             for cur_id, account_id, value, com_name, iso in cur.fetchall():
-                if cur_id not in symbols:
-                    symbols[cur_id] = Symbol(
-                        commodity_id=cur_id,
-                        commodity_name=com_name,
-                        ticker=iso,
-                        currency_id=currency,
-                        stored_price=None,
-                        stored_time=now,
-                        is_currency=True,
-                    )
-                invest.append(account_id)
-                a = Account(account_id)
-                accs[account_id] = a
+                if accounts is None or account_id in accounts:
+                    if cur_id not in symbols:
+                        symbols[cur_id] = Symbol(
+                            commodity_id=cur_id,
+                            commodity_name=com_name,
+                            ticker=iso,
+                            currency_id=currency,
+                            stored_price=None,
+                            stored_time=now,
+                            is_currency=True,
+                        )
+                    invest.append(account_id)
+                    a = Account(account_id)
+                    accs[account_id] = a
 
-                a.value = -value
-                symbols[cur_id].add_account(a)
+                    a.value = -value
+                    symbols[cur_id].add_account(a)
 
         # compute current networth for the investment accounts
         query4 = alere.models.Balances_Currency.objects.filter(

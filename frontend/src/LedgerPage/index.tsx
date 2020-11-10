@@ -30,6 +30,7 @@ const defaultPanels = [
       showWALine: true,
       showACLine: true,
       ticker: undefined,
+      accountIds: 'all',  // overridden later
    } as TickerPanelProps,
    {
       type: 'ledger',
