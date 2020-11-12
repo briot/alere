@@ -19,6 +19,7 @@
       text-align: left;
       width: 250px;
       white-space: normal;
+      z-index: 2000;
    }
    tr:hover .tooltip {
       display: block;

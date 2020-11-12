@@ -1,23 +1,18 @@
 import alere
 import datetime
 from .json import JSONView
+from typing import List
 
 
-class NetworthView(JSONView):
-
-    def get_json(self, params):
-        dates = params.get('dates', '').split(',')
-        currency = self.as_commodity_id(params, 'currency')
-
+def networth(
+        dates: List[datetime.datetime],
+        currency_id: int,
+    ):
         shares = {}
         prices = {}
-
-        for d_idx, d in enumerate(dates):
-            dt = datetime.datetime.fromisoformat(d).astimezone(
-                    datetime.timezone.utc)
-
+        for d_idx, dt in enumerate(dates):
             for acc in alere.models.Balances_Currency.objects \
-                   .filter(commodity_id=currency,
+                   .filter(commodity_id=currency_id,
                            mindate__lte=dt,
                            maxdate__gt=dt,
                            account__kind__in=
@@ -37,3 +32,13 @@ class NetworthView(JSONView):
             }
             for acc, s in shares.items()
         ]
+
+
+
+class NetworthView(JSONView):
+
+    def get_json(self, params):
+        return networth(
+            dates=self.as_time_list(params, 'dates', []),
+            currency_id=self.as_commodity_id(params, 'currency'),
+        )

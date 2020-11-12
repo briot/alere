@@ -371,14 +371,14 @@ class Transactions(AlereModel):
     # before the corresponding splits are effective on their respective
     # accounts.
 
-    memo = models.TextField()
+    memo = models.TextField(null=True)
 
     payee = models.TextField(null=True)
     # kmymoney has this in the Split, which means different splits of a given
     # transaction can have a different payee. The GUI doesn't seem to support
     # that though.
 
-    check_number = models.TextField()
+    check_number = models.TextField(null=True)
 
     # is_scheduled = models.Boolean()   # kmyMoney has txType = ('N', 'S')
     # ??? better stored in a separate table, which can include recurrence

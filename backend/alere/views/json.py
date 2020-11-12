@@ -20,7 +20,26 @@ class CustomJSONEncoder(json.JSONEncoder):
 coder = CustomJSONEncoder(allow_nan=True)
 
 
-class JSONView(View):
+class ParamDecoder:
+
+    def convert_time(self, value: str = None):
+        """
+        Return the given parameter as a datetime
+        """
+        if value is None:
+            return None
+
+        return datetime.datetime \
+            .fromisoformat(value) \
+            .astimezone(datetime.timezone.utc)
+
+    def convert_to_int_list(self, value: str = None):
+        if value is None:
+            return value
+        return [int(d) for d in value.split(',')]
+
+
+class JSONView(View, ParamDecoder):
     def get_json(self, params, *args, **kwargs):
         return {}
 
@@ -44,14 +63,21 @@ class JSONView(View):
         return bool(v) and v.lower() not in ('false', '0', 'undefined')
 
     def as_time(self, params, name, default=None):
+        return self.convert_time(params.get(name, default))
+
+    def as_time_list(self, params, name, default=None):
         """
-        Return the given parameter as a datetime
+        Return the given parameter as a list of datetime
         """
         v = params.get(name, default)
         if v is None:
-            return None
+            return v
+        return [
+            datetime.datetime.fromisoformat(d).astimezone(datetime.timezone.utc)
+            for d in v.split(',')
+        ]
 
-        return datetime.datetime \
-            .fromisoformat(v) \
-            .astimezone(datetime.timezone.utc)
+    def as_int_list(self, params, name, default=None):
+        return self.convert_to_int_list(params.get(name, default))
+
 

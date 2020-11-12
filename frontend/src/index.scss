@@ -266,10 +266,10 @@ p {
 }
 p:lang(fr),
 p:lang(en) {
-    text-align: justify;
-    hyphens: auto;
+    //  text-align: justify;
+    //  hyphens: auto;
 }
 p:lang(it) { // The browser does NOT correctly support hyphenation
-    text-align: left;
-    hyphens: none;
+    //  text-align: left;
+    //  hyphens: none;
 }

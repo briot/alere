@@ -1,0 +1,180 @@
+import alere
+import datetime
+from .ledger import ledger
+from .networth import networth
+from .base_test import BaseTest, Split
+from typing import List, Tuple
+
+
+class NetworthTestCase(BaseTest):
+
+    def setUp(self):
+        super().setUp()
+        self.maxDiff = None
+
+        self.create_transaction(
+            [Split(self.salary,  -1234, '2020-11-01'),
+             Split(self.checking, 1234, '2020-11-02')])
+        self.create_transaction(
+            [Split(self.salary,  -100, '2020-11-03'),
+             Split(self.checking, 100, '2020-11-04')])
+        self.create_transaction(
+            [Split(self.salary,    1000, '2020-11-03'),
+             Split(self.checking, -1000, '2020-11-03')])
+
+        # A transaction in a foreign currency.
+        # xrate:  1 EUR = 0.85 USD
+        # bought 2.12 USD  (price_scale is 1000)
+        # equivalent to 1.80 EUR (qty_scale is 100)
+        self.create_transaction(
+            [Split(self.groceries,
+                   212,   # scaled by groceries'commodity (EUR), i.e. 100
+                   '2020-11-25',
+                   self.usd, 850,  # scaled by usd qty_scale, i.e. 1000
+                ),
+             Split(self.checking,  -180, '2020-11-25')])
+
+    def test_networth(self):
+
+        # No date specified
+        a = networth(dates=[], currency_id=1)
+        self.assertEqual(a, [])
+
+        # Date prior to all transactions
+        a = networth(
+            dates=[self.convert_time('2010-11-20')],
+            currency_id=self.eur)
+        self.assertEqual(a, [])
+
+        # Date in the middle of transactions
+        self.assertEqual(
+            networth(
+                dates=[self.convert_time('2020-11-02')],
+                currency_id=self.eur),
+            [
+                {'accountId': self.checking.id,
+                 'price': [1.0], 'shares': [12.34]},
+            ])
+
+        # Date after the transactions
+        self.assertEqual(
+            networth(
+                dates=[self.convert_time('2020-11-20')],
+                currency_id=self.eur),
+            [
+                {'accountId': self.checking.id,
+                 'price': [1.0], 'shares': [3.34]},
+            ])
+
+        # Date after transactions in foreign currency
+        self.assertEqual(
+            networth(
+                dates=[self.convert_time('2020-11-26')],
+                currency_id=self.eur),
+            [
+                {'accountId': self.checking.id,
+                 'price': [1.0], 'shares': [1.54]},
+            ])
+
+    def test_ledger(self):
+        self.assertEqual(
+            ledger(
+                ids=[self.checking.id],
+                mindate=self.convert_time('2010-01-01'),
+                maxdate=self.convert_time('2999-01-01'),
+            ),
+            [
+                {'id': 1,
+                 'date': '2020-11-01',
+                 'balance': 12.34,
+                 'balanceShares': 12.34,
+                 'memo': None,
+                 'payee': None,
+                 'checknum': None,
+                 'splits': [
+                     {'accountId': self.salary.id,
+                      'amount': -12.34,
+                      'date': '2020-11-01',
+                      'price': 1.0,
+                      'reconcile': 'n',
+                      'shares': -12.34,
+                     },
+                     {'accountId': self.checking.id,
+                      'amount': 12.34,
+                      'date': '2020-11-02',
+                      'price': 1.0,
+                      'reconcile': 'n',
+                      'shares': 12.34,
+                      }
+                ]},
+                {'id': 2,
+                 'date': '2020-11-03',
+                 'balance': 13.34,
+                 'balanceShares': 13.34,
+                 'memo': None,
+                 'payee': None,
+                 'checknum': None,
+                 'splits': [
+                     {'accountId': self.salary.id,
+                      'date': '2020-11-03',
+                      'amount': -1.0,
+                      'reconcile': 'n',
+                      'shares': -1.0,
+                      'price': 1.0
+                     },
+                     {'accountId': self.checking.id,
+                      'date': '2020-11-04',
+                      'amount': 1.0,
+                      'reconcile': 'n',
+                      'shares': 1.0,
+                      'price': 1.0
+                     }
+                ]},
+                {'id': 3,
+                 'date': '2020-11-03',
+                 'balance': 3.34,
+                 'balanceShares': 3.34,
+                 'memo': None,
+                 'payee': None,
+                 'checknum': None,
+                 'splits': [
+                     {'accountId': self.salary.id,
+                      'date': '2020-11-03',
+                      'amount': 10.0,
+                      'reconcile': 'n',
+                      'shares': 10.0,
+                      'price': 1.0
+                      },
+                     {'accountId': self.checking.id,
+                      'date': '2020-11-03',
+                      'amount': -10.0,
+                      'reconcile': 'n',
+                      'shares': -10.0,
+                      'price': 1.0
+                      }
+                ]},
+                {'id': 4,
+                 'date': '2020-11-25',
+                 'balance': 1.5399999999999998,
+                 'balanceShares': 1.5399999999999998,   # 1.54 EUR
+                 'memo': None,
+                 'payee': None,
+                 'checknum': None,
+                 'splits': [
+                     {'accountId': self.groceries.id,
+                      'amount': 1.8019999999999998,    # in EUR
+                      'date': '2020-11-25',
+                      'price': 0.85,     # conversion rate
+                      'reconcile': 'n',
+                      'shares': 2.12,    # in USD
+                      },
+                     {'accountId': self.checking.id,
+                      'amount': -1.8,    # in EUR
+                      'date': '2020-11-25',
+                      'price': 1.0,
+                      'reconcile': 'n',
+                      'shares': -1.8,    # in EUR
+                     }
+                ]}
+            ]
+        )
