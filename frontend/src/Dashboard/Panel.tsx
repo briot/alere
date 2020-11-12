@@ -73,6 +73,7 @@ function Panel<T extends PanelBaseProps>(
                {
                   p.Settings !== null &&
                   <Dropdown
+                     animate={true}
                      button={(visible: boolean) =>
                         <RoundButton fa='fa-bars' size='tiny' selected={visible} />
                      }

@@ -6,6 +6,7 @@ interface DropdownProps {
    button: (visible: boolean) => React.ReactNode;
    menu: React.ReactNode;
    className?: string;
+   animate?: boolean;
 
    // If true, the dropdown is closed when clicking inside it. Otherwise we
    // keep it open.
@@ -111,6 +112,7 @@ const Dropdown: React.FC<DropdownProps> = p => {
    );
    const menuc = classes(
       'menu',
+      p.animate && 'animate',
       visible && 'visible',
    );
 

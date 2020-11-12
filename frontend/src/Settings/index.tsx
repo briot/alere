@@ -17,6 +17,7 @@ const Settings: React.FC<SettingsProps> = p => {
 
    return (
       <Dropdown
+         animate={true}
          className="settings"
          button={(visible: boolean) =>
             <RoundButton
