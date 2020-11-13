@@ -4,6 +4,7 @@ import Settings from './Settings';
 import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
 import { rangeDisplay } from 'Dates';
 import { capitalize } from 'services/utils';
+import useAccounts from 'services/useAccounts';
 
 export interface NetworthHistoryPanelProps
 extends PanelBaseProps, NetworthHistoryProps {
@@ -11,6 +12,11 @@ extends PanelBaseProps, NetworthHistoryProps {
 }
 
 const NetworthHistoryPanel: React.FC<PanelProps<NetworthHistoryPanelProps>> = p => {
+   const { accounts } = useAccounts();
+   if (!accounts.has_accounts()) {
+      return null;
+   }
+
    const r = rangeDisplay(p.props.range);
    return (
       <Panel

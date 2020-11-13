@@ -4,6 +4,7 @@ import Settings from 'Mean/Settings';
 import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
 import { rangeDisplay } from 'Dates';
 import { capitalize } from 'services/utils';
+import useAccounts from 'services/useAccounts';
 
 export interface MeanPanelProps extends PanelBaseProps, MeanProps {
    type: 'mean';
@@ -15,6 +16,11 @@ const MeanPanel: React.FC<PanelProps<MeanPanelProps>> = p => {
       p.props.showExpenses ? 'expenses' : undefined,
       p.props.showIncome ? 'income' : undefined,
    ].filter(v => v !== undefined).join(' and ');
+
+   const { accounts } = useAccounts();
+   if (!accounts.has_accounts()) {
+      return null;
+   }
 
    return (
       <Panel

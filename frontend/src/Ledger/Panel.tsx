@@ -20,9 +20,13 @@ const LedgerPanel: React.FC<
    const transactions = useTransactions(
       accounts, p.props.range, p.transactions);
    const setSortOn = (sortOn: string) => p.save({ sortOn });
-   const r = p.props.range 
+   const r = p.props.range
       ? rangeDisplay(p.props.range)
       : rangeDisplay("forever");
+
+   if (accounts.length === 0) {
+      return null;
+   }
 
    return (
       <Panel

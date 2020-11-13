@@ -178,6 +178,13 @@ export class AccountList {
       );
    }
 
+   /**
+    * Whether there is any networth account (bank, assets,..)
+    */
+   has_accounts() {
+      return this.allAccounts().filter(a => a.kind.is_asset).length !== 0;
+   }
+
    allAccounts(): Account[] {
       return Array.from(this.accounts.values());
    }

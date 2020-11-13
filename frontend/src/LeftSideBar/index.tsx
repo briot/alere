@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useLocation } from "react-router-dom";
+import useAccounts from 'services/useAccounts';
 import useHistory from 'services/useHistory';
 import RoundButton from 'RoundButton';
 import './LeftSideBar.css';
@@ -10,6 +11,7 @@ interface LeftSideBarProps {
 const LeftSideBar: React.FC<LeftSideBarProps> = p => {
    const location = useLocation();
    const { mostRecent } = useHistory();
+   const { accounts } = useAccounts();
 
    return (
       <div id='lsidebar'>
@@ -24,6 +26,7 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
          <RoundButton
             fa="fa-money"
             selected={location.pathname.startsWith('/accounts/')}
+            disabled={!accounts.has_accounts()}
             text="Accounts"
             size='large'
             url="/accounts/"
@@ -31,9 +34,9 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
          <RoundButton
             fa="fa-book"
             selected={location.pathname.startsWith('/ledger/')}
+            disabled={!accounts.has_accounts() || mostRecent === undefined}
             text="Ledger"
             size='large'
-            disabled={mostRecent === undefined}
             url={`/ledger/${mostRecent}`}
           />
          <RoundButton
@@ -45,6 +48,7 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
          <RoundButton
             fa="fa-bank"
             selected={location.pathname.startsWith('/investments/')}
+            disabled={!accounts.has_accounts()}
             text="Investments"
             size='large'
             url="/investments/"
@@ -58,21 +62,6 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
          <RoundButton
             fa="fa-pie-chart"
             text="Reports"
-            disabled={true}
-            size='large'
-         />
-
-         <h3>Favorite reports</h3>
-
-         <RoundButton
-            fa="fa-line-chart"
-            text="Custom 1"
-            disabled={true}
-            size='large'
-          />
-         <RoundButton
-            fa="fa-area-chart"
-            text="Custom 2"
             disabled={true}
             size='large'
          />
