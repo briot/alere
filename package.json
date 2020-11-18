@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "frontend": "cd frontend; npm start",
+    "backend": "./env/bin/python3 ./backend/manage.py migrate; ./env/bin/python3 ./backend/manage.py runserver 8000",
+    "tests": "./env/bin/python3 ./backend/manage.py test alere --parallel"
+
+  }
+}
