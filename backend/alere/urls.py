@@ -1,12 +1,14 @@
 from django.conf import settings
-# from django.contrib import admin
-import django.shortcuts
+from django.http import HttpResponse
+from django.template import Template, Context
 from django.template.context_processors import csrf
 from django.urls import path, re_path
+import django.shortcuts
 import django.views
 import os
 
 from .views.accounts import AccountList
+from .views.importers import ImportKmymoney
 from .views.ledger import LedgerView
 from .views.means import MeanView
 from .views.metrics import MetricsView
@@ -33,6 +35,16 @@ def static(request):
             document_root='/')
 
 
+def send_csrf(request):
+    t = Template("// {% csrf_token %}")
+    c = Context(csrf(request))
+    print(t.render(c)) # MANU
+    return HttpResponse(
+        t.render(c),
+        content_type='text/javascript',
+    )
+
+
 urlpatterns = [
     # path('admin/', admin.site.urls),
     path('api/account/list', AccountList.as_view()),
@@ -45,6 +57,8 @@ urlpatterns = [
     path('api/metrics', MetricsView.as_view()),
     path('api/mean', MeanView.as_view()),
     path('api/quotes', QuotesView.as_view()),
+    path('api/import/kmymoney', ImportKmymoney.as_view()),
 
-    # re_path(r'^.*$', static),
+    # Getting the CSRF token (called from index.html)
+    path('api/csrf', send_csrf),
 ]

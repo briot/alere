@@ -376,7 +376,6 @@ def __import_transactions(cur, accounts, commodities):
 
 
 def import_kmymoney(filename):
-
     with transaction.atomic():
         with sqlite3.connect(filename) as conn:
             conn.row_factory = sqlite3.Row

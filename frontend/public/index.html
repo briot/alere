@@ -28,6 +28,14 @@
     -->
     <title>Alere, manage your personal finances</title>
   </head>
+
+  <!-- Needed to send POST data to Django.
+      This sets the csrf cookie
+      The django-corsheaders extension will likely help here. We were
+      serving a html file, but loading it as javascript.
+  -->
+  <script type="text/javascript" src="/api/csrf" ></script>
+
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>

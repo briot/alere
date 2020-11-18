@@ -43,11 +43,18 @@ class JSONView(View, ParamDecoder):
     def get_json(self, params, *args, **kwargs):
         return {}
 
+    def post_json(self, params, files, *args, **kwargs):
+        return {}
+
     def to_json(self, obj):
         return coder.encode(obj)
 
     def get(self, request, *args, **kwargs):
         resp = self.get_json(request.GET, *args, **kwargs)
+        return HttpResponse(self.to_json(resp), content_type="application/json")
+
+    def post(self, request, *args, **kwargs):
+        resp = self.post_json(request.POST, request.FILES, *args, **kwargs)
         return HttpResponse(self.to_json(resp), content_type="application/json")
 
     def as_commodity_id(self, params, name):

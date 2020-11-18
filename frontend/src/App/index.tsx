@@ -19,10 +19,12 @@ import { registerPriceHistory } from 'PriceHistory/Panel';
 import { registerInvestments } from 'Investments/Panel';
 import { registerTicker } from 'Ticker/Panel';
 import { registerRecent } from 'Recent/Panel';
+import { WelcomePanelProps, registerWelcome } from 'Welcome/Panel';
 import { NetworthHistoryPanelProps,
    registerNetworthHistory } from 'NWHistory/Panel';
 import { SplitMode, NotesMode } from 'Ledger/View';
 import { TreeMode } from 'services/useAccountTree';
+import useAccounts from 'services/useAccounts';
 import './App.css';
 import "font-awesome/css/font-awesome.min.css";
 
@@ -36,6 +38,7 @@ registerNetworthHistory();
 registerPriceHistory();
 registerRecent();
 registerTicker();
+registerWelcome();
 
 const defaultOverview: PanelBaseProps[] = [
    {
@@ -114,6 +117,7 @@ const defaultOverview: PanelBaseProps[] = [
 const App: React.FC<{}> = () => {
    const { prefs } = usePrefs();
    const [ header, setHeader ] = React.useState<HeaderProps>({});
+   const { accounts } = useAccounts();
 
    return (
       <Switch>
@@ -121,30 +125,52 @@ const App: React.FC<{}> = () => {
              <StyleGuide />
          </Route>
          <Route>
-            <div id="app" className={prefs.dark_mode ? 'page darkpalette' : 'page lightpalette' }>
+            <div
+               id="app"
+               className={
+                  prefs.dark_mode ? 'page darkpalette' : 'page lightpalette' }
+            >
                <Header {...header} />
                <LeftSideBar />
                <RightSideBar />
 
-               <Switch>
-                   <Route path="/ledger/:accountIds" >
-                      <LedgerPage setHeader={setHeader} />
-                   </Route>
-                   <Route path="/accounts">
-                      <AccountsPage setHeader={setHeader} />
-                   </Route>
-                   <Route path="/investments">
-                      <InvestmentPage setHeader={setHeader} />
-                   </Route>
-                   <Route>
-                      <Dashboard
-                         defaultPanels={defaultOverview}
-                         setHeader={setHeader}
-                         className="main"
-                         name='Overview'
-                      />
-                   </Route>
-               </Switch>
+               {
+                  !accounts.has_accounts()
+                  ? (
+                     <Dashboard
+                        defaultPanels={[
+                           {
+                              type: 'welcome',
+                              rowspan: 4,
+                              colspan: 4,
+                           } as WelcomePanelProps,
+                        ]}
+                        setHeader={setHeader}
+                        className="main"
+                        name=''
+                     />
+                  ) : (
+                     <Switch>
+                         <Route path="/ledger/:accountIds" >
+                            <LedgerPage setHeader={setHeader} />
+                         </Route>
+                         <Route path="/accounts">
+                            <AccountsPage setHeader={setHeader} />
+                         </Route>
+                         <Route path="/investments">
+                            <InvestmentPage setHeader={setHeader} />
+                         </Route>
+                         <Route>
+                            <Dashboard
+                               defaultPanels={defaultOverview}
+                               setHeader={setHeader}
+                               className="main"
+                               name='Overview'
+                            />
+                         </Route>
+                     </Switch>
+                  )
+               }
             </div>
          </Route>
       </Switch>

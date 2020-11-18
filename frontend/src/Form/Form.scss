@@ -38,6 +38,7 @@ button.danger {
 .disabled span,
 .disabled input,
 .disabled button,
+button:disabled,
 .disabled .selector {
    pointer-events: none;
    opacity: 0.5;
