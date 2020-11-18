@@ -134,10 +134,9 @@ const Cashflow: React.FC<CashflowProps> = p => {
    const monthly_expenses = pl.expenses / months;
    const networth_delta = pl.networth - pl.networth_start;
    const cashflow = pl.income - pl.expenses;
+   const unrealized = networth_delta - cashflow;
 
-   const non_work_income =
-      //  pl.passive_income
-      networth_delta + pl.expenses - pl.work_income;
+   const non_work_income = pl.passive_income + unrealized;
 
    const flowrow = (r: {
       head: string,
@@ -291,7 +290,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
             name="Return on Investment"
             descr="How much passive income your whole networth provides"
             value={non_work_income / pl.networth * 100}
-            tooltip={`Passive income ${non_work_income.toFixed(0)} / Networth ${pl.networth.toFixed(0)}`}
+            tooltip={`Passive income and unrealized gains ${non_work_income.toFixed(0)} / Networth ${pl.networth.toFixed(0)}`}
             ideal={4}
             compare=">"
             suffix="%"
@@ -300,7 +299,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
             name="Return on Investment for liquid assets"
             descr="How much passive income your liquid assets provides"
             value={non_work_income / pl.liquid_assets * 100}
-            tooltip={`Passive income ${non_work_income.toFixed(0)} / Liquid assets ${pl.liquid_assets.toFixed(0)}`}
+            tooltip={`Passive income and unrealized gains ${non_work_income.toFixed(0)} / Liquid assets ${pl.liquid_assets.toFixed(0)}`}
             ideal={4}
             compare=">"
             suffix="%"
@@ -320,7 +319,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
             name="Financial independence"
             descr="Part of your expenses covered by passive income"
             value={non_work_income / pl.expenses * 100}
-            tooltip={`Passive income ${non_work_income.toFixed(0)} / Expenses ${pl.expenses.toFixed(0)}`}
+            tooltip={`Passive income and unrealized gains ${non_work_income.toFixed(0)} / Expenses ${pl.expenses.toFixed(0)}`}
             ideal={100}
             compare=">"
             suffix="%"
@@ -329,7 +328,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
             name="Passive income"
             descr="What part of the total income comes from sources other than the result of our work"
             value={non_work_income / pl.income * 100}
-            tooltip={`Passive income ${non_work_income.toFixed(0)} / Total Income ${pl.income.toFixed(0)}`}
+            tooltip={`Passive income and unrealized gains ${non_work_income.toFixed(0)} / Total Income ${pl.income.toFixed(0)}`}
             ideal={50}
             compare=">"
             suffix="%"
@@ -362,6 +361,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                      bold:  true})
                }
                {
+                  pl.work_income !== 0 &&
                   flowrow({
                      head: '  Income from work',
                      amount: pl.work_income,
@@ -372,6 +372,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   })
                }
                {
+                  pl.passive_income !== 0 &&
                   flowrow({
                      head: '  Passive income',
                      amount: pl.passive_income,
@@ -379,6 +380,15 @@ const Cashflow: React.FC<CashflowProps> = p => {
                       + " (dividends, rents,...)",
                      padding: 1,
                      url: `/ledger/passive_income?range=${p.range}`,
+                  })
+               }
+               {
+                  pl.income - pl.work_income - pl.passive_income !== 0 &&
+                  flowrow({
+                     head: '  Other income',
+                     amount: pl.income - pl.work_income - pl.passive_income,
+                     title: "Unclassified income",
+                     padding: 1,
                   })
                }
                {
@@ -391,6 +401,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   })
                }
                {
+                  pl.income_taxes !== 0 &&
                   flowrow({
                      head: 'Income taxes',
                      amount: -pl.income_taxes,
@@ -399,6 +410,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   })
                }
                {
+                  pl.other_taxes !== 0 &&
                   flowrow({
                      head: 'Other taxes',
                      amount: -pl.other_taxes,
@@ -407,6 +419,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   })
                }
                {
+                  -pl.expenses + pl.income_taxes + pl.other_taxes !== 0 &&
                   flowrow({
                      head: 'Other expenses',
                      amount: -pl.expenses + pl.income_taxes + pl.other_taxes,
@@ -423,9 +436,10 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   })
                }
                {
+                  unrealized !== 0 &&
                   flowrow({
                      head: 'Unrealized gains',
-                     amount: networth_delta - cashflow,
+                     amount: unrealized,
                      title: "Variation in the price of your investments",
                      padding: 1,
                   })
