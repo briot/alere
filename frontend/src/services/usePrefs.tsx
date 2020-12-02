@@ -8,7 +8,7 @@ export interface Preferences {
 
 const defaultPref: Preferences = {
    currencyId: 1,   // First available currency ?
-   dark_mode: true,
+   dark_mode: false,
 }
 
 interface PrefContext {
