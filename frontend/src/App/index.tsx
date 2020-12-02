@@ -51,7 +51,7 @@ const defaultOverview: PanelBaseProps[] = [
       roundValues: true,
       showDeltaLast: true,
       threshold: 1e-6,
-      dates: ["12 months ago", "1 month ago", "today"],
+      dates: ["1 year ago", "1 month ago", "today"],
       treeMode: TreeMode.USER_DEFINED,
    } as NetworthPanelProps,
    {
