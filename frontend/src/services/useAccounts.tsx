@@ -135,9 +135,6 @@ export class Account {
 
 export class AccountList {
    private accounts: Map<AccountId, Account>;
-   allCommodities: { [id: number /*CommodityId*/]: Commodity};
-   allAccountKinds: { [id: string /*AccountKindId*/]: AccountKindJSON };
-   allInstitutions: { [id: string /* InstitutionId */]: InstitutionJSON };
 
    static async fetch() {
       const resp = await window.fetch('/api/account/list');
@@ -154,19 +151,16 @@ export class AccountList {
       const inst: { [id: string /*InstitutionId*/]: InstitutionJSON } = {};
       acc[3].forEach(c => inst[c.id] = c);
 
-      return new AccountList(acc[0], comm, kinds, inst);
+      return new AccountList(acc[0], comm, kinds, inst, true);
    }
 
    constructor(
       acc: AccountJSON[],
-      allCommodities: { [id: number /*CommodityId*/]: Commodity},
-      allAccountKinds: { [id: string /*AccountKindId*/]: AccountKindJSON },
-      allInstitutions: { [id: string /* InstitutionId */]: InstitutionJSON },
+      public allCommodities: { [id: number /*CommodityId*/]: Commodity},
+      public allAccountKinds: { [id: string /*AccountKindId*/]: AccountKindJSON },
+      public allInstitutions: { [id: string /* InstitutionId */]: InstitutionJSON },
+      public loaded: boolean,
    ) {
-      this.allCommodities = allCommodities;
-      this.allAccountKinds = allAccountKinds;
-      this.allInstitutions = allInstitutions;
-
       this.accounts = new Map();
       acc.forEach(a => this.accounts.set(
          Number(a.id),
@@ -179,10 +173,12 @@ export class AccountList {
    }
 
    /**
-    * Whether there is any networth account (bank, assets,..)
+    * Whether there is any networth account (bank, assets,..). This is always
+    * true until we have indeed loaded the list of accounts from the server
     */
    has_accounts() {
-      return this.allAccounts().filter(a => a.kind.is_asset).length !== 0;
+      return !this.loaded
+         || this.allAccounts().filter(a => a.kind.is_asset).length !== 0;
    }
 
    allAccounts(): Account[] {
@@ -229,7 +225,7 @@ interface IAccountsContext {
 }
 
 const noContext: IAccountsContext = {
-   accounts: new AccountList([], {}, {}, {}),
+   accounts: new AccountList([], {}, {}, {}, false /* loaded */),
    commodities: {},
    refresh: () => {},
 }

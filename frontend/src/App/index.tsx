@@ -9,6 +9,7 @@ import InvestmentPage from 'InvestmentsPage';
 import usePrefs from 'services/usePrefs';
 import Header, { HeaderProps } from 'Header';
 import StyleGuide from 'StyleGuide';
+import Spinner from 'Spinner';
 import { PanelBaseProps } from 'Dashboard/Panel';
 import { IncomeExpensePanelProps, registerIE } from 'IncomeExpense/Panel';
 import { NetworthPanelProps, registerNetworth } from 'NetWorth/Panel';
@@ -135,7 +136,9 @@ const App: React.FC<{}> = () => {
                <RightSideBar />
 
                {
-                  !accounts.has_accounts()
+                  !accounts.loaded
+                  ? <div className="dashboard main"><Spinner /></div>
+                  : !accounts.has_accounts()
                   ? (
                      <Dashboard
                         defaultPanels={[
