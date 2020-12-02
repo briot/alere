@@ -1,26 +1,39 @@
-import * as React from 'react';
 import { LogicalRow } from 'List/ListWithColumns';
-import { DataWithAccount, TreeNode } from 'services/useAccountTree';
+import { computeTree, DataWithAccount,
+   TreeNode, TreeMode } from 'services/useAccountTree';
+import { Account, AccountList } from 'services/useAccounts';
 
 
-const useListFromAccount = <T extends DataWithAccount, SETTINGS> (
-   tree: TreeNode<T>[],
+/**
+ * Create rows for a ListWithColumns, when those rows represent accounts.
+ * Typical use is:
+ *    const rows = accountsToRows(useAccountTree(
+ *       accounts.allAccounts(),
+ *       createNode,
+ *       TreeMode.USER_DEFINED));
+ */
+
+const accountsToRows = <T extends DataWithAccount, SETTINGS> (
+   accounts: AccountList,
+   accountlist: Account[],
+   createNode: (a: Account|undefined, fallbackName: string) => T,
+   mode: TreeMode,
 ): LogicalRow<T, SETTINGS>[] => {
 
-   const rows = React.useMemo(
-      () => {
-         const toLogicalRows = (list: TreeNode<T>[]) =>
-            list
-            .map((n, idx) => ({
-               key: n.data.account?.id || -idx,
-               data: n.data,
-               getChildren: () => toLogicalRows(n.children),
-            }));
-         return toLogicalRows(tree);
-      },
-      [tree]
-   );
-   return rows;
+   const tree = computeTree(
+      accounts,
+      accountlist.map(a => createNode(a, '')),
+      createNode,
+      mode);
+
+   const toLogicalRows = (list: TreeNode<T>[]) =>
+      list
+      .map((n, idx) => ({
+         key: n.data.account?.id || -idx,
+         data: n.data,
+         getChildren: () => toLogicalRows(n.children),
+      }));
+   return toLogicalRows(tree);
 }
 
-export default useListFromAccount;
+export default accountsToRows;

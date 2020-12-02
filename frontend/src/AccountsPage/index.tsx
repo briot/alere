@@ -1,20 +1,14 @@
 import * as React from 'react';
 import { SetHeader } from 'Header';
 import Dashboard from 'Dashboard';
-import { NetworthPanelProps } from 'NetWorth/Panel';
-import { TreeMode } from 'services/useAccountTree';
+import { AccountsPanelProps } from 'Accounts/Panel';
 
 const defaultPanels = [
    {
-      type: 'networth',
-      showValue: true,
-      showDeltaLast: true,
-      alternateColors: true,
-      dates: ["3 months ago", "2 months ago", "1 month ago", "today"],
-      treeMode: TreeMode.USER_DEFINED,
+      type: 'accounts',
       rowspan: 4,
       colspan: 4,
-   } as NetworthPanelProps,
+   } as AccountsPanelProps,
 ];
 
 

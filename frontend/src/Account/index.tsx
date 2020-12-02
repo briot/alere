@@ -2,10 +2,10 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import useAccounts, { Account, AccountId } from 'services/useAccounts';
 import { AccountIdSet } from 'services/useAccountIds';
-import useAccountTree, { TreeNode } from 'services/useAccountTree';
+import useAccountTree, { TreeMode, TreeNode } from 'services/useAccountTree';
 import { Checkbox, Select, Option } from 'Form';
 import ListWithColumns, { AlternateRows, Column } from 'List/ListWithColumns';
-import useListFromAccount from 'List/ListAccounts';
+import accounts_to_rows from 'List/ListAccounts';
 import List from 'List';
 import "./Account.css";
 
@@ -14,7 +14,7 @@ interface SelectTreeNode {
    name: string;
 }
 
-const createDummyParent = (account: Account|undefined, name: string) =>
+const createRow = (account: Account|undefined, name: string): SelectTreeNode =>
    ({ account, name });
 
 interface SelectAccountProps {
@@ -29,8 +29,8 @@ export const SelectAccount: React.FC<SelectAccountProps> = p => {
    const { accounts } = useAccounts();
 
    const tree = useAccountTree<SelectTreeNode>(
-      accounts.allAccounts().map(account => ({ account, name: '' })),
-      createDummyParent,
+      accounts.allAccounts().map(a => createRow(a, '')),
+      createRow,
    );
 
    const localChange = React.useCallback(
@@ -80,23 +80,24 @@ interface MultiAccountSelectProps {
 }
 export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
    const { accounts } = useAccounts();
-   const filteredTree = useAccountTree<SelectTreeNode>(
-      accounts.allAccounts()
-         .filter(a => p.showStock || !a.kind.is_stock)
-         .map(account => ({ account, name: '' })),
-      createDummyParent,
-   );
 
-   const rows = useListFromAccount(filteredTree);
+   const rows = React.useMemo(
+      () => accounts_to_rows(
+         accounts,
+         accounts.allAccounts().filter(a => p.showStock || !a.kind.is_stock),
+         createRow,
+         TreeMode.USER_DEFINED),
+      [accounts, p.showStock]
+   );
 
    const localChange = (node: SelectTreeNode, checked: boolean) => {
       const cp = p.value
          ? p.value.map(a => a.id)
-         : filteredTree.map(a => a.data.account?.id || -1);
+         : rows.map(a => a.data.account?.id || -1);
       if (!node.account) {
       } else if (checked) {
          if (!cp.includes(node.account.id)) {
-            if (cp.length === filteredTree.length - 1) {
+            if (cp.length === rows.length - 1) {
                p.onChange('all');
             } else {
                p.onChange([...cp, node.account.id]);

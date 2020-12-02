@@ -3,12 +3,11 @@ import { RelativeDate, dateToString } from 'Dates';
 import Numeric from 'Numeric';
 import AccountName from 'Account';
 import { BalanceList } from 'services/useBalance';
-import useBalanceWithThreshold, {
-   BalanceWithAccount } from 'services/useBalanceWithThreshold';
 import usePrefs from 'services/usePrefs';
-import { Account } from 'services/useAccounts';
-import useAccountTree, { TreeMode } from 'services/useAccountTree';
-import useListFromAccount from 'List/ListAccounts';
+import useAccounts, { Account, AccountId } from 'services/useAccounts';
+import { TreeMode } from 'services/useAccountTree';
+import accountsToRows from 'List/ListAccounts';
+import useBalance, { Balance } from 'services/useBalance';
 import ListWithColumns, {
    AlternateRows, Column, LogicalRow, RowDetails } from 'List/ListWithColumns';
 import "./NetWorth.css";
@@ -30,8 +29,11 @@ export interface NetworthProps {
    // Only show account if at least one of the value columns is above this
    // threshold (absolute value).
 }
-interface LocalTreeNode extends BalanceWithAccount {
+interface LocalTreeNode {
+   accountId: AccountId;
+   account: Account|undefined;
    name?: string;
+   balance: Balance|undefined;
 }
 
 const columnAccountName: Column<LocalTreeNode, NetworthProps> = {
@@ -42,20 +44,18 @@ const columnAccountName: Column<LocalTreeNode, NetworthProps> = {
    foot: () => "Total",
 };
 
-const columnShares = (
-   base: BalanceList, date_idx: number,
-): Column<LocalTreeNode, NetworthProps> => ({
+const columnShares = (date_idx: number): Column<LocalTreeNode, NetworthProps> => ({
    id: `Shares${date_idx}`,
    head: 'Shares',
    className: 'price',
    cell: (d: LocalTreeNode,
           details: RowDetails<LocalTreeNode, NetworthProps>,
           settings: NetworthProps) =>
-      details.isExpanded === false
+      details.isExpanded === false || !d.balance
       ? ''
       : (
          <Numeric
-            amount={d.atDate[date_idx]?.shares}
+            amount={d.balance.atDate[date_idx]?.shares}
             commodity={d.account?.commodity}
          />
       ),
@@ -70,11 +70,11 @@ const columnPrice = (
    cell: (d: LocalTreeNode,
           details: RowDetails<LocalTreeNode, NetworthProps>,
           settings: NetworthProps ) =>
-      details.isExpanded === false
+      details.isExpanded === false || !d.balance
       ? ''
       : (
          <Numeric
-            amount={d.atDate[date_idx]?.price}
+            amount={d.balance.atDate[date_idx]?.price}
             commodity={base.currencyId}
          />
       )
@@ -87,7 +87,12 @@ const cumulatedValue = (
    isExpanded: boolean | undefined,
 ): number => {
    const d = logic.data;
-   const val = d.atDate[date_idx]?.price * d.atDate[date_idx]?.shares;
+   if (!d.balance) {
+      return NaN;
+   }
+
+   const val = d.balance.atDate[date_idx]?.price
+      * d.balance.atDate[date_idx]?.shares;
    return logic.getChildren === undefined || isExpanded === true
       ? val
       : logic.getChildren(d, settings).reduce(
@@ -174,51 +179,66 @@ const columnDelta = (
 
 const Networth: React.FC<NetworthProps> = p => {
    const { prefs } = usePrefs();
-   const {baseData, data} = useBalanceWithThreshold({
-      ...p,
-      currencyId: prefs.currencyId,
-   });
+   const { accounts } = useAccounts();
+   const balances = useBalance({...p, currencyId: prefs.currencyId});
 
-   const createDummyParent = React.useCallback(
-      (account: Account|undefined, name: string): LocalTreeNode => (
-         { account,
-           accountId: account?.id || -1,
-           atDate: [],
-           name,
+   const thresh = p.threshold ?? 1e-10;
+   const accountToBalance = React.useMemo(
+      () => {
+         const r: Map<AccountId, Balance> = new Map();
+         balances.list
+            // Remove lines below the threshold
+            .filter(n =>
+               n.atDate.find(a =>
+                  (Math.abs(a.shares * a.price) >= thresh)) !== undefined)
+            .forEach(n => r.set(n.accountId, n));
+         return r;
+      },
+      [balances, thresh]
+   );
+
+   const createRow = React.useCallback(
+      (account: Account|undefined, name: string): LocalTreeNode => ({
+         account,
+         accountId: account?.id || -1,
+         name,
+         balance: account ? accountToBalance.get(account.id) : undefined,
          }),
-      []
+      [accountToBalance]
    );
-   const tree = useAccountTree<LocalTreeNode>(
-      data,
-      createDummyParent,
-      p.treeMode,
+
+   const rows = React.useMemo(
+      () => accountsToRows(
+         accounts,
+         Array.from(accountToBalance.keys()).map(a => accounts.getAccount(a)),
+         createRow,
+         p.treeMode),
+      [accounts, accountToBalance, p.treeMode, createRow]
    );
-   const rows: LogicalRow<LocalTreeNode, NetworthProps>[] =
-      useListFromAccount(tree);
 
    const columns: (undefined | Column<LocalTreeNode, NetworthProps>)[] = React.useMemo(
       () => [
             undefined,  /* typescript workaround */
             columnAccountName,
          ].concat(p.dates.flatMap((_, date_idx) => [
-            p.showShares ? columnShares(baseData, date_idx) : undefined,
-            p.showPrice ? columnPrice(baseData, date_idx) : undefined,
-            p.showValue ? columnValue(baseData, date_idx) : undefined,
-            p.showPercent ? columnPercent(baseData, date_idx) : undefined,
+            p.showShares ? columnShares(date_idx) : undefined,
+            p.showPrice ? columnPrice(balances, date_idx) : undefined,
+            p.showValue ? columnValue(balances, date_idx) : undefined,
+            p.showPercent ? columnPercent(balances, date_idx) : undefined,
             p.showDeltaNext && date_idx !== p.dates.length - 1
                ? columnDelta(
-                  baseData, date_idx, date_idx + 1, 'ΔNext',
+                  balances, date_idx, date_idx + 1, 'ΔNext',
                   'Delta between this column and the next column')
                : undefined,
             p.showDeltaLast && date_idx !== p.dates.length - 1
                && (!p.showDeltaNext || date_idx !== p.dates.length - 2)
                ? columnDelta(
-                  baseData, date_idx, p.dates.length - 1, 'ΔLast',
+                  balances, date_idx, p.dates.length - 1, 'ΔLast',
                   'Delta between this column and the last column')
                : undefined,
          ])),
       [p.dates, p.showShares, p.showPrice, p.showValue,
-       baseData, p.showPercent, p.showDeltaLast, p.showDeltaNext]
+       balances, p.showPercent, p.showDeltaLast, p.showDeltaNext]
    );
 
    return (

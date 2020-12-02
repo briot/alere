@@ -20,6 +20,7 @@ import { registerPriceHistory } from 'PriceHistory/Panel';
 import { registerInvestments } from 'Investments/Panel';
 import { registerTicker } from 'Ticker/Panel';
 import { registerRecent } from 'Recent/Panel';
+import { registerAccounts } from 'Accounts/Panel';
 import { WelcomePanelProps, registerWelcome } from 'Welcome/Panel';
 import { NetworthHistoryPanelProps,
    registerNetworthHistory } from 'NWHistory/Panel';
@@ -29,6 +30,7 @@ import useAccounts from 'services/useAccounts';
 import './App.css';
 import "font-awesome/css/font-awesome.min.css";
 
+registerAccounts();
 registerCashflow();
 registerIE();
 registerInvestments();
