@@ -42,8 +42,8 @@ const columnCommodity: Column<RowData, AccountsProps> = {
    cell: (d: RowData) => d.account?.commodity.name,
 }
 const columnReconciled: Column<RowData, AccountsProps> = {
-   id: 'Reconciled',
-   //className: 'date',
+   id: 'Reconcile',
+   className: 'date',
    cell: (d: RowData) => d.account?.lastReconciled,
 }
 

@@ -223,7 +223,7 @@ class Migration(migrations.Migration):
                alr_accounts.id as id,
                alr_accounts.name as name,
                alr_accounts.parent_id,
-               '2000-01-01 00:00:00' as last_reconciled,
+               alr_accounts.last_reconciled,
                alr_accounts.kind_id,
                alr_accounts.commodity_id,
                alr_accounts.commodity_scu,

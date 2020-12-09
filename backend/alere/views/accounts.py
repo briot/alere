@@ -41,7 +41,10 @@ class AccountLists(alere.models.AlereModel):
             "closed": self.closed,
             "iban": self.iban,
             "parent": self.parent_id,
-            "lastReconciled": self.last_reconciled,
+            "lastReconciled": (
+                self.last_reconciled.date()
+                if self.last_reconciled
+                else None),
             "institution": self.institution_id,
         }
 
