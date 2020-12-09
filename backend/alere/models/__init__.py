@@ -336,13 +336,6 @@ class Accounts(AlereModel):
     opening_date = models.DateField(null=True)
     # When was the account opened
 
-    is_work_income = models.BooleanField(default=False)
-    is_passive_income = models.BooleanField(default=False)
-    is_misc_income = models.BooleanField(default=False)
-    # True if this is an income account, either from work or passive
-
-
-
     # ??? interest_rate  (though this should be date-dependent)
     # ??? last_modified  (for account data themselves)
     # ??? hidden         (in gnucash, is this similar to closed)

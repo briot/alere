@@ -9,6 +9,7 @@ class AccountLists(alere.models.AlereModel):
         alere.models.Accounts, on_delete=models.DO_NOTHING, related_name='+'
     )
     last_reconciled = models.DateTimeField()
+    opening_date = models.DateField()
     kind = models.ForeignKey(
         alere.models.AccountKinds,
         on_delete=models.DO_NOTHING,
@@ -26,6 +27,7 @@ class AccountLists(alere.models.AlereModel):
     closed = models.BooleanField()
     iban = models.TextField()
     description = models.TextField()
+    number = models.TextField()
 
     class Meta:
         db_table = "alr_accounts_list"
@@ -43,6 +45,8 @@ class AccountLists(alere.models.AlereModel):
             "iban": self.iban,
             "parent": self.parent_id,
             "description": self.description,
+            "number": self.number,
+            "opening_date": self.opening_date,
             "lastReconciled": (
                 self.last_reconciled.date()
                 if self.last_reconciled

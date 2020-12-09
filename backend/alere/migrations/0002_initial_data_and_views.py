@@ -230,6 +230,8 @@ class Migration(migrations.Migration):
                alr_institutions.id as institution_id,
                alr_accounts.closed,
                alr_accounts.description,
+               alr_accounts.number,
+               alr_accounts.opening_date,
                alr_accounts.iban
             FROM
                alr_accounts

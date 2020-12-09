@@ -414,7 +414,11 @@ def import_kmymoney(filename):
                     commodity=commodities[row['currencyId']],
                     commodity_scu=commodities[row['currencyId']].qty_scale,
                     last_reconciled=__time(row['lastReconciled']),
-                    opening_date=__time(row['openingDate']),
+                    opening_date=(
+                        None
+                        if row['openingDate'] == '1900-01-01'
+                        else __time(row['openingDate'])
+                    ),
                 )
                 parents[row['id']] = row['parentId']
 

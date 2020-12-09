@@ -55,6 +55,7 @@ interface AccountJSON {
    id: AccountId;
    name: string;
    description: string;
+   number: string;
    favorite: boolean;
    commodityId: CommodityId;
    commodity_scu: number;
@@ -62,6 +63,7 @@ interface AccountJSON {
    closed: boolean;
    iban: string;
    parent: AccountId | undefined;
+   opening_date: string;
    lastReconciled: string;
    institution: InstitutionId | undefined;
 }
@@ -69,6 +71,7 @@ const nullAccountJSON: AccountJSON = {
    id: -1,
    name: "",
    description: "",
+   number: "",
    favorite: false,
    commodityId: nullCommodity.id,
    commodity_scu: 1,
@@ -77,6 +80,7 @@ const nullAccountJSON: AccountJSON = {
    iban: "",
    parent: undefined,
    lastReconciled: "",
+   opening_date: "",
    institution: undefined,
 }
 
@@ -90,8 +94,10 @@ export class Account {
    readonly closed: boolean;
    readonly iban: string;
    readonly lastReconciled: string;
+   readonly opening_date: string;
    readonly parentId: AccountId | undefined;
    readonly description: string;
+   readonly number: string;
    parentAccount: Account | undefined;
    private institution: InstitutionJSON | undefined;
 
@@ -110,8 +116,10 @@ export class Account {
       this.closed = d.closed;
       this.iban = d.iban;
       this.lastReconciled = d.lastReconciled;
+      this.opening_date = d.opening_date;
       this.parentId = d.parent;
       this.description = d.description;
+      this.number = d.number;
       this.institution = d.institution === undefined
          ? undefined : allInstitutions[d.institution];
    }

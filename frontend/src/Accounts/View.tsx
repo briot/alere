@@ -46,6 +46,28 @@ const columnReconciled: Column<RowData, AccountsProps> = {
    className: 'date',
    cell: (d: RowData) => d.account?.lastReconciled,
 }
+const columnIBAN: Column<RowData, AccountsProps> = {
+   id: 'IBAN',
+   cell: (d: RowData) => d.account?.iban,
+}
+const columnNumber: Column<RowData, AccountsProps> = {
+   id: 'Number',
+   cell: (d: RowData) => d.account?.number,
+}
+const columnClosed: Column<RowData, AccountsProps> = {
+   id: 'Closed',
+   className: 'closed',
+   cell: (d: RowData) => d.account?.closed ? 'closed' : '',
+}
+const columnOpeningDate: Column<RowData, AccountsProps> = {
+   id: 'Opened',
+   className: 'date',
+   cell: (d: RowData) => d.account?.opening_date,
+}
+const columnInstitution: Column<RowData, AccountsProps> = {
+   id: 'Institution',
+   cell: (d: RowData) => d.account?.getInstitution()?.name,
+}
 
 
 /**
@@ -69,6 +91,11 @@ const Accounts: React.FC<AccountsProps> = p => {
          columnName,
          columnType,
          columnCommodity,
+         columnInstitution,
+         columnIBAN,
+         columnNumber,
+         columnClosed,
+         columnOpeningDate,
          columnReconciled
       ],
       []
