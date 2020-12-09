@@ -27,7 +27,7 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    @if $brightness >= 128 {
       @return "var(--gray-900)";
    } @else {
-      @return white;
+      @return #c0c0c0;
    }
 }
 
@@ -56,6 +56,7 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --#{$key}-400-30p: #{rgba($v-400, 0.3)};
    --#{$key}-400-80p: #{rgba($v-400, 0.8)};
    --#{$key}-400-90p: #{rgba($v-400, 0.9)};
+   --#{$key}-400-95p: #{rgba($v-400, 0.95)};
    --#{$key}-500: #{$base};
    --#{$key}-500-10p: #{rgba($base, 0.1)};
    --#{$key}-500-20p: #{rgba($base, 0.2)};
@@ -69,7 +70,10 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --#{$key}-800: #{$v-800};
    --#{$key}-800-20p: #{rgba($v-800, 0.2)};
    --#{$key}-800-50p: #{rgba($v-800, 0.5)};
+   --#{$key}-800-95p: #{rgba($v-800, 0.95)};
    --#{$key}-900: #{$v-900};
+   --#{$key}-900-20p: #{rgba($v-900, 0.2)};
+   --#{$key}-900-40p: #{rgba($v-900, 0.4)};
    --#{$key}-900-80p: #{rgba($v-900, 0.8)};
    --fg-#{$key}-100: #{black-or-white($v-100)};
    --fg-#{$key}-200: #{black-or-white($v-200)};
@@ -102,6 +106,9 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --table-vert-border-width: 0px;
    --table-horiz-border-width: 0px;
    --header-tool-height: 40px;
+   --nm-offset: 6px;
+   --nm-blur: 10px;
+   --nm-inset: 8px;
 }
 
 /**
@@ -112,9 +119,9 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
 
 
 .darkpalette {
-   --page-background: var(--gray-800);
+   --page-background: #1f1f1f; // var(--gray-900);
    --panel-background: var(--gray-900);
-   --panel-fg: var(--fg-gray-700);
+   --panel-fg: var(--fg-gray-900);
    --panel-fg-low-contrast: var(--gray-200);
    --background-summary-popup: rgba(0,0,0,0.9);
    --summary-background: rgba(255,255,255,0.2);
@@ -125,6 +132,7 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --table-row-details-fg: var(--gray-600);
    --table-alternate-row: var(--color-300-10p);
    --focus-color: var(--color-500);
+   --tooltip-bg: var(--gray-800-95p);
 
    --danger: var(--invalid-500);
    --danger-fg: var(--fg-invalid-500);
@@ -135,11 +143,11 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --negative-fg: var(--invalid-400);
    --negative-fg-border: var(--invalid-300);
 
-   --cartesian-grid: var(--gray-800);
+   --cartesian-grid: var(--gray-700);
 
    --input-background: var(--gray-700);
    --input-foreground: var(--gray-fg-700);
-   --input-border: var(--gray-800);
+   --input-border: var(--gray-900);
    --input-primary-background: var(--color-500);
    --input-primary-foreground: var(--fg-color-500);
    --input-primary-border: var(--color-600);
@@ -148,17 +156,17 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --input-error-border: var(--invalid-100);
    --input-error-foreground: var(--fg-invalid-300);
 
-   --neumorph-light: rgba(78,78,78,.6);
+   --neumorph-light: rgba(58,58,58,.6);
    --neumorph-dark: rgba(0,0,0,.2);
    --neumorph-selected-dark: rgba(40,40,40,.2);
    --neumorph-fg: var(--color-300);  // foreground in roundbuttons
 
    --expand-arrow-color: var(--gray-700);
 
-   --shadow-color: var(--gray-900-80p);
+   --shadow-color: var(--gray-900-40p);
 
-   --tool-color: var(--fg-gray-800);
-   --tool-background: var(--gray-800);
+   --tool-color: var(--fg-gray-900);
+   --tool-background: var(--gray-900);
 
    --scrollbar-fg: var(--color-200);
    --scrollbar-bg: var(--panel-background);
@@ -173,7 +181,7 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --background-summary-popup: rgba(0,0,0,0.9);
    --summary-background: rgba(255,255,255,0.2);
    --focus-color: var(--color-500);
-
+   --tooltip-bg: var(--gray-400-95p);
    --table-color: #b1afaf;
    --table-hover-background: var(--gray-100);
    --table-row-first-background: none;
@@ -201,7 +209,7 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --input-error-border: var(--invalid-300);
    --input-error-foreground: var(--fg-invalid-100);
 
-   --cartesian-grid: var(--gray-300);
+   --cartesian-grid: var(--gray-500);
 
    --neumorph-light: rgba(255,255,255,0.5);
    --neumorph-dark: rgba(70,70,70,.12);

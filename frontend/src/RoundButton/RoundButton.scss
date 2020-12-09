@@ -65,6 +65,8 @@ a.roundButton:hover {
    &.small {
       --rb-width: 2rem;
       --rb-height: 2rem;
+      --nm-offset: 3px;  // neumorphism
+      --nm-blur: 5px;
       img {
          width: 1.5rem;
       }
@@ -76,6 +78,9 @@ a.roundButton:hover {
    &.tiny {
       --rb-width: 1.4rem;
       --rb-height: 1.4rem;
+      --nm-offset: 2px;  // neumorphism
+      --nm-blur: 3px;
+      --nm-inset: 2px;
       img {
          width: 0.9rem;
       }

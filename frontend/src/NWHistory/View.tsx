@@ -87,10 +87,12 @@ const NetworthHistory: React.FC<NetworthHistoryProps> = p => {
                >
                   <XAxis
                      dataKey="date"
+                     tick={{fill: 'var(--cartesian-grid)'}}
                   />
                   <YAxis
                      domain={['auto', 'auto']}
                      tickFormatter={formatVal}
+                     tick={{fill: 'var(--cartesian-grid)'}}
                   />
                   <CartesianGrid
                       strokeDasharray="5 5"
