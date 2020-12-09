@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link } from "react-router-dom";
-import './RoundButton.css';
+import './RoundButton.scss';
 
 interface RoundButtonProps {
    fa?: string;     // font-awesome icon name

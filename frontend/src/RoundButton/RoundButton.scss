@@ -1,0 +1,87 @@
+a.roundButton:hover {
+   text-decoration: none;
+}
+
+.roundButton {
+   text-decoration: none;
+
+   display: flex;
+   flex-flow: row nowrap;      /* always use a single line */
+   align-items: center;        /* align children vertically */
+   justify-content: space-between;
+   outline: none;
+   color: var(--input-foreground);
+
+   span:first-child {
+      border-width: 1px;
+      border-radius: 50%;
+      margin: 5px 10px 5px 5px;
+      width: var(--rb-width);
+      height: var(--rb-height);
+
+      display: flex;          /* center text inside */
+      align-items: center;
+      justify-content: center;
+   }
+
+   /* the text. This rule must come first, in case we show no text */
+   span:last-child {
+      flex: 1 1;
+
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+   }
+
+   &.selected {
+      span:first-child {
+         color: var(--neumorph-fg);
+      }
+      span:last-child {
+         color: var(--neumorph-fg);
+         Afont-weight: bold;
+      }
+   }
+
+   &.large {
+      --rb-width: 3rem;
+      --rb-height: 3rem;
+      img {
+         width: 2.5rem;
+      }
+      .fa {
+         font-size: 1.3em;
+      }
+   }
+
+   &.normal {
+      --rb-width: 2.5rem;
+      --rb-height: 2.5rem;
+      img {
+         width: 2rem;
+      }
+   }
+
+   &.small {
+      --rb-width: 2rem;
+      --rb-height: 2rem;
+      img {
+         width: 1.5rem;
+      }
+      .fa {
+         font-size: 0.9em;
+      }
+   }
+
+   &.tiny {
+      --rb-width: 1.4rem;
+      --rb-height: 1.4rem;
+      img {
+         width: 0.9rem;
+      }
+      .fa {
+         font-size: 0.8em;
+      }
+   }
+
+}
