@@ -25,7 +25,13 @@
    .th,
    .td {
       display: inline-block;
-      flex: 1 1;
+
+      // Basis value doesn't matter. We just want all columns to request the
+      // same amount when they do not specify an explicit width, that way
+      // columns stay aligned. Otherwise, if column 1's content is large in
+      // row 1 than in row2, they will not be aligned.
+      flex: 1 1 100px;
+
       border-style: solid;
       border-color: var(--table-color);
       border-width: var(--table-horiz-border-width) var(--table-vert-border-width);
@@ -60,7 +66,6 @@
    .tbody .tr {
       width: 100%;
    }
-//   .tbody .tr,
 
    .thead .tr,
    .tfoot .tr {
