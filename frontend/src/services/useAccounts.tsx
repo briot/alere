@@ -54,6 +54,7 @@ const nullAccountKind: AccountKindJSON = {
 interface AccountJSON {
    id: AccountId;
    name: string;
+   description: string;
    favorite: boolean;
    commodityId: CommodityId;
    commodity_scu: number;
@@ -67,6 +68,7 @@ interface AccountJSON {
 const nullAccountJSON: AccountJSON = {
    id: -1,
    name: "",
+   description: "",
    favorite: false,
    commodityId: nullCommodity.id,
    commodity_scu: 1,
@@ -89,6 +91,7 @@ export class Account {
    readonly iban: string;
    readonly lastReconciled: string;
    readonly parentId: AccountId | undefined;
+   readonly description: string;
    parentAccount: Account | undefined;
    private institution: InstitutionJSON | undefined;
 
@@ -108,6 +111,7 @@ export class Account {
       this.iban = d.iban;
       this.lastReconciled = d.lastReconciled;
       this.parentId = d.parent;
+      this.description = d.description;
       this.institution = d.institution === undefined
          ? undefined : allInstitutions[d.institution];
    }

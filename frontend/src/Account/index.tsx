@@ -157,7 +157,7 @@ const AccountName: React.FC<AccountProps> = p => {
    const name = (!p.account || p.fullName) ? fname : p.account.name;
    return (
       <span
-         title={fname}
+         title={`${fname} ${p.account?.description ?? ''}`}
          className={`account ${p.account?.closed ? 'closed' : ''}`}
       >
          {

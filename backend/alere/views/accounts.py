@@ -25,6 +25,7 @@ class AccountLists(alere.models.AlereModel):
         related_name='+')
     closed = models.BooleanField()
     iban = models.TextField()
+    description = models.TextField()
 
     class Meta:
         db_table = "alr_accounts_list"
@@ -41,6 +42,7 @@ class AccountLists(alere.models.AlereModel):
             "closed": self.closed,
             "iban": self.iban,
             "parent": self.parent_id,
+            "description": self.description,
             "lastReconciled": (
                 self.last_reconciled.date()
                 if self.last_reconciled

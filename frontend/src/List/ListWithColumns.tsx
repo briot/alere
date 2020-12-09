@@ -26,9 +26,10 @@ export interface Column<T, SETTINGS> {
    // defaults to id
 
    className?: string;
-   title?: string;
+   title?: string;   // tooltip on header
    cell?: (data: T, details: RowDetails<T, SETTINGS>, settings: SETTINGS)
       => React.ReactNode;
+   cellTitle?: (data: T) => string|undefined;  // tooltip on cell
    foot?: string | ((data: LogicalRow<T, SETTINGS>[], settings: SETTINGS)
       => React.ReactNode);
 
@@ -284,6 +285,7 @@ const ListWithColumns = <T extends any, SETTINGS> (
                   <Table.TD
                      key={c.id}
                      className={c.className}
+                     title={c.cellTitle?.(logic.data)}
                      style={{
                         // Indent first column to show nesting
                         paddingLeft:
