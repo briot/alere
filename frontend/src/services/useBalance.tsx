@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { AccountId, CommodityId } from 'services/useAccounts';
 import { RelativeDate, dateToString } from 'Dates';
+import useFetch from 'services/useFetch';
 
 /**
  * The balance for a specific account, at a specific date.
@@ -34,8 +35,6 @@ export interface BalanceList {
    list: Balance[];   // indexed on date
    totalValue: number[];  // indexed on date
 }
-const noBalanceList: BalanceList = {
-   list: [], dates: [], totalValue: [], currencyId: -1};
 
 /**
  * As fetched from the server
@@ -59,37 +58,33 @@ const useBalance = (p: {
    currencyId: CommodityId;
    dates: RelativeDate[];
 }): BalanceList => {
-   const [ data, setData ] = React.useState(noBalanceList);
-   React.useEffect(
-      () => {
-         const doFetch = async () => {
-            const resp = await window.fetch(
-               `/api/plots/networth`
-               + `?currency=${p.currencyId}`
-               + `&dates=${p.dates.map(dateToString).join(',')}`
-            );
-            const list: JSONBalance[] = await resp.json()
-            setData({
-               dates: p.dates,
-               currencyId: p.currencyId,
-               list: list.map(a => ({
-                  accountId: a.accountId,
-                  atDate: p.dates.map((date, idx) => ({
-                     shares: a.shares[idx],
-                     price: a.price[idx] ?? NaN,
-                  })),
-               })),
-               totalValue: p.dates.map((_, idx) =>
-                  list
-                  .filter(d => d.price[idx])  // remove undefined and NaN
-                  .reduce((t, d) => t + d.price[idx]! * d.shares[idx], 0)),
-            });
-         }
-         doFetch();
-      },
-      [p.currencyId, p.dates]
+   const { json } = useFetch<JSONBalance[]>({
+      url: `/api/plots/networth`
+         + `?currency=${p.currencyId}`
+         + `&dates=${p.dates.map(dateToString).join(',')}`,
+      default: [],
+   });
+
+   const d = React.useMemo<BalanceList>(
+      () => ({
+         dates: p.dates,
+         currencyId: p.currencyId,
+         list: json.map(a => ({
+            accountId: a.accountId,
+            atDate: p.dates.map((date, idx) => ({
+               shares: a.shares[idx],
+               price: a.price[idx] ?? NaN,
+            })),
+         })),
+         totalValue: p.dates.map((_, idx) =>
+           json
+            .filter(d => d.price[idx])  // remove undefined and NaN
+            .reduce((t, d) => t + d.price[idx]! * d.shares[idx], 0)),
+      }),
+      [p.dates, p.currencyId, json]
    );
-   return data;
+
+   return d;
 }
 
 export default useBalance;

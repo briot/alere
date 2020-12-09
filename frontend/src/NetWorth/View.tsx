@@ -207,7 +207,7 @@ const Networth: React.FC<NetworthProps> = p => {
       [accountToBalance]
    );
 
-   const rows = React.useMemo(
+   const rows: LogicalRow<LocalTreeNode, NetworthProps>[] = React.useMemo(
       () => accountsToRows(
          accounts,
          Array.from(accountToBalance.keys()).map(a => accounts.getAccount(a)),

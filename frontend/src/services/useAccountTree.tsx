@@ -107,7 +107,7 @@ const useAccountTree = <T extends DataWithAccount> (
    const { accounts } = useAccounts();
    const roots = React.useMemo(
       () => computeTree(accounts, p, createDummyParent, mode),
-      [p, mode]
+      [p, mode, createDummyParent, accounts]
    );
    return roots;
 }

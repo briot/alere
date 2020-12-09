@@ -3,7 +3,7 @@ import AccountName from 'Account';
 import useAccounts, { Account, AccountId } from 'services/useAccounts';
 import accounts_to_rows from 'List/ListAccounts';
 import { TreeMode } from 'services/useAccountTree';
-import ListWithColumns, { Column } from 'List/ListWithColumns';
+import ListWithColumns, { Column, LogicalRow } from 'List/ListWithColumns';
 
 
 /**
@@ -64,7 +64,7 @@ const Accounts: React.FC<AccountsProps> = p => {
 
    const { accounts } = useAccounts();
 
-   const columns = React.useMemo(
+   const columns: Column<RowData, AccountsProps>[] = React.useMemo(
       () => [
          columnName,
          columnType,
@@ -74,7 +74,7 @@ const Accounts: React.FC<AccountsProps> = p => {
       []
    );
 
-   const rows = React.useMemo(
+   const rows: LogicalRow<RowData, AccountsProps>[] = React.useMemo(
       () => accounts_to_rows(
          accounts,
          accounts.allAccounts(),
