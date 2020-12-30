@@ -87,11 +87,9 @@ const cumulatedValue = (
    isExpanded: boolean | undefined,
 ): number => {
    const d = logic.data;
-   if (!d.balance) {
-      return NaN;
-   }
 
-   const val = d.balance.atDate[date_idx]?.price
+   const val = d.balance === undefined ? NaN
+      : d.balance.atDate[date_idx]?.price
       * d.balance.atDate[date_idx]?.shares;
    return logic.getChildren === undefined || isExpanded === true
       ? val
