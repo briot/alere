@@ -49,6 +49,8 @@ interface Props <T extends PanelBaseProps> extends PanelProps<T> {
    Settings?: React.ReactElement|null;
    // if null, no menu at all, not even the default one.
    // if undefined, default menu only.
+
+   className?: string;
 }
 
 function Panel<T extends PanelBaseProps>(
@@ -58,6 +60,7 @@ function Panel<T extends PanelBaseProps>(
    const changeCols = (colspan: number) => p.save?.({colspan} as Partial<T>);
 
    const c = classes(
+      p.className,
       'panel',
       `dash-${p.props.type}`,
       `row${p.props.rowspan}`,

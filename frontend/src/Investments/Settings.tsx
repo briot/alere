@@ -7,9 +7,15 @@ const Settings: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
    const changeHide = (hideIfNoShare: boolean) => p.save?.({ hideIfNoShare });
    const changeWA = (showWALine: boolean) => p.save?.({ showWALine });
    const changeAC = (showACLine: boolean) => p.save?.({ showACLine });
+   const changeTable = (asTable: boolean) => p.save?.({ asTable });
    return (
       <fieldset>
          <legend>Investments</legend>
+         <Checkbox
+             checked={p.props.asTable ?? false}
+             onChange={changeTable}
+             text="Show as table"
+         />
          <Checkbox
              checked={p.props.hideIfNoShare ?? false}
              onChange={changeHide}

@@ -153,7 +153,7 @@ interface AccountProps {
    noLinkIf?: Account[]|undefined;
 }
 const AccountName: React.FC<AccountProps> = p => {
-   const fname = p.account ? p.account.fullName() : `account ${p.id}`;
+   const fname = p.account?.fullName() ?? `account ${p.id}`;
    const name = (!p.account || p.fullName) ? fname : p.account.name;
    return (
       <span

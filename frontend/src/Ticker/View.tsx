@@ -16,7 +16,7 @@ export const THRESHOLD = 0.00000001;
 
 export type ClosePrice = [/*timestamp*/ number|null, /*close*/ number|null];
 
-interface AccountForTicker {
+export interface AccountForTicker {
    account: Account;
    absvalue: number;
    absshares: number;
@@ -42,7 +42,48 @@ export interface Ticker {
    accounts: AccountForTicker[];
 }
 
-const dateForm = d3TimeFormat.timeFormat("%Y-%m-%d");
+export interface ComputedTicker {
+   close: number;
+   weighted_avg: number;
+   avg_cost: number;
+   current_worth: number;
+   invested: number;  // total invested
+   oldest: Date;   // date of first investment
+   latest: Date;   // date of most recent investmnet
+   annualized_return: number;
+   annualized_return_recent: number;
+}
+
+export const computeTicker = (
+   ticker: Ticker, a: AccountForTicker
+): ComputedTicker => {
+   const pr = ticker.prices;
+   const current_worth = a.balance;
+   const invested = a.value;
+   const oldest = new Date(a.oldest * 1000);
+   const latest = new Date(a.latest * 1000);
+   return {
+      close: pr[pr.length - 1]?.[1] || ticker.storedprice || NaN,
+      weighted_avg: a.absvalue / a.absshares,
+      avg_cost: a.value / a.shares,
+      current_worth,
+      invested,
+      oldest,
+      latest,
+      annualized_return: (
+         Math.pow(
+            current_worth / invested,
+            365 * DAY_MS / (new Date().getTime() - oldest.getTime()))
+         - 1) * 100,
+      annualized_return_recent: (
+         Math.pow(
+            current_worth / invested,
+            365 * DAY_MS / (new Date().getTime() - latest.getTime()))
+         - 1) * 100,
+   };
+}
+
+export const dateForm = d3TimeFormat.timeFormat("%Y-%m-%d");
 const priceForm = (v: number) => v.toFixed(2);
 const labelForm = (d: number|string) => <span>{dateForm(new Date(d))}</span>;
 const bisect = d3Array.bisector((d: ClosePrice) => d[0]).right;
@@ -273,15 +314,10 @@ interface AccTickerProps {
 const AccTicker: React.FC<AccTickerProps> = p => {
    const { prefs } = usePrefs();
    const currencyId = prefs.currencyId;
-
    const a = p.acc;
-   const pr = p.ticker.prices;
-   const close = pr[pr.length - 1]?.[1] || p.ticker.storedprice || NaN;
-   const weighted_avg = a.absvalue / a.absshares;
-   const avg_cost = a.value / a.shares;
-   const current_worth = a.balance;
-   const oldest = new Date(a.oldest * 1000);
-   const latest = new Date(a.latest * 1000);
+   const { close, weighted_avg, avg_cost, current_worth,
+           oldest, latest, annualized_return, annualized_return_recent } =
+      computeTicker(p.ticker, p.acc);
 
    return (
    <div className="account">
@@ -406,14 +442,7 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                <th>Annualized return</th>
                <td>
                   <Numeric
-                     amount={
-                        (Math.pow(
-                           current_worth / a.value,
-                           365 * DAY_MS /
-                              (new Date().getTime() - oldest.getTime()))
-                           - 1
-                        ) * 100
-                     }
+                     amount={annualized_return}
                      suffix="%"
                   />
                   <div className="tooltip">
@@ -429,14 +458,7 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                <th>Annualized return recent</th>
                <td>
                   <Numeric
-                     amount={
-                        (Math.pow(
-                           current_worth / a.value,
-                           365 * DAY_MS /
-                              (new Date().getTime() - latest.getTime()))
-                           - 1
-                        ) * 100
-                     }
+                     amount={annualized_return_recent}
                      suffix="%"
                   />
                   <div className="tooltip">

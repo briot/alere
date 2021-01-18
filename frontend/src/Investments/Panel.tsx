@@ -17,6 +17,7 @@ const InvestmentsPanel: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
    return (
       <Panel
          {...p}
+         className={p.props.asTable ? 'astable' : 'asgrid'}
          header={{
             name: 'Investments',
             buttons: (

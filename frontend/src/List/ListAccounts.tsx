@@ -13,7 +13,7 @@ import { Account, AccountList } from 'services/useAccounts';
  *       TreeMode.USER_DEFINED));
  */
 
-const accountsToRows = <T extends DataWithAccount, SETTINGS> (
+const accounts_to_rows = <T extends DataWithAccount, SETTINGS> (
    accounts: AccountList,
    accountlist: Account[],
    createNode: (a: Account|undefined, fallbackName: string) => T,
@@ -36,4 +36,4 @@ const accountsToRows = <T extends DataWithAccount, SETTINGS> (
    return toLogicalRows(tree);
 }
 
-export default accountsToRows;
+export default accounts_to_rows;

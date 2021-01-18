@@ -27,7 +27,7 @@ const columnName: Column<RowData, AccountsProps> = {
    cell: (d: RowData) => d.account
       ? <AccountName id={d.accountId} account={d.account} />
       : d.fallback,
-   compare: (d1, d2: RowData) =>
+   compare: (d1: RowData, d2: RowData) =>
       (d1.account?.name ?? d1.fallback).localeCompare(
          d2.account?.name ?? d2.fallback),
 }
@@ -80,27 +80,23 @@ const createRow = (a: Account|undefined, fallbackName: string): RowData => ({
    fallback: fallbackName,
 });
 
+const columns: Column<RowData, AccountsProps>[] = [
+   columnName,
+   columnType,
+   columnCommodity,
+   columnInstitution,
+   columnIBAN,
+   columnNumber,
+   columnClosed,
+   columnOpeningDate,
+   columnReconciled,
+];
+
+
 
 const Accounts: React.FC<AccountsProps> = p => {
    const [sorted, setSorted] = React.useState('');
-
    const { accounts } = useAccounts();
-
-   const columns: Column<RowData, AccountsProps>[] = React.useMemo(
-      () => [
-         columnName,
-         columnType,
-         columnCommodity,
-         columnInstitution,
-         columnIBAN,
-         columnNumber,
-         columnClosed,
-         columnOpeningDate,
-         columnReconciled
-      ],
-      []
-   );
-
    const rows: LogicalRow<RowData, AccountsProps>[] = React.useMemo(
       () => accounts_to_rows(
          accounts,
