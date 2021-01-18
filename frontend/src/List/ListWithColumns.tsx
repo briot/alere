@@ -232,7 +232,7 @@ const ListWithColumns = <T extends any, SETTINGS> (
             return p.rows;
          }
          const asc = p.sortOn.charAt(0) === '+' ? 1 : -1;
-         return p.rows.sort((a, b) => col.compare!(a.data, b.data) * asc);
+         return [...p.rows].sort((a, b) => col.compare!(a.data, b.data) * asc);
       },
       [p.rows, p.sortOn, cols]
    );
