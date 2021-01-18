@@ -305,6 +305,14 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                </tr>
             }
             {
+               <tr>
+                  <th>Value</th>
+                  <td>
+                     <Numeric amount={current_worth} commodity={currencyId} />
+                  </td>
+               </tr>
+            }
+            {
                !p.ticker.is_currency
                && a.absshares > THRESHOLD
                && weighted_avg !== 0
