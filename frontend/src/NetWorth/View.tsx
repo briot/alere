@@ -114,13 +114,13 @@ const columnValue = (
          amount={cumulatedValue(
             details.logic, settings, date_idx, details.isExpanded)}
          commodity={base.currencyId}
-         roundValues={settings.roundValues}
+         scale={settings.roundValues ? 0 : undefined}
       />,
    foot: (d: LogicalRow<LocalTreeNode, NetworthProps>[], settings: NetworthProps) =>
       <Numeric
          amount={base.totalValue[date_idx]}
          commodity={base.currencyId}
-         roundValues={settings.roundValues}
+         scale={settings.roundValues ? 0 : undefined}
       />
 });
 

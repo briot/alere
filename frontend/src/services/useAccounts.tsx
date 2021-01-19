@@ -13,6 +13,7 @@ export interface Commodity {
    symbol_before: string;
    symbol_after: string;
    qty_scale: number;
+   price_scale: number;
    is_currency: boolean;
 }
 const nullCommodity: Commodity = {
@@ -21,6 +22,7 @@ const nullCommodity: Commodity = {
    symbol_after: "???",
    name: "???",
    qty_scale: 1,
+   price_scale: 1,
    is_currency: false,
 };
 

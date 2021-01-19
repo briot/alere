@@ -66,6 +66,7 @@ class AccountList(JSONView):
                 "symbol_before": c.symbol_before,
                 "symbol_after": c.symbol_after,
                 "qty_scale": c.qty_scale,
+                "price_scale": c.price_scale,
                 "name": c.name,
                 "is_currency": c.kind == alere.models.CommodityKinds.CURRENCY,
             }

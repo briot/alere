@@ -342,7 +342,9 @@ def __import_transactions(cur, accounts, commodities):
             price = currency.price_scale
         else:
             # for a stock account
-            price = __scaled_price(row['price'], scale=currency.price_scale)
+            price = __scaled_price(
+                row['price'],
+                scale=acc.commodity.price_scale)
 
         s = models.Splits.objects.create(
             transaction=trans,

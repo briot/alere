@@ -77,6 +77,13 @@ class Commodities(AlereModel):
     class Meta:
         db_table = prefix + "commodities"
 
+    def __str__(self):
+        return (
+            "Commodities(%s, iso_code=%s, kind=%s qty_scale=%s price_scale=%s)"
+            % (self.name, self.iso_code, self.kind, self.qty_scale,
+                self.price_scale)
+        )
+
 
 class Prices(AlereModel):
     """
@@ -414,12 +421,11 @@ class Splits(AlereModel):
     account     = models.ForeignKey(
         Accounts, on_delete=models.CASCADE, related_name='splits',
     )
-    # ??? Those two fields are the primary key, or do we need a splitId
 
     currency = models.ForeignKey(Commodities, on_delete=models.CASCADE)
     scaled_price = models.IntegerField(null=True)
     # The value of the split expressed in currency, scaled by
-    # currency's price_scale.
+    # accounts's commodity's price_scale.
     #
     # For a Stock BUY or SELL, we would have 'currency' equal to 'EUR' for
     # instance, and scaled_price is the actual price we paid per stock.

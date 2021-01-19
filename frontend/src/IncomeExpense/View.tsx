@@ -138,7 +138,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
                   <Numeric
                      amount={data.items[index].value}
                      commodity={prefs.currencyId}
-                     roundValues={p.roundValues}
+                     scale={p.roundValues ? 0 : undefined}
                   />
                   <Numeric
                      amount={data.items[index].value / data.total * 100}
@@ -158,10 +158,10 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
       <div className="columns">
          <div className="total">
             <h4>Total</h4>
-            <Numeric 
+            <Numeric
                amount={data.total}
                commodity={prefs.currencyId}
-               roundValues={p.roundValues}
+               scale={p.roundValues ? 0 : undefined}
             />
          </div>
          <div style={{ flex: '1 1 auto' }}>

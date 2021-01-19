@@ -249,12 +249,15 @@ const columnPrice: Column<TableRowData, ComputedBaseLedgerProps> = {
    compare: (a, b) =>
       (a.firstRowSplit.price ?? 0) - (b.firstRowSplit.price ?? 0),
    title: "Price of one share at the time of the transaction",
-         /* scale={d.account?.priceScale} */
    cell: (d: TableRowData) =>
       d.split === MAIN &&
       <Numeric
          amount={d.firstRowSplit.price}
-         commodity={d.firstRowSplit.account?.commodity}
+         commodity={
+            d.accounts.accounts.length > 1
+            ? undefined
+            : d.accounts.accounts[0]?.commodity
+         }
          hideCommodity={true}
       />
 }

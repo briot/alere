@@ -256,7 +256,7 @@ class Migration(migrations.Migration):
                alr_splits
                JOIN alr_accounts ON (alr_splits.account_id=alr_accounts.id)
                JOIN alr_commodities
-                  ON (alr_splits.currency_id=alr_commodities.id)
+                  ON (alr_accounts.commodity_id=alr_commodities.id)
         ;
 
         DROP VIEW IF EXISTS alr_latest_price;

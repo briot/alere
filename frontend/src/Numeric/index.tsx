@@ -14,7 +14,8 @@ interface NumericProps {
 
    commodity?: Commodity | CommodityId;
    hideCommodity?: boolean;
-   roundValues?: boolean;
+   scale?: number;  // override the commodity's scale (for prices). Set to 0
+                    // to round numbers
 }
 
 const Numeric: React.FC<NumericProps> = p => {
@@ -36,8 +37,8 @@ const Numeric: React.FC<NumericProps> = p => {
       p.colored && (p.amount >= 0 ? ' positive' : ' negative'),
    );
    const val = p.amount.toFixed(
-      p.roundValues 
-      ? 0
+      p.scale !== undefined
+      ? p.scale
       : commodity?.qty_scale === undefined
       ? 2
       : Math.log10(commodity.qty_scale));

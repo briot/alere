@@ -13,6 +13,7 @@ const commMonths: Commodity = {
    symbol_before: '',
    symbol_after: 'months',
    qty_scale: 1,
+   price_scale: 1,
    is_currency: false,
 }
 
@@ -158,14 +159,14 @@ const Cashflow: React.FC<CashflowProps> = p => {
                  <Numeric
                     amount={r.amount}
                     commodity={currency}
-                    roundValues={p.roundValues}
+                    scale={p.roundValues ? 0 : undefined}
                  />
               </Table.TH>
               <Table.TH className="amount">
                  <Numeric
                     amount={r.amount / months}
                     commodity={currency}
-                    roundValues={p.roundValues}
+                    scale={p.roundValues ? 0 : undefined}
                  />
               </Table.TH>
            </>
@@ -184,14 +185,14 @@ const Cashflow: React.FC<CashflowProps> = p => {
                  <Numeric
                     amount={r.amount}
                     commodity={currency}
-                    roundValues={p.roundValues}
+                    scale={p.roundValues ? 0 : undefined}
                  />
               </Table.TD>
               <Table.TD className="amount">
                  <Numeric
                     amount={r.amount / months}
                     commodity={currency}
-                    roundValues={p.roundValues}
+                    scale={p.roundValues ? 0 : undefined}
                  />
               </Table.TD>
            </>
@@ -218,7 +219,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   <Numeric
                      amount={r.amount}
                      commodity={currency}
-                     roundValues={p.roundValues}
+                     scale={p.roundValues ? 0 : undefined}
                   />
                </Table.TH>
             </>
@@ -233,7 +234,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   <Numeric
                      amount={r.amount}
                      commodity={currency}
-                     roundValues={p.roundValues}
+                     scale={p.roundValues ? 0 : undefined}
                   />
                </Table.TD>
             </>
