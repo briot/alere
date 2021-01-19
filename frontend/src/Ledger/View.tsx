@@ -235,12 +235,20 @@ const columnShares: Column<TableRowData, ComputedBaseLedgerProps> = {
    compare: (a, b) =>
       (a.firstRowSplit.shares ?? 0) - (b.firstRowSplit.shares ?? 0),
    cell: (d: TableRowData) =>
-      d.split === MAIN &&
-      <Numeric
-         amount={d.firstRowSplit.shares}
-         commodity={d.account?.commodity}  //  the account's commodity
-         hideCommodity={true}
-      />
+      d.split === MAIN
+      ? (
+         <Numeric
+            amount={d.firstRowSplit.shares}
+            commodity={d.account?.commodity}  //  the account's commodity
+            hideCommodity={true}
+         />
+      ) : d.account?.id === d.split.accountId ? (
+         <Numeric
+            amount={d.split.shares}
+            commodity={d.account?.commodity}  //  the account's commodity
+            hideCommodity={true}
+         />
+      ) : undefined
 }
 
 const columnPrice: Column<TableRowData, ComputedBaseLedgerProps> = {
