@@ -48,15 +48,19 @@ export const splitsNotForAccounts = (t: Transaction, accounts: Account[]) =>
  * Compute what the transaction amount is, for the given account.
  * This is the sum of the splits that apply to this account.
  */
-export const amountForAccounts = (t: Transaction, accounts: Account[]) =>
+export const amountForAccounts = (t: Transaction, accounts: Account[]): number =>
    // When no account is specified, the total sum is null by construction. So
    // we only sum positive ones to get useful feedback
-   splitsForAccounts(t, accounts).reduce((a, s) => a + s.amount, 0);
+   splitsForAccounts(t, accounts).reduce(
+      (a, s, idx) => (idx === 0 ? s.amount : a + s.amount),
+      NaN);
 
-export const sharesForAccounts = (t: Transaction, accounts: Account[]) =>
-   splitsForAccounts(t, accounts)
-   .reduce((a, s) => s.shares ? a + s.shares : a, 0);
+export const sharesForAccounts = (t: Transaction, accounts: Account[]): number =>
+   splitsForAccounts(t, accounts).reduce(
+      (a, s, idx) => s.shares ? (idx === 0 ? s.shares : a + s.shares) : a,
+      NaN);
 
-export const priceForAccounts = (t: Transaction, accounts: Account[]) =>
-   splitsForAccounts(t, accounts)
-   .reduce((a, s) => s.price ? a + s.price : a, 0);
+export const priceForAccounts = (t: Transaction, accounts: Account[]): number =>
+   splitsForAccounts(t, accounts).reduce(
+      (a, s, idx) => s.price ? (idx === 0 ? s.price : a + s.price) : a,
+      NaN);

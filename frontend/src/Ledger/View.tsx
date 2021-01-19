@@ -100,19 +100,21 @@ const columnSummary: Column<TableRowData, ComputedBaseLedgerProps> = {
                   (d.accounts.accounts === undefined
                      || !s.account
                      || !d.accounts.accounts.includes(s.account)
-                  ) ? <span key={index}>
-                     <span>{ s.amount >= 0 ? ' - ' : ' + ' }</span>
-                     <Numeric
-                        amount={Math.abs(s.amount)}
-                        commodity={s.account?.commodity}
-                     />
-                     &nbsp;(
-                        <AccountName
-                            id={s.accountId}
-                            account={s.account}
+                  ) ? (
+                     <span key={index}>
+                        <span>{ s.amount >= 0 ? ' - ' : ' + ' }</span>
+                        <Numeric
+                           amount={Math.abs(s.amount)}
+                           commodity={s.account?.commodity}
                         />
-                     )
-                  </span> : null
+                        &nbsp;(
+                           <AccountName
+                               id={s.accountId}
+                               account={s.account}
+                           />
+                        )
+                     </span>
+                  ) : null
                )
             }
          </>
@@ -258,16 +260,28 @@ const columnPrice: Column<TableRowData, ComputedBaseLedgerProps> = {
       (a.firstRowSplit.price ?? 0) - (b.firstRowSplit.price ?? 0),
    title: "Price of one share at the time of the transaction",
    cell: (d: TableRowData) =>
-      d.split === MAIN &&
-      <Numeric
-         amount={d.firstRowSplit.price}
-         commodity={
-            d.accounts.accounts.length > 1
-            ? undefined
-            : d.accounts.accounts[0]?.commodity
-         }
-         hideCommodity={true}
-      />
+      d.split === MAIN
+      ? (
+         <Numeric
+            amount={d.firstRowSplit.price}
+            commodity={
+               d.accounts.accounts.length > 1
+               ? undefined
+               : d.accounts.accounts[0]?.commodity
+            }
+            hideCommodity={true}
+         />
+      ) : d.account?.id === d.split.accountId ? (
+         <Numeric
+            amount={d.split.price}
+            commodity={
+               d.accounts.accounts.length > 1
+               ? undefined
+               : d.accounts.accounts[0]?.commodity
+            }
+            hideCommodity={true}
+         />
+      ) : undefined
 }
 
 const columnSharesBalance: Column<TableRowData, ComputedBaseLedgerProps> = {
