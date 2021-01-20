@@ -25,7 +25,6 @@ class MetricsView(JSONView):
                     maxdate__gt=maxdate,
                     commodity_id=currency)
 
-
         income = -(
             over_period \
             .filter(
@@ -81,6 +80,11 @@ class MetricsView(JSONView):
             .aggregate(value=Sum('balance'))['value']
             or 0)
 
+        liquid_assets_at_start = (
+            at_start \
+            .filter(account__kind__in=alere.models.AccountFlags.liquid()) \
+            .aggregate(value=Sum('balance'))['value']
+            or 0)
 
         return {
             "income": income,
@@ -92,4 +96,5 @@ class MetricsView(JSONView):
             "networth": networth,
             "networth_start": networth_start,
             "liquid_assets": liquid_assets,
+            "liquid_assets_at_start": liquid_assets_at_start,
         }

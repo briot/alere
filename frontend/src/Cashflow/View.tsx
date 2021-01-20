@@ -27,6 +27,7 @@ interface Metric {
    networth: number;
    networth_start: number;
    liquid_assets: number;
+   liquid_assets_at_start: number;
 }
 
 const useFetchPL = (range: DateRange, currencyId: CommodityId) => {
@@ -38,6 +39,7 @@ const useFetchPL = (range: DateRange, currencyId: CommodityId) => {
       networth: NaN,
       networth_start: NaN,
       liquid_assets: NaN,
+      liquid_assets_at_start: NaN,
       income_taxes: NaN,
       other_taxes: NaN,
    });
@@ -290,8 +292,8 @@ const Cashflow: React.FC<CashflowProps> = p => {
          <Metrics
             name="Return on Investment"
             descr="How much passive income your whole networth provides"
-            value={non_work_income / pl.networth * 100}
-            tooltip={`Passive income and unrealized gains ${non_work_income.toFixed(0)} / Networth ${pl.networth.toFixed(0)}`}
+            value={non_work_income / pl.networth_start * 100}
+            tooltip={`Passive income and unrealized gains ${non_work_income.toFixed(0)} / Networth at start ${pl.networth_start.toFixed(0)}`}
             ideal={4}
             compare=">"
             suffix="%"
@@ -299,8 +301,8 @@ const Cashflow: React.FC<CashflowProps> = p => {
          <Metrics
             name="Return on Investment for liquid assets"
             descr="How much passive income your liquid assets provides"
-            value={non_work_income / pl.liquid_assets * 100}
-            tooltip={`Passive income and unrealized gains ${non_work_income.toFixed(0)} / Liquid assets ${pl.liquid_assets.toFixed(0)}`}
+            value={non_work_income / pl.liquid_assets_at_start * 100}
+            tooltip={`Passive income and unrealized gains ${non_work_income.toFixed(0)} / Liquid assets at start ${pl.liquid_assets_at_start.toFixed(0)}`}
             ideal={4}
             compare=">"
             suffix="%"
