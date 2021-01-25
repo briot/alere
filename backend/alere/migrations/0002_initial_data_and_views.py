@@ -275,35 +275,30 @@ class Migration(migrations.Migration):
         --  so that we can compute average prices for instance.
         DROP VIEW IF EXISTS alr_accounts_security;
         CREATE VIEW alr_accounts_security AS
-           --  external query is only for the sake of django
            SELECT
               row_number() OVER () as id,   --  for django's sake
-              tmp.*
-           FROM (
-              SELECT
-                 splits_for_account.transaction_id,
-                 splits_for_account.account_id,
-                 currency.commodity_id as currency_id,
-                 currency.commodity_scu as scale,
-                 SUM(all_splits.scaled_qty) as scaled_qty
-              FROM
-                 alr_splits splits_for_account
-                 JOIN alr_transactions t
-                    ON (splits_for_account.transaction_id=t.id)
-                 JOIN alr_splits all_splits
-                    ON (all_splits.transaction_id=t.id)
-                 JOIN alr_accounts currency
-                    ON (currency.id=all_splits.account_id)
-              WHERE
-                 --  Only money to or from user accounts, since otherwise the
-                 --  sum is 0
-                 currency.kind_id IN ({networth_flags})
-              GROUP BY currency.commodity_id, scale,
-                 splits_for_account.transaction_id,
-                 splits_for_account.account_id
-           ) tmp
-           ORDER BY transaction_id
-           ;
+              splits_for_account.transaction_id,
+              splits_for_account.account_id,
+              currency.commodity_id as currency_id,
+              currency.commodity_scu as scale,
+              SUM(all_splits.scaled_qty) as scaled_qty
+           FROM
+              alr_splits splits_for_account
+              JOIN alr_transactions t
+                 ON (splits_for_account.transaction_id=t.id)
+              JOIN alr_splits all_splits
+                 ON (all_splits.transaction_id=t.id)
+              JOIN alr_accounts currency
+                 ON (currency.id=all_splits.account_id)
+           WHERE
+              --  Only money to or from user accounts, since otherwise the
+              --  sum is 0
+              currency.kind_id IN ({networth_flags})
+           GROUP BY currency.commodity_id, scale,
+              splits_for_account.transaction_id,
+              splits_for_account.account_id
+           ORDER BY splits_for_account.transaction_id
+        ;
         """
         )
     ]
