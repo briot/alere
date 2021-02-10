@@ -14,16 +14,16 @@ m = [
     ( 24,  models.AccountFlags.MISC_TAX),           # taxe habitation
     ( 25,  models.AccountFlags.INCOME_TAX),         # impots revenu
     ( 63,  models.AccountFlags.WORK_INCOME),        # chomage
-    ( 125, models.AccountFlags.INVESTMENT),         # assurance-vie Manu Bourso
-    ( 127, models.AccountFlags.EQUITY),             # reconciliation
-    ( 128, models.AccountFlags.INVESTMENT),         # solesio
-    ( 147, models.AccountFlags.UNREALIZED_GAINS),   # plus-value potentielle
-    ( 151, models.AccountFlags.PASSIVE_INCOME),     # interets
-    ( 153, models.AccountFlags.MISC_TAX),           # CSG
-    ( 157, models.AccountFlags.INVESTMENT),         # assurance-vie Anaelle
-    ( 160, models.AccountFlags.INCOME_TAX),         # URSAFF
-    ( 167, models.AccountFlags.MISC_INCOME),        # heritage
-    ( 180, models.AccountFlags.INVESTMENT),         # sequoia manu
+    ( 124, models.AccountFlags.INVESTMENT),         # assurance-vie Manu Bourso
+    ( 126, models.AccountFlags.EQUITY),             # reconciliation
+    ( 127, models.AccountFlags.INVESTMENT),         # solesio
+    ( 146, models.AccountFlags.UNREALIZED_GAINS),   # plus-value potentielle
+    ( 150, models.AccountFlags.PASSIVE_INCOME),     # interets
+    ( 152, models.AccountFlags.MISC_TAX),           # CSG
+    ( 156, models.AccountFlags.INVESTMENT),         # assurance-vie Anaelle
+    ( 159, models.AccountFlags.INCOME_TAX),         # URSAFF
+    ( 166, models.AccountFlags.MISC_INCOME),        # heritage
+    ( 179, models.AccountFlags.INVESTMENT),         # sequoia manu
 
 ]
 
