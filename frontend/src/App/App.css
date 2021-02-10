@@ -112,26 +112,6 @@ a:hover {
           var(--nm-blur) 0 var(--neumorph-dark);
 }
 
-/*
-.bg {
-   position: absolute;
-   bottom: 0;
-   right: 0;
-   left: 0;
-   top: 0;
-   z-index: 0;
-}
-.bg.circle {
-   pointer-events: none;
-   filter: drop-shadow(-6px -6px 15px var(--neumorph-light));
-}
-.bg.circle > div {
-   clip-path: circle(20% at 100% 100%);
-   background: var(--page-background);
-   width: 100%;
-   height: 100%;
-}
-*/
 #app {
    background-image: url('./coins2.png');
    background-repeat: no-repeat;

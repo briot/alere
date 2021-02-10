@@ -14,5 +14,5 @@
 .priceHistory .roundButton {
    display: block;
    position: absolute;
-   z-index: 1000;
+   z-index: var(--zindex-dropdown);
 }

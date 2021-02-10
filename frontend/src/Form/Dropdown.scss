@@ -42,7 +42,7 @@
       min-width: max-content;  // but leave space to show full items text
       margin: 0;
       padding: 10px;
-      z-index: 11;
+      z-index: var(--zindex-dropdown);
 
       &.animate {
          transform: scaleY(0);
