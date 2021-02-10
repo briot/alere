@@ -74,6 +74,9 @@ class Symbol:
             "is_currency": self.is_currency,
         }
 
+    def __repr__(self):
+        return "Symbol(%d, %s)" % (self.id, self.commodity_name)
+
 
 class QuotesView(JSONView):
 
