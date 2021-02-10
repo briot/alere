@@ -18,30 +18,32 @@ interface NumericProps {
                     // to round numbers
 }
 
-const Numeric: React.FC<NumericProps> = p => {
+const Numeric: React.FC<NumericProps> = ({
+   amount, commodity, className, colored, scale, hideCommodity, suffix
+}) => {
    const { accounts } = useAccounts();
 
-   if (p.amount === undefined || p.amount === null || isNaN(p.amount)) {
+   if (amount === undefined || amount === null || isNaN(amount)) {
       return (
          <span className='numeric'>-</span>
       );
    }
 
-   const commodity = typeof(p.commodity) === "number"
-      ? accounts.allCommodities[p.commodity]
-      : p.commodity;
+   const comm = typeof(commodity) === "number"
+      ? accounts.allCommodities[commodity]
+      : commodity;
 
-   const className = classes(
+   const cn = classes(
       'numeric',
-      p.className,
-      p.colored && (p.amount >= 0 ? ' positive' : ' negative'),
+      className,
+      colored && (amount >= 0 ? ' positive' : ' negative'),
    );
-   const val = p.amount.toFixed(
-      p.scale !== undefined
-      ? p.scale
-      : commodity?.qty_scale === undefined
+   const val = amount.toFixed(
+      scale !== undefined
+      ? scale
+      : comm?.qty_scale === undefined
       ? 2
-      : Math.log10(commodity.qty_scale));
+      : Math.log10(comm.qty_scale));
 
    let str = val.split('.');  // separator used by toFixed
    if (str[0].length >= 4) {
@@ -54,17 +56,17 @@ const Numeric: React.FC<NumericProps> = p => {
 //   }
 
    return (
-      <span className={className}>
-         {!p.hideCommodity && commodity?.symbol_before
-            ? <span className="prefix">{commodity.symbol_before}</span>
+      <span className={cn}>
+         {!hideCommodity && comm?.symbol_before
+            ? <span className="prefix">{comm.symbol_before}</span>
             : null
          }
          {str.join(DECIMAL_SEP)}
-         {!p.hideCommodity && commodity?.symbol_after
-            ? <span className="suffix">{commodity.symbol_after}</span>
+         {!hideCommodity && comm?.symbol_after
+            ? <span className="suffix">{comm.symbol_after}</span>
             : null
          }
-         {p.suffix}
+         {suffix}
       </span>
    );
 }
