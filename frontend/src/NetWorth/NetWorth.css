@@ -14,7 +14,6 @@
 .networth .tr span:not(:first-child).span2 {
    flex-basis: calc( var(--col-width) * 2 );
 }
-.networth .tfoot .tr span:not(:first-child),
-.networth .tbody .tr span:not(:first-child) {
+.networth :is(.tfoot, .tbody) .tr span:not(:first-child) {
    text-align: right;
 }

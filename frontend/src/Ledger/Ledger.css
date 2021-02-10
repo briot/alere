@@ -7,8 +7,7 @@
 }
 
 /* Editing */
-.ledgerTable .tr.edit .td input,
-.ledgerTable .tr.edit .td select {
+.ledgerTable .tr.edit .td :is(input, select) {
    width: calc(100% - 9px);
 }
 .ledgerTable .tr.edit .td.reconcile select {
@@ -47,8 +46,7 @@
    flex: 0 1 5rem;
    text-align: right;
 }
-.ledgerTable .payee,
-.ledgerTable .transfer {
+.ledgerTable :is(.payee, .transfer) {
    min-width: 150px;
 }
 .ledgerTable .summary {

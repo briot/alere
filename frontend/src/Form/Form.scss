@@ -10,9 +10,8 @@ select {
    color: var(--input-foreground);
    padding: 0.25em;
 }
-.primary input,
-button.primary,
-.primary .select {
+.primary :is(input, .select),
+button.primary {
    background-color: var(--input-primary-background);
    border: 1px solid var(--input-primary-border);
    color: var(--input-primary-foreground);
@@ -35,11 +34,8 @@ button.danger {
    color: var(--danger-fg);
 }
 .disabled,
-.disabled span,
-.disabled input,
-.disabled button,
-button:disabled,
-.disabled .selector {
+.disabled :is(span, input, button, .selector),
+button:disabled {
    pointer-events: none;
    opacity: 0.5;
 }
@@ -146,7 +142,6 @@ form .select option {
          }
       }
    }
-
 }
 
 form .checkbox {
