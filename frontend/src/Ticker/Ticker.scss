@@ -7,7 +7,8 @@
    transition: transform 0.3s;
 
    &:hover {
-      transform: scale(1.1);
+      // ??? With this, tooltips are displayed below graphs in other boxes
+      // transform: scale(1.1);
    }
 
    th {
@@ -15,19 +16,21 @@
    }
 
    .tooltip {
+      background: var(--page-background);
+      border: 1px solid var(--shadow-color);
+      color: var(--panel-fg);
+      cursor: default;
       display: none;
+      margin-top: 20px;
+      pointer-events: none;
+      position: absolute;
       text-align: left;
-      width: 250px;
       white-space: normal;
+      width: 250px;
       z-index: var(--zindex-tooltip);
    }
    tr:hover .tooltip {
       display: block;
-      position: absolute;
-      margin-top: 20px;
-      background: var(--page-background);
-      color: var(--panel-fg);
-      border: 1px solid var(--shadow-color);
    }
 
    .hist {
