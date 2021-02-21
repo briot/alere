@@ -11,6 +11,7 @@ interface NumericProps {
    suffix?: string; // extra suffix added after commodity (like "%" or "/month")
    colored?: boolean;
    className?: string;
+   forceSign?: boolean;
 
    commodity?: Commodity | CommodityId;
    hideCommodity?: boolean;
@@ -19,7 +20,8 @@ interface NumericProps {
 }
 
 const Numeric: React.FC<NumericProps> = ({
-   amount, commodity, className, colored, scale, hideCommodity, suffix
+   amount, commodity, className, colored, scale, hideCommodity, suffix,
+   forceSign,
 }) => {
    const { accounts } = useAccounts();
 
@@ -50,6 +52,8 @@ const Numeric: React.FC<NumericProps> = ({
        str[0] = str[0].replace(/(\d)(?=(\d{3})+$)/g, '$1' + GROUP_SEP);
    }
 
+   const sign = (forceSign && val >= 0) ? '+' : '';
+
    // No adjustment for the decimal part
 //   if (str[1] && str[1].length >= 4) {
 //       str[1] = str[1].replace(/(\d{3})/g, '$1 ');
@@ -61,7 +65,7 @@ const Numeric: React.FC<NumericProps> = ({
             ? <span className="prefix">{comm.symbol_before}</span>
             : null
          }
-         {str.join(DECIMAL_SEP)}
+         {sign}{str.join(DECIMAL_SEP)}
          {!hideCommodity && comm?.symbol_after
             ? <span className="suffix">{comm.symbol_after}</span>
             : null

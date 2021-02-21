@@ -345,6 +345,13 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                   <th>Value</th>
                   <td>
                      <Numeric amount={current_worth} commodity={currencyId} />
+                     &nbsp;(
+                        <Numeric
+                           amount={current_worth - a.value}
+                           commodity={currencyId}
+                           forceSign={true}
+                        />
+                     )
                   </td>
                </tr>
             }
@@ -367,9 +374,9 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                      &nbsp;(
                      <Numeric
                         amount={(close / weighted_avg - 1) * 100}
+                        forceSign={true}
                         suffix="%"
-                     />
-                     )
+                     />)
                      <div className="tooltip">
                         <p>
                         Average price at which you sold or
@@ -387,7 +394,7 @@ const AccTicker: React.FC<AccTickerProps> = p => {
               && avg_cost !== 0
               ? (
               <tr>
-                 <th>Average Cost</th>
+                 <th>Average Cost and RoI</th>
                  <td>
                     <Numeric
                        amount={avg_cost}
@@ -400,49 +407,47 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                     &nbsp;(
                     <Numeric
                        amount={(close / avg_cost - 1) * 100}
+                       forceSign={true}
                        suffix="%"
                     />
                     )
+                    {/*
+                        The return can also be computed as
+                           (current_worth / a.value - 1) * 100
+                        which gives the same value as above
+                    */}
                     <div className="tooltip">
                        <p>
                        Equivalent price for the remaining shares
                        you own, taking into account reinvested dividends, added
                        and removed shares,...
                        </p>
+                       <p>
+                       This value is used to compute the
+                       <b> Return on Investment</b>:
+                       current value / total invested, including withdrawals,
+                       dividends,..."
+                       </p>
+                       <Numeric
+                           amount={a.value}
+                           commodity={currencyId}
+                       />
+                       &rarr;&nbsp;
+                       <Numeric
+                           amount={current_worth}
+                           commodity={currencyId}
+                       />
                     </div>
                  </td>
               </tr>
               ) : null
            }
-           <tr>
-              <th>Return</th>
-              <td>
-                 <Numeric
-                     amount={(current_worth / a.value - 1) * 100}
-                     suffix="%"
-                 />
-                 <div className="tooltip">
-                    <Numeric
-                        amount={a.value}
-                        commodity={currencyId}
-                    />
-                    &rarr;&nbsp;
-                    <Numeric
-                        amount={current_worth}
-                        commodity={currencyId}
-                    />
-                    <p>
-                    Return on Investment: current value / total invested,
-                    including withdrawals, dividends,..."
-                    </p>
-                 </div>
-              </td>
-            </tr>
             <tr>
                <th>Annualized return</th>
                <td>
                   <Numeric
                      amount={annualized_return}
+                     forceSign={true}
                      suffix="%"
                   />
                   <div className="tooltip">
@@ -459,6 +464,7 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                <td>
                   <Numeric
                      amount={annualized_return_recent}
+                     forceSign={true}
                      suffix="%"
                   />
                   <div className="tooltip">
