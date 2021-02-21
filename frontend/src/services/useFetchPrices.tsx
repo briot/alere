@@ -9,10 +9,10 @@ interface Price {
 const useFetchPrices = (
    accountId: AccountId,
    currencyId: CommodityId,
-): Price[] => {
+) => {
    return useFetch<Price[]>({
       url: `/api/prices/${accountId}?currency=${currencyId}`,
-      default: [],
-   }).json;
+      placeholder: [],
+   }).data as Price[];
 }
 export default useFetchPrices;

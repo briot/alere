@@ -8,17 +8,28 @@ import * as serviceWorker from './serviceWorker';
 import { AccountsProvider } from 'services/useAccounts';
 import { PrefProvider } from 'services/usePrefs';
 import { HistProvider } from 'services/useHistory';
+import { QueryClient, QueryClientProvider } from 'react-query';
+
+const queryClient = new QueryClient({
+   defaultOptions: {
+     queries: {
+       staleTime: 5 * 60000,  // 5min
+     },
+   },
+});
 
 ReactDOM.render(
   <React.StrictMode>
       <BrowserRouter>
-         <PrefProvider>
-            <HistProvider>
-               <AccountsProvider>
-                  <App />
-               </AccountsProvider>
-            </HistProvider>
-         </PrefProvider>
+         <QueryClientProvider client={queryClient}>
+            <PrefProvider>
+               <HistProvider>
+                  <AccountsProvider>
+                     <App />
+                  </AccountsProvider>
+               </HistProvider>
+            </PrefProvider>
+        </QueryClientProvider>
       </BrowserRouter>
   </React.StrictMode>,
   document.getElementById('root')

@@ -1,64 +1,48 @@
-import * as React from 'react';
+import { useQuery, QueryKey, UseQueryOptions,
+   UseQueryResult } from 'react-query';
 
 interface FetchProps<T> {
    url: string;
-   init?: RequestInit,  // To override the method, for instance
-//   parse?: (json: any) => T;  // parse the server's response
-   default: T;
+   init?: RequestInit;  // To override the method, for instance
+   parse?: (json: any) => T;  // parse the server's response
+   placeholder?: T;
+   enabled?: boolean;
+   options?: UseQueryOptions<T, string /* error */, T /* TData */>;
+   key?: QueryKey;
 }
 
-// Only one of the fields is set
-interface FetchState {
-   loading?: boolean;
-   error?: Error|string;
-}
-
-const useFetch = <T extends any> (p: FetchProps<T>) => {
-   const [state, setState] = React.useState<FetchState>({loading: true});
-   const [json, setJson] = React.useState(p.default);
-   const controller = React.useRef<AbortController|undefined>();
-
-   const abort = React.useCallback(
-      () => {
-         controller.current?.abort();
-         controller.current = undefined;
-         setState({});
-      },
-      []
-   );
-
-   React.useEffect(
-      () => {
-         const doFetch = async() => {
-            abort();
-            controller.current = new AbortController();
-
-            try {
-               setState({ loading: true });
-               const resp  = await window.fetch(
-                  p.url,
-                  {...p.init, signal: controller.current.signal}
-               );
-
-               if (!resp.ok) {
-                  setState({
-                     error: `Error loading ${p.url}: ${resp.status}`,
-                  });
-               } else {
-                  const d: T = await resp.json();
-                  setJson(d);
-                  setState({});
-               }
-            } catch(e) {
-               setState({ error: e });
+/**
+ * Wrapper around react-query, to use window.fetch and setup cancellable
+ * queries.
+ */
+const useFetch = <T extends any> (
+   p: FetchProps<T>
+): UseQueryResult<T, string> => {
+   const resp = useQuery(
+      p.key || p.url,
+      async () => {
+         const controller = new AbortController();
+         const promise = window.fetch(
+            p.url,
+            {...p.init, signal: controller.signal},
+         ).then(r => {
+            if (!r.ok) {
+               throw new Error(`Failed to fetch ${p.url}`);
             }
-         }
-         doFetch();
-         return () => abort();
+            return r.json();
+         }).then(json => {
+            return (!p.parse) ? json as T : p.parse(json);
+         });
+//         (promise as any).cancel = () => controller.abort();  //  for react-query
+         return promise;
       },
-      [p.url, p.init, abort]
+      {
+         ...p.options,
+         placeholderData: p.placeholder,
+         enabled: p.enabled === undefined ? true : p.enabled,
+      },
    );
+   return resp;
+};
 
-   return {abort, json, state};
-}
 export default useFetch;

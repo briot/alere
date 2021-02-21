@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { AccountId, CommodityId } from 'services/useAccounts';
 import { RelativeDate, dateToString } from 'Dates';
 import useFetch from 'services/useFetch';
@@ -58,15 +57,11 @@ const useBalance = (p: {
    currencyId: CommodityId;
    dates: RelativeDate[];
 }): BalanceList => {
-   const { json } = useFetch<JSONBalance[]>({
+   const { data } = useFetch<BalanceList>({
       url: `/api/plots/networth`
          + `?currency=${p.currencyId}`
          + `&dates=${p.dates.map(dateToString).join(',')}`,
-      default: [],
-   });
-
-   const d = React.useMemo<BalanceList>(
-      () => ({
+      parse: (json: JSONBalance[]) => ({
          dates: p.dates,
          currencyId: p.currencyId,
          list: json.map(a => ({
@@ -77,14 +72,14 @@ const useBalance = (p: {
             })),
          })),
          totalValue: p.dates.map((_, idx) =>
-           json
+            json
             .filter(d => d.price[idx])  // remove undefined and NaN
             .reduce((t, d) => t + d.price[idx]! * d.shares[idx], 0)),
       }),
-      [p.dates, p.currencyId, json]
-   );
+      placeholder: {currencyId: p.currencyId, dates: [], list: [], totalValue: []},
+   });
 
-   return d;
+   return data as BalanceList;
 }
 
 export default useBalance;

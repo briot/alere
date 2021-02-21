@@ -8,6 +8,7 @@ import Numeric from 'Numeric';
 import AccountName from 'Account';
 import useAccounts, { AccountId, Account } from 'services/useAccounts';
 import usePrefs from 'services/usePrefs';
+import useFetch from 'services/useFetch';
 import './IncomeExpense.scss';
 
 const NAME_KEY = "nam";
@@ -88,42 +89,30 @@ export interface IncomeExpenseProps {
 }
 
 const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
-   const [baseData, setBaseData] = React.useState(noData);
    const { accounts } = useAccounts();
    const { prefs } = usePrefs();
-
-   React.useEffect(
-      () => {
-         const dofetch = async () => {
-            const resp = await window.fetch(
-               `/api/plots/category/${p.expenses ? 'expenses' : 'income'}`
-               + `?${rangeToHttp(p.range)}&currency=${prefs.currencyId}`
-            );
-            const d: DataType = await resp.json();
-
-            setBaseData({
-               items: d.items,
-               mindate: d.mindate,
-               maxdate: d.maxdate,
-               total: d.items.reduce((tot, v) => tot + v.value, 0),
-            });
-         }
-         dofetch();
-      },
-      [p.expenses, p.range, prefs.currencyId]
-   );
-
-   const data: DataType = React.useMemo(
-      () => {
-         const d = {...baseData};
+   const { data }  = useFetch({
+      url: `/api/plots/category/${p.expenses ? 'expenses' : 'income'}`
+        + `?${rangeToHttp(p.range)}&currency=${prefs.currencyId}`,
+      parse: (json: DataType) => {
+         const d = {
+            items: json.items,
+            mindate: json.mindate,
+            maxdate: json.maxdate,
+            total: json.items.reduce((tot, v) => tot + v.value, 0),
+         };
          d.items.forEach(a => {
             a.account = accounts.getAccount(a.accountId);
             a[NAME_KEY] = a.account?.name;
          });
          return d;
       },
-      [accounts, baseData]
-   );
+      placeholder: noData,
+   });
+
+   if (!data) {
+      return null; // only when fetch was disabled
+   }
 
    const legendItem = (value: any, entry: any, index?: number) =>
       index === undefined
