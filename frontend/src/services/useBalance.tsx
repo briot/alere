@@ -57,7 +57,7 @@ const useBalance = (p: {
    currencyId: CommodityId;
    dates: RelativeDate[];
 }): BalanceList => {
-   const { data } = useFetch<BalanceList>({
+   const { data } = useFetch<BalanceList, JSONBalance[]>({
       url: `/api/plots/networth`
          + `?currency=${p.currencyId}`
          + `&dates=${p.dates.map(dateToString).join(',')}`,

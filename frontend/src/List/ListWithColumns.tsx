@@ -43,7 +43,7 @@ export interface Column<T, SETTINGS> {
  * can have children rows).
  */
 export interface LogicalRow<T, SETTINGS> {
-   key: any;    //  unique id for this row (used a index in a Map)
+   key: string|number;    //  unique id for this row (used a index in a Map)
    data: T;
    getChildren?: (d: T, settings: SETTINGS) => LogicalRow<T, SETTINGS>[];
 
@@ -66,7 +66,7 @@ interface PhysicalRow<T, SETTINGS> {
    level: number;       // nesting level
 }
 
-const computePhysicalRows = <T extends any, SETTINGS> (
+const computePhysicalRows = <T extends unknown, SETTINGS> (
    r: LogicalRow<T, SETTINGS>,
    settings: SETTINGS,
    expanded: Map<number|string, boolean>,
@@ -106,7 +106,7 @@ interface PhysicalRows<T, SETTINGS> {
 }
 
 
-const usePhysicalRows = <T extends any, SETTINGS> (
+const usePhysicalRows = <T extends unknown, SETTINGS> (
    rows: LogicalRow<T, SETTINGS>[],
    settings: SETTINGS,
    defaultExpand: boolean,
@@ -210,7 +210,7 @@ interface ListWithColumnsProps<T, SETTINGS> {
    settings: SETTINGS;
 }
 
-const ListWithColumns = <T extends any, SETTINGS> (
+const ListWithColumns = <T extends unknown, SETTINGS> (
    p: ListWithColumnsProps<T, SETTINGS>,
 ) => {
    const list = React.createRef<FixedSizeList>();

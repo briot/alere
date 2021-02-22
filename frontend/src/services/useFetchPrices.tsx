@@ -10,7 +10,7 @@ const useFetchPrices = (
    accountId: AccountId,
    currencyId: CommodityId,
 ) => {
-   return useFetch<Price[]>({
+   return useFetch<Price[], any>({
       url: `/api/prices/${accountId}?currency=${currencyId}`,
       placeholder: [],
    }).data as Price[];

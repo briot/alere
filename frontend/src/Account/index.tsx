@@ -109,7 +109,7 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
       }
    };
 
-   const columnAccountName: Column<SelectTreeNode, any > = {
+   const columnAccountName: Column<SelectTreeNode, unknown > = {
       id: 'Account',
       cell: (n: SelectTreeNode) => {
          return n.account ? (

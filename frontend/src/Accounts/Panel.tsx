@@ -1,6 +1,5 @@
 import * as React from 'react';
 import Accounts, { AccountsProps } from 'Accounts/View';
-//  import Settings from 'NetWorth/Settings';
 import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
 
 export interface AccountsPanelProps extends PanelBaseProps, AccountsProps {

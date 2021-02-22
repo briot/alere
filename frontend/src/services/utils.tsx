@@ -1,4 +1,4 @@
-export const isNumeric = (str: any): boolean =>  {
+export const isNumeric = (str: unknown): boolean =>  {
    if (typeof str === "number") {
       return true;
    }

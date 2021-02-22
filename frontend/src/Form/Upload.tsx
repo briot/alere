@@ -63,12 +63,12 @@ const Upload: React.FC<UploadProps> = p => {
       [addFiles]
    );
 
-   const cancelEvent = (e: Event | React.DragEvent<any>) => {
+   const cancelEvent = (e: Event | React.DragEvent<unknown>) => {
       e.preventDefault();
       e.stopPropagation();
    };
 
-   const onDrop = (e: React.DragEvent<any>) => {
+   const onDrop = (e: React.DragEvent<unknown>) => {
       cancelEvent(e);
       if (e.dataTransfer) {
          addFiles(e.dataTransfer.files);

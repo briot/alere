@@ -114,7 +114,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
       return null; // only when fetch was disabled
    }
 
-   const legendItem = (value: any, entry: any, index?: number) =>
+   const legendItem = (value: React.ReactNode, entry: unknown, index?: number) =>
       index === undefined
          ? <span>{value}</span>
          : (

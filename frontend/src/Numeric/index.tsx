@@ -52,7 +52,7 @@ const Numeric: React.FC<NumericProps> = ({
        str[0] = str[0].replace(/(\d)(?=(\d{3})+$)/g, '$1' + GROUP_SEP);
    }
 
-   const sign = (forceSign && val >= 0) ? '+' : '';
+   const sign = (forceSign && amount >= 0) ? '+' : '';
 
    // No adjustment for the decimal part
 //   if (str[1] && str[1].length >= 4) {

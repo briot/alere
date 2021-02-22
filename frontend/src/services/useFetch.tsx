@@ -1,10 +1,10 @@
 import { useQuery, QueryKey, UseQueryOptions,
    UseQueryResult } from 'react-query';
 
-interface FetchProps<T> {
+interface FetchProps<T, RAW_T> {
    url: string;
    init?: RequestInit;  // To override the method, for instance
-   parse?: (json: any) => T;  // parse the server's response
+   parse?: (json: RAW_T) => T;  // parse the server's response
    placeholder?: T;
    enabled?: boolean;
    options?: UseQueryOptions<T, string /* error */, T /* TData */>;
@@ -15,8 +15,8 @@ interface FetchProps<T> {
  * Wrapper around react-query, to use window.fetch and setup cancellable
  * queries.
  */
-const useFetch = <T extends any> (
-   p: FetchProps<T>
+const useFetch = <T, RAW_T> (
+   p: FetchProps<T, RAW_T>
 ): UseQueryResult<T, string> => {
    const resp = useQuery(
       p.key || p.url,
@@ -33,7 +33,7 @@ const useFetch = <T extends any> (
          }).then(json => {
             return (!p.parse) ? json as T : p.parse(json);
          });
-//         (promise as any).cancel = () => controller.abort();  //  for react-query
+//         (promise as unknown).cancel = () => controller.abort();  //  for react-query
          return promise;
       },
       {
