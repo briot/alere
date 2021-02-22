@@ -1,7 +1,7 @@
-import * as React from 'react';
 import { ClosePrice, THRESHOLD, Ticker } from 'Ticker/View';
 import useAccounts, { AccountId, CommodityId } from 'services/useAccounts';
 import useAccountIds, { AccountIdSet } from 'services/useAccountIds';
+import useFetch from 'services/useFetch';
 
 interface TickerJSON {
    id: CommodityId;
@@ -37,33 +37,16 @@ const useTickers = (
    skip?: boolean,           // if true, do not fetch anything
 ) => {
    const { accounts } = useAccounts();
-   const [json, setJson] = React.useState<TickerJSON[]>([]);
-   const [tickers, setTickers] = React.useState<Ticker[]>([]);
    const accs = useAccountIds(accountIds);
    const ids = accs.accounts.map(a => a.id).sort().join(',');
-
-   React.useEffect(
-      () => {
-         const dofetch = async () => {
-            const resp = await window.fetch(
-               `/api/quotes?update=${fromProviders}&currency=${currencyId}`
-               + (commodity ? `&commodities=${commodity}` : '')
-               + (ids ? `&accounts=${ids}` : '')
-            );
-            const data: TickerJSON[] = await resp.json();
-            setJson(data);
-         }
-
-         if (!skip) {
-            dofetch();
-         }
-      },
-      [fromProviders, currencyId, commodity, skip, ids]
-   );
-
-   React.useEffect(
-      () => {
-         const accs = json.map(t => ({
+   const tickers = useFetch<Ticker[], TickerJSON[]>({
+      url: `/api/quotes?update=${fromProviders}&currency=${currencyId}`
+         + (commodity ? `&commodities=${commodity}` : '')
+         + (ids ? `&accounts=${ids}` : ''),
+      placeholder: [],
+      enabled: !skip,
+      parse: (json: TickerJSON[]) => {
+         return json.map(t => ({
             ...t,
             accounts: t.accounts.map(a => ({
                ...a,
@@ -74,11 +57,8 @@ const useTickers = (
                || t.is_currency
                || Math.abs(a.shares) > THRESHOLD)
          })).filter(t => !hideIfNoShare || t.accounts.length > 0);
-
-         setTickers(accs);
       },
-      [json, accounts, hideIfNoShare]
-   );
+   });
 
    return tickers;
 }

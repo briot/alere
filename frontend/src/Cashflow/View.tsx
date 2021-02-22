@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import Numeric from 'Numeric';
 import Table from 'List';
 import usePrefs from 'services/usePrefs';
+import useFetch from 'services/useFetch';
 import './Cashflow.scss';
 
 const commMonths: Commodity = {
@@ -30,34 +31,24 @@ interface Metric {
    liquid_assets_at_start: number;
 }
 
+const NULL_METRIC: Metric = {
+   income: NaN,
+   passive_income: NaN,
+   expenses: NaN,
+   work_income: NaN,
+   networth: NaN,
+   networth_start: NaN,
+   liquid_assets: NaN,
+   liquid_assets_at_start: NaN,
+   income_taxes: NaN,
+   other_taxes: NaN,
+};
+
 const useFetchPL = (range: DateRange, currencyId: CommodityId) => {
-   const [data, setData] = React.useState<Metric>({
-      income: NaN,
-      passive_income: NaN,
-      expenses: NaN,
-      work_income: NaN,
-      networth: NaN,
-      networth_start: NaN,
-      liquid_assets: NaN,
-      liquid_assets_at_start: NaN,
-      income_taxes: NaN,
-      other_taxes: NaN,
+   const { data } = useFetch<Metric, any>({
+      url: `/api/metrics?${rangeToHttp(range)}&currency=${currencyId}`,
    });
-
-   React.useEffect(
-      () => {
-         const doFetch = async() => {
-            const resp = await window.fetch(
-               `/api/metrics?${rangeToHttp(range)}&currency=${currencyId}`);
-            const d: Metric = await resp.json();
-            setData(d);
-         }
-         doFetch();
-      },
-      [range, currencyId]
-   );
-
-   return data;
+   return data ?? NULL_METRIC;
 }
 
 interface MetricsProps {

@@ -5,6 +5,7 @@ import { ComposedChart, XAxis, YAxis, CartesianGrid, Bar,
 import { CommodityId } from 'services/useAccounts';
 import Numeric from 'Numeric';
 import usePrefs from 'services/usePrefs';
+import useFetch from 'services/useFetch';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import './NetworthHistory.scss';
 
@@ -19,23 +20,11 @@ const useNetworthHistory = (
    after: number,
    currencyId: CommodityId,
 ) => {
-   const [points, setPoints] = React.useState<Point[]>([]);
-   React.useEffect(
-      () => {
-         const doFetch = async() => {
-            const resp = await window.fetch(
-               `/api/networth_history?${rangeToHttp(range)}`
-               + `&prior=${prior}&after=${after}&currency=${currencyId}`
-            );
-            const data: Point[] = await resp.json();
-            setPoints(data);
-         }
-         doFetch();
-      },
-      [range, prior, after, currencyId]
-   );
-
-   return points;
+   const { data } = useFetch<Point[], any>({
+      url: `/api/networth_history?${rangeToHttp(range)}`
+         + `&prior=${prior}&after=${after}&currency=${currencyId}`,
+   });
+   return data;
 }
 
 export interface NetworthHistoryProps {

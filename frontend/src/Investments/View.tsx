@@ -117,13 +117,13 @@ const columns: Column<RowData, InvestmentsProps>[] = [
 
 const Investments: React.FC<InvestmentsProps> = p => {
    const { prefs } = usePrefs();
-   const tickers = useTickers(
+   const { data } = useTickers(
       prefs.currencyId, p.fromProviders,
       'all' /* accountIds */, p.hideIfNoShare);
    const doNothing = React.useCallback(() => {}, []);
    const [sorted, setSorted] = React.useState('');
    const rows: LogicalRow<RowData, InvestmentsProps>[] = React.useMemo(
-      () => tickers.flatMap(ticker => ticker.accounts.map(acc => ({
+      () => data?.flatMap(ticker => ticker.accounts.map(acc => ({
          key: `${ticker.id}--${acc.account.id}`,
          data: { ticker,
                  acc,
@@ -131,8 +131,8 @@ const Investments: React.FC<InvestmentsProps> = p => {
                  d: computeTicker(ticker, acc),
                  accName: acc.account.fullName(),
                },
-      }))),
-      [tickers, prefs],
+      }))) ?? [],
+      [data, prefs],
    );
 
    if (p.asTable) {
@@ -150,7 +150,7 @@ const Investments: React.FC<InvestmentsProps> = p => {
       );
 
    } else {
-      const panels = tickers.map(t => ({
+      const panels = data?.map(t => ({
             type: 'ticker',
             colspan: 1,
             rowspan: 1,
@@ -163,7 +163,7 @@ const Investments: React.FC<InvestmentsProps> = p => {
 
       return (
          <DashboardFromPanels
-            panels={panels}
+            panels={panels ?? []}
             setPanels={doNothing}
             className="investments"
          />

@@ -23,7 +23,7 @@ const TickerPanel: React.FC<PanelProps<TickerPanelProps>> = p => {
    const { prefs } = usePrefs();
 
    // Download the ticker info, unless ticker is specified and is a Ticker
-   const downloaded = useTickers(
+   const { data } = useTickers(
       prefs.currencyId /* currencyId */,
       false            /* fromProvides */,
       p.props.accountIds  /* accountIds */,
@@ -34,8 +34,7 @@ const TickerPanel: React.FC<PanelProps<TickerPanelProps>> = p => {
 
    const tk =
       p.props.ticker === undefined ? undefined
-      : isNumeric(p.props.ticker)  ? downloaded
-                                   : [p.props.ticker as Ticker];
+      : isNumeric(p.props.ticker)  ? data : [p.props.ticker as Ticker];
 
    if (!tk || !tk.length) {
       return null;

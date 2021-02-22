@@ -6,6 +6,7 @@ import { CommodityId } from 'services/useAccounts';
 import Numeric from 'Numeric';
 import usePrefs from 'services/usePrefs';
 import AutoSizer from 'react-virtualized-auto-sizer';
+import useFetch from 'services/useFetch';
 import './Mean.scss';
 
 interface Point {
@@ -33,44 +34,34 @@ const useMeanHistory = (
    negateExpenses: boolean|undefined,
    currencyId: CommodityId,
 ) => {
-   const [points, setPoints] = React.useState<Point[]>([]);
+   const { data } = useFetch<Point[], Point[]>({
+      url: `/api/mean?${rangeToHttp(range)}&prior=${prior}&after=${after}`
+         + `&unrealized=${unrealized}&currency=${currencyId}`,
+      parse: (data: Point[]) => {
+         data.forEach(p => {
+            if (unrealized) {
+               p.value_unrealized = (p.value_networth_delta || 0)
+                  - (p.value_realized || 0)
+                  - (p.value_expenses || 0)
+               p.average_income = (p.average_networth_delta || 0)
+                  - (p.average_expenses || 0);
+            } else {
+               p.average_income = (p.average_realized || 0);
+            }
 
-   React.useEffect(
-      () => {
-         const doFetch = async() => {
-            const resp = await window.fetch(
-               `/api/mean?${rangeToHttp(range)}&prior=${prior}&after=${after}`
-               + `&unrealized=${unrealized}&currency=${currencyId}`
-            );
-            const data: Point[] = await resp.json();
-            data.forEach(p => {
-               if (unrealized) {
-                  p.value_unrealized = (p.value_networth_delta || 0)
-                     - (p.value_realized || 0)
-                     - (p.value_expenses || 0)
-                  p.average_income = (p.average_networth_delta || 0)
-                     - (p.average_expenses || 0);
-               } else {
-                  p.average_income = (p.average_realized || 0);
-               }
-
-               if (negateExpenses) {
-                  p.value_exp = -(p.value_expenses || 0);
-                  p.avg_exp = -(p.average_expenses || 0);
-               } else {
-                  p.value_exp = p.value_expenses || 0;
-                  p.avg_exp = p.average_expenses || 0;
-               }
-            });
-
-            setPoints(data);
-         }
-         doFetch();
+            if (negateExpenses) {
+               p.value_exp = -(p.value_expenses || 0);
+               p.avg_exp = -(p.average_expenses || 0);
+            } else {
+               p.value_exp = p.value_expenses || 0;
+               p.avg_exp = p.average_expenses || 0;
+            }
+         });
+         return data;
       },
-      [range, prior, after, currencyId, negateExpenses, unrealized]
-   );
+   });
 
-   return points;
+   return data;
 }
 
 export interface MeanProps {
