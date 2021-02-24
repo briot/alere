@@ -346,16 +346,12 @@ const History: React.FC<HistoryProps> = p => {
          <table>
             <thead>
                <tr>
-                  {
-                     perf.map(p => p && <PastHeader {...p} />)
-                  }
+                  {perf.map(p => p && <PastHeader {...p} />)}
                </tr>
             </thead>
             <tbody>
                <tr>
-                  {
-                     perf.map(p => p && <Past {...p} />)
-                  }
+                  {perf.map(p => p && <Past {...p} />)}
                </tr>
             </tbody>
          </table>
@@ -525,7 +521,9 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                      <Numeric
                          amount={(gains_at_end - gains_at_start)
                                  / (start.worth + invest_in_period) * 100}
+                         colored={true}
                          forceSign={true}
+                         showArrow={true}
                          suffix="%"
                      />
                   </td>
@@ -574,13 +572,11 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                     &nbsp;(
                     <Numeric
                        amount={(end.worth / a.end.value - 1) * 100}
-                       className={
-                          end.avg_cost > end.close ? 'negative' : 'positive'
-                       }
+                       colored={true}
                        forceSign={true}
+                       showArrow={true}
                        suffix="%"
-                    />
-                    )
+                    />)
                     {/*
                         The return can be computed as either:
                            (end.close / end.avg_cost - 1) * 100

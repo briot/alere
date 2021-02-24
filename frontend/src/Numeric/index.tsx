@@ -15,13 +15,14 @@ interface NumericProps {
 
    commodity?: Commodity | CommodityId;
    hideCommodity?: boolean;
+   showArrow?: boolean;
    scale?: number;  // override the commodity's scale (for prices). Set to 0
                     // to round numbers
 }
 
 const Numeric: React.FC<NumericProps> = ({
    amount, commodity, className, colored, scale, hideCommodity, suffix,
-   forceSign,
+   forceSign, showArrow,
 }) => {
    const { accounts } = useAccounts();
 
@@ -71,6 +72,12 @@ const Numeric: React.FC<NumericProps> = ({
             : null
          }
          {suffix}
+         {
+            showArrow &&
+            (amount < 0
+             ? <span>&#9660;</span>
+             : <span>&#9650;</span>)
+         }
       </span>
    );
 }
