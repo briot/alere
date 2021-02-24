@@ -241,6 +241,20 @@ const History: React.FC<HistoryProps> = p => {
                     height={height}
                     data={hist}
                  >
+                     <defs>
+                       <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
+                         <stop
+                            offset="5%"
+                            stopColor="var(--ticker-history)"
+                            stopOpacity={0.5}
+                         />
+                         <stop
+                            offset="95%"
+                            stopColor="var(--ticker-history)"
+                            stopOpacity={0.1}
+                         />
+                       </linearGradient>
+                     </defs>
                      <XAxis
                          dataKey="t"
                          scale="time"
@@ -292,12 +306,8 @@ const History: React.FC<HistoryProps> = p => {
                          dataKey="price"
                          isAnimationActive={false}
                          connectNulls={true}
-                         stroke="none"
-                         fill={
-                            d1.fromPrice <= d1.toPrice
-                            ? "var(--positive-fg)"
-                            : "var(--negative-fg)"
-                          }
+                         stroke="var(--ticker-history)"
+                         fill="url(#colorUv)"
                          dot={false}
                      />
                  </AreaChart>

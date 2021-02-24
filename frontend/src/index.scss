@@ -152,6 +152,7 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --negative-fg-border: var(--invalid-300);
 
    --cartesian-grid: var(--gray-700);
+   --ticker-history: var(--gray-500);
 
    --input-background: var(--gray-700);
    --input-foreground: var(--gray-fg-700);
@@ -218,6 +219,7 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --input-error-foreground: var(--fg-invalid-100);
 
    --cartesian-grid: var(--gray-500);
+   --ticker-history: var(--gray-500);
 
    --neumorph-light: rgba(255,255,255,0.5);
    --neumorph-dark: rgba(70,70,70,.12);
