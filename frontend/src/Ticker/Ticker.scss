@@ -11,6 +11,33 @@
       // transform: scale(1.1);
    }
 
+   .items {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-content: center;
+      width: 100%;
+
+      .item {
+         flex: 0 0 calc(50% - 5px);
+         display: flex;
+
+         &:hover .tooltip {
+            display: block;
+         }
+         .head {
+            flex: 1;
+            color: var(--cartesian-grid);
+         }
+         .value {
+            flex: 1;
+            text-align: right;
+         }
+      }
+   }
+
+
+
    th {
       font-weight: normal
    }
@@ -43,9 +70,6 @@
             border: 1px solid var(--shadow-color);
          }
       }
-   }
-   :is(td,th):hover .tooltip {
-      display: block;
    }
 
    .hist {
@@ -81,9 +105,9 @@
    .account {
       margin-top: 20px;
 
-      & > div {
-         font-weight: bold;
-      }
+//      & > div {
+//         font-weight: bold;
+//      }
 
       table {
          width: 100%;

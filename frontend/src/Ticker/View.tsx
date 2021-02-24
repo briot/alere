@@ -236,7 +236,7 @@ const History: React.FC<HistoryProps> = p => {
          pastValue(p.ticker, DAY_MS * 365),       // 1 year perf
       intv >= 365 / 2 &&
          pastValue(p.ticker, DAY_MS * 365 / 2),   // 6 months perf
-      intv >= 365 / 4 &&
+      Math.abs(intv - 365 / 4) < 4 &&
          pastValue(p.ticker, DAY_MS * 365 / 4),   // 3 months perf
       intv >= 365 / 12 &&
          pastValue(p.ticker, DAY_MS * 365 / 12),  // 1 month perf
@@ -360,304 +360,311 @@ const History: React.FC<HistoryProps> = p => {
    );
 }
 
+interface DataItemProps {
+   head: React.ReactNode;
+   tooltip?: React.ReactNode;
+}
+const DataItem: React.FC<DataItemProps> = p => {
+   return (
+      <div className="item">
+         <span className="head">
+            {p.head}
+            { p.tooltip && <div className="tooltip">{p.tooltip}</div> }
+         </span>
+         <span className="value">{p.children}</span>
+      </div>
+   );
+}
+
+interface PrecomputedProps {
+   ticker: Ticker;
+   acc: AccountForTicker;
+   dateRange: [Date, Date];
+   start: ComputedTicker;
+   end: ComputedTicker;
+   currencyId: CommodityId;
+}
+
+const shares_data = (p: PrecomputedProps) =>
+   !p.ticker.is_currency &&
+   <DataItem head="Shares">
+      <Numeric
+         amount={p.acc.end.shares}
+         commodity={p.acc.account.commodity}
+         hideCommodity={true}
+      />
+   </DataItem>
+;
+
+const equity_data = (p: PrecomputedProps) =>
+   <DataItem
+      head="Equity"
+      tooltip="Value of the stock (number of shares multiplied by price)"
+   >
+       <Numeric amount={p.end.worth} commodity={p.currencyId} />
+   </DataItem>
+;
+
+const pl_data = (p: PrecomputedProps) =>
+   <DataItem
+      head="P&L"
+      tooltip="Profit and loss (equity minus total amount invested)"
+   >
+      <Numeric
+         amount={p.end.worth - p.acc.end.value}
+         commodity={p.currencyId}
+         forceSign={true}
+      />
+   </DataItem>
+;
+
+const total_return_data = (p: PrecomputedProps) =>
+   // !p.ticker.is_currency
+   // && Math.abs(a.end.shares) > THRESHOLD
+   <DataItem
+       head="Total Ret"
+       tooltip={
+          <>
+             Return on investment since you first invested in this
+             commodity (current value&nbsp;
+                <Numeric amount={p.end.worth} commodity={p.currencyId} />
+             <br/>
+             / total invested including withdrawals, dividends,...&nbsp;
+             <Numeric amount={p.acc.end.value} commodity={p.currencyId} />)
+          </>
+       }
+    >
+       <Numeric
+          amount={(p.end.worth / p.acc.end.value - 1) * 100
+                   /* or: (worth / a.value - 1) * 100  */
+                 }
+          colored={true}
+          forceSign={true}
+          showArrow={true}
+          suffix="%"
+       />
+   </DataItem>
+;
+
+const avg_cost_data = (p: PrecomputedProps) =>
+   <DataItem
+      head="Avg Cost"
+      tooltip="Equivalent price for the remaining shares you own, taking into account reinvested dividends, added and removed shares,..."
+    >
+      <Numeric
+         amount={p.end.avg_cost}
+         commodity={p.ticker.id}
+         hideCommodity={true}
+      />
+   </DataItem>
+;
+
+const period_return_data = (p: PrecomputedProps) =>
+   <DataItem
+      head="Period Ret"
+      tooltip={
+         <>
+            <p>
+            How much we gain over the period, compared to how much
+            we invested (initial worth + total invested)
+            </p>
+            <table className="return">
+              <thead>
+                 <tr>
+                    <td />
+                    <th><DateDisplay when={p.dateRange[0]} /></th>
+                    <th><DateDisplay when={p.dateRange[1]} /></th>
+                 </tr>
+              </thead>
+              <tbody>
+                 <tr>
+                     <th>Shares</th>
+                     <td>
+                        <Numeric
+                           amount={p.acc.start.shares}
+                           commodity={p.acc.account.commodity}
+                           hideCommodity={true}
+                        />
+                     </td>
+                     <td>
+                        <Numeric
+                           amount={p.acc.end.shares}
+                           commodity={p.acc.account.commodity}
+                           hideCommodity={true}
+                        />
+                     </td>
+                 </tr>
+                 <tr>
+                     <th>Value</th>
+                     <td>
+                        <Numeric
+                           amount={p.start.worth}
+                           commodity={p.currencyId}
+                        />
+                     </td>
+                     <td>
+                        <Numeric
+                           amount={p.end.worth}
+                           commodity={p.currencyId}
+                        />
+                     </td>
+                 </tr>
+                 <tr>
+                     <th>Total invested</th>
+                     <td>
+                        <Numeric
+                           amount={p.acc.start.value}
+                           commodity={p.currencyId}
+                        />
+                     </td>
+                     <td>
+                        <Numeric
+                           amount={p.acc.end.value}
+                           commodity={p.currencyId}
+                        />
+                     </td>
+                 </tr>
+                 <tr>
+                     <th>Gains</th>
+                     <td>
+                        <Numeric
+                           amount={p.start.worth - p.acc.start.value}
+                           commodity={p.currencyId}
+                        />
+                     </td>
+                     <td>
+                        <Numeric
+                           amount={p.end.worth - p.acc.end.value}
+                           commodity={p.currencyId}
+                        />
+                     </td>
+                 </tr>
+              </tbody>
+            </table>
+         </>
+      }
+   >
+      <Numeric
+          amount={(p.end.worth - p.acc.end.value
+                   - (p.start.worth - p.acc.start.value))
+                  / (p.start.worth + p.acc.end.value - p.acc.start.value) * 100}
+          colored={true}
+          forceSign={true}
+          showArrow={true}
+          suffix="%"
+      />
+   </DataItem>
+;
+
+const annualized_return_data = (p: PrecomputedProps) =>
+   <DataItem
+      head="Annualized Ret"
+      tooltip={
+         <>
+            <p>Since {dateForm(p.end.oldest)}</p>
+            <p>Equivalent annualized return (assuming compound
+               interest), as if the total amount had been invested
+               when the account was initially opened
+            </p>
+         </>
+      }
+    >
+       <Numeric
+          amount={p.end.annualized_return}
+          forceSign={true}
+          suffix="%"
+       />
+   </DataItem>
+;
+
+const weighted_avg_data = (p: PrecomputedProps) =>
+   !p.ticker.is_currency
+   && p.acc.end.absshares > THRESHOLD
+   && p.end.weighted_avg !== 0
+   && (
+      <DataItem
+         head="Weighted Avg"
+         tooltip="Average price at which you sold or bought shares. It does not include shares added or subtracted with no paiement, nor dividends"
+      >
+         <Numeric
+            amount={p.end.weighted_avg}
+            commodity={p.ticker.id}
+            hideCommodity={true}
+         />
+      </DataItem>
+   );
+       //  <Numeric
+       //     amount={(end.close / end.weighted_avg - 1) * 100}
+       //     forceSign={true}
+       //     suffix="%"
+       //  />)
+
+const annualized_return_recent = (p: PrecomputedProps) =>
+   <DataItem
+      head="Annualized Ret Recent"
+      tooltip={
+         <>
+            <p>Since {dateForm(p.end.latest)}</p>
+            <p>Equivalent annualized return (assuming compound
+               interest), as if the total amount had been invested
+               at the time of the last transaction
+            </p>
+         </>
+      }
+    >
+       <Numeric
+          amount={p.end.annualized_return_recent}
+          forceSign={true}
+          suffix="%"
+       />
+   </DataItem>
+;
+
 interface AccTickerProps {
    ticker: Ticker;
    acc: AccountForTicker;
    dateRange: [Date, Date];
 }
 
+
 const AccTicker: React.FC<AccTickerProps> = p => {
    const { prefs } = usePrefs();
-   const currencyId = prefs.currencyId;
-   const a = p.acc;
-   const now = new Date();
-   const mindate = p.dateRange[0];
-   const start = computeTicker(
-      p.ticker, p.acc, false /* atEnd */,
-      now.getTime() - mindate.getTime() /* ms_elapsed */,
-   );
-   const end = computeTicker(
-      p.ticker, p.acc, true /* atEnd */, 0 /* ms_elapsed */);
-   const gains_at_start = start.worth - a.start.value;
-   const gains_at_end = end.worth - a.end.value;
-   const invest_in_period = a.end.value - a.start.value;
+   const data = {
+      ...p,
+      start: computeTicker(
+         p.ticker, p.acc, false /* atEnd */,
+         new Date().getTime() - p.dateRange[0].getTime() /* ms_elapsed */,
+      ),
+      end: computeTicker(
+         p.ticker, p.acc, true /* atEnd */, 0 /* ms_elapsed */
+      ),
+      currencyId: prefs.currencyId,
+      dateRange: p.dateRange,
+   };
+   const items = [
+      equity_data(data),
+      shares_data(data),
+      period_return_data(data),
+      total_return_data(data),
+      annualized_return_data(data),
+      pl_data(data),
+      avg_cost_data(data),
+      weighted_avg_data(data),
+      false && annualized_return_recent(data),
+   ];
 
    return (
    <div className="account">
       <div>
          <AccountName
-            id={a.account.id}
-            account={a.account}
+            id={p.acc.account.id}
+            account={p.acc.account}
             fullName={true}
          />
       </div>
-
-      <table>
-         <tbody>
-            {
-               !p.ticker.is_currency &&
-               <tr>
-                  <th>Shares owned</th>
-                  <td>
-                     <Numeric
-                        amount={a.end.shares}
-                        commodity={a.account.commodity}
-                        hideCommodity={true}
-                     />
-                  </td>
-               </tr>
-            }
-            {
-               <tr>
-                  <th>
-                     Value and P&L
-                     <div className="tooltip">
-                        Value of the stock (number of shares multiplied by
-                        price at the time) and profit or loss (i.e. the
-                        current value minus the total amount invested).
-                     </div>
-                  </th>
-                  <td>
-                     <Numeric amount={end.worth} commodity={currencyId} />
-                     &nbsp;(
-                        <Numeric
-                           amount={gains_at_end}
-                           commodity={currencyId}
-                           forceSign={true}
-                        />
-                     )
-                  </td>
-               </tr>
-            }
-            {
-               <tr>
-                  <th>
-                     Return over period
-                     <div className="tooltip">
-                        <p>
-                        How much we gain over the period, compared to how much
-                        we invested (initial worth + total invested)
-                        </p>
-                        <table className="return">
-                          <thead>
-                             <tr>
-                                <td />
-                                <th>
-                                   <DateDisplay when={mindate} />
-                                </th>
-                                <th>
-                                   <DateDisplay when={p.dateRange[1]} />
-                                </th>
-                             </tr>
-                          </thead>
-                          <tbody>
-                             <tr>
-                                 <th>Shares</th>
-                                 <td>
-                                    <Numeric
-                                       amount={a.start.shares}
-                                       commodity={a.account.commodity}
-                                       hideCommodity={true}
-                                    />
-                                 </td>
-                                 <td>
-                                    <Numeric
-                                       amount={a.end.shares}
-                                       commodity={a.account.commodity}
-                                       hideCommodity={true}
-                                    />
-                                 </td>
-                             </tr>
-                             <tr>
-                                 <th>Value</th>
-                                 <td>
-                                    <Numeric
-                                       amount={start.worth}
-                                       commodity={currencyId}
-                                    />
-                                 </td>
-                                 <td>
-                                    <Numeric
-                                       amount={end.worth}
-                                       commodity={currencyId}
-                                    />
-                                 </td>
-                             </tr>
-                             <tr>
-                                 <th>Total invested</th>
-                                 <td>
-                                    <Numeric
-                                       amount={a.start.value}
-                                       commodity={currencyId}
-                                    />
-                                 </td>
-                                 <td>
-                                    <Numeric
-                                       amount={a.end.value}
-                                       commodity={currencyId}
-                                    />
-                                 </td>
-                             </tr>
-                             <tr>
-                                 <th>Gains</th>
-                                 <td>
-                                    <Numeric
-                                       amount={gains_at_start}
-                                       commodity={currencyId}
-                                    />
-                                 </td>
-                                 <td>
-                                    <Numeric
-                                       amount={gains_at_end}
-                                       commodity={currencyId}
-                                    />
-                                 </td>
-                             </tr>
-                          </tbody>
-                        </table>
-                     </div>
-                  </th>
-                  <td>
-                     <Numeric
-                         amount={(gains_at_end - gains_at_start)
-                                 / (start.worth + invest_in_period) * 100}
-                         colored={true}
-                         forceSign={true}
-                         showArrow={true}
-                         suffix="%"
-                     />
-                  </td>
-                  <td />
-               </tr>
-            }
-           {
-              true
-              // !p.ticker.is_currency
-              // && Math.abs(a.end.shares) > THRESHOLD
-              ? (
-              <tr>
-                 <th>
-                    Average Cost and RoI
-                    <div className="tooltip">
-                       <p>
-                       Equivalent price for the remaining shares
-                       you own, taking into account reinvested dividends, added
-                       and removed shares,...
-                       </p>
-                       <p>
-                       This value is used to compute the
-                       <b> Return on Investment</b>:
-                       current value / total invested, including withdrawals,
-                       dividends,..."
-                       </p>
-                       <Numeric
-                           amount={a.end.value}
-                           commodity={currencyId}
-                       />
-                       &rarr;&nbsp;
-                       <Numeric
-                           amount={end.worth}
-                           commodity={currencyId}
-                       />
-                    </div>
-                 </th>
-                 <td>
-                    {end.avg_cost !== 0 &&
-                       <Numeric
-                          amount={end.avg_cost}
-                          commodity={p.ticker.id}
-                          hideCommodity={true}
-                       />
-                    }
-                    &nbsp;(
-                    <Numeric
-                       amount={(end.worth / a.end.value - 1) * 100}
-                       colored={true}
-                       forceSign={true}
-                       showArrow={true}
-                       suffix="%"
-                    />)
-                    {/*
-                        The return can be computed as either:
-                           (end.close / end.avg_cost - 1) * 100
-                        or
-                           (worth / a.value - 1) * 100
-                        which gives the same value as above
-                    */}
-                 </td>
-              </tr>
-              ) : null
-           }
-            {
-               !p.ticker.is_currency
-               && a.end.absshares > THRESHOLD
-               && end.weighted_avg !== 0
-               ? (
-               <tr>
-                  <th>
-                     Weighted Average
-                     <div className="tooltip">
-                        Average price at which you sold or
-                        bought shares. It does not include shares added or
-                        subtracted with no paiement, nor dividends.
-                     </div>
-                  </th>
-                  <td>
-                     <Numeric
-                        amount={end.weighted_avg}
-                        commodity={p.ticker.id}
-                        hideCommodity={true}
-                     />
-                     &nbsp;(
-                     <Numeric
-                        amount={(end.close / end.weighted_avg - 1) * 100}
-                        forceSign={true}
-                        suffix="%"
-                     />)
-                  </td>
-               </tr>
-             ) : null
-           }
-            <tr>
-               <th>
-                  Annualized return
-                  <div className="tooltip">
-                     <p>Since {dateForm(end.oldest)}</p>
-                     <p>Equivalent annualized return (assuming compound
-                        interest), as if the total amount had been invested
-                        when the account was initially opened
-                     </p>
-                  </div>
-               </th>
-               <td>
-                  <Numeric
-                     amount={end.annualized_return}
-                     forceSign={true}
-                     suffix="%"
-                  />
-               </td>
-            </tr>
-            <tr>
-               <th>
-                  Annualized return recent
-                  <div className="tooltip">
-                     <p>Since {dateForm(end.latest)}</p>
-                     <p>Equivalent annualized return (assuming compound
-                        interest), as if the total amount had been invested
-                        at the time of the last transaction
-                     </p>
-                  </div>
-               </th>
-               <td>
-                  <Numeric
-                     amount={end.annualized_return_recent}
-                     forceSign={true}
-                     suffix="%"
-                  />
-               </td>
-            </tr>
-         </tbody>
-      </table>
+      <div className="items">
+         {items}
+      </div>
    </div>
    );
 }
