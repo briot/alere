@@ -50,7 +50,10 @@ const TickerPanel: React.FC<PanelProps<TickerPanelProps>> = p => {
          header={{name: tk[0].name}}
          Settings={null  /* no menu at all */}
       >
-         <TickerView {...p.props} ticker={tk[0]} />
+         <TickerView
+            {...p.props}
+            ticker={tk[0]}
+         />
       </Panel>
    );
 }

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as d3TimeFormat from 'd3-time-format';
 import * as d3Array from 'd3-array';
-import { startDate, DateDisplay, DateRange } from 'Dates';
+import { DateDisplay } from 'Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
 import { Account, CommodityId } from 'services/useAccounts';
@@ -15,7 +15,7 @@ import './Ticker.scss';
 //  When do we consider a number of shares to be zero (for rounding errors)
 export const THRESHOLD = 0.00000001;
 
-export type ClosePrice = [/*timestamp*/ number|null, /*close*/ number|null];
+export type ClosePrice = [/*timestamp*/ number, /*close*/ number|null];
 
 interface Position {
    absvalue: number;
@@ -202,13 +202,12 @@ const Past: React.FC<PastProps> = p => {
 
 interface HistoryProps {
    ticker: Ticker;
+   dateRange: [Date, Date];
    showWALine?: boolean;
    showACLine?: boolean;
 }
 const History: React.FC<HistoryProps> = p => {
    const pr = p.ticker.prices;
-   const close = pr[pr.length - 1]?.[1] || NaN;
-   const ts = pr[pr.length - 1]?.[0] || null;
    const hist = pr.map(r => ({t: r[0], price: r[1]}));
 
    const d0 = pastValue(p.ticker, 0);
@@ -230,6 +229,9 @@ const History: React.FC<HistoryProps> = p => {
       header: `db (${humanDateInterval(db_interval)})`,
    }
 
+   const xrange = p.dateRange.map(d => d.getTime()) as [number, number];
+   const filtered_hist = hist.filter(d => d.t >= xrange[0] && d.t <= xrange[1]);
+
    return (
    <>
       <div className="hist" title={`Prices from ${p.ticker.source}`}>
@@ -239,7 +241,7 @@ const History: React.FC<HistoryProps> = p => {
                  <AreaChart
                     width={width}
                     height={height}
-                    data={hist}
+                    data={filtered_hist}
                  >
                      <defs>
                        <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
@@ -355,7 +357,7 @@ const History: React.FC<HistoryProps> = p => {
 interface AccTickerProps {
    ticker: Ticker;
    acc: AccountForTicker;
-   range: DateRange;
+   dateRange: [Date, Date];
 }
 
 const AccTicker: React.FC<AccTickerProps> = p => {
@@ -363,7 +365,7 @@ const AccTicker: React.FC<AccTickerProps> = p => {
    const currencyId = prefs.currencyId;
    const a = p.acc;
    const now = new Date();
-   const mindate = startDate(p.range);
+   const mindate = p.dateRange[0];
    const start = computeTicker(
       p.ticker, p.acc, false /* atEnd */,
       now.getTime() - mindate.getTime() /* ms_elapsed */,
@@ -603,7 +605,7 @@ const AccTicker: React.FC<AccTickerProps> = p => {
 export interface TickerViewProps {
    showWALine: boolean;
    showACLine: boolean;
-   range: DateRange;
+   dateRange: [Date, Date];
 }
 interface ExtraProps {
    ticker: Ticker;
@@ -616,6 +618,7 @@ const TickerView: React.FC<TickerViewProps & ExtraProps> = p => {
             p.ticker.prices.length > 0 &&
             <History
                ticker={p.ticker}
+               dateRange={p.dateRange}
                showWALine={p.showWALine}
                showACLine={p.showACLine}
             />
@@ -626,7 +629,7 @@ const TickerView: React.FC<TickerViewProps & ExtraProps> = p => {
                   key={a.account.id}
                   ticker={p.ticker}
                   acc={a}
-                  range={p.range}
+                  dateRange={p.dateRange}
                />
             )
          }

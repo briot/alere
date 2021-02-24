@@ -91,7 +91,7 @@ class Symbol:
 
 class QuotesView(JSONView):
 
-    def from_database(self, symbols, currency):
+    def from_database(self, symbols, currency, mindate, maxdate):
         """
         Fetch prices from database, for symbols that do not have prices yet.
         """
@@ -100,7 +100,9 @@ class QuotesView(JSONView):
             q = alere.models.Prices.objects \
                 .select_related('origin') \
                 .filter(origin__in=ids,
-                        target_id=currency)
+                        target_id=currency,
+                        date__gte=mindate,
+                        date__lte=maxdate)
 
             for row in q:
                 symbols[row.origin_id].prices.append(
@@ -111,19 +113,36 @@ class QuotesView(JSONView):
             for id in ids:
                 symbols[id].source = 'database'
 
-    def from_yahoo(self, symbols):
+    def from_yahoo(self, symbols, mindate):
         """
         Fetch prices from Yahoo
         """
         tickers = [s.ticker for s in symbols.values()
                    if s.source == "Yahoo Finance"]
         if tickers:
+            intv = (datetime.datetime.now().astimezone(datetime.timezone.utc)
+                    - mindate).total_seconds()
+            period, interval = (
+                ("1d", "5m")       if intv <= 86400
+                #else ("5d", "1h")  if intv <= 5 * 86400
+                else ("1mo", "1d") if intv <= 32 * 86400
+                else ("3mo", "1d") if intv <= 94 * 86400
+                else ("6mo", "5d") if intv <= 187 * 86400
+                else ("1y", "5d")  if intv <= 367 * 86400
+                else ("2y", "5d")  if intv <= 733 * 86400
+                else ("5y", "1mo")  if intv <= 1831 * 86400
+                else ("10y", "1mo") if intv <= 3661 * 86400
+                else ("max", "1mo")   # also possible: "ytd" for period
+                                      # "1m,2m,5m,15m,30m.60m,90m,1h,1d,5d,
+                                      #  1wk,1mo,3mo" for interval
+            )
+            print("MANU ", intv, intv / 86400, period, interval)
+
             data = yf.download(
                 tickers,
                 # start="2020-01-01",
-                period="1y",   # 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
-                interval="1d", # 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,
-                               # 1wk,1mo,3mo
+                period=period,
+                interval=interval,
             )
             d = data['Adj Close'].to_dict()
             for s in symbols.values():
@@ -180,8 +199,9 @@ class QuotesView(JSONView):
         # Second step: get historical prices for those commodities
 
         if update:
-            self.from_yahoo(symbols)
-        self.from_database(symbols, currency=currency)
+            self.from_yahoo(symbols, mindate=mindate)
+        self.from_database(
+            symbols, currency=currency, mindate=mindate, maxdate=maxdate)
 
         ########
         # Third step is to get the account details, for those accounts that

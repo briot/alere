@@ -5,6 +5,7 @@ import './Dates.css';
 
 export type RelativeDate =
    "today"                 |
+   "yesterday"             |
    "tomorrow"              |
    "1 month ago"           |
    "2 months ago"          |
@@ -87,6 +88,7 @@ export const dateToDate = (when: RelativeDate): Date => {
    switch (when) {
       case "today":               break;
       case "tomorrow":            addDay(d, 1);         break;
+      case "yesterday":           addDay(d, -1);        break;
       case "start of month":      startOfMonth(d, 0);   break;
       case "end of month":        endOfMonth(d, 0);     break;
       case "start of last month": startOfMonth(d, -1);  break;
@@ -159,7 +161,7 @@ export type DateRange =
 
 const rangeToDate = (name: DateRange): [RelativeDate, RelativeDate] => {
    switch (name) {
-      case '1day':          return ['today', 'today'];
+      case '1day':          return ['yesterday', 'today'];
       case '1month':        return ['1 month ago', 'today'];
       case '2months':       return ['2 months ago', 'today'];
       case '3months':       return ['3 months ago', 'today'];
@@ -196,9 +198,9 @@ const possessive = (name: DateRange): string => {
    }
 }
 
-export const startDate = (name: DateRange): Date => {
+export const toDates = (name: DateRange): [Date, Date] => {
    const r = rangeToDate(name);
-   return dateToDate(r[0]);
+   return [dateToDate(r[0]), dateToDate(r[1])];
 }
 
 export const rangeToHttp = (name: DateRange|undefined): string => {

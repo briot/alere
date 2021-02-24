@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { DateRange } from 'Dates';
+import { toDates, DateRange } from 'Dates';
 import usePrefs, { Preferences } from '../services/usePrefs';
 import { TickerPanelProps } from 'Ticker/Panel';
 import { AccountForTicker, ComputedTicker, Ticker,
@@ -137,6 +137,11 @@ const Investments: React.FC<InvestmentsProps> = p => {
       [data, prefs],
    );
 
+   // We compute the date range once for all tickers, so that they all have
+   // exactly the same range (otherwise resolving "now" might result in
+   // different dates)
+   const dateRange = toDates(p.range);
+
    if (p.asTable) {
       return (
          <ListWithColumns
@@ -159,6 +164,7 @@ const Investments: React.FC<InvestmentsProps> = p => {
             ticker: t,
             accountIds: 'all',
             range: p.range,
+            dateRange: dateRange,
             showWALine: p.showWALine,
             showACLine: p.showACLine,
          } as TickerPanelProps
