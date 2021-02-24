@@ -1,14 +1,16 @@
 import * as React from 'react';
 import { toDates, DateRange } from 'Dates';
-import usePrefs, { Preferences } from '../services/usePrefs';
+import usePrefs from '../services/usePrefs';
 import { TickerPanelProps } from 'Ticker/Panel';
-import { ComputedTicker, computeTicker } from 'Ticker/Compute';
-import { dateForm } from 'services/utils';
-import { AccountForTicker, Ticker } from 'Ticker/types';
+import { computeTicker } from 'Ticker/Compute';
+import { RowData } from 'Ticker/types';
 import { DashboardFromPanels } from 'Dashboard';
 import AccountName from 'Account';
-import Numeric from 'Numeric';
 import ListWithColumns, { Column, LogicalRow } from 'List/ListWithColumns';
+import { columnEquity, columnTotalReturn, columnAnnualizedReturn,
+   columnAnnualizedReturnRecent, columnPL, columnWeighedAverage,
+   columnAverageCost, columnPeriodReturn,
+   columnShares, columnInvested } from 'Ticker/Data';
 import useTickers from 'services/useTickers';
 import './Investments.scss';
 
@@ -25,14 +27,6 @@ export interface InvestmentsProps {
    range: DateRange;
 }
 
-interface RowData {
-   d: ComputedTicker;
-   ticker: Ticker;
-   acc: AccountForTicker;
-   accName: string;
-   prefs: Preferences;
-}
-
 const columnTickerName: Column<RowData, InvestmentsProps> = {
    id: 'Ticker',
    cell: (r: RowData) => r.ticker.name,
@@ -44,78 +38,25 @@ const columnAccountName: Column<RowData, InvestmentsProps> = {
    id: 'Account',
    cell: (r: RowData) =>
       <AccountName id={r.acc.account.id} account={r.acc.account} fullName={true} />,
-   compare: (r1: RowData, r2: RowData) => r1.accName.localeCompare(r2.accName),
+   compare: (r1: RowData, r2: RowData) =>
+      r1.acc.account.fullName().localeCompare(r2.acc.account.fullName()),
 };
 
-const columnValue: Column<RowData, InvestmentsProps> = {
-   id: 'Value',
-   className: 'amount',
-   cell: (r: RowData) =>
-      <Numeric amount={r.d.worth} commodity={r.prefs.currencyId} />,
-   compare: (r1: RowData, r2: RowData) => r1.d.worth - r2.d.worth,
-};
-
-const columnReturn: Column<RowData, InvestmentsProps> = {
-   id: 'Return',
-   className: 'amount',
-   cell: (r: RowData) =>
-      <Numeric amount={(r.d.worth / r.d.invested - 1) * 100} suffix='%' />,
-   compare: (r1: RowData, r2: RowData) =>
-      (r1.d.worth / r1.d.invested) - (r2.d.worth / r2.d.invested)
-}
-
-const columnAnnualizedReturn: Column<RowData, InvestmentsProps> = {
-   id: 'Return/y',
-   title: 'Annualized return',
-   className: 'amount',
-   cell: (r: RowData) => <Numeric amount={r.d.annualized_return} suffix='%' />,
-   compare: (r1: RowData, r2: RowData) =>
-      r1.d.annualized_return - r2.d.annualized_return,
-}
-
-const columnAnnualizedReturnRecent: Column<RowData, InvestmentsProps> = {
-   id: 'RetRec/y',
-   title: 'Annualized return since most recent trade',
-   cellTitle: (r: RowData) => `since ${dateForm(r.d.latest)}`,
-   className: 'amount',
-   cell: (r: RowData) =>
-      <Numeric amount={r.d.annualized_return_recent} suffix='%' />,
-   compare: (r1: RowData, r2: RowData) =>
-      r1.d.annualized_return_recent - r2.d.annualized_return_recent,
-}
-
-const columnPL: Column<RowData, InvestmentsProps> = {
-   id: 'P&L',
-   className: 'amount',
-   cell: (r: RowData) =>
-      <Numeric
-         amount={r.d.worth - r.d.invested}
-         commodity={r.prefs.currencyId}
-      />,
-   compare: (r1: RowData, r2: RowData) =>
-      (r1.d.worth - r1.d.invested) - (r2.d.worth - r2.d.invested),
-}
-
-const columnInvested: Column<RowData, InvestmentsProps> = {
-   id: 'Invested',
-   className: 'amount',
-   cell: (r: RowData) =>
-      <Numeric amount={r.d.invested} commodity={r.prefs.currencyId} />,
-   compare: (r1: RowData, r2: RowData) => r1.d.invested - r2.d.invested,
-}
-
-// const columnWeightedCost: Column<RowData, InvestmentsProps> = {
 // const columnGainLastYear: Column<RowData, InvestmentsProps> = {
 
 const columns: Column<RowData, InvestmentsProps>[] = [
    columnTickerName,
    columnAccountName,
-   columnValue,
+   columnEquity,
+   columnShares,
    columnInvested,
    columnPL,
-   columnReturn,
+   columnPeriodReturn,
+   columnTotalReturn,
    columnAnnualizedReturn,
    columnAnnualizedReturnRecent,
+   columnWeighedAverage,
+   columnAverageCost,
 ];
 
 const Investments: React.FC<InvestmentsProps> = p => {
@@ -125,23 +66,19 @@ const Investments: React.FC<InvestmentsProps> = p => {
       'all' /* accountIds */, p.range, p.hideIfNoShare);
    const doNothing = React.useCallback(() => {}, []);
    const [sorted, setSorted] = React.useState('');
-   const rows: LogicalRow<RowData, InvestmentsProps>[] = React.useMemo(
-      () => data?.flatMap(ticker => ticker.accounts.map(acc => ({
-         key: `${ticker.id}--${acc.account.id}`,
-         data: { ticker,
-                 acc,
-                 prefs,
-                 d: computeTicker(ticker, acc, true /* atEnd */, 0 /* ms_elapse */),
-                 accName: acc.account.fullName(),
-               },
-      }))) ?? [],
-      [data, prefs],
-   );
 
    // We compute the date range once for all tickers, so that they all have
    // exactly the same range (otherwise resolving "now" might result in
    // different dates)
    const dateRange = toDates(p.range);
+
+   const rows: LogicalRow<RowData, InvestmentsProps>[] = React.useMemo(
+      () => data?.flatMap(ticker => ticker.accounts.map(acc => ({
+         key: `${ticker.id}--${acc.account.id}`,
+         data: computeTicker(ticker, acc, prefs, dateRange),
+      }))) ?? [],
+      [data, prefs],
+   );
 
    if (p.asTable) {
       return (

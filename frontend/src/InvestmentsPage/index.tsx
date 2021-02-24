@@ -12,6 +12,7 @@ const defaultPanels = [
       hideIfNoShare: true,
       showWALine: false,
       showACLine: true,
+      range: "1year",
    } as InvestmentsPanelProps,
 ];
 

@@ -34,3 +34,32 @@ export interface Ticker {
    prices: ClosePrice[];
    accounts: AccountForTicker[];
 }
+
+/**
+ * Various stats computed at some point in time for a ticker
+ */
+export interface ComputedTicker {
+   close: number;     // most recent closing price
+   weighted_avg: number;
+   avg_cost: number;
+   worth: number;
+   invested: number;  // total invested
+   oldest: Date;      // date of first investment
+   latest: Date;      // date of most recent investmnet
+   annualized_return: number;
+   annualized_return_recent: number;
+}
+
+/**
+ * Data used to display information for one ticker+account. This includes
+ * precomputed performance-related information.
+ */
+export interface RowData {
+   ticker: Ticker;
+   acc: AccountForTicker;
+   dateRange: [Date, Date];
+   start: ComputedTicker;
+   end: ComputedTicker;
+   currencyId: CommodityId;
+   periodReturn: number;
+}
