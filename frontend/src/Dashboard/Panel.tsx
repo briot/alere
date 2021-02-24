@@ -14,6 +14,7 @@ export interface PanelBaseProps {
    type: Readonly<string>;
    rowspan: number;
    colspan: number;
+   hidePanelHeader?: boolean;
 }
 
 /**
@@ -69,61 +70,64 @@ function Panel<T extends PanelBaseProps>(
 
    return (
       <div className={c} >
-         <div className="header">
-            <h5 title={p.header.title}>{p.header.name}</h5>
-            <div className="group">
-               {p.header.buttons}
-               {
-                  p.Settings !== null &&
-                  <Dropdown
-                     animate={true}
-                     button={(visible: boolean) =>
-                        <RoundButton fa='fa-bars' size='tiny' selected={visible} />
-                     }
-                     menu={
-                        <form>
-                           {
-                              p.Settings
-                           }
-                           <fieldset>
-                              <legend>Layout</legend>
-                              <Select
-                                 text="Rows"
-                                 value={p.props.rowspan}
-                                 onChange={changeRows}
-                                 options={[
-                                    {text: "one row",    value: 1},
-                                    {text: "two rows",   value: 2},
-                                    {text: "three rows", value: 3},
-                                    {text: "four rows",  value: 4},
-                                 ]}
-                              />
+        {
+           !p.props.hidePanelHeader &&
+           <div className="header">
+              <h5 title={p.header.title}>{p.header.name}</h5>
+              <div className="group">
+                 {p.header.buttons}
+                 {
+                    p.Settings !== null &&
+                    <Dropdown
+                       animate={true}
+                       button={(visible: boolean) =>
+                          <RoundButton fa='fa-bars' size='tiny' selected={visible} />
+                       }
+                       menu={
+                          <form>
+                             {
+                                p.Settings
+                             }
+                             <fieldset>
+                                <legend>Layout</legend>
+                                <Select
+                                   text="Rows"
+                                   value={p.props.rowspan}
+                                   onChange={changeRows}
+                                   options={[
+                                      {text: "one row",    value: 1},
+                                      {text: "two rows",   value: 2},
+                                      {text: "three rows", value: 3},
+                                      {text: "four rows",  value: 4},
+                                   ]}
+                                />
 
-                              <Select
-                                 text="Columns"
-                                 value={p.props.colspan}
-                                 onChange={changeCols}
-                                 options={[
-                                    {text: "one column",    value: 1},
-                                    {text: "two columns",   value: 2},
-                                    {text: "three columns", value: 3},
-                                    {text: "four columns",  value: 4},
-                                 ]}
-                              />
-                           </fieldset>
-                        </form>
-                     }
-                  />
-               }
-               {/*
-                  <span className="fa fa-info-circle" />
-                  <span className="fa fa-window-close" />
-                */ }
-            </div>
-         </div>
-         <div className="content">
-            {p.children}
-         </div>
+                                <Select
+                                   text="Columns"
+                                   value={p.props.colspan}
+                                   onChange={changeCols}
+                                   options={[
+                                      {text: "one column",    value: 1},
+                                      {text: "two columns",   value: 2},
+                                      {text: "three columns", value: 3},
+                                      {text: "four columns",  value: 4},
+                                   ]}
+                                />
+                             </fieldset>
+                          </form>
+                       }
+                    />
+                 }
+                 {/*
+                    <span className="fa fa-info-circle" />
+                    <span className="fa fa-window-close" />
+                  */ }
+              </div>
+           </div>
+        }
+        <div className="content">
+           {p.children}
+        </div>
       </div>
    );
 }

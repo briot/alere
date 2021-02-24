@@ -2,7 +2,7 @@ import * as React from 'react';
 import { toDates, DateRange } from 'Dates';
 import usePrefs, { Preferences } from '../services/usePrefs';
 import { TickerPanelProps } from 'Ticker/Panel';
-import { ComputedTicker, computeTicker } from 'Ticker/View';
+import { ComputedTicker, computeTicker } from 'Ticker/Compute';
 import { dateForm } from 'services/utils';
 import { AccountForTicker, Ticker } from 'Ticker/types';
 import { DashboardFromPanels } from 'Dashboard';

@@ -1,8 +1,9 @@
 import * as React from 'react';
+import AccountName from 'Account';
 import { DateRange } from 'Dates';
 import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
 import TickerView, { TickerViewProps } from './View';
-import { Ticker } from 'Ticker/types';
+import { AccountForTicker, Ticker } from 'Ticker/types';
 import { CommodityId } from 'services/useAccounts';
 import { AccountIdSet } from 'services/useAccountIds';
 import useTickers from 'services/useTickers';
@@ -16,6 +17,10 @@ export interface TickerPanelProps extends PanelBaseProps, TickerViewProps {
    // instance to pre-load a large number of commodities) or loaded as needed
    // if you provide a CommodityId.
    // If undefined, nothing is shown.
+
+   acc: AccountForTicker|undefined;
+   // Which account is managing the ticker (computed automatically if
+   // undefined)
 
    accountIds: AccountIdSet;
    // Restrict to one specific account
@@ -45,14 +50,25 @@ const TickerPanel: React.FC<PanelProps<TickerPanelProps>> = p => {
       return null;
    }
 
+   const acc = p.props.acc ?? tk[0].accounts[0];
+
    return (
       <Panel
          {...p}
-         header={{name: tk[0].name}}
+         header={{name: (
+            <div>
+               <AccountName
+                  id={acc.account.id}
+                  account={acc.account}
+                  fullName={false}
+               />
+            </div>
+         )}}
          Settings={null  /* no menu at all */}
       >
          <TickerView
             {...p.props}
+            acc={acc}
             ticker={tk[0]}
          />
       </Panel>

@@ -1,15 +1,19 @@
 .investments {
-   --gap: 20px;
+   --gap: 10px;
+   --items-per-row: 4;
 
-   font-size: 0.8rem;
+   --items-per-row-minus-1: calc(var(--items-per-row) - 1);
+   --small-gap: calc( var(--gap) * var(--items-per-row-minus-1) / var(--items-per-row));
+
+
    width: 100%;   // Use all available space
    height: 100%;  // Use all available space
 
    display: grid;
-   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+   grid-template-columns: repeat(auto-fill, calc(100% / var(--items-per-row) - var(--small-gap)));
    grid-template-rows: repeat(auto-fit, minmax(var(--panel-height), auto));
    grid-auto-flow: row;
-   grid-gap: 20px;
+   grid-gap: var(--gap);
    justify-items: stretch;
 }
 

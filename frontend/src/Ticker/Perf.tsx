@@ -107,12 +107,12 @@ const Perfs: React.FC<PerfProps> = p => {
       <table>
          <thead>
             <tr>
-               {perf.map(p => p && <PastHeader {...p} />)}
+               {perf.map(p => p && <PastHeader {...p} key={p.header} />)}
             </tr>
          </thead>
          <tbody>
             <tr>
-               {perf.map(p => p && <Past {...p} />)}
+               {perf.map(p => p && <Past {...p} key={p.header} />)}
             </tr>
          </tbody>
       </table>

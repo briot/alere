@@ -22,7 +22,6 @@ const History: React.FC<HistoryProps> = p => {
       .map(r => ({t: r[0], price: r[1]}))
 
    return (
-   <>
       <div className="hist" title={`Prices from ${p.ticker.source}`}>
          <AutoSizer>
             {
@@ -106,7 +105,6 @@ const History: React.FC<HistoryProps> = p => {
             }
          </AutoSizer>
       </div>
-   </>
    );
 }
 

@@ -3,81 +3,31 @@ import { DateDisplay } from 'Dates';
 import Numeric from 'Numeric';
 import { CommodityId } from 'services/useAccounts';
 import usePrefs from 'services/usePrefs';
-import { DAY_MS, dateForm } from 'services/utils';
-import AccountName from 'Account';
+import { dateForm } from 'services/utils';
 import { AccountForTicker, Ticker, THRESHOLD } from 'Ticker/types';
-import { pastValue } from 'Ticker/Past';
+import { ComputedTicker, computeTicker } from 'Ticker/Compute';
 import Perfs from 'Ticker/Perf';
 import History from 'Ticker/History';
 import './Ticker.scss';
 
-/**
- * Compute various performance indicators for a security
- */
-
-export interface ComputedTicker {
-   close: number;     // most recent closing price
-   weighted_avg: number;
-   avg_cost: number;
-   worth: number;
-   invested: number;  // total invested
-   oldest: Date;   // date of first investment
-   latest: Date;   // date of most recent investmnet
-   annualized_return: number;
-   annualized_return_recent: number;
-}
-
-export const computeTicker = (
-   ticker: Ticker,
-   a: AccountForTicker,
-   atEnd: boolean,
-   ms_elapsed: number,
-): ComputedTicker => {
-   const price = pastValue(ticker, ms_elapsed);
-   const worth =
-      atEnd
-      ? a.end.shares * price.toPrice
-      : a.start.shares * price.fromPrice;
-   const invested = a.end.value;
-   const oldest = new Date(a.oldest * 1000);
-   const latest = new Date(a.latest * 1000);
-   return {
-      close: price.toPrice || ticker.storedprice || NaN,
-      weighted_avg:
-         atEnd
-         ? a.end.absvalue / a.end.absshares
-         : a.start.absvalue / a.start.absshares,
-      avg_cost:
-         atEnd
-         ? a.end.value / a.end.shares
-         : a.start.value / a.start.shares,
-      worth,
-      invested,
-      oldest,
-      latest,
-      annualized_return: (
-         Math.pow(
-            worth / invested,
-            365 * DAY_MS / (new Date().getTime() - oldest.getTime()))
-         - 1) * 100,
-      annualized_return_recent: (
-         Math.pow(
-            worth / invested,
-            365 * DAY_MS / (new Date().getTime() - latest.getTime()))
-         - 1) * 100,
-   };
-}
-
 interface DataItemProps {
-   head: React.ReactNode;
+   head: string;
    tooltip?: React.ReactNode;
+   full_head?: string;
 }
 const DataItem: React.FC<DataItemProps> = p => {
    return (
       <div className="item">
          <span className="head">
             {p.head}
-            { p.tooltip && <div className="tooltip">{p.tooltip}</div> }
+            { (p.tooltip || p.full_head) &&
+              <div className="tooltip">
+                 <div>
+                    <b>{p.full_head ?? p.head}</b>
+                 </div>
+                 {p.tooltip}
+              </div>
+            }
          </span>
          <span className="value">{p.children}</span>
       </div>
@@ -118,7 +68,8 @@ const pl_data = (p: PrecomputedProps) =>
    <DataItem
       key="pl"
       head="P&L"
-      tooltip="Profit and loss (equity minus total amount invested)"
+      full_head="Profits and Loss"
+      tooltip="equity minus total amount invested"
    >
       <Numeric
          amount={p.end.worth - p.acc.end.value}
@@ -134,6 +85,7 @@ const total_return_data = (p: PrecomputedProps) =>
    <DataItem
        key="total_ret"
        head="Total Ret"
+       full_head="Total Return"
        tooltip={
           <>
              Return on investment since you first invested in this
@@ -161,6 +113,7 @@ const avg_cost_data = (p: PrecomputedProps) =>
    <DataItem
       key="avg_cost"
       head="Avg Cost"
+      full_head="Average Cost"
       tooltip="Equivalent price for the remaining shares you own, taking into account reinvested dividends, added and removed shares,..."
     >
       <Numeric
@@ -175,6 +128,7 @@ const period_return_data = (p: PrecomputedProps) =>
    <DataItem
       key="period_ret"
       head="Period Ret"
+      full_head="Return for the period"
       tooltip={
          <>
             <p>
@@ -208,7 +162,7 @@ const period_return_data = (p: PrecomputedProps) =>
                      </td>
                  </tr>
                  <tr>
-                     <th>Value</th>
+                     <th>Equity</th>
                      <td>
                         <Numeric
                            amount={p.start.worth}
@@ -273,6 +227,7 @@ const annualized_return_data = (p: PrecomputedProps) =>
    <DataItem
       key="ann_ret"
       head="Annualized Ret"
+      full_head="Annualized Return"
       tooltip={
          <>
             <p>Since {dateForm(p.end.oldest)}</p>
@@ -299,6 +254,7 @@ const weighted_avg_data = (p: PrecomputedProps) =>
       <DataItem
          key="w_avg"
          head="Weighted Avg"
+         full_head="Weighted Average"
          tooltip="Average price at which you sold or bought shares. It does not include shares added or subtracted with no paiement, nor dividends"
       >
          <Numeric
@@ -318,6 +274,7 @@ const annualized_return_recent = (p: PrecomputedProps) =>
    <DataItem
       key="ann_ret_rec"
       head="Annualized Ret Recent"
+      full_head="Annualized Return since Last Transaction"
       tooltip={
          <>
             <p>Since {dateForm(p.end.latest)}</p>
@@ -339,11 +296,12 @@ const annualized_return_recent = (p: PrecomputedProps) =>
 export interface TickerViewProps {
    showWALine: boolean;
    showACLine: boolean;
+   hideHistory?: boolean;
    dateRange: [Date, Date];
-   acc: AccountForTicker;
 }
 interface ExtraProps {
    ticker: Ticker;
+   acc: AccountForTicker;
 }
 
 const TickerView: React.FC<TickerViewProps & ExtraProps> = p => {
@@ -374,13 +332,9 @@ const TickerView: React.FC<TickerViewProps & ExtraProps> = p => {
 
    return (
    <>
-      <AccountName
-         id={p.acc.account.id}
-         account={p.acc.account}
-         fullName={true}
-      />
       {
          p.ticker.prices.length > 0 &&
+         !p.hideHistory &&
          <History
             ticker={p.ticker}
             dateRange={p.dateRange}

@@ -4,7 +4,7 @@ import { useHistory as useRouterHistory,
 import useAccountIds from 'services/useAccountIds';
 import useHistory from 'services/useHistory';
 import useTransactions from 'services/useTransactions';
-import { DateRange } from 'Dates';
+import { toDates, DateRange } from 'Dates';
 import { SetHeader } from 'Header';
 import Dashboard from 'Dashboard';
 import { SplitMode, NotesMode } from 'Ledger/View';
@@ -22,15 +22,21 @@ const defaultPanels = [
       range: "forever",
       rowspan: 1,
       colspan: 3,
+      hidePanelHeader: true,
    } as PriceHistoryPanelProps,
    {
       type: 'ticker',
       rowspan: 1,
       colspan: 1,
+      hidePanelHeader: true,
       showWALine: true,
       showACLine: true,
+      hideHistory: true,
       ticker: undefined,
+      acc: undefined,     // computed in Ticker/Panel
       accountIds: 'all',  // overridden later
+      range: "forever",
+      dateRange: toDates("forever"),
    } as TickerPanelProps,
    {
       type: 'ledger',
@@ -122,6 +128,7 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
                   ? accounts[0].commodity.id
                   : undefined
                ),
+               dateRange: toDates(range),
             }
          }
       />
