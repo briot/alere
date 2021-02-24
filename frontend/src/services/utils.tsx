@@ -1,3 +1,5 @@
+import * as d3TimeFormat from 'd3-time-format';
+
 export const DAY_MS = 86400000;
 
 export const isNumeric = (str: unknown): boolean =>  {
@@ -44,3 +46,8 @@ export const humanDateInterval = (ms: number) => {
       ? '5y'
       : `${Math.floor(d).toFixed(0)}d`;
 }
+
+/**
+ * Formatting dates
+ */
+export const dateForm = d3TimeFormat.timeFormat("%Y-%m-%d");

@@ -1,98 +1,15 @@
 import * as React from 'react';
-import * as d3TimeFormat from 'd3-time-format';
-import * as d3Array from 'd3-array';
 import { DateDisplay } from 'Dates';
-import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
-import { Account, CommodityId } from 'services/useAccounts';
+import { CommodityId } from 'services/useAccounts';
 import usePrefs from 'services/usePrefs';
-import { DAY_MS, humanDateInterval } from 'services/utils';
+import { DAY_MS, dateForm } from 'services/utils';
 import AccountName from 'Account';
-import { AreaChart, XAxis, YAxis, Area, Tooltip,
-         ReferenceLine } from 'recharts';
+import { AccountForTicker, Ticker, THRESHOLD } from 'Ticker/types';
+import { pastValue } from 'Ticker/Past';
+import Perfs from 'Ticker/Perf';
+import History from 'Ticker/History';
 import './Ticker.scss';
-
-//  When do we consider a number of shares to be zero (for rounding errors)
-export const THRESHOLD = 0.00000001;
-
-export type ClosePrice = [/*timestamp*/ number, /*close*/ number];
-
-interface Position {
-   absvalue: number;
-   absshares: number;
-   value: number;    //  how much we invested (including dividends)
-   shares: number;
-}
-
-export interface AccountForTicker {
-   account: Account;
-   start: Position; // at mindate
-   end: Position;   // at maxdate
-   oldest: number;  // date of oldest transaction
-   latest: number;  // date of most recent transaction
-}
-
-export interface Ticker {
-   id: CommodityId;
-   name: string;
-   ticker: string;
-   source: string;
-   is_currency: boolean;
-
-   storedtime: string;   // timestamp of last stored price
-   storedprice: number|null;
-
-   // sorted chronologically, given in the currency used in the query
-   prices: ClosePrice[];
-   accounts: AccountForTicker[];
-}
-
-/**
- * Compute the price of a security at some time in the past
- */
-
-export const dateForm = d3TimeFormat.timeFormat("%Y-%m-%d");
-const priceForm = (v: number) => v.toFixed(2);
-const labelForm = (d: number|string) => <span>{dateForm(new Date(d))}</span>;
-const bisect = d3Array.bisector((d: ClosePrice) => d[0]).right;
-
-interface PastValue  {
-   fromDate: Date|undefined;
-   fromPrice: number;   // price as of fromDate (the requested one)
-
-   toDate: Date|undefined;
-   toPrice: number;     // latest known price
-
-   commodity: CommodityId;
-   show_perf: boolean;
-
-   header: string;
-   // human-readable description of the date.
-}
-
-const pastValue = (
-   ticker: Ticker,
-   ms: number,              // how far back in the past
-): PastValue => {
-   const prices = ticker.prices;
-   const now = prices[prices.length - 1]?.[0] || null;
-   const close = prices[prices.length - 1]?.[1] || NaN;
-   const idx = now === null
-      ? undefined
-      : Math.max(0, bisect(prices, now - ms) - 1);
-   const price = idx === undefined ? undefined : prices[idx][1];
-   const ts = idx === undefined ? null : prices[idx]?.[0];
-
-   return {
-      fromDate: ts === null ? undefined : new Date(ts),
-      toDate: now === null ? undefined : new Date(now),
-      fromPrice: price ?? NaN,
-      toPrice: close,
-      commodity: ticker.id,
-      header: humanDateInterval(ms),
-      show_perf: ms !== 0,
-   };
-}
 
 /**
  * Compute various performance indicators for a security
@@ -151,215 +68,6 @@ export const computeTicker = (
    };
 }
 
-const PastHeader: React.FC<PastValue> = p => {
-   return (
-      <th>
-         {p.header}
-      </th>
-   );
-}
-
-const Past: React.FC<PastValue> = p => {
-   const perf = (p.toPrice / p.fromPrice - 1) * 100;
-   return (
-      !isNaN(perf)
-      ? (
-      <td>
-         <div>
-            {
-               p.show_perf
-               ? <Numeric amount={perf} colored={true} suffix="%"/>
-               : <Numeric
-                    amount={p.fromPrice}
-                    commodity={p.commodity}
-                    hideCommodity={true}
-                 />
-            }
-         </div>
-         <div className="tooltip">
-            <table>
-               <tbody>
-                  <tr>
-                     <td>
-                        <DateDisplay when={p.fromDate} />
-                     </td>
-                     <td>
-                        <DateDisplay when={p.toDate} />
-                     </td>
-                  </tr>
-                  <tr>
-                     <td>
-                        <Numeric
-                           amount={p.fromPrice}
-                           commodity={p.commodity}
-                           hideCommodity={true}
-                        />
-                     </td>
-                     <td>
-                        <Numeric
-                           amount={p.toPrice}
-                           commodity={p.commodity}
-                           hideCommodity={true}
-                        />
-                     </td>
-                  </tr>
-               </tbody>
-            </table>
-         </div>
-      </td>
-      ) : <td />
-   );
-}
-
-
-interface HistoryProps {
-   ticker: Ticker;
-   dateRange: [Date, Date];
-   showWALine?: boolean;
-   showACLine?: boolean;
-}
-const History: React.FC<HistoryProps> = p => {
-   const xrange = p.dateRange.map(d => d.getTime()) as [number, number];
-   const hist =
-      p.ticker.prices
-      .filter(r => r[0] >= xrange[0] && r[0] <= xrange[1] && r[1] !== null)
-      .map(r => ({t: r[0], price: r[1]}))
-
-   const db_from_date = new Date(p.ticker.storedtime);
-   const db_to_date = new Date();
-   const db_interval = db_to_date.getTime() - db_from_date.getTime();
-   const intv = (p.dateRange[1].getTime() - p.dateRange[0].getTime()) / DAY_MS;
-   const perf = [
-      intv >= 365 * 5 &&
-         pastValue(p.ticker, DAY_MS * 365 * 5),   // 5 year perf
-      intv >= 365 &&
-         pastValue(p.ticker, DAY_MS * 365),       // 1 year perf
-      intv >= 365 / 2 &&
-         pastValue(p.ticker, DAY_MS * 365 / 2),   // 6 months perf
-      Math.abs(intv - 365 / 4) < 4 &&
-         pastValue(p.ticker, DAY_MS * 365 / 4),   // 3 months perf
-      intv >= 365 / 12 &&
-         pastValue(p.ticker, DAY_MS * 365 / 12),  // 1 month perf
-      intv >= 5 &&
-         pastValue(p.ticker, DAY_MS * 5),         // 5 days perf
-      pastValue(p.ticker, DAY_MS),             // 1 day perf
-      pastValue(p.ticker, 0),                  // intraday perf
-      db_from_date.getTime() !== hist[hist.length - 1].t &&  // from database
-         {
-            fromDate: db_from_date,
-            toDate: db_to_date,
-            fromPrice: p.ticker.storedprice ?? NaN,
-            toPrice: hist[hist.length - 1].price,
-            commodity: p.ticker.id,
-            header: `db (${humanDateInterval(db_interval)})`,
-            show_perf: true,
-         },
-   ];
-
-   return (
-   <>
-      <div className="hist" title={`Prices from ${p.ticker.source}`}>
-         <AutoSizer>
-            {
-               ({width, height}) => (
-                 <AreaChart
-                    width={width}
-                    height={height}
-                    data={hist}
-                 >
-                     <defs>
-                       <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-                         <stop
-                            offset="5%"
-                            stopColor="var(--ticker-history)"
-                            stopOpacity={0.5}
-                         />
-                         <stop
-                            offset="95%"
-                            stopColor="var(--ticker-history)"
-                            stopOpacity={0.1}
-                         />
-                       </linearGradient>
-                     </defs>
-                     <XAxis
-                         dataKey="t"
-                         scale="time"
-                         type="number"
-                         domain={["auto", "auto"]}
-                         hide={false}
-                         tickFormatter={dateForm}
-                     />
-                     <YAxis
-                         dataKey="price"
-                         type="number"
-                         domain={["auto", "auto"]}
-                         hide={false}
-                         orientation="right"
-                         tickFormatter={priceForm}
-                     />
-                     <Tooltip
-                         labelFormatter={labelForm}
-                         contentStyle={{backgroundColor: "var(--panel-background)"}}
-                         allowEscapeViewBox={{x: true, y: true}}
-                         isAnimationActive={false}
-                     />
-                     {
-                        p.showWALine &&
-                        p.ticker.accounts.map(a =>
-                           <ReferenceLine
-                               key={`${a.account}-wa`}
-                               y={a.end.absvalue / a.end.absshares}
-                               stroke="var(--cartesian-grid)"
-                               strokeDasharray="3 3"
-                               isFront={true}
-                           />
-                        )
-                     }
-                     {
-                        p.showACLine &&
-                        p.ticker.accounts.map(a =>
-                           <ReferenceLine
-                               key={`${a.account}-ac`}
-                               y={a.end.value / a.end.shares}
-                               stroke="var(--cartesian-grid)"
-                               strokeDasharray="3 3"
-                               isFront={true}
-                           />
-                        )
-                     }
-                     <Area
-                         type="linear"
-                         dataKey="price"
-                         isAnimationActive={false}
-                         connectNulls={true}
-                         stroke="var(--ticker-history)"
-                         fill="url(#colorUv)"
-                         dot={false}
-                     />
-                 </AreaChart>
-                )
-            }
-         </AutoSizer>
-      </div>
-
-      <div className="perf">
-         <table>
-            <thead>
-               <tr>
-                  {perf.map(p => p && <PastHeader {...p} />)}
-               </tr>
-            </thead>
-            <tbody>
-               <tr>
-                  {perf.map(p => p && <Past {...p} />)}
-               </tr>
-            </tbody>
-         </table>
-      </div>
-   </>
-   );
-}
-
 interface DataItemProps {
    head: React.ReactNode;
    tooltip?: React.ReactNode;
@@ -387,7 +95,7 @@ interface PrecomputedProps {
 
 const shares_data = (p: PrecomputedProps) =>
    !p.ticker.is_currency &&
-   <DataItem head="Shares">
+   <DataItem key="shares" head="Shares">
       <Numeric
          amount={p.acc.end.shares}
          commodity={p.acc.account.commodity}
@@ -398,6 +106,7 @@ const shares_data = (p: PrecomputedProps) =>
 
 const equity_data = (p: PrecomputedProps) =>
    <DataItem
+      key="equity"
       head="Equity"
       tooltip="Value of the stock (number of shares multiplied by price)"
    >
@@ -407,6 +116,7 @@ const equity_data = (p: PrecomputedProps) =>
 
 const pl_data = (p: PrecomputedProps) =>
    <DataItem
+      key="pl"
       head="P&L"
       tooltip="Profit and loss (equity minus total amount invested)"
    >
@@ -422,6 +132,7 @@ const total_return_data = (p: PrecomputedProps) =>
    // !p.ticker.is_currency
    // && Math.abs(a.end.shares) > THRESHOLD
    <DataItem
+       key="total_ret"
        head="Total Ret"
        tooltip={
           <>
@@ -448,6 +159,7 @@ const total_return_data = (p: PrecomputedProps) =>
 
 const avg_cost_data = (p: PrecomputedProps) =>
    <DataItem
+      key="avg_cost"
       head="Avg Cost"
       tooltip="Equivalent price for the remaining shares you own, taking into account reinvested dividends, added and removed shares,..."
     >
@@ -461,6 +173,7 @@ const avg_cost_data = (p: PrecomputedProps) =>
 
 const period_return_data = (p: PrecomputedProps) =>
    <DataItem
+      key="period_ret"
       head="Period Ret"
       tooltip={
          <>
@@ -558,6 +271,7 @@ const period_return_data = (p: PrecomputedProps) =>
 
 const annualized_return_data = (p: PrecomputedProps) =>
    <DataItem
+      key="ann_ret"
       head="Annualized Ret"
       tooltip={
          <>
@@ -583,6 +297,7 @@ const weighted_avg_data = (p: PrecomputedProps) =>
    && p.end.weighted_avg !== 0
    && (
       <DataItem
+         key="w_avg"
          head="Weighted Avg"
          tooltip="Average price at which you sold or bought shares. It does not include shares added or subtracted with no paiement, nor dividends"
       >
@@ -601,6 +316,7 @@ const weighted_avg_data = (p: PrecomputedProps) =>
 
 const annualized_return_recent = (p: PrecomputedProps) =>
    <DataItem
+      key="ann_ret_rec"
       head="Annualized Ret Recent"
       tooltip={
          <>
@@ -620,14 +336,17 @@ const annualized_return_recent = (p: PrecomputedProps) =>
    </DataItem>
 ;
 
-interface AccTickerProps {
-   ticker: Ticker;
-   acc: AccountForTicker;
+export interface TickerViewProps {
+   showWALine: boolean;
+   showACLine: boolean;
    dateRange: [Date, Date];
+   acc: AccountForTicker;
+}
+interface ExtraProps {
+   ticker: Ticker;
 }
 
-
-const AccTicker: React.FC<AccTickerProps> = p => {
+const TickerView: React.FC<TickerViewProps & ExtraProps> = p => {
    const { prefs } = usePrefs();
    const data = {
       ...p,
@@ -642,66 +361,44 @@ const AccTicker: React.FC<AccTickerProps> = p => {
       dateRange: p.dateRange,
    };
    const items = [
-      equity_data(data),
-      shares_data(data),
       period_return_data(data),
       total_return_data(data),
       annualized_return_data(data),
       pl_data(data),
+      equity_data(data),
+      shares_data(data),
       avg_cost_data(data),
       weighted_avg_data(data),
       false && annualized_return_recent(data),
    ];
 
    return (
-   <div className="account">
-      <div>
-         <AccountName
-            id={p.acc.account.id}
-            account={p.acc.account}
-            fullName={true}
+   <>
+      <AccountName
+         id={p.acc.account.id}
+         account={p.acc.account}
+         fullName={true}
+      />
+      {
+         p.ticker.prices.length > 0 &&
+         <History
+            ticker={p.ticker}
+            dateRange={p.dateRange}
+            showWALine={p.showWALine}
+            showACLine={p.showACLine}
          />
-      </div>
+      }
+      {
+         p.ticker.prices.length > 0 &&
+         <div className="perf">
+            <Perfs {...p} />
+         </div>
+      }
       <div className="items">
          {items}
       </div>
-   </div>
+   </>
    );
 }
 
-
-export interface TickerViewProps {
-   showWALine: boolean;
-   showACLine: boolean;
-   dateRange: [Date, Date];
-}
-interface ExtraProps {
-   ticker: Ticker;
-}
-
-const TickerView: React.FC<TickerViewProps & ExtraProps> = p => {
-   return (
-      <>
-         {
-            p.ticker.prices.length > 0 &&
-            <History
-               ticker={p.ticker}
-               dateRange={p.dateRange}
-               showWALine={p.showWALine}
-               showACLine={p.showACLine}
-            />
-         }
-         {
-            p.ticker.accounts.map(a =>
-               <AccTicker
-                  key={a.account.id}
-                  ticker={p.ticker}
-                  acc={a}
-                  dateRange={p.dateRange}
-               />
-            )
-         }
-      </>
-   );
-}
 export default TickerView;

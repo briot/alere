@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { DateRange } from 'Dates';
 import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
-import TickerView, { Ticker, TickerViewProps } from './View';
+import TickerView, { TickerViewProps } from './View';
+import { Ticker } from 'Ticker/types';
 import { CommodityId } from 'services/useAccounts';
 import { AccountIdSet } from 'services/useAccountIds';
 import useTickers from 'services/useTickers';

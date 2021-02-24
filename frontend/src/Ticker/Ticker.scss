@@ -17,6 +17,7 @@
       justify-content: space-between;
       align-content: center;
       width: 100%;
+      margin-top: 20px;
 
       .item {
          flex: 0 0 calc(50% - 5px);
@@ -99,24 +100,6 @@
 
       th {
          font-weight: bold;
-      }
-   }
-
-   .account {
-      margin-top: 20px;
-
-//      & > div {
-//         font-weight: bold;
-//      }
-
-      table {
-         width: 100%;
-         margin-top: 10px;
-         padding: 0 20px;
-
-         th, td {
-            text-align: left;
-         }
       }
    }
 }

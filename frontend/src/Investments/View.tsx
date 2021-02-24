@@ -2,8 +2,9 @@ import * as React from 'react';
 import { toDates, DateRange } from 'Dates';
 import usePrefs, { Preferences } from '../services/usePrefs';
 import { TickerPanelProps } from 'Ticker/Panel';
-import { AccountForTicker, ComputedTicker, Ticker,
-         computeTicker, dateForm } from 'Ticker/View';
+import { ComputedTicker, computeTicker } from 'Ticker/View';
+import { dateForm } from 'services/utils';
+import { AccountForTicker, Ticker } from 'Ticker/types';
 import { DashboardFromPanels } from 'Dashboard';
 import AccountName from 'Account';
 import Numeric from 'Numeric';
@@ -157,18 +158,23 @@ const Investments: React.FC<InvestmentsProps> = p => {
       );
 
    } else {
-      const panels = data?.map(t => ({
-            type: 'ticker',
-            colspan: 1,
-            rowspan: 1,
-            ticker: t,
-            accountIds: 'all',
-            range: p.range,
-            dateRange: dateRange,
-            showWALine: p.showWALine,
-            showACLine: p.showACLine,
-         } as TickerPanelProps
-      ));
+      const panels = data?.flatMap(
+         t => t.accounts.map(
+            a => ({
+               type: 'ticker',
+               colspan: 1,
+               rowspan: 1,
+               ticker: t,
+               acc: a,
+               accountIds: 'all',
+               range: p.range,
+               dateRange: dateRange,
+               showWALine: p.showWALine,
+               showACLine: p.showACLine,
+            } as TickerPanelProps
+            )
+         )
+      );
 
       return (
          <DashboardFromPanels
