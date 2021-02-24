@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { DateRange, DateRangePicker } from 'Dates';
 import { InvestmentsPanelProps } from 'Investments/Panel';
 import { Checkbox } from 'Form';
 import { PanelProps } from 'Dashboard/Panel';
@@ -8,6 +9,7 @@ const Settings: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
    const changeWA = (showWALine: boolean) => p.save?.({ showWALine });
    const changeAC = (showACLine: boolean) => p.save?.({ showACLine });
    const changeTable = (asTable: boolean) => p.save?.({ asTable });
+   const changeRange = (range: DateRange) => p.save({ range });
    return (
       <fieldset>
          <legend>Investments</legend>
@@ -31,6 +33,14 @@ const Settings: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
              onChange={changeAC}
              text="Show Average Cost lines in graphs"
          />
+         {
+            !p.excludeFields?.includes("range") &&
+            <DateRangePicker
+               text="Time period"
+               value={p.props.range || 'forever'}
+               onChange={changeRange}
+            />
+         }
       </fieldset>
    );
 }

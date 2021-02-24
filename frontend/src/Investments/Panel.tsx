@@ -1,8 +1,10 @@
 import * as React from 'react';
+import { rangeDisplay } from 'Dates';
 import Investments, { InvestmentsProps } from 'Investments/View';
 import Settings from 'Investments/Settings';
 import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
 import RoundButton from 'RoundButton';
+import { capitalize } from 'services/utils';
 
 export interface InvestmentsPanelProps extends PanelBaseProps, InvestmentsProps {
    type: 'investments';
@@ -14,12 +16,13 @@ const InvestmentsPanel: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
       () => setUpdate(true),
       []
    );
+   const r = rangeDisplay(p.props.range);
    return (
       <Panel
          {...p}
          className={p.props.asTable ? 'astable' : 'asgrid'}
          header={{
-            name: 'Investments',
+            name: capitalize(`${r.possessive}investments`),
             buttons: (
                <RoundButton
                   fa='fa-refresh'

@@ -6,6 +6,22 @@ from django.db.models import Max, Min
 import math
 import yfinance as yf
 
+class Position:
+    def __init__(self):
+        self.absvalue = 0
+        self.absshares = 0
+        self.value = 0           # how much we invested (+dividends,...)
+        self.shares = 0
+        self.balance = None      # as of maxdate
+
+    def to_json(self):
+        return {
+            "absvalue": self.absvalue,
+            "absshares": self.absshares,
+            "value": self.value,
+            "shares": self.shares,
+            "balance": self.balance,
+        }
 
 class Account:
     """
@@ -13,22 +29,17 @@ class Account:
     """
     def __init__(self, account_id):
         self.account_id = account_id
-        self.absvalue = 0
-        self.absshares = 0
-        self.value = 0
-        self.shares = 0
-        self.balance = None
-        self.oldest = None
-        self.latest = None
+        self.start = Position()  # as of mindate
+        self.end = Position()    # as of maxdate
+
+        self.oldest = None       # date of oldest transaction
+        self.latest = None       # date of most recent transaction
 
     def to_json(self):
         return {
             "account": self.account_id,
-            "absvalue": self.absvalue,
-            "absshares": self.absshares,
-            "value": self.value,
-            "shares": self.shares,
-            "balance": self.balance,
+            "start": self.start,
+            "end": self.end,
             "oldest": self.oldest,
             "latest": self.latest,
         }
@@ -125,10 +136,14 @@ class QuotesView(JSONView):
                     s.prices.sort(key=lambda v: v[0]) # order by timestamp
 
     def get_json(self, params):
+        now = datetime.datetime.now().astimezone(datetime.timezone.utc)
+
         update = self.as_bool(params, 'update', False)
         currency = self.as_commodity_id(params, 'currency')
         commodities = params.get('commodities', None)
         accounts = params.get('accounts')  # comma-separate list of ids
+        maxdate = self.as_time(params, 'maxdate') or now
+        mindate = self.as_time(params, 'mindate')
 
         if accounts:
             accounts = [int(c) for c in accounts.split(',')]
@@ -187,11 +202,20 @@ class QuotesView(JSONView):
 
         def next_transaction(acc, trans):
             if acc is not None:
-                acc.value += money_for_trans
-                acc.shares += shares_for_trans
-                if money_for_trans != 0 and shares_for_trans != 0:
-                    acc.absshares += abs(shares_for_trans)
-                    acc.absvalue += abs(money_for_trans)
+                acc.start.value += money_for_trans_before
+                acc.start.shares += shares_for_trans_before
+                if money_for_trans_before != 0 and shares_for_trans_before != 0:
+                    acc.start.absshares += abs(shares_for_trans_before)
+                    acc.start.absvalue += abs(money_for_trans_before)
+
+                m = money_for_trans + money_for_trans_before
+                s = shares_for_trans + shares_for_trans_before
+
+                acc.end.value += m
+                acc.end.shares += s
+                if m != 0 and s != 0:
+                    acc.end.absshares += abs(s)
+                    acc.end.absvalue += abs(m)
 
             if trans is not None:
                 if trans.account_id in accs:
@@ -215,14 +239,22 @@ class QuotesView(JSONView):
                 if trans.transaction_id != current_transaction:
                     acc = next_transaction(acc, trans)
                     current_transaction = trans.transaction_id
-                    shares_for_trans = 0
-                    money_for_trans = 0
+                    shares_for_trans_before = 0 # up to mindate
+                    money_for_trans_before = 0  # up to mindate
+                    shares_for_trans = 0        # up to maxdate
+                    money_for_trans = 0         # up to maxdate
 
-                if trans.currency.kind == alere.models.CommodityKinds.CURRENCY:
-                    # Need '-' because this was for another account
-                    money_for_trans -= trans.scaled_qty / trans.scale
+                if trans.timestamp < mindate:
+                    if trans.currency.kind == alere.models.CommodityKinds.CURRENCY:
+                        # Need '-' because this was for another account
+                        money_for_trans_before -= trans.scaled_qty / trans.scale
+                    else:
+                        shares_for_trans_before += trans.scaled_qty / trans.scale
                 else:
-                    shares_for_trans += trans.scaled_qty / trans.scale
+                    if trans.currency.kind == alere.models.CommodityKinds.CURRENCY:
+                        money_for_trans -= trans.scaled_qty / trans.scale
+                    else:
+                        shares_for_trans += trans.scaled_qty / trans.scale
 
         except django.core.exceptions.EmptyResultSet:
             pass
@@ -260,7 +292,6 @@ class QuotesView(JSONView):
 
         invest = []
         current_account = Account(-1)
-        now = datetime.datetime.now().astimezone(datetime.timezone.utc)
 
         with django.db.connection.cursor() as cur:
             cur.execute(query3, [currency])
@@ -283,15 +314,15 @@ class QuotesView(JSONView):
                     a.value = -value
                     symbols[cur_id].add_account(a)
 
-        # compute current networth for the investment accounts
+        # compute networth at maxdate for the investment accounts
         query4 = alere.models.Balances_Currency.objects.filter(
             account_id__in=invest,
             commodity_id=currency,
-            mindate__lte=now,
-            maxdate__gt=now,
+            mindate__lte=maxdate,
+            maxdate__gt=maxdate,
         )
         for b in query4:
-            accs[b.account_id].balance = b.balance
+            accs[b.account_id].end.balance = b.balance
 
         # Compute oldest transaction date for all accounts. These are the
         # transactions to or from other bank accounts (so that for instance

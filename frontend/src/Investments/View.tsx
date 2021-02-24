@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { DateRange } from 'Dates';
 import usePrefs, { Preferences } from '../services/usePrefs';
 import { TickerPanelProps } from 'Ticker/Panel';
 import { AccountForTicker, ComputedTicker, Ticker,
@@ -20,6 +21,7 @@ export interface InvestmentsProps {
    showACLine: boolean;
    fromProviders: boolean; // whether to load prices from source provides
    asTable?: boolean;
+   range: DateRange;
 }
 
 interface RowData {
@@ -48,17 +50,17 @@ const columnValue: Column<RowData, InvestmentsProps> = {
    id: 'Value',
    className: 'amount',
    cell: (r: RowData) =>
-      <Numeric amount={r.d.current_worth} commodity={r.prefs.currencyId} />,
-   compare: (r1: RowData, r2: RowData) => r1.d.current_worth - r2.d.current_worth,
+      <Numeric amount={r.d.worth} commodity={r.prefs.currencyId} />,
+   compare: (r1: RowData, r2: RowData) => r1.d.worth - r2.d.worth,
 };
 
 const columnReturn: Column<RowData, InvestmentsProps> = {
    id: 'Return',
    className: 'amount',
    cell: (r: RowData) =>
-      <Numeric amount={(r.d.current_worth / r.d.invested - 1) * 100} suffix='%' />,
+      <Numeric amount={(r.d.worth / r.d.invested - 1) * 100} suffix='%' />,
    compare: (r1: RowData, r2: RowData) =>
-      (r1.d.current_worth / r1.d.invested) - (r2.d.current_worth / r2.d.invested)
+      (r1.d.worth / r1.d.invested) - (r2.d.worth / r2.d.invested)
 }
 
 const columnAnnualizedReturn: Column<RowData, InvestmentsProps> = {
@@ -86,11 +88,11 @@ const columnPL: Column<RowData, InvestmentsProps> = {
    className: 'amount',
    cell: (r: RowData) =>
       <Numeric
-         amount={r.d.current_worth - r.d.invested}
+         amount={r.d.worth - r.d.invested}
          commodity={r.prefs.currencyId}
       />,
    compare: (r1: RowData, r2: RowData) =>
-      (r1.d.current_worth - r1.d.invested) - (r2.d.current_worth - r2.d.invested),
+      (r1.d.worth - r1.d.invested) - (r2.d.worth - r2.d.invested),
 }
 
 const columnInvested: Column<RowData, InvestmentsProps> = {
@@ -119,7 +121,7 @@ const Investments: React.FC<InvestmentsProps> = p => {
    const { prefs } = usePrefs();
    const { data } = useTickers(
       prefs.currencyId, p.fromProviders,
-      'all' /* accountIds */, p.hideIfNoShare);
+      'all' /* accountIds */, p.range, p.hideIfNoShare);
    const doNothing = React.useCallback(() => {}, []);
    const [sorted, setSorted] = React.useState('');
    const rows: LogicalRow<RowData, InvestmentsProps>[] = React.useMemo(
@@ -128,7 +130,7 @@ const Investments: React.FC<InvestmentsProps> = p => {
          data: { ticker,
                  acc,
                  prefs,
-                 d: computeTicker(ticker, acc),
+                 d: computeTicker(ticker, acc, true /* atEnd */, 0 /* ms_elapse */),
                  accName: acc.account.fullName(),
                },
       }))) ?? [],
@@ -156,6 +158,7 @@ const Investments: React.FC<InvestmentsProps> = p => {
             rowspan: 1,
             ticker: t,
             accountIds: 'all',
+            range: p.range,
             showWALine: p.showWALine,
             showACLine: p.showACLine,
          } as TickerPanelProps

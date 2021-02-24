@@ -196,6 +196,11 @@ const possessive = (name: DateRange): string => {
    }
 }
 
+export const startDate = (name: DateRange): Date => {
+   const r = rangeToDate(name);
+   return dateToDate(r[0]);
+}
+
 export const rangeToHttp = (name: DateRange|undefined): string => {
    if (!name) {
       return '';

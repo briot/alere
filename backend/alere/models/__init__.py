@@ -668,6 +668,7 @@ class Accounts_Security(AlereModel):
     account = models.ForeignKey(
         Accounts, on_delete=models.DO_NOTHING, related_name='+')
     scale = models.IntegerField()
+    timestamp = models.DateTimeField()   # of transaction
 
     scaled_qty = models.IntegerField()
     # Sum of the values of all splits performed in `currency`

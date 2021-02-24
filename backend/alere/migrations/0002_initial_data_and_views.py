@@ -279,6 +279,7 @@ class Migration(migrations.Migration):
               row_number() OVER () as id,   --  for django's sake
               splits_for_account.transaction_id,
               splits_for_account.account_id,
+              t.timestamp,
               currency.commodity_id as currency_id,
               currency.commodity_scu as scale,
               SUM(all_splits.scaled_qty) as scaled_qty

@@ -1,7 +1,15 @@
 import { ClosePrice, THRESHOLD, Ticker } from 'Ticker/View';
+import { DateRange, rangeToHttp } from 'Dates';
 import useAccounts, { AccountId, CommodityId } from 'services/useAccounts';
 import useAccountIds, { AccountIdSet } from 'services/useAccountIds';
 import useFetch from 'services/useFetch';
+
+interface PositionJSON {
+   absvalue: number;
+   absshares: number;
+   value: number;
+   shares: number;
+}
 
 interface TickerJSON {
    id: CommodityId;
@@ -18,13 +26,10 @@ interface TickerJSON {
 
    accounts: {
       account: AccountId;
-      absvalue: number;
-      absshares: number;
-      value: number;
-      shares: number;
+      start: PositionJSON;
+      end: PositionJSON;
       oldest: number;
       latest: number;
-      balance?: number;  // computed automatically if needed
    }[];
 }
 
@@ -32,6 +37,7 @@ const useTickers = (
    currencyId: CommodityId,  // what currency should prices be given in
    fromProviders: boolean,   // whether to load prices from source provides
    accountIds: AccountIdSet, // restrict to a specific set of accounts
+   range: DateRange = "forever",
    hideIfNoShare?: boolean,  // ignore commodities not owned by user
    commodity?: CommodityId,  // restrict to some specific commodities
    skip?: boolean,           // if true, do not fetch anything
@@ -42,7 +48,8 @@ const useTickers = (
    const tickers = useFetch<Ticker[], TickerJSON[]>({
       url: `/api/quotes?update=${fromProviders}&currency=${currencyId}`
          + (commodity ? `&commodities=${commodity}` : '')
-         + (ids ? `&accounts=${ids}` : ''),
+         + (ids ? `&accounts=${ids}` : '')
+         + `&${rangeToHttp(range)}`,
       placeholder: [],
       enabled: !skip,
       parse: (json: TickerJSON[]) => {
@@ -51,11 +58,10 @@ const useTickers = (
             accounts: t.accounts.map(a => ({
                ...a,
                account: accounts.getAccount(a.account),
-               balance: a.balance ?? (a.shares * (t.storedprice || NaN)),
             }))
             .filter(a => !hideIfNoShare
                || t.is_currency
-               || Math.abs(a.shares) > THRESHOLD)
+               || Math.abs(a.end.shares) > THRESHOLD)
          })).filter(t => !hideIfNoShare || t.accounts.length > 0);
       },
    });

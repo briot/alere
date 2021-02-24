@@ -1,11 +1,12 @@
 import * as React from 'react';
 import * as d3TimeFormat from 'd3-time-format';
 import * as d3Array from 'd3-array';
-import { DateDisplay } from 'Dates';
+import { startDate, DateDisplay, DateRange } from 'Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from 'Numeric';
 import { Account, CommodityId } from 'services/useAccounts';
 import usePrefs from 'services/usePrefs';
+import { DAY_MS, humanDateInterval } from 'services/utils';
 import AccountName from 'Account';
 import { AreaChart, XAxis, YAxis, Area, Tooltip,
          ReferenceLine } from 'recharts';
@@ -16,13 +17,17 @@ export const THRESHOLD = 0.00000001;
 
 export type ClosePrice = [/*timestamp*/ number|null, /*close*/ number|null];
 
-export interface AccountForTicker {
-   account: Account;
+interface Position {
    absvalue: number;
    absshares: number;
-   value: number;
+   value: number;    //  how much we invested (including dividends)
    shares: number;
-   balance: number;
+}
+
+export interface AccountForTicker {
+   account: Account;
+   start: Position; // at mindate
+   end: Position;   // at maxdate
    oldest: number;  // date of oldest transaction
    latest: number;  // date of most recent transaction
 }
@@ -42,60 +47,26 @@ export interface Ticker {
    accounts: AccountForTicker[];
 }
 
-export interface ComputedTicker {
-   close: number;
-   weighted_avg: number;
-   avg_cost: number;
-   current_worth: number;
-   invested: number;  // total invested
-   oldest: Date;   // date of first investment
-   latest: Date;   // date of most recent investmnet
-   annualized_return: number;
-   annualized_return_recent: number;
-}
-
-export const computeTicker = (
-   ticker: Ticker, a: AccountForTicker
-): ComputedTicker => {
-   const pr = ticker.prices;
-   const current_worth = a.balance;
-   const invested = a.value;
-   const oldest = new Date(a.oldest * 1000);
-   const latest = new Date(a.latest * 1000);
-   return {
-      close: pr[pr.length - 1]?.[1] || ticker.storedprice || NaN,
-      weighted_avg: a.absvalue / a.absshares,
-      avg_cost: a.value / a.shares,
-      current_worth,
-      invested,
-      oldest,
-      latest,
-      annualized_return: (
-         Math.pow(
-            current_worth / invested,
-            365 * DAY_MS / (new Date().getTime() - oldest.getTime()))
-         - 1) * 100,
-      annualized_return_recent: (
-         Math.pow(
-            current_worth / invested,
-            365 * DAY_MS / (new Date().getTime() - latest.getTime()))
-         - 1) * 100,
-   };
-}
+/**
+ * Compute the price of a security at some time in the past
+ */
 
 export const dateForm = d3TimeFormat.timeFormat("%Y-%m-%d");
 const priceForm = (v: number) => v.toFixed(2);
 const labelForm = (d: number|string) => <span>{dateForm(new Date(d))}</span>;
 const bisect = d3Array.bisector((d: ClosePrice) => d[0]).right;
-const DAY_MS = 86400000;
 
 interface PastValue  {
    fromDate: Date|undefined;
+   fromPrice: number;   // price as of fromDate (the requested one)
+
    toDate: Date|undefined;
-   fromPrice: number;
-   toPrice: number;
+   toPrice: number;     // latest known price
+
    commodity: CommodityId;
-   header?: string;
+
+   header: string;
+   // human-readable description of the date.
 }
 
 const pastValue = (
@@ -110,22 +81,107 @@ const pastValue = (
       : Math.max(0, bisect(prices, now - ms) - 1);
    const price = idx === undefined ? undefined : prices[idx][1];
    const ts = idx === undefined ? null : prices[idx]?.[0];
+
    return {
       fromDate: ts === null ? undefined : new Date(ts),
       toDate: now === null ? undefined : new Date(now),
       fromPrice: price ?? NaN,
       toPrice: close,
       commodity: ticker.id,
+      header: humanDateInterval(ms),
    };
 }
 
-const Past: React.FC<PastValue> = p => {
+/**
+ * Compute various performance indicators for a security
+ */
+
+export interface ComputedTicker {
+   close: number;     // most recent closing price
+   weighted_avg: number;
+   avg_cost: number;
+   worth: number;
+   invested: number;  // total invested
+   oldest: Date;   // date of first investment
+   latest: Date;   // date of most recent investmnet
+   annualized_return: number;
+   annualized_return_recent: number;
+}
+
+export const computeTicker = (
+   ticker: Ticker,
+   a: AccountForTicker,
+   atEnd: boolean,
+   ms_elapsed: number,
+): ComputedTicker => {
+   const price = pastValue(ticker, ms_elapsed);
+   const worth =
+      atEnd
+      ? a.end.shares * price.toPrice
+      : a.start.shares * price.fromPrice;
+   const invested = a.end.value;
+   const oldest = new Date(a.oldest * 1000);
+   const latest = new Date(a.latest * 1000);
+   return {
+      close: price.toPrice || ticker.storedprice || NaN,
+      weighted_avg:
+         atEnd
+         ? a.end.absvalue / a.end.absshares
+         : a.start.absvalue / a.start.absshares,
+      avg_cost:
+         atEnd
+         ? a.end.value / a.end.shares
+         : a.start.value / a.start.shares,
+      worth,
+      invested,
+      oldest,
+      latest,
+      annualized_return: (
+         Math.pow(
+            worth / invested,
+            365 * DAY_MS / (new Date().getTime() - oldest.getTime()))
+         - 1) * 100,
+      annualized_return_recent: (
+         Math.pow(
+            worth / invested,
+            365 * DAY_MS / (new Date().getTime() - latest.getTime()))
+         - 1) * 100,
+   };
+}
+
+const PastHeader: React.FC<PastValue> = p => {
+   return (
+      <th>
+         {p.header}
+         <div className="tooltip">
+            <DateDisplay when={p.fromDate} />
+         </div>
+      </th>
+   );
+}
+
+interface PastProps extends PastValue {
+   hidePerf?: boolean;
+}
+
+const Past: React.FC<PastProps> = p => {
    const perf = (p.toPrice / p.fromPrice - 1) * 100;
    return (
       !isNaN(perf)
       ? (
       <td>
-         <Numeric amount={perf} colored={true} suffix="%"/>
+         <div>
+            <Numeric
+               amount={p.fromPrice}
+               commodity={p.commodity}
+               hideCommodity={true}
+            />
+            <br/>
+            {
+               !p.hidePerf
+               && <Numeric amount={perf} colored={true} suffix="%"/>
+            }
+         </div>
          <div className="tooltip">
             <div>
                <DateDisplay when={p.fromDate} />
@@ -143,23 +199,6 @@ const Past: React.FC<PastValue> = p => {
    );
 }
 
-const PastHead: React.FC<PastValue> = p => {
-   const d = (
-      (p.toDate?.getTime() ?? NaN) - (p.fromDate?.getTime() ?? NaN)
-   ) / DAY_MS;
-   const r = (Math.abs(d - 180) < 10)
-      ? '6m'
-      : (Math.abs(d - 365) < 10)
-      ? '1y'
-      : `${Math.floor(d).toFixed(0)}d`;
-
-   return (
-      <th>
-         {p.header ? `${p.header} (${r})` : r}
-      </th>
-   );
-}
-
 
 interface HistoryProps {
    ticker: Ticker;
@@ -172,18 +211,23 @@ const History: React.FC<HistoryProps> = p => {
    const ts = pr[pr.length - 1]?.[0] || null;
    const hist = pr.map(r => ({t: r[0], price: r[1]}));
 
+   const d0 = pastValue(p.ticker, 0);
    const d1 = pastValue(p.ticker, DAY_MS);
    const d5 = pastValue(p.ticker, DAY_MS * 5);
    const m6 = pastValue(p.ticker, DAY_MS * 365 / 2);
    const m3 = pastValue(p.ticker, DAY_MS * 365 / 4);
    const y1 = pastValue(p.ticker, DAY_MS * 365);
+
+   const db_from_date = new Date(p.ticker.storedtime);
+   const db_to_date = new Date();
+   const db_interval = db_to_date.getTime() - db_from_date.getTime();
    const db = {
-      fromDate: new Date(p.ticker.storedtime),
-      toDate: new Date(),
+      fromDate: db_from_date,
+      toDate: db_to_date,
       fromPrice: p.ticker.storedprice ?? NaN,
       toPrice: d1.toPrice,
       commodity: p.ticker.id,
-      header: 'db',
+      header: `db (${humanDateInterval(db_interval)})`,
    }
 
    return (
@@ -224,7 +268,7 @@ const History: React.FC<HistoryProps> = p => {
                         p.ticker.accounts.map(a =>
                            <ReferenceLine
                                key={`${a.account}-wa`}
-                               y={a.absvalue / a.absshares}
+                               y={a.end.absvalue / a.end.absshares}
                                stroke="var(--cartesian-grid)"
                                strokeDasharray="3 3"
                                isFront={true}
@@ -236,7 +280,7 @@ const History: React.FC<HistoryProps> = p => {
                         p.ticker.accounts.map(a =>
                            <ReferenceLine
                                key={`${a.account}-ac`}
-                               y={a.value / a.shares}
+                               y={a.end.value / a.end.shares}
                                stroke="var(--cartesian-grid)"
                                strokeDasharray="3 3"
                                isFront={true}
@@ -262,29 +306,20 @@ const History: React.FC<HistoryProps> = p => {
          </AutoSizer>
       </div>
 
-      <div className="prices">
-         Closing price:
-         <Numeric
-             amount={close}
-             commodity={p.ticker.id}
-             hideCommodity={true}
-         />
-         on <DateDisplay when={ts === null ? undefined : new Date(ts)} />
-      </div>
-
       <div className="perf">
          <table>
             <thead>
                <tr>
-                  <PastHead {...y1} />
-                  <PastHead {...m6} />
-                  <PastHead {...m3} />
-                  <PastHead {...d5} />
-                  <PastHead {...d1} />
+                  <PastHeader {...y1} />
+                  <PastHeader {...m6} />
+                  <PastHeader {...m3} />
+                  <PastHeader {...d5} />
+                  <PastHeader {...d1} />
                   {
                      d1.toPrice !== p.ticker.storedprice &&
-                     <PastHead {...db} />
+                     <PastHeader {...db} />
                   }
+                  <PastHeader {...d0} />
                </tr>
             </thead>
             <tbody>
@@ -298,6 +333,7 @@ const History: React.FC<HistoryProps> = p => {
                      d1.toPrice !== p.ticker.storedprice &&
                      <Past {...db} />
                   }
+                  <Past {...d0} hidePerf={true} />
                </tr>
             </tbody>
          </table>
@@ -309,15 +345,24 @@ const History: React.FC<HistoryProps> = p => {
 interface AccTickerProps {
    ticker: Ticker;
    acc: AccountForTicker;
+   range: DateRange;
 }
 
 const AccTicker: React.FC<AccTickerProps> = p => {
    const { prefs } = usePrefs();
    const currencyId = prefs.currencyId;
    const a = p.acc;
-   const { close, weighted_avg, avg_cost, current_worth,
-           oldest, latest, annualized_return, annualized_return_recent } =
-      computeTicker(p.ticker, p.acc);
+   const now = new Date();
+   const mindate = startDate(p.range);
+   const start = computeTicker(
+      p.ticker, p.acc, false /* atEnd */,
+      now.getTime() - mindate.getTime() /* ms_elapsed */,
+   );
+   const end = computeTicker(
+      p.ticker, p.acc, true /* atEnd */, 0 /* ms_elapsed */);
+   const gains_at_start = start.worth - a.start.value;
+   const gains_at_end = end.worth - a.end.value;
+   const invest_in_period = a.end.value - a.start.value;
 
    return (
    <div className="account">
@@ -336,18 +381,46 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                <tr>
                   <th>Shares owned</th>
                   <td>
-                     <Numeric amount={a.shares} commodity={a.account.commodity} />
+                     <Numeric
+                        amount={a.start.shares}
+                        commodity={a.account.commodity}
+                        hideCommodity={true}
+                     />
+                  </td>
+                  <td>
+                     <Numeric
+                        amount={a.end.shares}
+                        commodity={a.account.commodity}
+                        hideCommodity={true}
+                     />
                   </td>
                </tr>
             }
             {
                <tr>
-                  <th>Value</th>
+                  <th>
+                     Value and P&L
+                     <div className="tooltip">
+                        Value of the stock (number of shares multiplied by
+                        price at the time) and profit or loss (i.e. the
+                        current value minus the total amount invested).
+                     </div>
+                  </th>
                   <td>
-                     <Numeric amount={current_worth} commodity={currencyId} />
+                     <Numeric amount={start.worth} commodity={currencyId} />
                      &nbsp;(
                         <Numeric
-                           amount={current_worth - a.value}
+                           amount={gains_at_start}
+                           commodity={currencyId}
+                           forceSign={true}
+                        />
+                     )
+                  </td>
+                  <td>
+                     <Numeric amount={end.worth} commodity={currencyId} />
+                     &nbsp;(
+                        <Numeric
+                           amount={gains_at_end}
                            commodity={currencyId}
                            forceSign={true}
                         />
@@ -356,66 +429,67 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                </tr>
             }
             {
+               <tr>
+                  <th>
+                     Return over period
+                  </th>
+                  <td>
+                     {/*
+                        How much we gain this year, compared to how much
+                        we invested (initial worth + total invested)
+                     */}
+                     <Numeric
+                         amount={(gains_at_end - gains_at_start)
+                                 / (start.worth + invest_in_period) * 100}
+                         forceSign={true}
+                         suffix="%"
+                     />
+                  </td>
+                  <td />
+               </tr>
+            }
+            {
                !p.ticker.is_currency
-               && a.absshares > THRESHOLD
-               && weighted_avg !== 0
+               && a.end.absshares > THRESHOLD
+               && end.weighted_avg !== 0
                ? (
                <tr>
-                  <th>Weighted Average</th>
+                  <th>
+                     Weighted Average
+                     <div className="tooltip">
+                        Average price at which you sold or
+                        bought shares. It does not include shares added or
+                        subtracted with no paiement, nor dividends.
+                     </div>
+                  </th>
+                  <td />
                   <td>
                      <Numeric
-                        amount={weighted_avg}
+                        amount={end.weighted_avg}
                         className={
-                           weighted_avg > close ? 'negative' : 'positive'
+                           end.weighted_avg > end.close ? 'negative' : 'positive'
                         }
                         commodity={p.ticker.id}
                         hideCommodity={true}
                      />
                      &nbsp;(
                      <Numeric
-                        amount={(close / weighted_avg - 1) * 100}
+                        amount={(end.close / end.weighted_avg - 1) * 100}
                         forceSign={true}
                         suffix="%"
                      />)
-                     <div className="tooltip">
-                        <p>
-                        Average price at which you sold or
-                        bought shares. It does not include shares added or
-                        subtracted with no paiement, nor dividends.
-                        </p>
-                     </div>
                   </td>
                </tr>
              ) : null
            }
            {
-              !p.ticker.is_currency
-              && Math.abs(a.shares) > THRESHOLD
-              && avg_cost !== 0
+              true
+              // !p.ticker.is_currency
+              // && Math.abs(a.end.shares) > THRESHOLD
               ? (
               <tr>
-                 <th>Average Cost and RoI</th>
-                 <td>
-                    <Numeric
-                       amount={avg_cost}
-                       className={
-                          avg_cost > close ? 'negative' : 'positive'
-                       }
-                       commodity={p.ticker.id}
-                       hideCommodity={true}
-                    />
-                    &nbsp;(
-                    <Numeric
-                       amount={(close / avg_cost - 1) * 100}
-                       forceSign={true}
-                       suffix="%"
-                    />
-                    )
-                    {/*
-                        The return can also be computed as
-                           (current_worth / a.value - 1) * 100
-                        which gives the same value as above
-                    */}
+                 <th>
+                    Average Cost and RoI
                     <div className="tooltip">
                        <p>
                        Equivalent price for the remaining shares
@@ -429,51 +503,84 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                        dividends,..."
                        </p>
                        <Numeric
-                           amount={a.value}
+                           amount={a.end.value}
                            commodity={currencyId}
                        />
                        &rarr;&nbsp;
                        <Numeric
-                           amount={current_worth}
+                           amount={end.worth}
                            commodity={currencyId}
                        />
                     </div>
+                 </th>
+                 <td />
+                 <td>
+                    {end.avg_cost !== 0 &&
+                       <Numeric
+                          amount={end.avg_cost}
+                          className={
+                             end.avg_cost > end.close ? 'negative' : 'positive'
+                          }
+                          commodity={p.ticker.id}
+                          hideCommodity={true}
+                       />
+                    }
+                    &nbsp;(
+                    <Numeric
+                       amount={(end.worth / a.end.value - 1) * 100}
+                       forceSign={true}
+                       suffix="%"
+                    />
+                    )
+                    {/*
+                        The return can be computed as either:
+                           (end.close / end.avg_cost - 1) * 100
+                        or
+                           (worth / a.value - 1) * 100
+                        which gives the same value as above
+                    */}
                  </td>
               </tr>
               ) : null
            }
             <tr>
-               <th>Annualized return</th>
-               <td>
-                  <Numeric
-                     amount={annualized_return}
-                     forceSign={true}
-                     suffix="%"
-                  />
+               <th>
+                  Annualized return
                   <div className="tooltip">
-                     <p>Since {dateForm(oldest)}</p>
+                     <p>Since {dateForm(end.oldest)}</p>
                      <p>Equivalent annualized return (assuming compound
                         interest), as if the total amount had been invested
                         when the account was initially opened
                      </p>
                   </div>
-               </td>
-            </tr>
-            <tr>
-               <th>Annualized return recent</th>
+               </th>
+               <td />
                <td>
                   <Numeric
-                     amount={annualized_return_recent}
+                     amount={end.annualized_return}
                      forceSign={true}
                      suffix="%"
                   />
+               </td>
+            </tr>
+            <tr>
+               <th>
+                  Annualized return recent
                   <div className="tooltip">
-                     <p>Since {dateForm(latest)}</p>
+                     <p>Since {dateForm(end.latest)}</p>
                      <p>Equivalent annualized return (assuming compound
                         interest), as if the total amount had been invested
                         at the time of the last transaction
                      </p>
                   </div>
+               </th>
+               <td />
+               <td>
+                  <Numeric
+                     amount={end.annualized_return_recent}
+                     forceSign={true}
+                     suffix="%"
+                  />
                </td>
             </tr>
          </tbody>
@@ -486,6 +593,7 @@ const AccTicker: React.FC<AccTickerProps> = p => {
 export interface TickerViewProps {
    showWALine: boolean;
    showACLine: boolean;
+   range: DateRange;
 }
 interface ExtraProps {
    ticker: Ticker;
@@ -508,6 +616,7 @@ const TickerView: React.FC<TickerViewProps & ExtraProps> = p => {
                   key={a.account.id}
                   ticker={p.ticker}
                   acc={a}
+                  range={p.range}
                />
             )
          }
