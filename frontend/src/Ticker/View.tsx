@@ -15,7 +15,7 @@ import './Ticker.scss';
 //  When do we consider a number of shares to be zero (for rounding errors)
 export const THRESHOLD = 0.00000001;
 
-export type ClosePrice = [/*timestamp*/ number, /*close*/ number|null];
+export type ClosePrice = [/*timestamp*/ number, /*close*/ number];
 
 interface Position {
    absvalue: number;
@@ -64,6 +64,7 @@ interface PastValue  {
    toPrice: number;     // latest known price
 
    commodity: CommodityId;
+   show_perf: boolean;
 
    header: string;
    // human-readable description of the date.
@@ -89,6 +90,7 @@ const pastValue = (
       toPrice: close,
       commodity: ticker.id,
       header: humanDateInterval(ms),
+      show_perf: ms !== 0,
    };
 }
 
@@ -153,46 +155,56 @@ const PastHeader: React.FC<PastValue> = p => {
    return (
       <th>
          {p.header}
-         <div className="tooltip">
-            <DateDisplay when={p.fromDate} />
-         </div>
       </th>
    );
 }
 
-interface PastProps extends PastValue {
-   hidePerf?: boolean;
-}
-
-const Past: React.FC<PastProps> = p => {
+const Past: React.FC<PastValue> = p => {
    const perf = (p.toPrice / p.fromPrice - 1) * 100;
    return (
       !isNaN(perf)
       ? (
       <td>
          <div>
-            <Numeric
-               amount={p.fromPrice}
-               commodity={p.commodity}
-               hideCommodity={true}
-            />
-            <br/>
             {
-               !p.hidePerf
-               && <Numeric amount={perf} colored={true} suffix="%"/>
+               p.show_perf
+               ? <Numeric amount={perf} colored={true} suffix="%"/>
+               : <Numeric
+                    amount={p.fromPrice}
+                    commodity={p.commodity}
+                    hideCommodity={true}
+                 />
             }
          </div>
          <div className="tooltip">
-            <div>
-               <DateDisplay when={p.fromDate} />
-               &nbsp;&rarr;&nbsp;
-               <DateDisplay when={p.toDate} />
-            </div>
-            <div>
-               <Numeric amount={p.fromPrice} commodity={p.commodity} />
-               &nbsp;&rarr;&nbsp;
-               <Numeric amount={p.toPrice} commodity={p.commodity} />
-            </div>
+            <table>
+               <tbody>
+                  <tr>
+                     <td>
+                        <DateDisplay when={p.fromDate} />
+                     </td>
+                     <td>
+                        <DateDisplay when={p.toDate} />
+                     </td>
+                  </tr>
+                  <tr>
+                     <td>
+                        <Numeric
+                           amount={p.fromPrice}
+                           commodity={p.commodity}
+                           hideCommodity={true}
+                        />
+                     </td>
+                     <td>
+                        <Numeric
+                           amount={p.toPrice}
+                           commodity={p.commodity}
+                           hideCommodity={true}
+                        />
+                     </td>
+                  </tr>
+               </tbody>
+            </table>
          </div>
       </td>
       ) : <td />
@@ -207,30 +219,42 @@ interface HistoryProps {
    showACLine?: boolean;
 }
 const History: React.FC<HistoryProps> = p => {
-   const pr = p.ticker.prices;
-   const hist = pr.map(r => ({t: r[0], price: r[1]}));
-
-   const d0 = pastValue(p.ticker, 0);
-   const d1 = pastValue(p.ticker, DAY_MS);
-   const d5 = pastValue(p.ticker, DAY_MS * 5);
-   const m6 = pastValue(p.ticker, DAY_MS * 365 / 2);
-   const m3 = pastValue(p.ticker, DAY_MS * 365 / 4);
-   const y1 = pastValue(p.ticker, DAY_MS * 365);
+   const xrange = p.dateRange.map(d => d.getTime()) as [number, number];
+   const hist =
+      p.ticker.prices
+      .filter(r => r[0] >= xrange[0] && r[0] <= xrange[1] && r[1] !== null)
+      .map(r => ({t: r[0], price: r[1]}))
 
    const db_from_date = new Date(p.ticker.storedtime);
    const db_to_date = new Date();
    const db_interval = db_to_date.getTime() - db_from_date.getTime();
-   const db = {
-      fromDate: db_from_date,
-      toDate: db_to_date,
-      fromPrice: p.ticker.storedprice ?? NaN,
-      toPrice: d1.toPrice,
-      commodity: p.ticker.id,
-      header: `db (${humanDateInterval(db_interval)})`,
-   }
-
-   const xrange = p.dateRange.map(d => d.getTime()) as [number, number];
-   const filtered_hist = hist.filter(d => d.t >= xrange[0] && d.t <= xrange[1]);
+   const intv = (p.dateRange[1].getTime() - p.dateRange[0].getTime()) / DAY_MS;
+   const perf = [
+      intv >= 365 * 5 &&
+         pastValue(p.ticker, DAY_MS * 365 * 5),   // 5 year perf
+      intv >= 365 &&
+         pastValue(p.ticker, DAY_MS * 365),       // 1 year perf
+      intv >= 365 / 2 &&
+         pastValue(p.ticker, DAY_MS * 365 / 2),   // 6 months perf
+      intv >= 365 / 4 &&
+         pastValue(p.ticker, DAY_MS * 365 / 4),   // 3 months perf
+      intv >= 365 / 12 &&
+         pastValue(p.ticker, DAY_MS * 365 / 12),  // 1 month perf
+      intv >= 5 &&
+         pastValue(p.ticker, DAY_MS * 5),         // 5 days perf
+      pastValue(p.ticker, DAY_MS),             // 1 day perf
+      pastValue(p.ticker, 0),                  // intraday perf
+      db_from_date.getTime() !== hist[hist.length - 1].t &&  // from database
+         {
+            fromDate: db_from_date,
+            toDate: db_to_date,
+            fromPrice: p.ticker.storedprice ?? NaN,
+            toPrice: hist[hist.length - 1].price,
+            commodity: p.ticker.id,
+            header: `db (${humanDateInterval(db_interval)})`,
+            show_perf: true,
+         },
+   ];
 
    return (
    <>
@@ -241,7 +265,7 @@ const History: React.FC<HistoryProps> = p => {
                  <AreaChart
                     width={width}
                     height={height}
-                    data={filtered_hist}
+                    data={hist}
                  >
                      <defs>
                        <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
@@ -322,30 +346,16 @@ const History: React.FC<HistoryProps> = p => {
          <table>
             <thead>
                <tr>
-                  <PastHeader {...y1} />
-                  <PastHeader {...m6} />
-                  <PastHeader {...m3} />
-                  <PastHeader {...d5} />
-                  <PastHeader {...d1} />
                   {
-                     d1.toPrice !== p.ticker.storedprice &&
-                     <PastHeader {...db} />
+                     perf.map(p => p && <PastHeader {...p} />)
                   }
-                  <PastHeader {...d0} />
                </tr>
             </thead>
             <tbody>
                <tr>
-                  <Past {...y1 } />
-                  <Past {...m6 } />
-                  <Past {...m3 } />
-                  <Past {...d5 } />
-                  <Past {...d1 } />
                   {
-                     d1.toPrice !== p.ticker.storedprice &&
-                     <Past {...db} />
+                     perf.map(p => p && <Past {...p} />)
                   }
-                  <Past {...d0} hidePerf={true} />
                </tr>
             </tbody>
          </table>

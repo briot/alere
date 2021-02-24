@@ -50,7 +50,6 @@ const useTickers = (
          + (commodity ? `&commodities=${commodity}` : '')
          + (ids ? `&accounts=${ids}` : '')
          + `&${rangeToHttp(range)}`,
-      placeholder: [],
       enabled: !skip,
       parse: (json: TickerJSON[]) => {
          return json.map(t => ({

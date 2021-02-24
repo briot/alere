@@ -4,7 +4,6 @@ import Investments, { InvestmentsProps } from 'Investments/View';
 import Settings from 'Investments/Settings';
 import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
 import RoundButton from 'RoundButton';
-import { capitalize } from 'services/utils';
 
 export interface InvestmentsPanelProps extends PanelBaseProps, InvestmentsProps {
    type: 'investments';
@@ -22,7 +21,7 @@ const InvestmentsPanel: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
          {...p}
          className={p.props.asTable ? 'astable' : 'asgrid'}
          header={{
-            name: capitalize(`${r.possessive}investments`),
+            name: `Investments (${r.possessive} performance)`,
             buttons: (
                <RoundButton
                   fa='fa-refresh'
