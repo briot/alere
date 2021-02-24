@@ -404,13 +404,6 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                   <th>Shares owned</th>
                   <td>
                      <Numeric
-                        amount={a.start.shares}
-                        commodity={a.account.commodity}
-                        hideCommodity={true}
-                     />
-                  </td>
-                  <td>
-                     <Numeric
                         amount={a.end.shares}
                         commodity={a.account.commodity}
                         hideCommodity={true}
@@ -429,16 +422,6 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                      </div>
                   </th>
                   <td>
-                     <Numeric amount={start.worth} commodity={currencyId} />
-                     &nbsp;(
-                        <Numeric
-                           amount={gains_at_start}
-                           commodity={currencyId}
-                           forceSign={true}
-                        />
-                     )
-                  </td>
-                  <td>
                      <Numeric amount={end.worth} commodity={currencyId} />
                      &nbsp;(
                         <Numeric
@@ -454,12 +437,91 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                <tr>
                   <th>
                      Return over period
+                     <div className="tooltip">
+                        <p>
+                        How much we gain over the period, compared to how much
+                        we invested (initial worth + total invested)
+                        </p>
+                        <table className="return">
+                          <thead>
+                             <tr>
+                                <td />
+                                <th>
+                                   <DateDisplay when={mindate} />
+                                </th>
+                                <th>
+                                   <DateDisplay when={p.dateRange[1]} />
+                                </th>
+                             </tr>
+                          </thead>
+                          <tbody>
+                             <tr>
+                                 <th>Shares</th>
+                                 <td>
+                                    <Numeric
+                                       amount={a.start.shares}
+                                       commodity={a.account.commodity}
+                                       hideCommodity={true}
+                                    />
+                                 </td>
+                                 <td>
+                                    <Numeric
+                                       amount={a.end.shares}
+                                       commodity={a.account.commodity}
+                                       hideCommodity={true}
+                                    />
+                                 </td>
+                             </tr>
+                             <tr>
+                                 <th>Value</th>
+                                 <td>
+                                    <Numeric
+                                       amount={start.worth}
+                                       commodity={currencyId}
+                                    />
+                                 </td>
+                                 <td>
+                                    <Numeric
+                                       amount={end.worth}
+                                       commodity={currencyId}
+                                    />
+                                 </td>
+                             </tr>
+                             <tr>
+                                 <th>Total invested</th>
+                                 <td>
+                                    <Numeric
+                                       amount={a.start.value}
+                                       commodity={currencyId}
+                                    />
+                                 </td>
+                                 <td>
+                                    <Numeric
+                                       amount={a.end.value}
+                                       commodity={currencyId}
+                                    />
+                                 </td>
+                             </tr>
+                             <tr>
+                                 <th>Gains</th>
+                                 <td>
+                                    <Numeric
+                                       amount={gains_at_start}
+                                       commodity={currencyId}
+                                    />
+                                 </td>
+                                 <td>
+                                    <Numeric
+                                       amount={gains_at_end}
+                                       commodity={currencyId}
+                                    />
+                                 </td>
+                             </tr>
+                          </tbody>
+                        </table>
+                     </div>
                   </th>
                   <td>
-                     {/*
-                        How much we gain this year, compared to how much
-                        we invested (initial worth + total invested)
-                     */}
                      <Numeric
                          amount={(gains_at_end - gains_at_start)
                                  / (start.worth + invest_in_period) * 100}
@@ -470,40 +532,6 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                   <td />
                </tr>
             }
-            {
-               !p.ticker.is_currency
-               && a.end.absshares > THRESHOLD
-               && end.weighted_avg !== 0
-               ? (
-               <tr>
-                  <th>
-                     Weighted Average
-                     <div className="tooltip">
-                        Average price at which you sold or
-                        bought shares. It does not include shares added or
-                        subtracted with no paiement, nor dividends.
-                     </div>
-                  </th>
-                  <td />
-                  <td>
-                     <Numeric
-                        amount={end.weighted_avg}
-                        className={
-                           end.weighted_avg > end.close ? 'negative' : 'positive'
-                        }
-                        commodity={p.ticker.id}
-                        hideCommodity={true}
-                     />
-                     &nbsp;(
-                     <Numeric
-                        amount={(end.close / end.weighted_avg - 1) * 100}
-                        forceSign={true}
-                        suffix="%"
-                     />)
-                  </td>
-               </tr>
-             ) : null
-           }
            {
               true
               // !p.ticker.is_currency
@@ -535,14 +563,10 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                        />
                     </div>
                  </th>
-                 <td />
                  <td>
                     {end.avg_cost !== 0 &&
                        <Numeric
                           amount={end.avg_cost}
-                          className={
-                             end.avg_cost > end.close ? 'negative' : 'positive'
-                          }
                           commodity={p.ticker.id}
                           hideCommodity={true}
                        />
@@ -550,6 +574,9 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                     &nbsp;(
                     <Numeric
                        amount={(end.worth / a.end.value - 1) * 100}
+                       className={
+                          end.avg_cost > end.close ? 'negative' : 'positive'
+                       }
                        forceSign={true}
                        suffix="%"
                     />
@@ -565,6 +592,36 @@ const AccTicker: React.FC<AccTickerProps> = p => {
               </tr>
               ) : null
            }
+            {
+               !p.ticker.is_currency
+               && a.end.absshares > THRESHOLD
+               && end.weighted_avg !== 0
+               ? (
+               <tr>
+                  <th>
+                     Weighted Average
+                     <div className="tooltip">
+                        Average price at which you sold or
+                        bought shares. It does not include shares added or
+                        subtracted with no paiement, nor dividends.
+                     </div>
+                  </th>
+                  <td>
+                     <Numeric
+                        amount={end.weighted_avg}
+                        commodity={p.ticker.id}
+                        hideCommodity={true}
+                     />
+                     &nbsp;(
+                     <Numeric
+                        amount={(end.close / end.weighted_avg - 1) * 100}
+                        forceSign={true}
+                        suffix="%"
+                     />)
+                  </td>
+               </tr>
+             ) : null
+           }
             <tr>
                <th>
                   Annualized return
@@ -576,7 +633,6 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                      </p>
                   </div>
                </th>
-               <td />
                <td>
                   <Numeric
                      amount={end.annualized_return}
@@ -596,7 +652,6 @@ const AccTicker: React.FC<AccTickerProps> = p => {
                      </p>
                   </div>
                </th>
-               <td />
                <td>
                   <Numeric
                      amount={end.annualized_return_recent}

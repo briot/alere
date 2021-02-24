@@ -26,8 +26,23 @@
       position: absolute;
       text-align: left;
       white-space: normal;
-      width: 250px;
+      min-width: 250px;
+      max-width: 400px;
       z-index: var(--zindex-tooltip);
+
+      table.return {
+         border-spacing: 0;
+         border-collapse: collapse;
+         th {
+            font-weight: bold;
+         }
+         td {
+            text-align: right;
+         }
+         :is(th,td) {
+            border: 1px solid var(--shadow-color);
+         }
+      }
    }
    :is(td,th):hover .tooltip {
       display: block;
