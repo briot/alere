@@ -58,6 +58,9 @@ const useTickers = (
          + (ids ? `&accounts=${ids}` : '')
          + `&${rangeToHttp(range)}`,
       enabled: !skip,
+      options: {
+         keepPreviousData: true,
+      },
       parse: (json: TickerJSON[]) => {
          return json.map(t => ({
             ...t,
