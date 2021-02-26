@@ -72,7 +72,7 @@ const History: React.FC<HistoryProps> = p => {
                         p.ticker.accounts.map(a =>
                            <ReferenceLine
                                key={`${a.account}-wa`}
-                               y={a.end.absvalue / a.end.absshares}
+                               y={a.end.weighted_avg}
                                stroke="var(--cartesian-grid)"
                                strokeDasharray="3 3"
                                isFront={true}
@@ -84,7 +84,7 @@ const History: React.FC<HistoryProps> = p => {
                         p.ticker.accounts.map(a =>
                            <ReferenceLine
                                key={`${a.account}-ac`}
-                               y={a.end.value / a.end.shares}
+                               y={a.end.avg_cost}
                                stroke="var(--cartesian-grid)"
                                strokeDasharray="3 3"
                                isFront={true}

@@ -1,49 +1,122 @@
 from .json import JSONView
 import alere
+import bisect
 import datetime
 import django.db
 from django.db.models import Max, Min
 import math
 import yfinance as yf
 
+
+def enc(p):
+    return (None if math.isnan(p) else p)
+
 class Position:
     def __init__(self):
-        self.absvalue = 0
-        self.absshares = 0
-        self.value = 0           # how much we invested (+dividends,...)
-        self.shares = 0
-        self.balance = None      # as of maxdate
+        self.invested = 0  # investments (including reinvested dividends). POSITIVE
+        self.gains = 0     # realized gains. POSITIVE
+        self.shares = 0    # increase in number of shares (from buying,
+                           # adding for free, removing, selling,...)
+        self.absvalue = 0  # sum of absolute values of investments and gains.
+                           # does not include dividends
+        self.absshares = 0 # sum of absolute values of shares. Does not include
+                           # added or subtracted shares with no money traded
+        self.equity = 0    # networth
+
+    def _compute(self):
+        # Average price at which we sold or bought shares
+        self.weighted_avg = (
+            math.nan if self.absshares == 0
+            else self.absvalue / self.absshares
+        )
+
+        # Equivalent price for remaining shares (taking into account dividends)
+        self.avg_cost = (
+            math.nan if self.shares == 0
+            else (self.invested - self.gains) / self.shares
+        )
+
+        # Return-on-Investment since beginning
+        self.roi = (
+            math.nan if self.invested == 0
+            else (self.equity + self.gains) / self.invested
+        )
+
+        # Profit-and-Loss
+        self.pl = (
+            math.nan if self.invested == 0
+            else self.equity + self.gains - self.invested
+        )
 
     def to_json(self):
+        self._compute()
         return {
-            "absvalue": self.absvalue,
-            "absshares": self.absshares,
-            "value": self.value,
+            "avg_cost": enc(self.avg_cost),
+            "equity": enc(self.equity),
+            "gains": self.gains,
+            "invested": self.invested,
+            "pl": enc(self.pl),
+            "roi": enc(self.roi),
             "shares": self.shares,
-            "balance": self.balance,
+            "weighted_avg": enc(self.weighted_avg),
         }
+
+    def __repr__(self):
+        return str(self.to_json())
 
 class Account:
     """
     Details on an investment account
     """
-    def __init__(self, account_id):
+    def __init__(self, account_id, symbol: "Symbol"):
         self.account_id = account_id
-        self.start = Position()  # as of mindate
-        self.end = Position()    # as of maxdate
+        self.start = Position() # as of mindate
+        self.end = Position()   # as of maxdate
+        self.oldest = None      # date of oldest transaction (for annualized)
+        self.latest = None      # date of most recent transaction
+        self.symbol = symbol    # pointer to symbol
 
-        self.oldest = None       # date of oldest transaction
-        self.latest = None       # date of most recent transaction
+    def _compute(self):
+        self.end._compute()
+
+        now = datetime.datetime.now()
+
+        # Annualized total return on investment
+        if self.oldest:
+            d = (now - self.oldest).total_seconds() / 86400
+            self.annualized_return = self.end.roi ** (365 / d)
+        else:
+            self.annualized_return = math.nan
+
+        # Annualized total return since most recent transaction
+        if self.latest:
+            d = (now - self.latest).total_seconds() / 86400
+            self.annualized_return_recent = self.end.roi ** (365 / d)
+        else:
+            self.annualized_return_recent = math.nan
+
+        # Return over the period [mindate,maxdate]
+        d = self.start.equity + self.end.invested - self.start.invested
+        self.period_roi = (
+            math.nan if d == 0
+            else (self.end.equity + self.end.gains - self.start.gains) / d
+        )
 
     def to_json(self):
+        self._compute()
         return {
             "account": self.account_id,
             "start": self.start,
             "end": self.end,
             "oldest": self.oldest,
             "latest": self.latest,
+            "annualized_roi": enc(self.annualized_return),
+            "annualized_roi_recent": enc(self.annualized_return_recent),
+            "period_roi": enc(self.period_roi),
         }
 
+    def __repr__(self):
+        return str(self.to_json())
 
 class Symbol:
     """
@@ -60,7 +133,7 @@ class Symbol:
         self.source = source
         self.commodity_name = commodity_name
         self.ticker = ticker
-        self.accounts = []
+        self.accounts = []   # array of Account
         self.currency_id = currency_id
         self.stored_time = stored_time.strftime("%Y-%m-%d"),
         self.stored_price = stored_price
@@ -86,7 +159,12 @@ class Symbol:
         }
 
     def __repr__(self):
-        return "Symbol(%d, %s)" % (self.id, self.commodity_name)
+        return "Symbol(%d, %s, %s)" % (
+            self.id, self.commodity_name, self.accounts)
+
+
+def price_timestamp(d: datetime.datetime):
+    return d.timestamp() * 1e3
 
 
 class QuotesView(JSONView):
@@ -106,7 +184,7 @@ class QuotesView(JSONView):
 
             for row in q:
                 symbols[row.origin_id].prices.append(
-                    (row.date.timestamp() * 1e3,
+                    (price_timestamp(row.date),
                      row.scaled_price / row.origin.price_scale)
                 )
 
@@ -147,7 +225,7 @@ class QuotesView(JSONView):
             for s in symbols.values():
                 if s.ticker in d:
                     s.prices = [
-                        (timestamp.timestamp() * 1e3, val)
+                        (price_timestamp(timestamp), val)
                         for timestamp, val in d[s.ticker].items()
                         if not math.isnan(val)
                     ]
@@ -221,31 +299,32 @@ class QuotesView(JSONView):
 
         def next_transaction(acc, trans):
             if acc is not None:
-                acc.start.value += money_for_trans_before
-                acc.start.shares += shares_for_trans_before
-                if money_for_trans_before != 0 and shares_for_trans_before != 0:
-                    acc.start.absshares += abs(shares_for_trans_before)
-                    acc.start.absvalue += abs(money_for_trans_before)
+                if current_transaction_ts < mindate:
+                    acc.start.gains += gains
+                    acc.start.invested += invested
+                    acc.start.shares += shares
+                    if (gains + invested) != 0 and shares != 0:
+                        acc.start.absshares += abs(shares)
+                        acc.start.absvalue += abs(gains + invested)
 
-                m = money_for_trans + money_for_trans_before
-                s = shares_for_trans + shares_for_trans_before
-
-                acc.end.value += m
-                acc.end.shares += s
-                if m != 0 and s != 0:
-                    acc.end.absshares += abs(s)
-                    acc.end.absvalue += abs(m)
+                acc.end.gains += gains
+                acc.end.invested += invested
+                acc.end.shares += shares
+                if (gains + invested) != 0 and shares != 0:
+                    acc.end.absshares += abs(shares)
+                    acc.end.absvalue += abs(gains + invested)
 
             if trans is not None:
                 if trans.account_id in accs:
                     return accs[trans.account_id]
-                a = symbols[trans.account.commodity_id].add_account(
-                    Account(trans.account_id))
+                s = symbols[trans.account.commodity_id]
+                a = s.add_account(Account(trans.account_id, s))
                 accs[trans.account_id] = a
                 return a
 
         acc = None   # account the current transaction is applying to
-        current_transaction = None
+        current_transaction_id = None
+        current_transaction_ts = None
         query2 = alere.models.Accounts_Security.objects \
             .filter(account__commodity_id__in=symbols.keys()) \
             .select_related('currency', 'account')
@@ -255,25 +334,21 @@ class QuotesView(JSONView):
 
         try:
             for trans in query2:
-                if trans.transaction_id != current_transaction:
+                if trans.transaction_id != current_transaction_id:
                     acc = next_transaction(acc, trans)
-                    current_transaction = trans.transaction_id
-                    shares_for_trans_before = 0 # up to mindate
-                    money_for_trans_before = 0  # up to mindate
-                    shares_for_trans = 0        # up to maxdate
-                    money_for_trans = 0         # up to maxdate
-
-                if trans.timestamp < mindate:
-                    if trans.currency.kind == alere.models.CommodityKinds.CURRENCY:
+                    current_transaction_id = trans.transaction_id
+                    current_transaction_ts = trans.timestamp
+                    invested = 0
+                    gains = 0
+                    shares = 0
+                if trans.currency.kind == alere.models.CommodityKinds.CURRENCY:
+                    if trans.scaled_qty > 0:
+                        gains = trans.scaled_qty / trans.scale
+                    else:
                         # Need '-' because this was for another account
-                        money_for_trans_before -= trans.scaled_qty / trans.scale
-                    else:
-                        shares_for_trans_before += trans.scaled_qty / trans.scale
+                        invested -= trans.scaled_qty / trans.scale
                 else:
-                    if trans.currency.kind == alere.models.CommodityKinds.CURRENCY:
-                        money_for_trans -= trans.scaled_qty / trans.scale
-                    else:
-                        shares_for_trans += trans.scaled_qty / trans.scale
+                    shares += trans.scaled_qty / trans.scale
 
         except django.core.exceptions.EmptyResultSet:
             pass
@@ -310,7 +385,7 @@ class QuotesView(JSONView):
         """
 
         invest = []
-        current_account = Account(-1)
+        current_account = Account(-1, None)
 
         with django.db.connection.cursor() as cur:
             cur.execute(query3, [currency])
@@ -327,21 +402,49 @@ class QuotesView(JSONView):
                             is_currency=True,
                         )
                     invest.append(account_id)
-                    a = Account(account_id)
+                    s = symbols[cur_id]
+                    a = Account(account_id, s)
                     accs[account_id] = a
 
                     a.value = -value
-                    symbols[cur_id].add_account(a)
+                    s.add_account(a)
 
-        # compute networth at maxdate for the investment accounts
-        query4 = alere.models.Balances_Currency.objects.filter(
-            account_id__in=invest,
-            commodity_id=currency,
-            mindate__lte=maxdate,
-            maxdate__gt=maxdate,
-        )
-        for b in query4:
-            accs[b.account_id].end.balance = b.balance
+        # compute networth at mindate and maxdate for all accounts
+        # This is computed the database for investment accounts, but using
+        # number of shares and downloaded prices for stocks.
+        if invest:
+            query4 = alere.models.Balances_Currency.objects.filter(
+                account_id__in=invest,
+                commodity_id=currency,
+                mindate__lte=mindate,
+                maxdate__gt=mindate,
+            )
+            for b in query4:
+                accs[b.account_id].start.equity = b.balance
+
+            query4 = alere.models.Balances_Currency.objects.filter(
+                account_id__in=invest,
+                commodity_id=currency,
+                mindate__lte=maxdate,
+                maxdate__gt=maxdate,
+            )
+            for b in query4:
+                accs[b.account_id].end.equity = b.balance
+
+        for a in accs.values():
+            if a not in invest:
+                if not a.symbol.prices:
+                    # ???
+                    a.start.equity = math.nan
+                    a.end.equity = math.nan
+                else:
+                    k = [p[0] for p in a.symbol.prices]   # the timestamps
+
+                    idx = bisect.bisect(k, price_timestamp(mindate)) - 1
+                    a.start.equity = a.start.shares * a.symbol.prices[idx][1]
+
+                    idx = bisect.bisect(k, price_timestamp(maxdate)) - 1
+                    a.end.equity = a.end.shares * a.symbol.prices[idx][1]
 
         # Compute oldest transaction date for all accounts. These are the
         # transactions to or from other bank accounts (so that for instance
@@ -367,8 +470,8 @@ class QuotesView(JSONView):
         with django.db.connection.cursor() as cur:
             cur.execute(query5)
             for a, oldest, latest in cur.fetchall():
-                accs[a].oldest = datetime.datetime.fromisoformat(oldest).timestamp()
-                accs[a].latest = datetime.datetime.fromisoformat(latest).timestamp()
+                accs[a].oldest = datetime.datetime.fromisoformat(oldest)
+                accs[a].latest = datetime.datetime.fromisoformat(latest)
 
         return sorted(symbols.values(), key=lambda r: r.commodity_name)
 

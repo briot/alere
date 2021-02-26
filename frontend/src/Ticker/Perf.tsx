@@ -91,8 +91,9 @@ const Perfs: React.FC<PerfProps> = p => {
          pastValue(p.ticker, DAY_MS * 5),         // 5 days perf
       pastValue(p.ticker, DAY_MS),             // 1 day perf
       pastValue(p.ticker, 0),                  // intraday perf
-      db_from_date.getTime() !== hist[hist.length - 1].t &&  // from database
-         {
+      hist.length !== 0
+      && db_from_date.getTime() !== hist[hist.length - 1].t  // from database
+      && {
             fromDate: db_from_date,
             toDate: db_to_date,
             fromPrice: p.ticker.storedprice ?? NaN,

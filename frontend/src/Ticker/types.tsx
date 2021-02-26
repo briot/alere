@@ -6,10 +6,14 @@ export const THRESHOLD = 0.00000001;
 export type ClosePrice = [/*timestamp*/ number, /*close*/ number];
 
 interface Position {
-   absvalue: number;
-   absshares: number;
-   value: number;    //  how much we invested (including dividends)
+   avg_cost: number;
+   equity: number;   // equity at maxdate
+   gains: number;
+   invested: number; //  how much we invested (including dividends)
+   pl: number;       // profit-and-loss
+   roi: number;      // return-on-investment
    shares: number;
+   weighted_avg: number;
 }
 
 export interface AccountForTicker {
@@ -18,6 +22,9 @@ export interface AccountForTicker {
    end: Position;   // at maxdate
    oldest: number;  // date of oldest transaction
    latest: number;  // date of most recent transaction
+   annualized_roi: number;
+   annualized_roi_recent: number;
+   period_roi: number;
 }
 
 export interface Ticker {
@@ -40,14 +47,8 @@ export interface Ticker {
  */
 export interface ComputedTicker {
    close: number;     // most recent closing price
-   weighted_avg: number;
-   avg_cost: number;
-   worth: number;
-   invested: number;  // total invested
    oldest: Date;      // date of first investment
-   latest: Date;      // date of most recent investmnet
-   annualized_return: number;
-   annualized_return_recent: number;
+   latest: Date;      // date of most recent investment
 }
 
 /**
@@ -61,5 +62,4 @@ export interface RowData {
    start: ComputedTicker;
    end: ComputedTicker;
    currencyId: CommodityId;
-   periodReturn: number;
 }

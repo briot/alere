@@ -5,10 +5,14 @@ import useAccountIds, { AccountIdSet } from 'services/useAccountIds';
 import useFetch from 'services/useFetch';
 
 interface PositionJSON {
-   absvalue: number;
-   absshares: number;
-   value: number;
+   avg_cost: number;
+   equity: number;
+   gains: number;
+   invested: number;
+   pl: number;
+   roi: number;
    shares: number;
+   weighted_avg: number;
 }
 
 interface TickerJSON {
@@ -30,6 +34,9 @@ interface TickerJSON {
       end: PositionJSON;
       oldest: number;
       latest: number;
+      annualized_roi: number;
+      annualized_roi_recent: number;
+      period_roi: number;
    }[];
 }
 

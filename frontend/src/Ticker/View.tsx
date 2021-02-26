@@ -55,7 +55,7 @@ const TickerView: React.FC<TickerViewProps & ExtraProps> = p => {
       columnPL,
       columnEquity,
       columnShares,
-      columnInvested,
+      false ? columnInvested : undefined,
       columnAverageCost,
       columnWeighedAverage,
       false ? columnAnnualizedReturnRecent : undefined,

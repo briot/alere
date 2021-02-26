@@ -1,4 +1,4 @@
-import { RowData, THRESHOLD } from 'Ticker/types';
+import { RowData } from 'Ticker/types';
 import { dateForm } from 'services/utils';
 import { DateDisplay } from 'Dates';
 import Numeric from 'Numeric';
@@ -41,9 +41,9 @@ export const columnEquity: ColumnType = {
    className: 'amount',
    tooltip: () => "Value of the stock (number of shares multiplied by price)",
    cell: (r: RowData) =>
-      <Numeric amount={r.end.worth} commodity={r.currencyId} />,
+      <Numeric amount={r.acc.end.equity} commodity={r.currencyId} />,
    compare: (r1: RowData, r2: RowData) =>
-      numComp(r1.end.worth, r2.end.worth),
+      numComp(r1.acc.end.equity, r2.acc.end.equity),
 }
 
 export const columnTotalReturn: ColumnType = {
@@ -51,23 +51,24 @@ export const columnTotalReturn: ColumnType = {
    className: 'amount',
    cell: (r: RowData) =>
       <Numeric
-         amount={(r.end.worth / r.end.invested - 1) * 100
-                   /* or: (worth / a.value - 1) * 100  */}
+         amount={(r.acc.end.roi - 1) * 100}
          colored={true}
          forceSign={true}
          showArrow={true}
          suffix='%'
       />,
    compare: (r1: RowData, r2: RowData) =>
-      numComp(r1.end.worth / r1.end.invested, r2.end.worth / r2.end.invested),
+      numComp(r1.acc.end.roi, r2.acc.end.roi),
    tooltip: (r: RowData) => (
       <>
+         <p>
          Return on investment since you first invested in this
-         commodity (current value&nbsp;
-            <Numeric amount={r.end.worth} commodity={r.currencyId} />
-         <br/>
-         / total invested including withdrawals, dividends,...&nbsp;
-         <Numeric amount={r.end.invested} commodity={r.currencyId} />)
+         commodity
+         </p>
+         <p>(equity + realized gains) / investment</p>
+         (<Numeric amount={r.acc.end.equity} commodity={r.currencyId} />
+         + <Numeric amount={r.acc.end.gains} commodity={r.currencyId} />)
+         / <Numeric amount={r.acc.end.invested} commodity={r.currencyId} />
       </>
    ),
 }
@@ -78,12 +79,12 @@ export const columnAnnualizedReturn: ColumnType = {
    className: 'amount',
    cell: (r: RowData) =>
       <Numeric
-         amount={r.end.annualized_return}
+         amount={(r.acc.annualized_roi - 1) * 100}
          forceSign={true}
          suffix='%'
       />,
    compare: (r1: RowData, r2: RowData) =>
-      numComp(r1.end.annualized_return, r2.end.annualized_return),
+      numComp(r1.acc.annualized_roi, r2.acc.annualized_roi),
    tooltip: (r: RowData) => (
       <>
          <p>Since {dateForm(r.end.oldest)}</p>
@@ -101,12 +102,12 @@ export const columnPL: ColumnType = {
    title: 'Profits and Loss',
    cell: (r: RowData) =>
       <Numeric
-         amount={r.end.worth - r.end.invested}
+         amount={r.acc.end.pl}
          commodity={r.currencyId}
          forceSign={true}
       />,
    compare: (r1: RowData, r2: RowData) =>
-      numComp(r1.end.worth - r1.end.invested, r2.end.worth - r2.end.invested),
+      numComp(r1.acc.end.pl, r2.acc.end.pl),
    tooltip: (r: RowData) => "Equity minus total amount invested",
 }
 
@@ -116,12 +117,12 @@ export const columnAnnualizedReturnRecent: ColumnType = {
    className: 'amount',
    cell: (r: RowData) =>
       <Numeric
-        amount={r.end.annualized_return_recent}
+        amount={(r.acc.annualized_roi_recent - 1) * 100}
         forceSign={true}
         suffix='%'
       />,
    compare: (r1: RowData, r2: RowData) =>
-      numComp(r1.end.annualized_return_recent, r2.end.annualized_return_recent),
+      numComp(r1.acc.annualized_roi_recent, r2.acc.annualized_roi_recent),
    tooltip: (r: RowData) => (
       <>
          <p>Since {dateForm(r.end.latest)}</p>
@@ -137,9 +138,9 @@ export const columnInvested: ColumnType = {
    id: 'Invested',
    className: 'amount',
    cell: (r: RowData) =>
-      <Numeric amount={r.end.invested} commodity={r.currencyId} />,
+      <Numeric amount={r.acc.end.invested} commodity={r.currencyId} />,
    compare: (r1: RowData, r2: RowData) =>
-      numComp(r1.end.invested, r2.end.invested),
+      numComp(r1.acc.end.invested, r2.acc.end.invested),
 }
 
 export const columnWeighedAverage: ColumnType = {
@@ -147,16 +148,13 @@ export const columnWeighedAverage: ColumnType = {
    title: "Weighted Average",
    className: 'amount',
    cell: (r: RowData) =>
-      !r.ticker.is_currency
-      && r.acc.end.absshares > THRESHOLD
-      && r.end.weighted_avg !== 0
-      && <Numeric
-         amount={r.end.weighted_avg}
+      <Numeric
+         amount={r.acc.end.weighted_avg}
          commodity={r.ticker.id}
          hideCommodity={true}
       />,
    compare: (r1: RowData, r2: RowData) =>
-      numComp(r1.end.weighted_avg, r2.end.weighted_avg),
+      numComp(r1.acc.end.weighted_avg, r2.acc.end.weighted_avg),
    tooltip: () =>
      "Average price at which you sold or bought shares. It does not include shares added or subtracted with no paiement, nor dividends",
 }
@@ -167,11 +165,12 @@ export const columnAverageCost: ColumnType = {
    className: 'amount',
    cell: (r: RowData) =>
       <Numeric
-         amount={r.end.avg_cost}
+         amount={r.acc.end.avg_cost}
          commodity={r.ticker.id}
          hideCommodity={true}
       />,
-   compare: (r1: RowData, r2: RowData) => r1.end.avg_cost - r2.end.avg_cost,
+   compare: (r1: RowData, r2: RowData) =>
+      numComp(r1.acc.end.avg_cost, r2.acc.end.avg_cost),
    tooltip: () =>
       "Equivalent price for the remaining shares you own, taking into account reinvested dividends, added and removed shares,...",
 }
@@ -216,13 +215,13 @@ export const columnPeriodReturn: ColumnType = {
                   <th>Equity</th>
                   <td>
                      <Numeric
-                        amount={r.start.worth}
+                        amount={r.acc.start.equity}
                         commodity={r.currencyId}
                      />
                   </td>
                   <td>
                      <Numeric
-                        amount={r.end.worth}
+                        amount={r.acc.end.equity}
                         commodity={r.currencyId}
                      />
                   </td>
@@ -231,28 +230,43 @@ export const columnPeriodReturn: ColumnType = {
                   <th>Total invested</th>
                   <td>
                      <Numeric
-                        amount={r.acc.start.value}
+                        amount={r.acc.start.invested}
                         commodity={r.currencyId}
                      />
                   </td>
                   <td>
                      <Numeric
-                        amount={r.end.invested}
+                        amount={r.acc.end.invested}
                         commodity={r.currencyId}
                      />
                   </td>
               </tr>
               <tr>
-                  <th>Gains</th>
+                  <th>Realized Gains</th>
                   <td>
                      <Numeric
-                        amount={r.start.worth - r.start.invested}
+                        amount={r.acc.start.gains}
                         commodity={r.currencyId}
                      />
                   </td>
                   <td>
                      <Numeric
-                        amount={r.end.worth - r.end.invested}
+                        amount={r.acc.end.gains}
+                        commodity={r.currencyId}
+                     />
+                  </td>
+              </tr>
+              <tr>
+                  <th>Unrealized Gains</th>
+                  <td>
+                     <Numeric
+                        amount={r.acc.start.pl}
+                        commodity={r.currencyId}
+                     />
+                  </td>
+                  <td>
+                     <Numeric
+                        amount={r.acc.end.pl}
                         commodity={r.currencyId}
                      />
                   </td>
@@ -263,7 +277,7 @@ export const columnPeriodReturn: ColumnType = {
    ),
    cell: (r: RowData) => (
       <Numeric
-          amount={r.periodReturn * 100}
+          amount={(r.acc.period_roi - 1) * 100}
           colored={true}
           forceSign={true}
           showArrow={true}
@@ -271,6 +285,5 @@ export const columnPeriodReturn: ColumnType = {
       />
    ),
    compare: (r1: RowData, r2: RowData) =>
-      numComp(r1.periodReturn, r2.periodReturn),
+      numComp(r1.acc.period_roi, r2.acc.period_roi),
 }
-
