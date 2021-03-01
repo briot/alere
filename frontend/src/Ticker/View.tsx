@@ -49,8 +49,8 @@ const TickerView: React.FC<TickerViewProps & ExtraProps> = p => {
    const { prefs } = usePrefs();
    const data = computeTicker(p.ticker, p.acc, prefs, p.dateRange);
    const columns = [
-      columnPeriodReturn,
       columnTotalReturn,
+      columnPeriodReturn,
       columnAnnualizedReturn,
       columnPL,
       columnEquity,
