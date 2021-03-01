@@ -85,6 +85,10 @@
       table-layout: fixed;
       border-collapse: collapse;
 
+      :is(td,th):hover .tooltip {
+         display: block;
+      }
+
       td, th {
          border: 1px solid var(--shadow-color);
          text-align: center;
