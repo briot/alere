@@ -473,5 +473,5 @@ class QuotesView(JSONView):
                 accs[a].oldest = datetime.datetime.fromisoformat(oldest)
                 accs[a].latest = datetime.datetime.fromisoformat(latest)
 
-        return sorted(symbols.values(), key=lambda r: r.commodity_name)
+        return list(symbols.values())
 

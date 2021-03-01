@@ -111,7 +111,9 @@ const Investments: React.FC<InvestmentsProps> = p => {
             } as TickerPanelProps
             )
          )
-      );
+      ).filter(a => a !== undefined);
+      panels?.sort((a, b) =>
+         a.acc!.account.name.localeCompare(b.acc!.account.name));
 
       return (
          <DashboardFromPanels
