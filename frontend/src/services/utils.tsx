@@ -33,7 +33,7 @@ export const capitalize = (str: string): string => {
 export const humanDateInterval = (ms: number) => {
    const d = ms / DAY_MS;
    return ms === 0
-      ? 'most recent'
+      ? 'last'
       : (Math.abs(d - 30) < 2)
       ? '1m'
       : (Math.abs(d - 90) < 10)

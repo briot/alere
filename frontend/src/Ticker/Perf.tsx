@@ -2,7 +2,7 @@ import { Ticker } from 'Ticker/types';
 import { pastValue, PastValue } from 'Ticker/Past';
 import Numeric from 'Numeric';
 import { DateDisplay } from 'Dates';
-import { DAY_MS, humanDateInterval } from 'services/utils';
+import { DAY_MS } from 'services/utils';
 
 const PastHeader: React.FC<PastValue> = p => <th>{p.header}</th>;
 
@@ -66,15 +66,6 @@ interface PerfProps {
 }
 
 const Perfs: React.FC<PerfProps> = p => {
-   const xrange = p.dateRange.map(d => d.getTime()) as [number, number];
-   const hist =
-      p.ticker.prices
-      .filter(r => r[0] >= xrange[0] && r[0] <= xrange[1] && r[1] !== null)
-      .map(r => ({t: r[0], price: r[1]}))
-
-   const db_from_date = new Date(p.ticker.storedtime);
-   const db_to_date = new Date();
-   const db_interval = db_to_date.getTime() - db_from_date.getTime();
    const intv = (p.dateRange[1].getTime() - p.dateRange[0].getTime()) / DAY_MS;
    const perf = [
       intv >= 365 * 5 &&
@@ -91,18 +82,19 @@ const Perfs: React.FC<PerfProps> = p => {
          pastValue(p.ticker, DAY_MS * 5),         // 5 days perf
       pastValue(p.ticker, DAY_MS),             // 1 day perf
       pastValue(p.ticker, 0),                  // intraday perf
-      hist.length !== 0
-      && db_from_date.getTime() !== hist[hist.length - 1].t  // from database
-      && {
-            fromDate: db_from_date,
-            toDate: db_to_date,
-            fromPrice: p.ticker.storedprice ?? NaN,
-            toPrice: hist[hist.length - 1].price,
-            commodity: p.ticker.id,
-            header: `db (${humanDateInterval(db_interval)})`,
-            show_perf: true,
-         },
    ];
+
+   if (p.ticker.prices.length === 0) {
+      return null;
+//         <table>
+//            <thead>
+//               <tr><td>&nbsp;</td></tr>
+//            </thead>
+//            <tbody>
+//               <tr><td>&nbsp;</td></tr>
+//            </tbody>
+//         </table>
+   }
 
    return (
       <table>

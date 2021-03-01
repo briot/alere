@@ -22,9 +22,6 @@ interface TickerJSON {
    source: string;
    is_currency: boolean;
 
-   storedtime: string;   // timestamp of last stored price
-   storedprice: number|null;
-
    // sorted chronologically, given in the currency used in the query
    prices: ClosePrice[];
 
@@ -33,9 +30,7 @@ interface TickerJSON {
       start: PositionJSON;
       end: PositionJSON;
       oldest: number;
-      latest: number;
       annualized_roi: number;
-      annualized_roi_recent: number;
       period_roi: number;
    }[];
 }

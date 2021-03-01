@@ -21,9 +21,7 @@ export interface AccountForTicker {
    start: Position; // at mindate
    end: Position;   // at maxdate
    oldest: number;  // date of oldest transaction
-   latest: number;  // date of most recent transaction
    annualized_roi: number;
-   annualized_roi_recent: number;
    period_roi: number;
 }
 
@@ -33,9 +31,6 @@ export interface Ticker {
    ticker: string;
    source: string;
    is_currency: boolean;
-
-   storedtime: string;   // timestamp of last stored price
-   storedprice: number|null;
 
    // sorted chronologically, given in the currency used in the query
    prices: ClosePrice[];
@@ -48,7 +43,6 @@ export interface Ticker {
 export interface ComputedTicker {
    close: number;     // most recent closing price
    oldest: Date;      // date of first investment
-   latest: Date;      // date of most recent investment
 }
 
 /**

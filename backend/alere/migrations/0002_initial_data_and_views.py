@@ -270,36 +270,100 @@ class Migration(migrations.Migration):
               AND alr_prices.date=latest.date
         ;
 
-        --  Return all accounts that trade securities, along with the number of
-        --  shares (currently own and traded over time) and total amount spent,
-        --  so that we can compute average prices for instance.
-        DROP VIEW IF EXISTS alr_accounts_security;
-        CREATE VIEW alr_accounts_security AS
+        --  For all accounts, compute the total amount invested (i.e. money
+        --  transfered from other user accounts) and realized gains (i.e.
+        --  money transferred to other user accounts).
+        --
+        --  One difficulty (!!! not handled here) is if multiple currencies
+        --  are used over several transactions, though this is unlikely (a stock
+        --  is traded in one currency).
+
+        DROP VIEW IF EXISTS alr_invested;
+        CREATE VIEW alr_invested AS
            SELECT
               row_number() OVER () as id,   --  for django's sake
-              splits_for_account.transaction_id,
-              splits_for_account.account_id,
-              t.timestamp,
-              currency.commodity_id as currency_id,
-              currency.commodity_scu as scale,
-              SUM(all_splits.scaled_qty) as scaled_qty
-           FROM
-              alr_splits splits_for_account
-              JOIN alr_transactions t
-                 ON (splits_for_account.transaction_id=t.id)
-              JOIN alr_splits all_splits
-                 ON (all_splits.transaction_id=t.id)
-              JOIN alr_accounts currency
-                 ON (currency.id=all_splits.account_id)
-           WHERE
-              --  Only money to or from user accounts, since otherwise the
-              --  sum is 0
-              currency.kind_id IN ({networth_flags})
-           GROUP BY currency.commodity_id, scale,
-              splits_for_account.transaction_id,
-              splits_for_account.account_id
-           ORDER BY splits_for_account.transaction_id
+              s.account_id as account_id,   --  account for which we compute
+              s.post_date as mindate,
+              COALESCE(
+                 max(s.post_date)
+                    OVER (PARTITION BY s.account_id
+                          ORDER by s.post_date
+                          ROWS BETWEEN 1 FOLLOWING AND 1 FOLLOWING),
+                 '2999-12-31 00:00:00'
+                ) AS maxdate,
+              FIRST_VALUE(s.post_date) OVER (PARTITION BY s.account_id)
+                 AS first_date,
+              SUM(CASE WHEN s2.qty < 0 THEN -s2.qty ELSE 0 END)
+                 OVER (PARTITION BY s.account_id
+                       ORDER BY s.post_date
+                       ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+                 AS invested,
+              SUM(CASE WHEN s2.qty > 0 THEN s2.qty ELSE 0 END)
+                 OVER (PARTITION BY s.account_id
+                       ORDER BY s.post_date
+                       ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+                 AS realized_gain,
+              SUM(CASE WHEN s2.qty <> 0 AND s.scaled_qty <> 0
+                      THEN abs(s2.qty) ELSE 0 END)
+                 OVER (PARTITION BY s.account_id
+                       ORDER BY s.post_date
+                       ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+                 AS invested_for_shares,
+              CAST(SUM(CASE WHEN s2.qty <> 0 AND s.scaled_qty <> 0
+                       THEN abs(s.scaled_qty) ELSE 0 END)
+                    OVER (PARTITION BY s.account_id
+                          ORDER BY s.post_date
+                          ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+                   AS FLOAT)
+                 / sa.commodity_scu
+                 AS shares_transacted
+           FROM alr_splits s,
+                alr_accounts sa,
+
+              --  All splits that apply to a Networth account
+              (SELECT s3.transaction_id,
+                  CAST(s3.scaled_qty AS FLOAT) / a.commodity_scu AS qty,
+                  s3.account_id,
+                  s3.post_date
+               FROM alr_splits s3, alr_accounts a
+               WHERE
+                 s3.account_id = a.id
+                 AND a.kind_id IN ('B','A','S','I','L','EQ')    --  networth accounts
+              ) s2
+           WHERE s.transaction_id = s2.transaction_id
+            AND s.account_id = sa.id
+            AND s.account_id <> s2.account_id   --  not the same split
         ;
+
+       --  For all accounts, compute the return on investment at any point in
+       --  time, by combining the balance at that time with the total amount
+       --  invested that far and realized gains moved out of the account.
+       DROP VIEW IF EXISTS alr_roi;
+       CREATE VIEW alr_roi AS
+           SELECT
+              row_number() OVER () as id,   --  for django's sake
+              i.account_id,
+              max(b.mindate, i.mindate) as mindate,
+              min(b.maxdate, i.maxdate) as maxdate,
+              i.first_date,
+              b.balance,
+              b.commodity_id,
+              b.shares,
+              i.invested,
+              i.realized_gain,
+              (b.balance + i.realized_gain) / (i.invested) as roi,
+              b.balance + i.realized_gain - i.invested as pl,
+              (i.invested - i.realized_gain) / b.shares as average_cost,
+              (i.invested_for_shares / i.shares_transacted) as weighted_average
+           FROM alr_balances_currency b,
+              alr_invested i
+           WHERE b.account_id=i.account_id
+
+               --  intervals intersect
+             AND b.mindate < i.maxdate
+             AND i.mindate < b.maxdate
+        ;
+
         """
         )
     ]

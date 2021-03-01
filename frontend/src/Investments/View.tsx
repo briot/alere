@@ -8,7 +8,7 @@ import { DashboardFromPanels } from 'Dashboard';
 import AccountName from 'Account';
 import ListWithColumns, { Column, LogicalRow } from 'List/ListWithColumns';
 import { columnEquity, columnTotalReturn, columnAnnualizedReturn,
-   columnAnnualizedReturnRecent, columnPL, columnWeighedAverage,
+   columnPL, columnWeighedAverage,
    columnAverageCost, columnPeriodReturn,
    columnShares, columnInvested } from 'Ticker/Data';
 import useTickers from 'services/useTickers';
@@ -27,36 +27,27 @@ export interface InvestmentsProps {
    range: DateRange;
 }
 
-const columnTickerName: Column<RowData, InvestmentsProps> = {
-   id: 'Ticker',
-   cell: (r: RowData) => r.ticker.name,
-   compare: (r1: RowData, r2: RowData) =>
-      r1.ticker.name.toLowerCase().localeCompare(r2.ticker.name.toLowerCase()),
-}
-
 const columnAccountName: Column<RowData, InvestmentsProps> = {
    id: 'Account',
    cell: (r: RowData) =>
-      <AccountName id={r.acc.account.id} account={r.acc.account} fullName={true} />,
+      <AccountName id={r.acc.account.id} account={r.acc.account} fullName={false} />,
    compare: (r1: RowData, r2: RowData) =>
-      r1.acc.account.fullName().localeCompare(r2.acc.account.fullName()),
+      r1.acc.account.name.localeCompare(r2.acc.account.name),
 };
 
 // const columnGainLastYear: Column<RowData, InvestmentsProps> = {
 
 const columns: Column<RowData, InvestmentsProps>[] = [
-   columnTickerName,
    columnAccountName,
    columnEquity,
    columnShares,
+   columnTotalReturn,
+   columnPeriodReturn,
    columnInvested,
    columnPL,
-   columnPeriodReturn,
-   columnTotalReturn,
    columnAnnualizedReturn,
-   columnAnnualizedReturnRecent,
-   columnWeighedAverage,
    columnAverageCost,
+   columnWeighedAverage,
 ];
 
 const Investments: React.FC<InvestmentsProps> = p => {

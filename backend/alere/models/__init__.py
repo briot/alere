@@ -161,8 +161,10 @@ class AccountFlags(models.TextChoices):
     # see in the investments page.
 
     EQUITY = 'EQ'
-    # Money used to initial the database. This will typically contain opening
-    # balances for accounts opened before you started using this software.
+    # Money used to initialized the database. This will typically contain
+    # opening balances for accounts opened before you started using this
+    # software. Should also be used for reconciliation, when you do not know
+    # where the money came from.
 
     @classmethod
     def expenses(klass):
@@ -176,6 +178,13 @@ class AccountFlags(models.TextChoices):
     def income_tax(klass):
         return (
             klass.INCOME_TAX,
+        )
+
+    @classmethod
+    def trading(klass):
+        return (
+            klass.INVESTMENT,
+            klass.STOCK,
         )
 
     @classmethod
@@ -660,27 +669,38 @@ class Latest_Price(AlereModel):
         db_table = prefix + "latest_price"
 
 
-class Accounts_Security(AlereModel):
-    transaction = models.ForeignKey(
-        Transactions, on_delete=models.DO_NOTHING, related_name='+')
-    currency = models.ForeignKey(
-        Commodities, on_delete=models.DO_NOTHING, related_name='+')
+class RoI(AlereModel):
+    """
+    Return-on-Investment at any point in time
+    """
+    mindate = models.DateTimeField()   # included in range
+    maxdate = models.DateTimeField()   # not included in range
+    first_date = models.DateTimeField()  # date of oldest transaction
     account = models.ForeignKey(
-        Accounts, on_delete=models.DO_NOTHING, related_name='+')
-    scale = models.IntegerField()
-    timestamp = models.DateTimeField()   # of transaction
+        Accounts, on_delete=models.DO_NOTHING, related_name='roi')
+    commodity = models.ForeignKey(
+        Commodities,
+        on_delete=models.DO_NOTHING,
+        related_name='+'
+    )
+    balance = models.FloatField() # The current balance, in commodity
+    shares = models.FloatField()  # Number of shares owned
 
-    scaled_qty = models.IntegerField()
-    # Sum of the values of all splits performed in `currency`
+    invested = models.FloatField()      # Amount invested so far, unscaled
+    realized_gain = models.FloatField() # Realized gains so far, unscaled
+    roi = models.FloatField()           # Return on Investment so far, unscaled
+    pl = models.FloatField()            # P&L so far, unscaled
+
+    average_cost = models.FloatField()
+    # average cost for one share, taking into account the amount invested and
+    # the realized gains so far.
+
+    weighted_average = models.FloatField()
+    # average price we bought or sold shares
 
     class Meta:
         managed = False
-        db_table = prefix + "accounts_security"
+        db_table = "roi_tmp"
 
     def __str__(self):
-        return "Accounts_Security(transaction=%s, currency=%s, account=%s)" % (
-            self.transaction_id,
-            self.currency_id,
-            self.account_id
-        )
-
+        return "RoI([%s,%s), roi=%s)" % (self.mindate, self.maxdate, self.roi)

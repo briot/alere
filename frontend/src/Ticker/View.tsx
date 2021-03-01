@@ -5,8 +5,7 @@ import { computeTicker } from 'Ticker/Compute';
 import Perfs from 'Ticker/Perf';
 import History from 'Ticker/History';
 import { ColumnType, columnEquity, columnTotalReturn,
-   columnAnnualizedReturnRecent, columnAnnualizedReturn,
-   columnShares, columnAverageCost, columnPeriodReturn,
+   columnAnnualizedReturn, columnShares, columnAverageCost, columnPeriodReturn,
    columnWeighedAverage, columnPL, columnInvested } from 'Ticker/Data';
 import './Ticker.scss';
 
@@ -58,13 +57,11 @@ const TickerView: React.FC<TickerViewProps & ExtraProps> = p => {
       false ? columnInvested : undefined,
       columnAverageCost,
       columnWeighedAverage,
-      false ? columnAnnualizedReturnRecent : undefined,
    ];
 
    return (
    <>
       {
-         p.ticker.prices.length > 0 &&
          !p.hideHistory &&
          <History
             ticker={p.ticker}
@@ -74,7 +71,6 @@ const TickerView: React.FC<TickerViewProps & ExtraProps> = p => {
          />
       }
       {
-         p.ticker.prices.length > 0 &&
          <div className="perf">
             <Perfs {...p} />
          </div>

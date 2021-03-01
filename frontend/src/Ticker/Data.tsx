@@ -28,7 +28,7 @@ export const columnShares: ColumnType = {
    className: 'amount',
    cell: (r: RowData) =>
       <Numeric
-         amount={r.acc.end.shares}
+         amount={r.ticker.is_currency ? NaN : r.acc.end.shares}
          commodity={r.acc.account.commodity}
          hideCommodity={true}
       />,
@@ -111,29 +111,6 @@ export const columnPL: ColumnType = {
    tooltip: (r: RowData) => "Equity minus total amount invested",
 }
 
-export const columnAnnualizedReturnRecent: ColumnType = {
-   id: 'RetRec/y',
-   title: 'Annualized return since most recent trade',
-   className: 'amount',
-   cell: (r: RowData) =>
-      <Numeric
-        amount={(r.acc.annualized_roi_recent - 1) * 100}
-        forceSign={true}
-        suffix='%'
-      />,
-   compare: (r1: RowData, r2: RowData) =>
-      numComp(r1.acc.annualized_roi_recent, r2.acc.annualized_roi_recent),
-   tooltip: (r: RowData) => (
-      <>
-         <p>Since {dateForm(r.end.latest)}</p>
-         <p>Equivalent annualized return (assuming compound
-            interest), as if the total amount had been invested
-            at the time of the last transaction
-         </p>
-      </>
-   ),
-}
-
 export const columnInvested: ColumnType = {
    id: 'Invested',
    className: 'amount',
@@ -149,7 +126,7 @@ export const columnWeighedAverage: ColumnType = {
    className: 'amount',
    cell: (r: RowData) =>
       <Numeric
-         amount={r.acc.end.weighted_avg}
+         amount={r.ticker.is_currency ? NaN : r.acc.end.weighted_avg}
          commodity={r.ticker.id}
          hideCommodity={true}
       />,
@@ -165,7 +142,7 @@ export const columnAverageCost: ColumnType = {
    className: 'amount',
    cell: (r: RowData) =>
       <Numeric
-         amount={r.acc.end.avg_cost}
+         amount={r.ticker.is_currency ? NaN : r.acc.end.avg_cost}
          commodity={r.ticker.id}
          hideCommodity={true}
       />,

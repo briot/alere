@@ -57,7 +57,7 @@ const History: React.FC<HistoryProps> = p => {
                          dataKey="price"
                          type="number"
                          domain={["auto", "auto"]}
-                         hide={false}
+                         hide={hist.length === 0}
                          orientation="right"
                          tickFormatter={priceForm}
                      />

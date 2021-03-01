@@ -13,11 +13,9 @@ const computeAtDate = (
 ): ComputedTicker => {
    const price = pastValue(ticker, ms_elapsed);
    const oldest = new Date(a.oldest * 1000);
-   const latest = new Date(a.latest * 1000);
    return {
-      close: price.toPrice || ticker.storedprice || NaN,
+      close: price.toPrice || NaN,
       oldest,
-      latest,
    };
 }
 
