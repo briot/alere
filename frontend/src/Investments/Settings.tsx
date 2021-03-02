@@ -10,6 +10,8 @@ const Settings: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
    const changeAC = (showACLine: boolean) => p.save?.({ showACLine });
    const changeTable = (asTable: boolean) => p.save?.({ asTable });
    const changeRange = (range: DateRange) => p.save({ range });
+   const changeROIGraph = (s: boolean) => p.save({ hideROIGraph: !s });
+   const changePriceGraph = (s: boolean) => p.save({ hidePriceGraph: !s });
    return (
       <fieldset>
          <legend>Investments</legend>
@@ -22,6 +24,16 @@ const Settings: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
              checked={p.props.hideIfNoShare ?? false}
              onChange={changeHide}
              text="Hide no longer traded stocks"
+         />
+         <Checkbox
+             checked={!p.props.hidePriceGraph}
+             onChange={changePriceGraph}
+             text="Show Price graph"
+         />
+         <Checkbox
+             checked={!p.props.hideROIGraph}
+             onChange={changeROIGraph}
+             text="Show ROI graph"
          />
          <Checkbox
              checked={p.props.showWALine ?? false}

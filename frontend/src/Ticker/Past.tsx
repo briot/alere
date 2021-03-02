@@ -1,6 +1,6 @@
 import * as d3Array from 'd3-array';
 import { CommodityId } from 'services/useAccounts';
-import { ClosePrice, Ticker } from 'Ticker/types';
+import { AccountForTicker, ClosePrice, Ticker } from 'Ticker/types';
 import { humanDateInterval } from 'services/utils';
 
 const bisect = d3Array.bisector((d: ClosePrice) => d[0]).right;
@@ -21,9 +21,10 @@ export interface PastValue  {
 
 export const pastValue = (
    ticker: Ticker,
+   acc: AccountForTicker,
    ms: number,              // how far back in the past
 ): PastValue => {
-   const prices = ticker.prices;
+   const prices = acc.prices;
    const now = prices[prices.length - 1]?.[0] || null;
    const close = prices[prices.length - 1]?.[1] || NaN;
    const idx = now === null

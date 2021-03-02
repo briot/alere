@@ -3,7 +3,11 @@ import { Account, CommodityId } from 'services/useAccounts';
 //  When do we consider a number of shares to be zero (for rounding errors)
 export const THRESHOLD = 0.00000001;
 
-export type ClosePrice = [/*timestamp*/ number, /*close*/ number];
+export type ClosePrice = [
+   number,  // timestamp
+   number,  // price
+   number,  // return-on-investment
+];
 
 interface Position {
    avg_cost: number;
@@ -23,6 +27,9 @@ export interface AccountForTicker {
    oldest: number;  // date of oldest transaction
    annualized_roi: number;
    period_roi: number;
+
+   // sorted chronologically, given in the currency used in the query
+   prices: ClosePrice[];
 }
 
 export interface Ticker {
@@ -31,9 +38,6 @@ export interface Ticker {
    ticker: string;
    source: string;
    is_currency: boolean;
-
-   // sorted chronologically, given in the currency used in the query
-   prices: ClosePrice[];
    accounts: AccountForTicker[];
 }
 

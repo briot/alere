@@ -79,23 +79,27 @@
       fill: var(--panel-fg-low-contrast);
    }
 
-   .perf table {
-      margin-top: 10px;
-      width: 100%;
-      table-layout: fixed;
-      border-collapse: collapse;
+   .perf {
+      min-height: 4em;
 
-      :is(td,th):hover .tooltip {
-         display: block;
-      }
-
-      td, th {
-         border: 1px solid var(--shadow-color);
-         text-align: center;
-      }
-
-      th {
-         font-weight: bold;
+      table {
+         margin-top: 10px;
+         width: 100%;
+         table-layout: fixed;
+         border-collapse: collapse;
+   
+         :is(td,th):hover .tooltip {
+            display: block;
+         }
+   
+         td, th {
+            border: 1px solid var(--shadow-color);
+            text-align: center;
+         }
+   
+         th {
+            font-weight: bold;
+         }
       }
    }
 }

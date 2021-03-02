@@ -1,4 +1,4 @@
-import { Ticker } from 'Ticker/types';
+import { AccountForTicker, Ticker } from 'Ticker/types';
 import { pastValue, PastValue } from 'Ticker/Past';
 import Numeric from 'Numeric';
 import { DateDisplay } from 'Dates';
@@ -60,6 +60,7 @@ const Past: React.FC<PastValue> = p => {
 
 interface PerfProps {
    ticker: Ticker;
+   acc: AccountForTicker;
    dateRange: [Date, Date];
    showWALine?: boolean;
    showACLine?: boolean;
@@ -69,31 +70,23 @@ const Perfs: React.FC<PerfProps> = p => {
    const intv = (p.dateRange[1].getTime() - p.dateRange[0].getTime()) / DAY_MS;
    const perf = [
       intv >= 365 * 5 &&
-         pastValue(p.ticker, DAY_MS * 365 * 5),   // 5 year perf
+         pastValue(p.ticker, p.acc, DAY_MS * 365 * 5),   // 5 year perf
       intv >= 365 &&
-         pastValue(p.ticker, DAY_MS * 365),       // 1 year perf
+         pastValue(p.ticker, p.acc, DAY_MS * 365),       // 1 year perf
       intv >= 365 / 2 &&
-         pastValue(p.ticker, DAY_MS * 365 / 2),   // 6 months perf
+         pastValue(p.ticker, p.acc, DAY_MS * 365 / 2),   // 6 months perf
       Math.abs(intv - 365 / 4) < 4 &&
-         pastValue(p.ticker, DAY_MS * 365 / 4),   // 3 months perf
+         pastValue(p.ticker, p.acc, DAY_MS * 365 / 4),   // 3 months perf
       intv >= 365 / 12 &&
-         pastValue(p.ticker, DAY_MS * 365 / 12),  // 1 month perf
+         pastValue(p.ticker, p.acc, DAY_MS * 365 / 12),  // 1 month perf
       intv >= 5 &&
-         pastValue(p.ticker, DAY_MS * 5),         // 5 days perf
-      pastValue(p.ticker, DAY_MS),             // 1 day perf
-      pastValue(p.ticker, 0),                  // intraday perf
+         pastValue(p.ticker, p.acc, DAY_MS * 5),         // 5 days perf
+      pastValue(p.ticker, p.acc, DAY_MS),                // 1 day perf
+      pastValue(p.ticker, p.acc, 0),                     // intraday perf
    ];
 
-   if (p.ticker.prices.length === 0) {
+   if (p.acc.prices.length === 0) {
       return null;
-//         <table>
-//            <thead>
-//               <tr><td>&nbsp;</td></tr>
-//            </thead>
-//            <tbody>
-//               <tr><td>&nbsp;</td></tr>
-//            </tbody>
-//         </table>
    }
 
    return (

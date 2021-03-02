@@ -11,7 +11,7 @@ const computeAtDate = (
    a: AccountForTicker,
    ms_elapsed: number,  // how long ago was the "start" data
 ): ComputedTicker => {
-   const price = pastValue(ticker, ms_elapsed);
+   const price = pastValue(ticker, a, ms_elapsed);
    const oldest = new Date(a.oldest * 1000);
    return {
       close: price.toPrice || NaN,

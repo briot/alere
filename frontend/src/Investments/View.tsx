@@ -22,6 +22,8 @@ export interface InvestmentsProps {
    hideIfNoShare: boolean;
    showWALine: boolean;
    showACLine: boolean;
+   hideROIGraph?: boolean;
+   hidePriceGraph?: boolean;
    fromProviders: boolean; // whether to load prices from source provides
    asTable?: boolean;
    range: DateRange;
@@ -99,6 +101,8 @@ const Investments: React.FC<InvestmentsProps> = p => {
                dateRange: dateRange,
                showWALine: p.showWALine,
                showACLine: p.showACLine,
+               hideROIGraph: p.hideROIGraph,
+               hidePriceGraph: p.hidePriceGraph,
             } as TickerPanelProps
             )
          )

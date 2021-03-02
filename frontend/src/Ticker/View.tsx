@@ -37,6 +37,8 @@ export interface TickerViewProps {
    showWALine: boolean;
    showACLine: boolean;
    hideHistory?: boolean;
+   hideROIGraph?: boolean;
+   hidePriceGraph?: boolean;
    dateRange: [Date, Date];
 }
 interface ExtraProps {
@@ -65,16 +67,17 @@ const TickerView: React.FC<TickerViewProps & ExtraProps> = p => {
          !p.hideHistory &&
          <History
             ticker={p.ticker}
+            acc={p.acc}
             dateRange={p.dateRange}
             showWALine={p.showWALine}
             showACLine={p.showACLine}
+            showPriceGraph={!p.hidePriceGraph}
+            showROIGraph={!p.hideROIGraph}
          />
       }
-      {
-         <div className="perf">
-            <Perfs {...p} />
-         </div>
-      }
+      <div className="perf">
+         <Perfs {...p} />
+      </div>
       <div className="items">
          {
             columns.map(c => c && from_col(c, data))

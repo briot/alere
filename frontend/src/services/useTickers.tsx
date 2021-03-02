@@ -22,9 +22,6 @@ interface TickerJSON {
    source: string;
    is_currency: boolean;
 
-   // sorted chronologically, given in the currency used in the query
-   prices: ClosePrice[];
-
    accounts: {
       account: AccountId;
       start: PositionJSON;
@@ -32,6 +29,9 @@ interface TickerJSON {
       oldest: number;
       annualized_roi: number;
       period_roi: number;
+
+      // sorted chronologically, given in the currency used in the query
+      prices: ClosePrice[];
    }[];
 }
 
