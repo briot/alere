@@ -19,7 +19,7 @@ interface TickerJSON {
    id: CommodityId;
    name: string;
    ticker: string;
-   source: string;
+   source: number;
    is_currency: boolean;
 
    accounts: {

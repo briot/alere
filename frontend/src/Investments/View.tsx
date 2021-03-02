@@ -12,6 +12,7 @@ import { columnEquity, columnTotalReturn, columnAnnualizedReturn,
    columnAverageCost, columnPeriodReturn,
    columnShares, columnInvested } from 'Ticker/Data';
 import useTickers from 'services/useTickers';
+import usePriceSources from 'services/usePriceSources';
 import './Investments.scss';
 
 /**
@@ -59,6 +60,19 @@ const Investments: React.FC<InvestmentsProps> = p => {
       'all' /* accountIds */, p.range, p.hideIfNoShare);
    const doNothing = React.useCallback(() => {}, []);
    const [sorted, setSorted] = React.useState('');
+   const sources = usePriceSources();
+
+   const columnPriceSource: Column<RowData, InvestmentsProps> = {
+      id: 'Source',
+      cell: (r: RowData) => sources[r.ticker.source]?.name,
+      compare: (r1: RowData, r2: RowData) =>
+         (sources[r1.ticker.source].name ?? '')
+            .localeCompare(sources[r2.ticker.source].name ?? ''),
+   }
+   const cols = React.useMemo(
+      () => [...columns, columnPriceSource],
+      [columns, columnPriceSource],
+   );
 
    // We compute the date range once for all tickers, so that they all have
    // exactly the same range (otherwise resolving "now" might result in
@@ -77,7 +91,7 @@ const Investments: React.FC<InvestmentsProps> = p => {
       return (
          <ListWithColumns
             className="investmentsTable"
-            columns={columns}
+            columns={cols}
             rows={rows}
             settings={p}
             defaultExpand={true}

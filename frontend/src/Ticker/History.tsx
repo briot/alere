@@ -76,7 +76,7 @@ const History: React.FC<HistoryProps> = p => {
                             dataKey="roi"
                             isAnimationActive={false}
                             connectNulls={true}
-                            stroke="black"
+                            stroke="var(--cartesian-grid2)"
                             dot={false}
                             yAxisId="left"
                         />

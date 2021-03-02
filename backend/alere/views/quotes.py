@@ -98,7 +98,7 @@ class Symbol:
     Details on a traded symbol
     """
     def __init__(self, commodity_id, commodity_name, ticker,
-            source: str,
+            source: int,
             is_currency: bool,
             price_scale: int
         ):
@@ -280,8 +280,7 @@ class QuotesView(JSONView):
         #########
         # First step: find all commodities
 
-        query = alere.models.Commodities.objects \
-            .select_related('quote_source')
+        query = alere.models.Commodities.objects.all()
 
         if commodities:
             query = query.filter(
@@ -292,7 +291,7 @@ class QuotesView(JSONView):
                 commodity_id=c.id,
                 commodity_name=c.name,
                 ticker=c.quote_symbol,
-                source=c.quote_source.name if c.quote_source else None,
+                source=c.quote_source_id or 1,
                 is_currency=c.kind == alere.models.CommodityKinds.CURRENCY,
                 price_scale=c.price_scale,
             )

@@ -16,6 +16,7 @@ from .views.networth import NetworthView
 from .views.networth_history import NetworthHistoryView
 from .views.plots import CategoryPlotView
 from .views.prices import PriceHistory
+from .views.price_sources import PriceSourceList
 from .views.quotes import QuotesView
 
 
@@ -48,6 +49,7 @@ def send_csrf(request):
 urlpatterns = [
     # path('admin/', admin.site.urls),
     path('api/account/list', AccountList.as_view()),
+    path('api/price_source/list', PriceSourceList.as_view()),
     path('api/ledger/<str:ids>', LedgerView.as_view()),
     path('api/prices/<str:accountId>', PriceHistory.as_view()),
     re_path('api/ledger/(<str:id>)?', LedgerView.as_view()),
