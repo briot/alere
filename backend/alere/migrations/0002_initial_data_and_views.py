@@ -219,28 +219,6 @@ class Migration(migrations.Migration):
                AND alr_commodities.kind='C'
         ;
 
-        DROP VIEW IF EXISTS alr_accounts_list;
-        CREATE VIEW alr_accounts_list AS
-            SELECT
-               alr_accounts.id as id,
-               alr_accounts.name as name,
-               alr_accounts.parent_id,
-               alr_accounts.last_reconciled,
-               alr_accounts.kind_id,
-               alr_accounts.commodity_id,
-               alr_accounts.commodity_scu,
-               alr_institutions.id as institution_id,
-               alr_accounts.closed,
-               alr_accounts.description,
-               alr_accounts.number,
-               alr_accounts.opening_date,
-               alr_accounts.iban
-            FROM
-               alr_accounts
-               LEFT JOIN alr_institutions
-                  ON (alr_accounts.institution_id=alr_institutions.id)
-        ;
-
         DROP VIEW IF EXISTS alr_splits_with_value;
         CREATE VIEW alr_splits_with_value AS
             SELECT

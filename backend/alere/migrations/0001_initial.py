@@ -13,24 +13,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='AccountLists',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.TextField()),
-                ('last_reconciled', models.DateTimeField()),
-                ('opening_date', models.DateField()),
-                ('commodity_scu', models.IntegerField()),
-                ('closed', models.BooleanField()),
-                ('iban', models.TextField()),
-                ('description', models.TextField()),
-                ('number', models.TextField()),
-            ],
-            options={
-                'db_table': 'alr_accounts_list',
-                'managed': False,
-            },
-        ),
-        migrations.CreateModel(
             name='Balances',
             fields=[
                 ('id', models.BigIntegerField(primary_key=True, serialize=False)),

@@ -1,64 +1,31 @@
-from django.db import models
 from .json import JSONView
 import alere
 
 
-class AccountLists(alere.models.AlereModel):
-    name = models.TextField()
-    parent = models.ForeignKey(
-        alere.models.Accounts, on_delete=models.DO_NOTHING, related_name='+'
-    )
-    last_reconciled = models.DateTimeField()
-    opening_date = models.DateField()
-    kind = models.ForeignKey(
-        alere.models.AccountKinds,
-        on_delete=models.DO_NOTHING,
-        related_name='+')
-    commodity = models.ForeignKey(
-        alere.models.Commodities,
-        on_delete=models.DO_NOTHING,
-        related_name='+')
-    commodity_scu = models.IntegerField()
-    institution = models.ForeignKey(
-        alere.models.Institutions,
-        on_delete=models.DO_NOTHING,
-        null=True,
-        related_name='+')
-    closed = models.BooleanField()
-    iban = models.TextField()
-    description = models.TextField()
-    number = models.TextField()
-
-    class Meta:
-        db_table = "alr_accounts_list"
-        managed = False
-
-    def to_json(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "favorite": False,   # ???
-            "commodityId": self.commodity_id,
-            "commodity_scu": self.commodity_scu,
-            "kindId": self.kind_id,
-            "closed": self.closed,
-            "iban": self.iban,
-            "parent": self.parent_id,
-            "description": self.description,
-            "number": self.number,
-            "opening_date": self.opening_date,
-            "lastReconciled": (
-                self.last_reconciled.date()
-                if self.last_reconciled
-                else None),
-            "institution": self.institution_id,
-        }
-
-
 class AccountList(JSONView):
     def get_json(self, params):
-        accounts = list(AccountLists.objects
-            .select_related('kind', 'commodity').all())
+        accounts = [
+            {
+                "id": a.id,
+                "name": a.name,
+                "favorite": False,   # ???
+                "commodityId": a.commodity_id,
+                "commodity_scu": a.commodity_scu,
+                "kindId": a.kind_id,
+                "closed": a.closed,
+                "iban": a.iban,
+                "parent": a.parent_id,
+                "description": a.description,
+                "number": a.number,
+                "opening_date": a.opening_date,
+                "lastReconciled": (
+                    a.last_reconciled.date()
+                    if a.last_reconciled
+                    else None),
+                "institution": a.institution_id,
+            }
+            for a in alere.models.Accounts.objects.all()
+        ]
 
         commodities = [
             {
