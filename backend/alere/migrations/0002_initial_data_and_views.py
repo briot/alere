@@ -6,14 +6,16 @@ from alere import models
 import sys
 
 
-networth_flags = ",".join("'%s'" % f for f in models.AccountFlags.networth())
+invested_flags = ",".join("'%s'" % f for f in models.AccountFlags.invested())
 
 
 def create_views(apps, schema_editor):
     models.PriceSources.objects.create(
+        id=models.PriceSources.USER,
         name="User",
     )
     models.PriceSources.objects.create(
+        id=models.PriceSources.YAHOO,
         name="Yahoo Finance",
     )
 
@@ -269,6 +271,130 @@ class Migration(migrations.Migration):
             WHERE alr_prices.origin_id=latest.origin_id
               AND alr_prices.date=latest.date
         ;
+
+        --  All the splits that transfer money between two accounts (they do
+        --  not modify overall networth).
+
+        DROP VIEW IF EXISTS alr_internal_splits;
+        CREATE VIEW alr_internal_splits AS
+           SELECT s3.transaction_id,
+              CAST(s3.scaled_qty AS FLOAT) / a.commodity_scu AS qty,
+              s3.account_id,
+              s3.post_date
+           FROM alr_splits s3 JOIN alr_accounts a ON (s3.account_id = a.id)
+           WHERE a.kind_id IN ({invested_flags})
+        ;
+
+        --  For all accounts, compute the total amount invested (i.e. money
+        --  transfered from other user accounts) and realized gains (i.e.
+        --  money transferred to other user accounts).
+        --
+        --  One difficulty (!!! not handled here) is if multiple currencies
+        --  are used over several transactions, though this is unlikely (a
+        --  stock is traded in one currency).
+        --
+        --  For efficiency (to avoid traversing tables multiple times), this
+        --  duplicates the alr_balances and alr_balances_currency views.
+
+        DROP VIEW IF EXISTS alr_invested;
+        CREATE VIEW alr_invested AS
+           SELECT
+              a.id AS account_id,
+              a.commodity_id,
+              s.post_date AS mindate,
+              COALESCE(
+                 MAX(s.post_date)
+                    OVER (PARTITION BY a.id
+                          ORDER by s.post_date
+                          ROWS BETWEEN 1 FOLLOWING AND 1 FOLLOWING),
+                 '2999-12-31 00:00:00'
+                ) AS maxdate,
+              CAST( SUM(CASE WHEN s.account_id = s2.account_id
+                             THEN s.scaled_qty ELSE 0 END)
+                 OVER (PARTITION BY a.id
+                       ORDER BY s.post_date
+                       ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+                 AS FLOAT
+                ) / a.commodity_scu
+                AS shares,
+              FIRST_VALUE(s.post_date)
+                 OVER (PARTITION BY a.id ORDER BY s.post_date)
+                 AS first_date,
+              SUM(CASE WHEN s.account_id <> s2.account_id AND s2.qty < 0
+                       THEN -s2.qty ELSE 0 END)
+                 OVER (PARTITION BY s.account_id
+                       ORDER BY s.post_date
+                       ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+                 AS invested,
+              SUM(CASE WHEN s.account_id <> s2.account_id AND s2.qty > 0
+                       THEN s2.qty ELSE 0 END)
+                 OVER (PARTITION BY s.account_id
+                       ORDER BY s.post_date
+                       ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+                 AS realized_gain,
+              SUM(CASE WHEN s.account_id <> s2.account_id AND s2.qty <> 0
+                         AND s.scaled_qty <> 0
+                      THEN abs(s2.qty) ELSE 0 END)
+                 OVER (PARTITION BY s.account_id
+                       ORDER BY s.post_date
+                       ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+                 AS invested_for_shares,
+              CAST(SUM(CASE WHEN s.account_id <> s2.account_id
+                         AND s2.qty <> 0 AND s.scaled_qty <> 0
+                       THEN abs(s.scaled_qty) ELSE 0 END)
+                    OVER (PARTITION BY s.account_id
+                          ORDER BY s.post_date
+                          ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+                   AS FLOAT)
+                 / a.commodity_scu
+                 AS shares_transacted
+           FROM alr_splits s
+              JOIN alr_accounts a ON (s.account_id = a.id)
+              JOIN alr_internal_splits s2 USING (transaction_id)
+        ;
+
+        --  For all accounts, compute the return on investment at any point
+        --  in time, by combining the balance at that time with the total
+        --  amount invested that far and realized gains moved out of the
+        --  account.
+
+        DROP VIEW IF EXISTS alr_roi;
+        CREATE VIEW alr_roi AS
+           SELECT
+              row_number() OVER () as id,   --  for django's sake
+              target.id as commodity_id,
+              max(b.mindate, p.mindate) as mindate,
+              min(b.maxdate, p.maxdate) as maxdate,
+              CAST(b.shares * p.scaled_price AS FLOAT) / source.price_scale
+                 AS balance,
+              CAST(p.scaled_price AS FLOAT) / source.price_scale
+                 AS computed_price,
+              b.realized_gain,
+              b.invested,
+              b.shares,
+              b.first_date,
+              b.account_id,
+              (CAST(b.shares * p.scaled_price AS FLOAT) / source.price_scale
+                 + b.realized_gain) / (b.invested) as roi,
+              CAST(b.shares * p.scaled_price AS FLOAT) / source.price_scale
+                 + b.realized_gain - b.invested as pl,
+              (b.invested - b.realized_gain) / b.shares as average_cost,
+              (b.invested_for_shares / b.shares_transacted) as weighted_average
+           FROM
+              alr_invested b
+              JOIN alr_price_history p ON (b.commodity_id = p.origin_id)
+
+              --  price from: the account's commodity
+              JOIN alr_commodities source ON (b.commodity_id = source.id)
+
+              --  price target: the user's requested commodity, can only be
+              --  a currency
+              JOIN alr_commodities target
+                 ON (p.target_id = target.id AND target.kind = 'C')
+           WHERE
+              --  intervals intersect
+              b.mindate < p.maxdate
+              AND p.mindate < b.maxdate
         """
         )
     ]

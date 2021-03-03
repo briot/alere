@@ -4,6 +4,12 @@ from django.views.generic import View
 import json
 import math
 
+def nan_enc(p):
+    """
+    Convert a float to a value suitable for JSON, including support for NaN
+    """
+    return (None if p is None or math.isnan(p) else p)
+
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):

@@ -24,6 +24,8 @@ class PriceSources(AlereModel):
     """
     All known source of prices
     """
+    USER = 1
+    YAHOO = 2
 
     name = models.TextField()
 
@@ -244,6 +246,21 @@ class AccountFlags(models.TextChoices):
             klass.STOCK,
             klass.INVESTMENT,
             klass.LIABILITY,
+        )
+
+    @classmethod
+    def invested(klass):
+        """
+        All accounts used to compute invested amount (for stocks and
+        investment accounts)
+        """
+        return (
+            klass.BANK,
+            klass.ASSET,
+            klass.STOCK,
+            klass.INVESTMENT,
+            klass.LIABILITY,
+            klass.EQUITY,
         )
 
     @classmethod
@@ -667,3 +684,40 @@ class Latest_Price(AlereModel):
     class Meta:
         managed = False
         db_table = prefix + "latest_price"
+
+
+class RoI(AlereModel):
+    """
+    Return-on-Investment at any point in time
+    """
+    commodity = models.ForeignKey(
+        Commodities,
+        on_delete=models.DO_NOTHING,
+        related_name='+'
+    )
+    mindate = models.DateTimeField()   # included in range
+    maxdate = models.DateTimeField()   # not included in range
+    balance = models.FloatField() # The current balance, in commodity
+    computed_price = models.FloatField()
+    realized_gain = models.FloatField() # Realized gains so far, unscaled
+    invested = models.FloatField()      # Amount invested so far, unscaled
+    shares = models.FloatField()  # Number of shares owned
+    first_date = models.DateTimeField()  # date of oldest transaction
+    account = models.ForeignKey(
+        Accounts, on_delete=models.DO_NOTHING, related_name='roi')
+    roi = models.FloatField()           # Return on Investment so far, unscaled
+    pl = models.FloatField()            # P&L so far, unscaled
+
+    average_cost = models.FloatField()
+    # average cost for one share, taking into account the amount invested and
+    # the realized gains so far.
+
+    weighted_average = models.FloatField()
+    # average price we bought or sold shares
+
+    class Meta:
+        managed = False
+        db_table = "alr_roi"
+
+    def __str__(self):
+        return "RoI([%s,%s), roi=%s)" % (self.mindate, self.maxdate, self.roi)

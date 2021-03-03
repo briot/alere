@@ -17,7 +17,6 @@ interface PositionJSON {
 
 interface TickerJSON {
    id: CommodityId;
-   name: string;
    ticker: string;
    source: number;
    is_currency: boolean;

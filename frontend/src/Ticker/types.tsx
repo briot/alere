@@ -34,7 +34,6 @@ export interface AccountForTicker {
 
 export interface Ticker {
    id: CommodityId;
-   name: string;
    ticker: string;
    source: number;
    is_currency: boolean;
