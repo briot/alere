@@ -137,11 +137,16 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
            </span>
          );
 
+   const mapToRange = (index: number, length: number, min: number, max: number) =>
+      min + (index / (length - 1)) * (max - min);
+
+
    const color = p.expenses
-      ? (index: number) => d3ScaleChromatic.interpolateTurbo(
-         (data.items.length - index) / data.items.length)
-      : (index: number) => d3ScaleChromatic.interpolateTurbo(
-         (index + 1) / data.items.length)
+      ? (index: number) => d3ScaleChromatic.interpolateYlOrRd(
+         mapToRange(index, data.items.length, 1.0, 0.5))
+      : (index: number) => d3ScaleChromatic.interpolateYlGn(
+         mapToRange(index, data.items.length, 1.0, 0.5))
+   ;
 
    return (
       <div className="columns">
