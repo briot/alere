@@ -14,6 +14,7 @@ from .views.means import MeanView
 from .views.metrics import MetricsView
 from .views.networth import NetworthView
 from .views.networth_history import NetworthHistoryView
+from .views.online import OnlineView
 from .views.plots import CategoryPlotView
 from .views.prices import PriceHistory
 from .views.price_sources import PriceSourceList
@@ -49,17 +50,18 @@ def send_csrf(request):
 urlpatterns = [
     # path('admin/', admin.site.urls),
     path('api/account/list', AccountList.as_view()),
-    path('api/price_source/list', PriceSourceList.as_view()),
+    path('api/import/kmymoney', ImportKmymoney.as_view()),
     path('api/ledger/<str:ids>', LedgerView.as_view()),
-    path('api/prices/<str:accountId>', PriceHistory.as_view()),
     re_path('api/ledger/(<str:id>)?', LedgerView.as_view()),
+    path('api/mean', MeanView.as_view()),
+    path('api/metrics', MetricsView.as_view()),
+    path('api/networth_history', NetworthHistoryView.as_view()),
+    path('api/online', OnlineView.as_view()),
     path('api/plots/category/<str:expenses>', CategoryPlotView.as_view()),
     path('api/plots/networth', NetworthView.as_view()),
-    path('api/networth_history', NetworthHistoryView.as_view()),
-    path('api/metrics', MetricsView.as_view()),
-    path('api/mean', MeanView.as_view()),
+    path('api/price_source/list', PriceSourceList.as_view()),
+    path('api/prices/<str:accountId>', PriceHistory.as_view()),
     path('api/quotes', QuotesView.as_view()),
-    path('api/import/kmymoney', ImportKmymoney.as_view()),
 
     # Getting the CSRF token (called from index.html)
     path('api/csrf', send_csrf),

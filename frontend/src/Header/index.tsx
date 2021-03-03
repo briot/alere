@@ -1,5 +1,6 @@
 import React from 'react';
 import Settings from 'Settings';
+import OnlineUpdate from 'Header/OnlineUpdate';
 import './Header.css';
 
 export interface HeaderProps {
@@ -25,6 +26,7 @@ const Header: React.FC<HeaderProps> = p => {
 
          <div className='group'>
             {p.buttons}
+            <OnlineUpdate />
             <Settings />
          </div>
 

@@ -1,8 +1,7 @@
 import * as React from 'react';
 import Upload from 'Form/Upload';
-import post from 'services/usePost';
-import useCsrf from 'services/useCsrf';
 import useAccounts from 'services/useAccounts';
+import usePost from 'services/usePost';
 import './Welcome.scss';
 
 enum Mode {
@@ -15,27 +14,21 @@ export interface WelcomeProps {
 
 const Welcome: React.FC<WelcomeProps> = p => {
    const [mode, setMode] = React.useState(Mode.CHOICES);
-   const csrf = useCsrf();
    const { refresh } = useAccounts();
-
+   const importer = usePost({
+      url: '/api/import/kmymoney',
+      onSuccess: refresh,
+      onError: () => {
+         throw new Error("Could not upload file");
+      },
+   });
    const onKMyMoney = () => {
       setMode(Mode.KMYMONEY);
    }
    const uploadKMyMoney = (files: File[]) => {
       const data = new FormData();
       files.forEach(f => data.append("file", f));
-
-      return post(csrf, '/api/import/kmymoney', data).then((resp: Response) => {
-         if (resp.status !== 200) {
-            return {
-               success: false,
-               error: `Upload failed with error ${resp.status}, ${resp.statusText}`
-            };
-         }
-         refresh();
-         return { success: true };
-         // const result: Promise<ImportResponse> = resp.json();
-      });
+      importer.mutate(data);
    }
 
    return (

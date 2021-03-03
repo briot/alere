@@ -3,18 +3,12 @@ import { rangeDisplay } from 'Dates';
 import Investments, { InvestmentsProps } from 'Investments/View';
 import Settings from 'Investments/Settings';
 import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
-import RoundButton from 'RoundButton';
 
 export interface InvestmentsPanelProps extends PanelBaseProps, InvestmentsProps {
    type: 'investments';
 }
 
 const InvestmentsPanel: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
-   const [update, setUpdate] = React.useState(false);
-   const forceUpdate = React.useCallback(
-      () => setUpdate(true),
-      []
-   );
    const r = rangeDisplay(p.props.range);
    return (
       <Panel
@@ -22,14 +16,6 @@ const InvestmentsPanel: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
          className={p.props.asTable ? 'astable' : 'asgrid'}
          header={{
             name: `Investments (${r.possessive} performance)`,
-            buttons: (
-               <RoundButton
-                  fa='fa-refresh'
-                  size='tiny'
-                  title='sync'
-                  onClick={forceUpdate}
-               />
-            )
          }}
          Settings={
             <Settings
@@ -39,10 +25,7 @@ const InvestmentsPanel: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
             />
          }
       >
-         <Investments
-            {...p.props}
-            fromProviders={update}
-         />
+         <Investments {...p.props} />
       </Panel>
    );
 }

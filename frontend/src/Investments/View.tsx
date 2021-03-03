@@ -25,7 +25,6 @@ export interface InvestmentsProps {
    showACLine: boolean;
    hideROIGraph?: boolean;
    hidePriceGraph?: boolean;
-   fromProviders: boolean; // whether to load prices from source provides
    asTable?: boolean;
    range: DateRange;
 }
@@ -56,8 +55,7 @@ const columns: Column<RowData, InvestmentsProps>[] = [
 const Investments: React.FC<InvestmentsProps> = p => {
    const { prefs } = usePrefs();
    const { data } = useTickers(
-      prefs.currencyId, p.fromProviders,
-      'all' /* accountIds */, p.range, p.hideIfNoShare);
+      prefs.currencyId, 'all' /* accountIds */, p.range, p.hideIfNoShare);
    const doNothing = React.useCallback(() => {}, []);
    const [sorted, setSorted] = React.useState('');
    const sources = usePriceSources();

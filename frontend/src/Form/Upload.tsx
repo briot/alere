@@ -13,9 +13,9 @@ interface UploadProps {
    multiple?: boolean;     // do we allow multiple files
    autosubmit?: boolean;   // submit() the form as soon as we have a file
 
-   // Called to perform the upload of the files.
-   // It should return at least a success field.
-   doUpload: (files: File[]) => Promise<{ success: boolean }>;
+   // Called to perform the upload of the files. Should raise an exception in
+   // case of error.
+   doUpload: (files: File[]) => void;
 }
 
 const Upload: React.FC<UploadProps> = p => {
@@ -27,14 +27,12 @@ const Upload: React.FC<UploadProps> = p => {
    const send = React.useCallback(
       (files: File[]) => {
          setUploading(true);
-         doUpload(files).then(
-            (res: { success: boolean }) => {
-               if (res.success) {
-                  setFiles([]);
-               }
-               setUploading(false);
-            }
-         );
+         try {
+            doUpload(files);
+            setFiles([]);
+         } catch (e) {
+         }
+         setUploading(false);
       },
       [doUpload]
    );

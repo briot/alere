@@ -36,7 +36,6 @@ interface TickerJSON {
 
 const useTickers = (
    currencyId: CommodityId,  // what currency should prices be given in
-   fromProviders: boolean,   // whether to load prices from source provides
    accountIds: AccountIdSet, // restrict to a specific set of accounts
    range: DateRange = "forever",
    hideIfNoShare?: boolean,  // ignore commodities not owned by user
@@ -47,7 +46,7 @@ const useTickers = (
    const accs = useAccountIds(accountIds);
    const ids = accs.accounts.map(a => a.id).sort().join(',');
    const tickers = useFetch<Ticker[], TickerJSON[]>({
-      url: `/api/quotes?update=${fromProviders}&currency=${currencyId}`
+      url: `/api/quotes?currency=${currencyId}`
          + (commodity ? `&commodities=${commodity}` : '')
          + (ids ? `&accounts=${ids}` : '')
          + `&${rangeToHttp(range)}`,
