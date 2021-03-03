@@ -37,7 +37,7 @@ const formatVal = (p: number|string|React.ReactText[]) =>
    (p as number).toFixed(0);
 
 const CustomTooltip = (
-   p: TooltipProps & {currency: CommodityId, props: NetworthHistoryProps}
+   p: TooltipProps<number, string> & {currency: CommodityId, props: NetworthHistoryProps}
 ) => {
    const d = p.payload?.[0]?.payload;
    if (!d) {

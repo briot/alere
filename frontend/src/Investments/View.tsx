@@ -62,16 +62,18 @@ const Investments: React.FC<InvestmentsProps> = p => {
    const [sorted, setSorted] = React.useState('');
    const sources = usePriceSources();
 
-   const columnPriceSource: Column<RowData, InvestmentsProps> = {
-      id: 'Source',
-      cell: (r: RowData) => sources[r.ticker.source]?.name,
-      compare: (r1: RowData, r2: RowData) =>
-         (sources[r1.ticker.source].name ?? '')
-            .localeCompare(sources[r2.ticker.source].name ?? ''),
-   }
    const cols = React.useMemo(
-      () => [...columns, columnPriceSource],
-      [columns, columnPriceSource],
+      () => {
+         const columnPriceSource: Column<RowData, InvestmentsProps> = {
+            id: 'Source',
+            cell: (r: RowData) => sources[r.ticker.source]?.name,
+            compare: (r1: RowData, r2: RowData) =>
+               (sources[r1.ticker.source].name ?? '')
+                  .localeCompare(sources[r2.ticker.source].name ?? ''),
+         }
+         return [...columns, columnPriceSource];
+      },
+      [sources],
    );
 
    // We compute the date range once for all tickers, so that they all have
@@ -84,7 +86,7 @@ const Investments: React.FC<InvestmentsProps> = p => {
          key: `${ticker.id}--${acc.account.id}`,
          data: computeTicker(ticker, acc, prefs, dateRange),
       }))) ?? [],
-      [data, prefs],
+      [data, dateRange, prefs],
    );
 
    if (p.asTable) {

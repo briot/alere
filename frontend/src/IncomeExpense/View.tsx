@@ -53,13 +53,13 @@ const renderCustomizedLabel = (p: PieLabelRenderProps) => {
   );
 };
 
-const CustomTooltip = (p: TooltipProps & {data: DataType} ) => {
+const CustomTooltip = (p: TooltipProps<number, string> & {data: DataType} ) => {
    const pay = p.payload?.[0];
    if (!pay) {
       return null;
    }
    const value = pay.value as number;
-   const total = p.data.items.reduce((t, d) => t + d.value, 0);
+   const total = p.data.items.reduce((t: number, d: DataItemType) => t + d.value, 0);
    return p.active
      ? (
        <div className="customTooltip" >

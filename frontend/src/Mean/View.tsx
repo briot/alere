@@ -80,7 +80,7 @@ const formatVal = (p: number|string|React.ReactText[]) =>
    (p as number).toFixed(0);
 
 const CustomTooltip = (
-   p: TooltipProps & {currency: CommodityId, props: MeanProps}
+   p: TooltipProps<number, string> & {currency: CommodityId, props: MeanProps}
 ) => {
    const d = p.payload?.[0]?.payload;
    if (!d) {
@@ -242,7 +242,7 @@ const Mean: React.FC<MeanProps> = p => {
                       stroke="var(--cartesian-grid)"
                   />
                   <ReferenceLine
-                     alwaysShow={true}
+                     ifOverflow="extendDomain"
                      isFront={false}
                      y={9}
                      stroke="var(--cartesian-grid)"
