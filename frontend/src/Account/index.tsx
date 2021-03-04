@@ -23,10 +23,16 @@ interface SelectAccountProps {
    onChange?: (account: Account) => void;
    hideArrow?: boolean;
    style?: React.CSSProperties;
+   format?: (value: Account) => string;  //  formatting the selected
 }
 export const SelectAccount: React.FC<SelectAccountProps> = p => {
-   const { onChange } = p;
+   const { format, onChange } = p;
    const { accounts } = useAccounts();
+
+   const formatAccount = React.useCallback(
+      (a: AccountId) => format?.(accounts.getAccount(a)),
+      [format, accounts],
+   );
 
    const tree = useAccountTree<SelectTreeNode>(
       accounts.allAccounts().map(a => createRow(a, '')),
@@ -66,6 +72,7 @@ export const SelectAccount: React.FC<SelectAccountProps> = p => {
          hideArrow={p.hideArrow}
          style={p.style}
          options={items}
+         format={formatAccount}
       />
    );
 }

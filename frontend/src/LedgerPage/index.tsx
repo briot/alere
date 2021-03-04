@@ -101,6 +101,7 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
                      account={accounts[0]}
                      onChange={onAccountChange}
                      hideArrow={false}
+                     format={a => a.fullName()}
                   />
                ) : title,
          });

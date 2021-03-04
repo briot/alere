@@ -173,6 +173,7 @@ interface SelectProps<T> extends SharedInputProps {
    direction?: "left" | "right";
    hideArrow?: boolean;
    style?: React.CSSProperties;
+   format?: (value: T) => string|undefined;  //  formatting the selected
 }
 
 export const Select = <T, > (p: SelectProps<T>) => {
@@ -211,7 +212,12 @@ export const Select = <T, > (p: SelectProps<T>) => {
             button={() =>
                <>
                   <div className="text" >
-                     {selected?.text ?? selected?.value ?? ''}
+                     {
+                        (selected?.value && selected.value !== "divider"
+                           && p.format?.(selected.value))
+                        ?? selected?.text
+                        ?? selected?.value
+                        ?? ''}
                   </div>
                   {
                      !p.hideArrow &&
