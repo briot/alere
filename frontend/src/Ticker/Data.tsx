@@ -1,6 +1,7 @@
 import { RowData } from 'Ticker/types';
 import { dateForm } from 'services/utils';
 import { DateDisplay } from 'Dates';
+import { LogicalRow } from 'List/ListWithColumns';
 import Numeric from 'Numeric';
 
 /**
@@ -16,6 +17,7 @@ export interface ColumnType {
    tooltip?: (data: RowData) => React.ReactNode;
    cell: (data: RowData) => React.ReactNode;
    compare: (left: RowData, right: RowData) => number;
+   foot?: (data: LogicalRow<RowData, any>[]) => React.ReactNode;
 }
 
 const numComp = (n1: number, n2: number) =>
@@ -44,6 +46,15 @@ export const columnEquity: ColumnType = {
       <Numeric amount={r.acc.end.equity} commodity={r.currencyId} />,
    compare: (r1: RowData, r2: RowData) =>
       numComp(r1.acc.end.equity, r2.acc.end.equity),
+   foot: (data: LogicalRow<RowData, any>[]) =>
+      <Numeric
+         amount={data.reduce(
+            (t: number, d: LogicalRow<RowData, any>) =>
+                t + d.data.acc.end.equity,
+            0)}
+         commodity={data[0]?.data.currencyId}
+         forceSign={true}
+      />,
 }
 
 export const columnTotalReturn: ColumnType = {
@@ -74,7 +85,7 @@ export const columnTotalReturn: ColumnType = {
 }
 
 export const columnAnnualizedReturn: ColumnType = {
-   id: 'Ret/y',
+   id: 'Return/year',
    title: 'Annualized Return',
    className: 'amount',
    cell: (r: RowData) =>
@@ -109,6 +120,15 @@ export const columnPL: ColumnType = {
    compare: (r1: RowData, r2: RowData) =>
       numComp(r1.acc.end.pl, r2.acc.end.pl),
    tooltip: (r: RowData) => "Equity minus total amount invested",
+   foot: (data: LogicalRow<RowData, any>[]) =>
+      <Numeric
+         amount={data.reduce(
+            (t: number, d: LogicalRow<RowData, any>) =>
+                t + d.data.acc.end.pl,
+            0)}
+         commodity={data[0]?.data.currencyId}
+         forceSign={true}
+      />,
 }
 
 export const columnInvested: ColumnType = {
@@ -118,6 +138,34 @@ export const columnInvested: ColumnType = {
       <Numeric amount={r.acc.end.invested} commodity={r.currencyId} />,
    compare: (r1: RowData, r2: RowData) =>
       numComp(r1.acc.end.invested, r2.acc.end.invested),
+   foot: (data: LogicalRow<RowData, any>[]) =>
+      <Numeric
+         amount={data.reduce(
+            (t: number, d: LogicalRow<RowData, any>) =>
+                t + d.data.acc.end.invested,
+            0)}
+         commodity={data[0]?.data.currencyId}
+         forceSign={true}
+      />,
+}
+
+export const columnGains: ColumnType = {
+   id: 'Realized',
+   className: 'amount',
+   title: 'Realized gain',
+   cell: (r: RowData) =>
+      <Numeric amount={r.acc.end.gains} commodity={r.currencyId} />,
+   compare: (r1: RowData, r2: RowData) =>
+      numComp(r1.acc.end.gains, r2.acc.end.gains),
+   foot: (data: LogicalRow<RowData, any>[]) =>
+      <Numeric
+         amount={data.reduce(
+            (t: number, d: LogicalRow<RowData, any>) =>
+                t + d.data.acc.end.gains,
+            0)}
+         commodity={data[0]?.data.currencyId}
+         forceSign={true}
+      />,
 }
 
 export const columnWeighedAverage: ColumnType = {
@@ -150,6 +198,31 @@ export const columnAverageCost: ColumnType = {
       numComp(r1.acc.end.avg_cost, r2.acc.end.avg_cost),
    tooltip: () =>
       "Equivalent price for the remaining shares you own, taking into account reinvested dividends, added and removed shares,...",
+}
+
+export const columnPeriodPL: ColumnType = {
+   id: 'Period P&L',
+   className: 'amount',
+   title: 'Profits and Loss for the period',
+   cell: (r: RowData) =>
+      <Numeric
+         amount={r.acc.end.pl - r.acc.start.pl}
+         commodity={r.currencyId}
+         forceSign={true}
+      />,
+   compare: (r1: RowData, r2: RowData) =>
+      numComp(r1.acc.end.pl - r1.acc.start.pl,
+              r2.acc.end.pl - r2.acc.start.pl),
+   foot: (data: LogicalRow<RowData, any>[]) =>
+      <Numeric
+         amount={data.reduce(
+            (t: number, d: LogicalRow<RowData, any>) =>
+                t + d.data.acc.end.pl - d.data.acc.start.pl,
+            0)}
+         commodity={data[0]?.data.currencyId}
+         forceSign={true}
+      />,
+   tooltip: (r: RowData) => "Equity minus total amount invested",
 }
 
 export const columnPeriodReturn: ColumnType = {

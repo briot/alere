@@ -8,7 +8,7 @@ import { DashboardFromPanels } from 'Dashboard';
 import AccountName from 'Account';
 import ListWithColumns, { Column, LogicalRow } from 'List/ListWithColumns';
 import { columnEquity, columnTotalReturn, columnAnnualizedReturn,
-   columnPL, columnWeighedAverage,
+   columnPL, columnWeighedAverage, columnPeriodPL, columnGains,
    columnAverageCost, columnPeriodReturn,
    columnShares, columnInvested } from 'Ticker/Data';
 import useTickers from 'services/useTickers';
@@ -46,7 +46,9 @@ const columns: Column<RowData, InvestmentsProps>[] = [
    columnTotalReturn,
    columnPeriodReturn,
    columnInvested,
+   columnGains,
    columnPL,
+   columnPeriodPL,
    columnAnnualizedReturn,
    columnAverageCost,
    columnWeighedAverage,

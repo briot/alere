@@ -71,7 +71,7 @@ const TickerView: React.FC<TickerViewProps & ExtraProps> = p => {
             dateRange={p.dateRange}
             showWALine={p.showWALine}
             showACLine={p.showACLine}
-            showPriceGraph={!p.hidePriceGraph}
+            showPriceGraph={!p.hidePriceGraph && !p.ticker.is_currency}
             showROIGraph={!p.hideROIGraph}
          />
       }
