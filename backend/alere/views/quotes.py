@@ -170,9 +170,11 @@ class QuotesView(JSONView):
             if r.mindate <= maxdate and maxdate < r.maxdate:
                 a.end = Position(r)
 
-            a.prices.append(
-                (r.mindate.timestamp() * 1e3,
-                 r.computed_price,
-                 r.roi))
+            a.prices.append({
+                "t": r.mindate.timestamp() * 1e3,
+                "price": r.computed_price,
+                "roi": (r.roi - 1) * 100 if r.roi else None,
+                "shares": r.shares,
+            })
 
         return list(symbols.values())

@@ -3,7 +3,7 @@ import { CommodityId } from 'services/useAccounts';
 import { AccountForTicker, ClosePrice, Ticker } from 'Ticker/types';
 import { humanDateInterval } from 'services/utils';
 
-const bisect = d3Array.bisector((d: ClosePrice) => d[0]).right;
+const bisect = d3Array.bisector((d: ClosePrice) => d.t).right;
 
 export interface PastValue  {
    fromDate: Date|undefined;
@@ -25,13 +25,13 @@ export const pastValue = (
    ms: number,              // how far back in the past
 ): PastValue => {
    const prices = acc.prices;
-   const now = prices[prices.length - 1]?.[0] || null;
-   const close = prices[prices.length - 1]?.[1] || NaN;
+   const now = prices[prices.length - 1]?.t || null;
+   const close = prices[prices.length - 1]?.price || NaN;
    const idx = now === null
       ? undefined
       : Math.max(0, bisect(prices, now - ms) - 1);
-   const price = idx === undefined ? undefined : prices[idx][1];
-   const ts = idx === undefined ? null : prices[idx]?.[0];
+   const price = idx === undefined ? undefined : prices[idx].price;
+   const ts = idx === undefined ? null : prices[idx]?.t;
 
    return {
       fromDate: ts === null ? undefined : new Date(ts),

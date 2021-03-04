@@ -3,11 +3,12 @@ import { Account, CommodityId } from 'services/useAccounts';
 //  When do we consider a number of shares to be zero (for rounding errors)
 export const THRESHOLD = 0.00000001;
 
-export type ClosePrice = [
-   number,  // timestamp
-   number,  // price
-   number,  // return-on-investment
-];
+export type ClosePrice = {
+   t: number;      // timestamp
+   price: number;  // price
+   roi: number;    // return-on-investment, as percent
+   shares: number; // number of shares owned
+};
 
 interface Position {
    avg_cost: number;

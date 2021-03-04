@@ -1,11 +1,12 @@
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { ComposedChart, XAxis, YAxis, Area, Tooltip, Line,
-         ReferenceLine } from 'recharts';
-import { AccountForTicker, Ticker } from 'Ticker/types';
+         ReferenceLine, TooltipProps } from 'recharts';
+import { AccountForTicker, ClosePrice, Ticker } from 'Ticker/types';
 import { dateForm } from 'services/utils';
+import Numeric from 'Numeric';
+import usePrefs from 'services/usePrefs';
 
 const priceForm = (v: number) => v.toFixed(2);
-const labelForm = (d: number|string) => <span>{dateForm(new Date(d))}</span>;
 
 interface HistoryProps {
    ticker: Ticker;
@@ -21,8 +22,56 @@ const History: React.FC<HistoryProps> = p => {
    const xrange = p.dateRange.map(d => d.getTime()) as [number, number];
    const hist =
       p.acc.prices
-      .filter(r => r[0] >= xrange[0] && r[0] <= xrange[1] && r[1] !== null)
-      .map(r => ({t: r[0], price: r[1], roi: (r[2] - 1) * 100}))
+      .filter(r => r.t >= xrange[0] && r.t <= xrange[1] && r.price !== null);
+
+   const CustomTooltip: React.FC<TooltipProps<any, number>> = d => {
+     const { prefs } = usePrefs();
+     if (d.active && d.payload && d.payload.length) {
+        const data: ClosePrice = d.payload[0].payload;
+        return (
+           <div className="graph-tooltip">
+              <p className="label">
+                 { dateForm(new Date(data.t)) }
+              </p>
+              <table>
+                 <tbody>
+                    <tr>
+                       <th>Price</th>
+                       <td>
+                          <Numeric
+                             amount={data.price}
+                             commodity={prefs.currencyId}
+                          />
+                      </td>
+                    </tr>
+                    <tr>
+                       <th>Return</th>
+                       <td>
+                          <Numeric
+                             amount={data.roi}
+                             colored={true}
+                             forceSign={true}
+                             showArrow={true}
+                             suffix='%'
+                          />
+                      </td>
+                    </tr>
+                    <tr>
+                       <th>Shares</th>
+                       <td>
+                          <Numeric
+                             amount={data.shares}
+                             commodity={p.ticker.id}
+                          />
+                      </td>
+                    </tr>
+                 </tbody>
+              </table>
+           </div>
+        );
+     }
+      return null;
+   };
 
    return (
       <div className="hist" title={`Prices from ${p.ticker.source}`}>
@@ -104,10 +153,8 @@ const History: React.FC<HistoryProps> = p => {
                             dot={false}
                         />
                      }
-
                      <Tooltip
-                         labelFormatter={labelForm}
-                         contentStyle={{backgroundColor: "var(--panel-background)"}}
+                         content={CustomTooltip}
                          allowEscapeViewBox={{x: true, y: true}}
                          isAnimationActive={false}
                      />
