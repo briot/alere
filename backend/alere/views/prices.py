@@ -10,7 +10,8 @@ class PriceHistory(JSONView):
         query = alere.models.Prices.objects \
             .select_related('origin') \
             .filter(target_id=currency,
-                    origin__accounts=accountId)
+                    origin__accounts=accountId) \
+            .order_by('date')
 
         return [
            {
