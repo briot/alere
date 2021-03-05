@@ -3,7 +3,7 @@ import usePrefs from 'services/usePrefs';
 import { AccountForTicker, RowData, Ticker } from 'Ticker/types';
 import { computeTicker } from 'Ticker/Compute';
 import Perfs from 'Ticker/Perf';
-import History from 'Ticker/History';
+import PriceGraph from 'PriceGraph';
 import { ColumnType, columnEquity, columnTotalReturn,
    columnAnnualizedReturn, columnShares, columnAverageCost, columnPeriodReturn,
    columnWeighedAverage, columnPL, columnInvested } from 'Ticker/Data';
@@ -65,14 +65,14 @@ const TickerView: React.FC<TickerViewProps & ExtraProps> = p => {
    <>
       {
          !p.hideHistory &&
-         <History
-            ticker={p.ticker}
-            acc={p.acc}
+         <PriceGraph
+            commodity_id={p.ticker.id}
+            prices={p.acc.prices}
             dateRange={p.dateRange}
-            showWALine={p.showWALine}
-            showACLine={p.showACLine}
-            showPriceGraph={!p.hidePriceGraph && !p.ticker.is_currency}
-            showROIGraph={!p.hideROIGraph}
+            showWeightedAverage={p.showWALine}
+            showAverageCost={p.showACLine}
+            showPrice={!p.hidePriceGraph && !p.ticker.is_currency}
+            showROI={!p.hideROIGraph}
          />
       }
       <div className="perf">

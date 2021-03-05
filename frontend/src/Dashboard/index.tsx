@@ -5,6 +5,7 @@ import useSettings from 'services/useSettings';
 import classes from 'services/classes';
 import './Dashboard.css';
 
+type Overrides = { [panel: string]: Partial<PanelBaseProps>};
 
 interface PanelWrapperProps {
    panel: PanelBaseProps;
@@ -51,7 +52,8 @@ interface DashboardFromPanelsProps {
    panels: PanelBaseProps[];
    setPanels: React.Dispatch<React.SetStateAction<PanelBaseProps[]>>;
    className?: string;
-   overrides?: Object;    //  Overrides settings for the panels
+   overrides?: Overrides;
+      //  Overrides settings for the panels
 }
 export const DashboardFromPanels: React.FC<DashboardFromPanelsProps> = p => {
    const c = classes(
@@ -64,9 +66,9 @@ export const DashboardFromPanels: React.FC<DashboardFromPanelsProps> = p => {
             p.panels.map((p2, idx) =>
                <PanelWrapper
                   key={idx}
-                  panel={{...p2, ...p.overrides}}
+                  panel={{...p2, ...p.overrides?.[p2.type]}}
                   setPanels={p.setPanels}
-                  excludeFields={Object.keys(p.overrides ?? {})}
+                  excludeFields={Object.keys(p.overrides?.[p2.type] ?? {})}
                   index={idx}
                />
             )
@@ -80,7 +82,7 @@ export const DashboardFromPanels: React.FC<DashboardFromPanelsProps> = p => {
 interface DashboardProps {
    name: string;     // dashboard name
    defaultPanels: PanelBaseProps[],
-   overrides?: Object;    //  Overrides settings for the panels
+   overrides?: Overrides;    //  Overrides settings for the panels
    className?: string;
 }
 const Dashboard: React.FC<DashboardProps & SetHeader> = p => {
@@ -104,9 +106,9 @@ const Dashboard: React.FC<DashboardProps & SetHeader> = p => {
             val.map((p2, idx) =>
                <PanelWrapper
                   key={idx}
-                  panel={{...p2, ...p.overrides}}
+                  panel={{...p2, ...p.overrides?.[p2.type]}}
                   setPanels={setVal}
-                  excludeFields={Object.keys(p.overrides ?? {})}
+                  excludeFields={Object.keys(p.overrides?.[p2.type] ?? {})}
                   index={idx}
                />
             )

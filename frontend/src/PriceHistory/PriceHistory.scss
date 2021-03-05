@@ -9,10 +9,10 @@
    .recharts-cartesian-axis-ticks tspan {
       fill: var(--panel-fg);
    }
-}
 
-.priceHistory .roundButton {
-   display: block;
-   position: absolute;
-   z-index: var(--zindex-dropdown);
+   .roundButton {
+      display: block;
+      position: absolute;
+      z-index: var(--zindex-dropdown);
+   }
 }

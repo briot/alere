@@ -1,24 +1,17 @@
 import * as React from 'react';
-import PriceHistory, { PriceHistoryProps } from 'PriceHistory/View';
 import Settings from 'PriceHistory/Settings';
 import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
-import useAccountIds from 'services/useAccountIds';
+import PriceGraph, { PriceGraphProps } from 'PriceGraph';
 
-export interface PriceHistoryPanelProps extends PanelBaseProps, PriceHistoryProps {
+export interface PriceHistoryPanelProps extends PanelBaseProps, PriceGraphProps {
    type: 'pricehistory';
 }
 
 const PriceHistoryPanel: React.FC<PanelProps<PriceHistoryPanelProps>> = p => {
-   const { accounts, title } = useAccountIds(p.props.accountIds ?? []);
-
-   if (accounts.length !== 1) {
-      return null;
-   }
-
    return (
       <Panel
          {...p}
-         header={{ name: `Price History ${title}` }}
+         header={{ name: `Price History` }}
          Settings={
             <Settings
                props={p.props}
@@ -27,9 +20,8 @@ const PriceHistoryPanel: React.FC<PanelProps<PriceHistoryPanelProps>> = p => {
             />
          }
       >
-         <PriceHistory
+         <PriceGraph
             {...p.props}
-            account={accounts[0]}
          />
       </Panel>
    );

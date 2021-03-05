@@ -13,16 +13,21 @@ import { SelectAccount } from 'Account';
 import { LedgerPanelProps } from 'Ledger/Panel';
 import { PriceHistoryPanelProps } from 'PriceHistory/Panel';
 import { TickerPanelProps } from 'Ticker/Panel';
+import usePrefs from 'services/usePrefs';
+import useTickers from 'services/useTickers';
 
 const defaultPanels = [
    {
       type: 'pricehistory',
-      accountIds: 'all',  // overridden later
-      transactions: [],   // overridden later
-      range: "forever",
+      commodity_id: -1,
+      prices: [],
+      dateRange: [new Date(), new Date()],
+      showAverageCost: true,
+      showROI: true,
+      showPrice: true,
       rowspan: 1,
       colspan: 3,
-      hidePanelHeader: true,
+      hidePanelHeader: false,
    } as PriceHistoryPanelProps,
    {
       type: 'ticker',
@@ -62,8 +67,9 @@ interface LedgerPageProps {
 }
 const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
    const { setHeader } = p;
+   const { prefs } = usePrefs();
 
-   // list of account ids
+   // list of account ids (as string)
    const { accountIds } = useParams<LedgerPageRouteProps>();
    const { accounts, title } = useAccountIds(accountIds);
 
@@ -74,6 +80,15 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
    const history = useRouterHistory();
    const { pushAccount } = useHistory();
    const transactions = useTransactions(accounts, range);
+
+   const { data: tickers } = useTickers(
+      prefs.currencyId        /* currencyId */,
+      accounts.map(a => a.id) /* accountIds */,
+      "forever"               /* range */,
+      false                   /* hideIfNoShare */,
+      undefined               /* commodity */,
+      accounts.length !== 1   /* skip */,
+   );
 
    const onAccountChange = React.useCallback(
       (a: Account) => {
@@ -119,17 +134,31 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
          setHeader={doNothing}
          overrides={
             {
-               accountIds,
-               transactions: transactions,
-               range,
-
-               // for 'ticker' view
-               ticker: (
-                  accounts.length === 1 && accounts[0].commodity.id > 0
-                  ? accounts[0].commodity.id
-                  : undefined
-               ),
-               dateRange: toDates(range),
+               "ledger": {
+                  accountIds,
+                  transactions: transactions,
+                  range,
+               } as Partial<LedgerPanelProps>,
+               "ticker": {
+                  ticker: (
+                     tickers && tickers.length === 1 ? tickers[0] : undefined
+                  ),
+                  dateRange: toDates(range),
+               } as Partial<TickerPanelProps>,
+               "pricehistory": {
+                  commodity_id:
+                     accounts && accounts.length === 1 ? accounts[0].id : -1,
+                  prices:
+                     tickers && tickers.length === 1
+                        ? tickers[0].accounts[0].prices : [],
+                  dateRange: toDates(range),
+                  avg_cost:
+                     tickers && tickers.length === 1
+                     ? tickers[0].accounts[0].end.avg_cost : NaN,
+                  weighted_avg:
+                     tickers && tickers.length === 1
+                     ? tickers[0].accounts[0].end.weighted_avg : NaN,
+               } as Partial<PriceHistoryPanelProps>,
             }
          }
       />

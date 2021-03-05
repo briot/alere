@@ -1,41 +1,49 @@
 import * as React from 'react';
 import { Checkbox } from 'Form';
 import { PanelProps } from 'Dashboard/Panel';
-import { DateRange, DateRangePicker } from 'Dates';
 import { PriceHistoryPanelProps } from 'PriceHistory/Panel';
 
 const Settings: React.FC<PanelProps<PriceHistoryPanelProps>> = p => {
-   const changeHidePos = (show: boolean) => p.save({hidePositions: !show});
-   const changeHidePrices = (show: boolean) => p.save({hidePrices: !show});
-   const changeHideHold = (show: boolean) => p.save({hideHoldings: !show});
-   const changeRange = (range: DateRange) => p.save({ range });
+   const changeShares = (show: boolean) => p.save({ showShares: show });
+   const changePrice = (show: boolean) => p.save({ showPrice: show });
+   const changeHold = (show: boolean) => p.save({ showHolding: show });
+   const changeROI = (show: boolean) => p.save({ showROI: show });
+   const changeWA = (show: boolean) => p.save?.({ showWeightedAverage: show });
+   const changeAC = (show: boolean) => p.save?.({ showAverageCost: show });
 
    return (
       <fieldset>
          <legend>Price History</legend>
          <Checkbox
-            checked={!p.props.hidePositions}
-            onChange={changeHidePos}
+            checked={!!p.props.showShares}
+            onChange={changeShares}
             text="Show positions"
          />
          <Checkbox
-            checked={!p.props.hidePrices}
-            onChange={changeHidePrices}
+            checked={!!p.props.showPrice}
+            onChange={changePrice}
             text="Show prices"
          />
          <Checkbox
-            checked={!p.props.hideHoldings}
-            onChange={changeHideHold}
+            checked={!!p.props.showHolding}
+            onChange={changeHold}
             text="Show holdings"
          />
-         {
-            !p.excludeFields?.includes("range") &&
-            <DateRangePicker
-               text="Time period"
-               value={p.props.range || 'forever'}
-               onChange={changeRange}
-            />
-         }
+         <Checkbox
+            checked={!!p.props.showROI}
+            onChange={changeROI}
+            text="Show return-on-investment"
+         />
+         <Checkbox
+             checked={!!p.props.showWeightedAverage}
+             onChange={changeWA}
+             text="Show Weighted Average lines in graphs"
+         />
+         <Checkbox
+             checked={!!p.props.showAverageCost}
+             onChange={changeAC}
+             text="Show Average Cost lines in graphs"
+         />
       </fieldset>
    );
 }

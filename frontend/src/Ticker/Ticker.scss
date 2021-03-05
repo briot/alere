@@ -7,16 +7,6 @@
       // transform: scale(1.1);
    }
 
-   .graph-tooltip {
-      border: 1px solid var(--cartesian-grid);
-      background: var(--panel-background);
-      padding: 0 10px 10px 10px;
-
-      .label {
-         font-weight: bold;
-      }
-   }
-
    .items {
       display: flex;
       flex-wrap: wrap;
@@ -74,7 +64,7 @@
       }
    }
 
-   .hist {
+   .priceGraph {
       flex: 0 1 100px;
    }
 

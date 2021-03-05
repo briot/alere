@@ -96,6 +96,8 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    @include generate-color-vars(color, $green);
    @include generate-color-vars(invalid, $red);
    @include generate-color-vars(green, $green);
+   @include generate-color-vars(red, $red);
+   @include generate-color-vars(teal, $teal);
    @include generate-color-vars(gray, #adb5bd);
    white-fg: #{black-or-white(white)};  // foreground to use on top of white
 
@@ -152,8 +154,10 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --negative-fg-border: var(--invalid-300);
 
    --cartesian-grid: var(--gray-700);
-   --cartesian-grid2: var(--gray-900);
-   --ticker-history: var(--gray-500);
+   --graph-price: var(--gray-500);
+   --graph-roi: var(--green-500);
+   --graph-shares: var(--red-500);
+   --graph-holding: var(--teal-500);
 
    --input-background: var(--gray-700);
    --input-foreground: var(--gray-fg-700);
@@ -220,8 +224,11 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --input-error-foreground: var(--fg-invalid-100);
 
    --cartesian-grid: var(--gray-500);
-   --cartesian-grid2: var(--gray-300);
-   --ticker-history: var(--gray-500);
+
+   --graph-price: var(--gray-500);
+   --graph-roi: var(--green-500);
+   --graph-shares: var(--red-500);
+   --graph-holding: var(--teal-500);
 
    --neumorph-light: rgba(255,255,255,0.5);
    --neumorph-dark: rgba(70,70,70,.12);

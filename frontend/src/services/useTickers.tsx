@@ -1,4 +1,5 @@
-import { ClosePrice, THRESHOLD, Ticker } from 'Ticker/types';
+import { THRESHOLD, Ticker } from 'Ticker/types';
+import { ClosePrice } from 'PriceGraph';
 import { DateRange, rangeToHttp } from 'Dates';
 import useAccounts, { AccountId, CommodityId } from 'services/useAccounts';
 import useAccountIds, { AccountIdSet } from 'services/useAccountIds';
