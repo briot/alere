@@ -5,14 +5,14 @@ import useAccountIds, { AccountIdSet } from 'services/useAccountIds';
 import useFetch from 'services/useFetch';
 
 interface PositionJSON {
-   avg_cost: number;
-   equity: number;
+   avg_cost: number | null;  // null for NaN
+   equity: number | null;
    gains: number;
    invested: number;
-   pl: number;
-   roi: number;
+   pl: number | null;
+   roi: number | null;
    shares: number;
-   weighted_avg: number;
+   weighted_avg: number | null;
 }
 
 interface TickerJSON {
@@ -26,8 +26,10 @@ interface TickerJSON {
       start: PositionJSON;
       end: PositionJSON;
       oldest: number;
-      annualized_roi: number;
-      period_roi: number;
+      most_recent: number;
+      now_for_annualized: number;
+      annualized_roi: number | null;
+      period_roi: number | null;  // null for NaN
 
       // sorted chronologically, given in the currency used in the query
       prices: ClosePrice[];
@@ -45,6 +47,8 @@ const useTickers = (
    const { accounts } = useAccounts();
    const accs = useAccountIds(accountIds);
    const ids = accs.accounts.map(a => a.id).sort().join(',');
+   const nan_dec = (n: number|null) => n === null ? NaN : n;
+
    const tickers = useFetch<Ticker[], TickerJSON[]>({
       url: `/api/quotes?currency=${currencyId}`
          + (commodity ? `&commodities=${commodity}` : '')
@@ -58,8 +62,29 @@ const useTickers = (
          return json.map(t => ({
             ...t,
             accounts: t.accounts.map(a => ({
-               ...a,
                account: accounts.getAccount(a.account),
+               period_roi: nan_dec(a.period_roi),
+               annualized_roi: nan_dec(a.annualized_roi),
+               oldest_transaction: new Date(a.oldest * 1e3),
+               most_recent_transaction: new Date(a.most_recent * 1e3),
+               now_for_annualized: new Date(a.now_for_annualized * 1e3),
+               prices: a.prices,
+               start: {
+                  ...a.start,
+                  avg_cost: nan_dec(a.start.avg_cost),
+                  equity: nan_dec(a.start.equity),
+                  pl: nan_dec(a.start.pl),
+                  roi: nan_dec(a.start.roi),
+                  weighted_avg: nan_dec(a.start.weighted_avg),
+               },
+               end: {
+                  ...a.end,
+                  avg_cost: nan_dec(a.end.avg_cost),
+                  equity: nan_dec(a.end.equity),
+                  pl: nan_dec(a.end.pl),
+                  roi: nan_dec(a.end.roi),
+                  weighted_avg: nan_dec(a.end.weighted_avg),
+               },
             }))
             .filter(a => !hideIfNoShare
                || t.is_currency

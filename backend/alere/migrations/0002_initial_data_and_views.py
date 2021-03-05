@@ -295,9 +295,6 @@ class Migration(migrations.Migration):
                  AS FLOAT
                 ) / a.commodity_scu
                 AS shares,
-              FIRST_VALUE(s.post_date)
-                 OVER (PARTITION BY a.id ORDER BY s.post_date)
-                 AS first_date,
               SUM(CASE WHEN s.account_id <> s2.account_id AND s2.qty < 0
                        THEN -s2.qty ELSE 0 END)
                  OVER (PARTITION BY s.account_id
@@ -350,7 +347,6 @@ class Migration(migrations.Migration):
               b.realized_gain,
               b.invested,
               b.shares,
-              b.first_date,
               b.account_id,
               (CAST(b.shares * p.scaled_price AS FLOAT) / source.price_scale
                  + b.realized_gain) / (b.invested) as roi,

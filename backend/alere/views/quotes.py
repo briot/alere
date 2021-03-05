@@ -40,6 +40,7 @@ class Account:
         self.start = Position() # as of mindate
         self.end = Position()   # as of maxdate
         self.oldest = None      # date of oldest transaction (for annualized)
+        self.most_recent = None # most recent transaction
         self.prices = []
 
     def to_json(self):
@@ -55,7 +56,7 @@ class Account:
         # Return over the period [mindate,maxdate]
         d = self.start.equity + self.end.invested - self.start.invested
         period_roi = (
-            math.nan if d == 0
+            math.nan if abs(d) < 1e-6
             else (self.end.equity + self.end.gains - self.start.gains) / d
         )
 
@@ -63,7 +64,11 @@ class Account:
             "account": self.account_id,
             "start": self.start,
             "end": self.end,
-            "oldest": self.oldest,
+            "oldest": self.oldest.timestamp()
+                if self.oldest is not None else 0,
+            "most_recent": self.most_recent.timestamp()
+                if self.most_recent is not None else 0,
+            "now_for_annualized": now.timestamp(),
             "annualized_roi": nan_enc(annualized_return),
             "period_roi": nan_enc(period_roi),
             "prices": self.prices,
@@ -163,9 +168,12 @@ class QuotesView(JSONView):
         for r in query2:
             a = accs[r.account_id]
 
+            if a.oldest is None:
+                a.oldest = r.mindate
+            a.most_recent = r.mindate
+
             if r.mindate <= mindate and mindate < r.maxdate:
                 a.start = Position(r)
-                a.oldest = r.first_date
 
             if r.mindate <= maxdate and maxdate < r.maxdate:
                 a.end = Position(r)

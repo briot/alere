@@ -25,7 +25,9 @@ export interface AccountForTicker {
    account: Account;
    start: Position; // at mindate
    end: Position;   // at maxdate
-   oldest: number;  // date of oldest transaction
+   oldest_transaction: Date;   // date of oldest transaction
+   most_recent_transaction: Date;
+   now_for_annualized: Date;   // date to compute annualized return
    annualized_roi: number;
    period_roi: number;
 
@@ -42,14 +44,6 @@ export interface Ticker {
 }
 
 /**
- * Various stats computed at some point in time for a ticker
- */
-export interface ComputedTicker {
-   close: number;     // most recent closing price
-   oldest: Date;      // date of first investment
-}
-
-/**
  * Data used to display information for one ticker+account. This includes
  * precomputed performance-related information.
  */
@@ -57,7 +51,5 @@ export interface RowData {
    ticker: Ticker;
    acc: AccountForTicker;
    dateRange: [Date, Date];
-   start: ComputedTicker;
-   end: ComputedTicker;
    currencyId: CommodityId;
 }

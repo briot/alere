@@ -1,23 +1,9 @@
-import { AccountForTicker, ComputedTicker, Ticker } from 'Ticker/types';
-import { pastValue } from 'Ticker/Past';
+import { AccountForTicker, Ticker } from 'Ticker/types';
 import { Preferences } from 'services/usePrefs';
 
 /**
  * Compute various performance indicators for a security
  */
-
-const computeAtDate = (
-   ticker: Ticker,
-   a: AccountForTicker,
-   ms_elapsed: number,  // how long ago was the "start" data
-): ComputedTicker => {
-   const price = pastValue(ticker, a, ms_elapsed);
-   const oldest = new Date(a.oldest * 1000);
-   return {
-      close: price.toPrice || NaN,
-      oldest,
-   };
-}
 
 export const computeTicker = (
    ticker: Ticker,
@@ -25,15 +11,14 @@ export const computeTicker = (
    prefs: Preferences,
    dateRange: [Date, Date],
 ) => {
-   const start = computeAtDate(
-      ticker, acc, new Date().getTime() - dateRange[0].getTime());
-   const end = computeAtDate(ticker, acc, 0);
+   const mindate = new Date(
+      Math.max(acc.oldest_transaction.getTime(), dateRange[0].getTime()));
+   const maxdate = new Date(
+      Math.min(acc.most_recent_transaction.getTime(), dateRange[1].getTime()));
    return {
       ticker,
       acc,
-      start,
-      end,
       currencyId: prefs.currencyId,
-      dateRange: dateRange,
+      dateRange: [mindate, maxdate] as [Date, Date],
    };
 }

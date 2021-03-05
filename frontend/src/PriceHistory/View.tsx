@@ -19,21 +19,23 @@ interface Holding {
    position: number;
 }
 
+type AlrAxisDomainItem = string | number | ((x: number)=>number);
+
 interface State {
    xmin: number|string,
    xmax: number|string,
    refAreaLeft?: number|undefined,
    refAreaRight?: number|undefined,
-   priceRange: [number|string, number|string],
-   posRange: [number|string, number|string],
-   holdRange: [number|string, number|string],
+   priceRange: [AlrAxisDomainItem, AlrAxisDomainItem],
+   posRange: [AlrAxisDomainItem, AlrAxisDomainItem],
+   holdRange: [AlrAxisDomainItem, AlrAxisDomainItem],
 }
 const nullState: State = {
    xmin: 'dataMin',
    xmax: 'dataMax',
-   priceRange: ['dataMin', 'dataMax'],
-   posRange: ['dataMin', 'dataMax'],
-   holdRange: ['dataMin', 'dataMax'],
+   priceRange: [min => min * 0.99, max => max * 1.01],
+   posRange: [min => min * 0.99, max => max * 1.01],
+   holdRange: [min => min * 0.95, max => max * 1.05],
 }
 
 export interface PriceHistoryProps {
@@ -110,7 +112,7 @@ const PriceHistory: React.FC<PriceHistoryProps & ExtraProps> = p => {
          const merge = (d_idx: number, t_idx: number) => {
             const pr = prices[d_idx];
             const tr = p.transactions[t_idx];
-            const position = tr?.balanceShares ?? NaN
+            const position = tr?.balanceShares ?? 0
             const price    = pr?.price ?? 0;
             merged.push({
                date: new Date((pr ?? tr).date).getTime(),

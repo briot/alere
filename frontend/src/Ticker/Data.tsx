@@ -98,7 +98,9 @@ export const columnAnnualizedReturn: ColumnType = {
       numComp(r1.acc.annualized_roi, r2.acc.annualized_roi),
    tooltip: (r: RowData) => (
       <>
-         <p>Since {dateForm(r.end.oldest)}</p>
+         <p>
+            From {dateForm(r.acc.oldest_transaction)} to {dateForm(r.acc.now_for_annualized)}
+         </p>
          <p>Equivalent annualized return (assuming compound
             interest), as if the total amount had been invested
             when the account was initially opened

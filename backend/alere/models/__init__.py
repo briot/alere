@@ -702,7 +702,6 @@ class RoI(AlereModel):
     realized_gain = models.FloatField() # Realized gains so far, unscaled
     invested = models.FloatField()      # Amount invested so far, unscaled
     shares = models.FloatField()  # Number of shares owned
-    first_date = models.DateTimeField()  # date of oldest transaction
     account = models.ForeignKey(
         Accounts, on_delete=models.DO_NOTHING, related_name='roi')
     roi = models.FloatField()           # Return on Investment so far, unscaled
