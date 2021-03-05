@@ -157,6 +157,10 @@ class QuotesView(JSONView):
             a = accs[row.id] = Account(row.id)
             symbols[row.commodity_id].accounts.append(a)
 
+        # remove all symbols for which we have zero account, to limit the scope
+        # of the following query
+        symbols = {s: data for s, data in symbols.items() if data.accounts}
+
         ########
         # Compute metrics
 
