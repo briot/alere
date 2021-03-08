@@ -393,7 +393,7 @@ const PriceGraph: React.FC<PriceGraphProps> = p => {
             isNumeric(state.xmin) &&
             <RoundButton
                fa="fa-search-minus"
-               title="Reset zoom level"
+               tooltip="Reset zoom level"
                onClick={zoomOut}
                size="small"
             />

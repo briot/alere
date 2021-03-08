@@ -7,7 +7,7 @@ import { RowData } from 'Ticker/types';
 import { DashboardFromPanels } from 'Dashboard';
 import AccountName from 'Account';
 import ListWithColumns, { Column, LogicalRow } from 'List/ListWithColumns';
-import { columnEquity, columnTotalReturn, columnAnnualizedReturn,
+import { ColumnType, columnEquity, columnTotalReturn, columnAnnualizedReturn,
    columnPL, columnWeighedAverage, columnPeriodPL, columnGains,
    columnAverageCost, columnPeriodReturn,
    columnShares, columnInvested } from 'Ticker/Data';
@@ -29,7 +29,7 @@ export interface InvestmentsProps {
    range: DateRange;
 }
 
-const columnAccountName: Column<RowData, InvestmentsProps> = {
+const columnAccountName: ColumnType = {
    id: 'Account',
    cell: (r: RowData) =>
       <AccountName id={r.acc.account.id} account={r.acc.account} fullName={false} />,
@@ -39,7 +39,7 @@ const columnAccountName: Column<RowData, InvestmentsProps> = {
 
 // const columnGainLastYear: Column<RowData, InvestmentsProps> = {
 
-const columns: Column<RowData, InvestmentsProps>[] = [
+const dataColumns: ColumnType[] = [
    columnAccountName,
    columnEquity,
    columnShares,
@@ -53,6 +53,8 @@ const columns: Column<RowData, InvestmentsProps>[] = [
    columnAverageCost,
    columnWeighedAverage,
 ];
+const columns: Column<RowData, InvestmentsProps>[] =
+   dataColumns.map(c => ({ ...c, cellTitle: c.tooltip }));
 
 const Investments: React.FC<InvestmentsProps> = p => {
    const { prefs } = usePrefs();

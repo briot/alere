@@ -1,0 +1,74 @@
+.tooltip {
+   --tooltip-arrow-size: 6px;
+
+   background: var(--tooltip-bg);
+   border: 1px solid var(--shadow-color);
+   border-radius: 4px;
+   box-shadow: 4px 4px 8px 0 var(--shadow-color);
+   color: var(--panel-fg);
+   cursor: default;
+   display: none;
+   font-size: 0.8rem;
+   font-family: sans-serif;
+   left: 0;
+   padding: 5px;
+   pointer-events: none;
+   position: absolute;
+   text-align: left;
+   top: 0;
+   transition: top 0.2s ease 0s, left 0.2s ease 0s;
+   white-space: normal;
+   min-height: 50px;
+   min-width: 200px;
+   max-width: 400px;
+   z-index: var(--zindex-tooltip);
+
+   &.visible {
+      display: block;
+   }
+
+   table.return {
+      width: 100%;
+      border-spacing: 0;
+      border-collapse: collapse;
+      th {
+         font-weight: bold;
+      }
+      td {
+         text-align: right;
+      }
+      :is(th,td) {
+         border: 1px solid var(--shadow-color);
+      }
+   }
+
+   &.bottom, &.top {
+      transform: translateX(-50%);
+   }
+   &.right, &.left {
+      transform: translateY(-50%);
+   }
+
+   // Arrows
+   &::before {
+      content: " ";
+      border: solid transparent;
+      height: 0;
+      width: 0;
+      position: absolute;
+      pointer-events: none;
+      border-width: var(--tooltip-arrow-size);
+   }
+   &.bottom::before {
+      bottom: 100%;
+      border-bottom-color: var(--tooltip-bg);
+      left: 50%;
+      margin-left: calc(var(--tooltip-arrow-size) * -1);
+   }
+   &.right:before {
+      right: 100%;
+      border-right-color: var(--tooltip-bg);
+      top: 50%;
+      margin-top: calc(var(--tooltip-arrow-size) * -1);
+   }
+}

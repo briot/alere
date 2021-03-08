@@ -34,36 +34,6 @@
       }
    }
 
-   .tooltip {
-      background: var(--page-background);
-      border: 1px solid var(--shadow-color);
-      color: var(--panel-fg);
-      cursor: default;
-      display: none;
-      margin-top: 20px;
-      pointer-events: none;
-      position: absolute;
-      text-align: left;
-      white-space: normal;
-      width: 250px;
-      z-index: var(--zindex-tooltip);
-
-      table.return {
-         width: 100%;
-         border-spacing: 0;
-         border-collapse: collapse;
-         th {
-            font-weight: bold;
-         }
-         td {
-            text-align: right;
-         }
-         :is(th,td) {
-            border: 1px solid var(--shadow-color);
-         }
-      }
-   }
-
    .priceGraph {
       flex: 0 1 100px;
    }

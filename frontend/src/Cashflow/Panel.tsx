@@ -15,7 +15,7 @@ const CashflowPanel: React.FC<PanelProps<CashflowPanelProps>> = p => {
       <Panel
          {...p}
          header={{ name: capitalize(`${r.possessive}metrics`),
-                   title: r.as_dates}}
+                   tooltip: r.as_dates}}
          Settings={
             <Settings
                props={p.props}

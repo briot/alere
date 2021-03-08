@@ -8,6 +8,7 @@ import * as serviceWorker from './serviceWorker';
 import { AccountsProvider } from 'services/useAccounts';
 import { PrefProvider } from 'services/usePrefs';
 import { HistProvider } from 'services/useHistory';
+import { TooltipProvider } from 'Tooltip';
 import { QueryClient, QueryClientProvider } from 'react-query';
 
 const queryClient = new QueryClient({
@@ -22,13 +23,15 @@ ReactDOM.render(
   <React.StrictMode>
       <BrowserRouter>
          <QueryClientProvider client={queryClient}>
-            <PrefProvider>
-               <HistProvider>
-                  <AccountsProvider>
-                     <App />
-                  </AccountsProvider>
-               </HistProvider>
-            </PrefProvider>
+            <TooltipProvider>
+               <PrefProvider>
+                  <HistProvider>
+                     <AccountsProvider>
+                        <App />
+                     </AccountsProvider>
+                  </HistProvider>
+               </PrefProvider>
+            </TooltipProvider>
         </QueryClientProvider>
       </BrowserRouter>
   </React.StrictMode>,

@@ -7,6 +7,7 @@ import { Checkbox, Select, Option } from 'Form';
 import ListWithColumns, { AlternateRows, Column } from 'List/ListWithColumns';
 import accounts_to_rows from 'List/ListAccounts';
 import List from 'List';
+import Tooltip from 'Tooltip';
 import "./Account.css";
 
 interface SelectTreeNode {
@@ -163,18 +164,19 @@ const AccountName: React.FC<AccountProps> = p => {
    const fname = p.account?.fullName() ?? `account ${p.id}`;
    const name = (!p.account || p.fullName) ? fname : p.account.name;
    return (
-      <span
-         title={`${fname} ${p.account?.description ?? ''}`}
-         className={`account ${p.account?.closed ? 'closed' : ''}`}
+      <Tooltip
+          tooltip={`${fname} ${p.account?.description ?? ''}`}
       >
-         {
-            p.noLinkIf === undefined
-            || p.account === undefined
-            || !p.noLinkIf.includes(p.account)
-            ? (<Link to={`/ledger/${p.id}`}>{name}</Link>)
-            : name
-         }
-      </span>
+         <span className={`account ${p.account?.closed ? 'closed' : ''}`} >
+            {
+               p.noLinkIf === undefined
+               || p.account === undefined
+               || !p.noLinkIf.includes(p.account)
+               ? (<Link to={`/ledger/${p.id}`}>{name}</Link>)
+               : name
+            }
+         </span>
+      </Tooltip>
    );
 }
 export default AccountName;

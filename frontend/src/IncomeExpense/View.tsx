@@ -124,16 +124,15 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
                   account={data.items[index].account}
               />
 
-                  <Numeric
-                     amount={data.items[index].value}
-                     commodity={prefs.currencyId}
-                     scale={p.roundValues ? 0 : undefined}
-                  />
-                  <Numeric
-                     amount={data.items[index].value / data.total * 100}
-                     suffix='%'
-                  />
-
+              <Numeric
+                 amount={data.items[index].value}
+                 commodity={prefs.currencyId}
+                 scale={p.roundValues ? 0 : undefined}
+              />
+              <Numeric
+                 amount={data.items[index].value / data.total * 100}
+                 suffix='%'
+              />
            </span>
          );
 

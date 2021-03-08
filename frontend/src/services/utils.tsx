@@ -2,7 +2,7 @@ import * as d3TimeFormat from 'd3-time-format';
 
 export const DAY_MS = 86400000;
 
-export const isNumeric = (str: unknown): boolean =>  {
+export const isNumeric = (str: unknown): str is number =>  {
    if (typeof str === "number") {
       return true;
    }
@@ -13,6 +13,14 @@ export const isNumeric = (str: unknown): boolean =>  {
              // use type coercion to parse the _entirety_ of the
              // string (`parseFloat` alone does not do this)...
           && !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
+}
+
+export const isString = (s: any): s is string => {
+   return typeof(s) === "string";
+}
+
+export const isFunc = (s: any): s is Function => {
+   return typeof(s) === "function";
 }
 
 export const capitalize = (str: string): string => {

@@ -22,7 +22,7 @@ const NetworthHistoryPanel: React.FC<PanelProps<NetworthHistoryPanelProps>> = p 
       <Panel
          {...p}
          header={{name: capitalize(`${r.possessive}networth history`),
-                  title: r.as_dates}}
+                  tooltip: r.as_dates}}
          Settings={
             <Settings
                props={p.props}

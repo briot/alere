@@ -29,7 +29,7 @@ export interface Column<T, SETTINGS> {
    title?: string;   // tooltip on header
    cell?: (data: T, details: RowDetails<T, SETTINGS>, settings: SETTINGS)
       => React.ReactNode;
-   cellTitle?: (data: T) => string|undefined;  // tooltip on cell
+   cellTitle?: (data: T) => React.ReactNode;  // tooltip on cell
    foot?: string | ((data: LogicalRow<T, SETTINGS>[], settings: SETTINGS)
       => React.ReactNode);
 
@@ -285,7 +285,8 @@ const ListWithColumns = <T extends unknown, SETTINGS> (
                   <Table.TD
                      key={c.id}
                      className={c.className}
-                     title={c.cellTitle?.(logic.data)}
+                     tooltip={c.cellTitle}
+                     tooltipData={logic.data}
                      style={{
                         // Indent first column to show nesting
                         paddingLeft:
@@ -332,7 +333,7 @@ const ListWithColumns = <T extends unknown, SETTINGS> (
             <Table.TH
                key={idx}
                className={c.className}
-               title={c.title}
+               tooltip={c.title}
                sortable={c.compare !== undefined && p.setSortOn !== undefined}
                asc={p.sortOn === undefined ||p.sortOn.slice(1) !== c.id
                   ? undefined
@@ -371,17 +372,19 @@ const ListWithColumns = <T extends unknown, SETTINGS> (
       ) : null;
 
    return (
-      <Table.Table
-         className={p.className}
-         itemCount={phys.length}
-         itemKey={getKey}
-         getRow={getRow}
-         header={header}
-         footer={footer}
-         expandableRows={expandableRows}
-         borders={p.borders}
-         ref={list}
-      />
+      <>
+         <Table.Table
+            className={p.className}
+            itemCount={phys.length}
+            itemKey={getKey}
+            getRow={getRow}
+            header={header}
+            footer={footer}
+            expandableRows={expandableRows}
+            borders={p.borders}
+            ref={list}
+         />
+      </>
    );
 }
 

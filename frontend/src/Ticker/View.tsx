@@ -7,29 +7,39 @@ import PriceGraph from 'PriceGraph';
 import { ColumnType, columnEquity, columnTotalReturn,
    columnAnnualizedReturn, columnShares, columnAverageCost, columnPeriodReturn,
    columnWeighedAverage, columnPL, columnInvested } from 'Ticker/Data';
+import Tooltip from 'Tooltip';
 import './Ticker.scss';
 
-const from_col = (c: ColumnType, p: RowData) => {
-   const h = typeof(c.head) === 'string' ? c.head : c.id;
-   return (
-      <div className="item" key={c.id} >
-         <span className="head">
-            {h}
-            { (c.tooltip || c.title) &&
-              <div className="tooltip">
-                 <div>
-                    <b>{c.title ?? h}</b>
-                 </div>
-                 {
-                    c.tooltip?.(p)
-                 }
-              </div>
-            }
-         </span>
-         <span className="value">
-           { c.cell?.(p) }
-         </span>
+const rowTooltip = (c: ColumnType) => {
+   if (!c.tooltip && !c.title) {
+      return undefined;
+   }
+
+   return (r: RowData): React.ReactNode =>
+      <div>
+         <h4>{c.title ?? c.head ?? c.id}</h4>
+         {
+            c.tooltip?.(r)
+         }
       </div>
+}
+
+const from_col = (c: ColumnType, p: RowData) => {
+   return (
+      <Tooltip
+         tooltip={rowTooltip(c)}
+         tooltipData={p}
+         key={c.id}
+      >
+         <div className="item" >
+            <span className="head">
+               {c.head ?? c.id}
+            </span>
+            <span className="value">
+              { c.cell?.(p) }
+            </span>
+         </div>
+      </Tooltip>
    );
 }
 

@@ -26,7 +26,7 @@ const MeanPanel: React.FC<PanelProps<MeanPanelProps>> = p => {
       <Panel
          {...p}
          header={{name: capitalize(`${r.possessive}${title} history`),
-                  title: r.as_dates}}
+                  tooltip: r.as_dates}}
          Settings={
             <Settings
                props={p.props}

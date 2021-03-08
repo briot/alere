@@ -4,6 +4,7 @@ import RoundButton from 'RoundButton';
 import Dropdown from 'Form/Dropdown';
 import { HeaderProps } from 'Header';
 import classes from 'services/classes';
+import Tooltip from 'Tooltip';
 import './Panel.scss';
 
 /**
@@ -73,7 +74,9 @@ function Panel<T extends PanelBaseProps>(
         {
            !p.props.hidePanelHeader &&
            <div className="header">
-              <h5 title={p.header.title}>{p.header.name}</h5>
+              <Tooltip tooltip={p.header.tooltip}>
+                 <h5>{p.header.name}</h5>
+              </Tooltip>
               <div className="group">
                  {p.header.buttons}
                  {

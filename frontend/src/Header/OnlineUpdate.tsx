@@ -21,7 +21,7 @@ const OnlineUpdate: React.FC<{}> = () => {
       <RoundButton
          fa='fa-refresh'
          size='small'
-         title='update prices from online sources. This includes closing prices from the previous day, not necessarily the current price.'
+         tooltip='update prices from online sources. This includes closing prices from the previous day, not necessarily the current price.'
          onClick={() => mutation.mutate('')}
          disabled={mutation.isLoading}
       />

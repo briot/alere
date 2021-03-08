@@ -4,6 +4,7 @@ import { Commodity, CommodityId } from 'services/useAccounts';
 import { Link } from 'react-router-dom';
 import Numeric from 'Numeric';
 import Table from 'List';
+import Tooltip, { TooltipProps } from 'Tooltip';
 import usePrefs from 'services/usePrefs';
 import useFetch from 'services/useFetch';
 import './Cashflow.scss';
@@ -51,7 +52,7 @@ const useFetchPL = (range: DateRange, currencyId: CommodityId) => {
    return data ?? NULL_METRIC;
 }
 
-interface MetricsProps {
+interface MetricsProps extends TooltipProps<undefined> {
    name: string;
    descr: string;
    value: number | React.ReactNode;
@@ -59,7 +60,6 @@ interface MetricsProps {
    compare?: string;
    commodity?: CommodityId|Commodity;
    suffix?: string;
-   tooltip?: string;
 }
 
 const Metrics: React.FC<MetricsProps> = p => {
@@ -91,21 +91,19 @@ const Metrics: React.FC<MetricsProps> = p => {
                */
             }
             {
-               React.isValidElement(p.value)
-               ? (
-               <span className="value" title={p.tooltip}>
-                  {p.value}
-               </span>
-               )
-               : (
-               <span className="value" title={p.tooltip}>
-                  <Numeric
-                     amount={p.value as number}
-                     commodity={p.commodity}
-                     suffix={p.suffix}
-                  />
-               </span>
-               )
+               <Tooltip {...p} >
+                  <span className="value">
+                  {
+                     React.isValidElement(p.value)
+                     ? p.value
+                     : <Numeric
+                           amount={p.value as number}
+                           commodity={p.commodity}
+                           suffix={p.suffix}
+                        />
+                  }
+                  </span>
+               </Tooltip>
             }
          </div>
       </div>
@@ -135,14 +133,14 @@ const Cashflow: React.FC<CashflowProps> = p => {
    const flowrow = (r: {
       head: string,
       amount: number,
-      title?: string,
+      tooltip?: string,
       bold?: boolean,
       border?: boolean,
       padding?: number,
       url?: string,
    }) => (
       <Table.TR
-         title={r.title}
+         tooltip={r.tooltip}
          style={{borderTop: r.border ? "1px solid var(--table-color)" : ""}}
       >
         {r.bold ? (
@@ -196,12 +194,12 @@ const Cashflow: React.FC<CashflowProps> = p => {
    const assetrow = (r: {
       head: string,
       amount: number,
-      title?: string,
+      tooltip?: string,
       bold?: boolean,
       padding?: number
    }) => (
       <Table.TR
-         title={r.title}
+         tooltip={r.tooltip}
       >
          {r.bold ? (
             <>
@@ -244,7 +242,13 @@ const Cashflow: React.FC<CashflowProps> = p => {
             name="Savings rate"
             descr="How much of your realized income you are saving"
             value={cashflow / pl.income * 100}
-            tooltip={`cashflow ${cashflow.toFixed(0)} / income ${pl.income.toFixed(0)}`}
+            tooltip={() =>
+               <p>
+                  cashflow <Numeric amount={cashflow} />
+                  <br/>
+                  / income <Numeric amount={pl.income} />
+               </p>
+            }
             ideal={24}
             compare=">"
             suffix="%"
@@ -254,7 +258,13 @@ const Cashflow: React.FC<CashflowProps> = p => {
             name="Emergency Fund Ratio"
             descr="How many months worth of expenses can be funded through liquid assets"
             value={pl.liquid_assets / monthly_expenses}
-            tooltip={`liquid assets ${pl.liquid_assets.toFixed(0)} / monthly expenses ${monthly_expenses.toFixed(0)}`}
+            tooltip={() =>
+               <p>
+                  liquid assets <Numeric amount={pl.liquid_assets} />
+                  <br/>
+                  / monthly expenses <Numeric amount={monthly_expenses} />
+               </p>
+            }
             ideal={4}
             compare=">"
             commodity={commMonths}
@@ -263,7 +273,13 @@ const Cashflow: React.FC<CashflowProps> = p => {
             name="Actual income tax rate"
             descr="How much of your income you spend on income taxes"
             value={pl.income_taxes / pl.income * 100}
-            tooltip={`Income taxes ${pl.income_taxes.toFixed(0)} / Total income ${pl.income.toFixed(0)}`}
+            tooltip={() =>
+               <p>
+                  Income taxes <Numeric amount={pl.income_taxes} />
+                  <br/>
+                  / Total income <Numeric amount={pl.income} />
+               </p>
+            }
             ideal={10}
             compare="<"
             suffix="%"
@@ -275,7 +291,13 @@ const Cashflow: React.FC<CashflowProps> = p => {
             name="Wealth"
             descr="How many months worth of expenses you own in total"
             value={pl.networth / monthly_expenses}
-            tooltip={`Networth ${pl.networth.toFixed(0)} / Monthly expenses ${monthly_expenses.toFixed(0)}`}
+            tooltip={() =>
+               <p>
+                  Networth <Numeric amount={pl.networth} />
+                  <br/>
+                  / Monthly expenses <Numeric amount={monthly_expenses} />
+               </p>
+            }
             ideal={6}
             compare=">"
             commodity={commMonths}
@@ -284,7 +306,14 @@ const Cashflow: React.FC<CashflowProps> = p => {
             name="Return on Investment"
             descr="How much passive income your whole networth provides"
             value={non_work_income / pl.networth_start * 100}
-            tooltip={`Passive income and unrealized gains ${non_work_income.toFixed(0)} / Networth at start ${pl.networth_start.toFixed(0)}`}
+            tooltip={() =>
+               <p>
+                  Passive income and unrealized
+                  gains <Numeric amount={non_work_income} />
+                  <br/>
+                  / Networth at start <Numeric amount={pl.networth_start} />
+               </p>
+            }
             ideal={4}
             compare=">"
             suffix="%"
@@ -293,7 +322,15 @@ const Cashflow: React.FC<CashflowProps> = p => {
             name="Return on Investment for liquid assets"
             descr="How much passive income your liquid assets provides"
             value={non_work_income / pl.liquid_assets_at_start * 100}
-            tooltip={`Passive income and unrealized gains ${non_work_income.toFixed(0)} / Liquid assets at start ${pl.liquid_assets_at_start.toFixed(0)}`}
+            tooltip={() =>
+               <p>
+                  Passive income and unrealized
+                  gains <Numeric amount={non_work_income} />
+                  <br />
+                  / Liquid assets at
+                  start <Numeric amount={pl.liquid_assets_at_start} />
+               </p>
+            }
             ideal={4}
             compare=">"
             suffix="%"
@@ -313,7 +350,14 @@ const Cashflow: React.FC<CashflowProps> = p => {
             name="Financial independence"
             descr="Part of your expenses covered by passive income"
             value={non_work_income / pl.expenses * 100}
-            tooltip={`Passive income and unrealized gains ${non_work_income.toFixed(0)} / Expenses ${pl.expenses.toFixed(0)}`}
+            tooltip={() =>
+               <p>
+                  Passive income and unrealized
+                  gains <Numeric amount={non_work_income} />
+                  <br />
+                  / Expenses <Numeric amount={pl.expenses} />
+               </p>
+            }
             ideal={100}
             compare=">"
             suffix="%"
@@ -322,7 +366,14 @@ const Cashflow: React.FC<CashflowProps> = p => {
             name="Passive income"
             descr="What part of the total income comes from sources other than the result of our work"
             value={non_work_income / pl.income * 100}
-            tooltip={`Passive income and unrealized gains ${non_work_income.toFixed(0)} / Total Income ${pl.income.toFixed(0)}`}
+            tooltip={() =>
+               <p>
+                  Passive income and unrealized
+                  gains <Numeric amount={non_work_income} />
+                  <br/>
+                  / Total Income <Numeric amount={pl.income} />
+               </p>
+            }
             ideal={50}
             compare=">"
             suffix="%"
@@ -351,7 +402,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   flowrow({
                      head: 'Total income',
                      amount: pl.income,
-                     title: "Cumulated income (passive + from work)",
+                     tooltip: "Cumulated income (passive + from work)",
                      bold:  true})
                }
                {
@@ -359,7 +410,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   flowrow({
                      head: '  Income from work',
                      amount: pl.work_income,
-                     title: "Sum of all income from work"
+                     tooltip: "Sum of all income from work"
                        + " (salaries, unemployment,...) during that period",
                      padding: 1,
                      url: `/ledger/work_income?range=${p.range}`,
@@ -370,7 +421,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   flowrow({
                      head: '  Passive income',
                      amount: pl.passive_income,
-                     title: "Income that would remain if you stopped working"
+                     tooltip: "Income that would remain if you stopped working"
                       + " (dividends, rents,...)",
                      padding: 1,
                      url: `/ledger/passive_income?range=${p.range}`,
@@ -381,7 +432,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   flowrow({
                      head: '  Other income',
                      amount: pl.income - pl.work_income - pl.passive_income,
-                     title: "Unclassified income",
+                     tooltip: "Unclassified income",
                      padding: 1,
                   })
                }
@@ -389,7 +440,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   flowrow({
                      head: 'Total expenses',
                      amount: -pl.expenses,
-                     title: "Sum of all expenses during that period",
+                     tooltip: "Sum of all expenses during that period",
                      bold: true,
                      url: `/ledger/expenses?range=${p.range}`,
                   })
@@ -424,7 +475,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   flowrow({
                      head: 'Cashflow',
                      amount: cashflow,
-                     title: "Income minus expenses, not counting the delta in the valuation of stocks",
+                     tooltip: "Income minus expenses, not counting the delta in the valuation of stocks",
                      bold: true,
                      border: true,
                   })
@@ -434,7 +485,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   flowrow({
                      head: 'Unrealized gains',
                      amount: unrealized,
-                     title: "Variation in the price of your investments",
+                     tooltip: "Variation in the price of your investments",
                      padding: 1,
                   })
                }
@@ -442,7 +493,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   flowrow({
                      head: 'Networth change',
                      amount: networth_delta,
-                     title: "How much your total networth change during that period",
+                     tooltip: "How much your total networth change during that period",
                      bold: true,
                      border: true,
                   })
@@ -463,7 +514,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                assetrow({
                   head: 'Networth',
                   amount: pl.networth,
-                  title: 'How much you own minus how much you how at the end of the period',
+                  tooltip: 'How much you own minus how much you how at the end of the period',
                   bold: true
                })
             }
@@ -471,7 +522,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                assetrow({
                   head: 'Liquid assets',
                   amount: pl.liquid_assets,
-                  title: "The part of your assets in savings, checkings, investments and stocks",
+                  tooltip: "The part of your assets in savings, checkings, investments and stocks",
                   padding: 1,
                })
             }
@@ -479,7 +530,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                assetrow({
                   head: 'Other assets',
                   amount: pl.networth - pl.liquid_assets,
-                  title: "The part of your assets that cannot be sold quickly, like real-estate, jewels,..",
+                  tooltip: "The part of your assets that cannot be sold quickly, like real-estate, jewels,..",
                   padding: 1,
                })
             }

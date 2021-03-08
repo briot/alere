@@ -24,7 +24,7 @@ const IEPanel: React.FC<PanelProps<IncomeExpensePanelProps>> = p => {
       <Panel
          {...p}
          header={{ name: capitalize(`${r.possessive}${basetitle}`),
-                   title: r.as_dates}}
+                   tooltip: r.as_dates}}
          Settings={
             <Settings
                props={p.props}

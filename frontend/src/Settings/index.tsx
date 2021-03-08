@@ -24,7 +24,7 @@ const Settings: React.FC<SettingsProps> = p => {
                fa='fa-gear'
                selected={visible}
                size='small'
-               title="Global Settings"
+               tooltip="Global Settings"
             />
          }
          menu={

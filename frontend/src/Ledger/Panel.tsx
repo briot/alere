@@ -32,7 +32,7 @@ const LedgerPanel: React.FC<
       <Panel
          {...p}
          header={{name: capitalize(`${r.possessive}transactions, ${title}`),
-                  title: r.as_dates }}
+                  tooltip: r.as_dates }}
          Settings={
             <Settings
                props={p.props}
