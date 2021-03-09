@@ -10,13 +10,11 @@
    display: none;
    font-size: 0.8rem;
    font-family: sans-serif;
-   left: 0;
    padding: 5px;
    pointer-events: none;
    position: absolute;
    text-align: left;
-   top: 0;
-   transition: top 0.2s ease 0s, left 0.2s ease 0s;
+   transition: all 0.2s ease 0s;
    white-space: normal;
    min-height: 50px;
    min-width: 200px;
@@ -42,13 +40,6 @@
       }
    }
 
-   &.bottom, &.top {
-      transform: translateX(-50%);
-   }
-   &.right, &.left {
-      transform: translateY(-50%);
-   }
-
    // Arrows
    &::before {
       content: " ";
@@ -59,16 +50,28 @@
       pointer-events: none;
       border-width: var(--tooltip-arrow-size);
    }
+   &.top::before {
+      top: 100%;
+      left: 50%;
+      border-top-color: var(--tooltip-bg);
+      margin-bottom: calc(var(--tooltip-arrow-size) * -1);
+   }
    &.bottom::before {
       bottom: 100%;
-      border-bottom-color: var(--tooltip-bg);
       left: 50%;
-      margin-left: calc(var(--tooltip-arrow-size) * -1);
+      border-bottom-color: var(--tooltip-bg);
+      margin-top: calc(var(--tooltip-arrow-size) * -1);
+   }
+   &.left:before {
+      left: 100%;
+      top: 50%;
+      border-left-color: var(--tooltip-bg);
+      margin-right: calc(var(--tooltip-arrow-size) * -1);
    }
    &.right:before {
       right: 100%;
-      border-right-color: var(--tooltip-bg);
       top: 50%;
-      margin-top: calc(var(--tooltip-arrow-size) * -1);
+      border-right-color: var(--tooltip-bg);
+      margin-left: calc(var(--tooltip-arrow-size) * -1);
    }
 }

@@ -23,6 +23,9 @@ export const isFunc = (s: any): s is Function => {
    return typeof(s) === "function";
 }
 
+export const clamp = (n: number, min: number, max: number) =>
+  Math.min(max, Math.max(n, min));
+
 export const capitalize = (str: string): string => {
    return (
       str.charAt(0).toLocaleUpperCase()

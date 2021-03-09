@@ -1,12 +1,12 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import classes from 'services/classes';
-import { isFunc } from 'services/utils';
+import { clamp, isFunc } from 'services/utils';
 import './Tooltip.scss';
 
 type TooltipFunc<T> = (d: T) => React.ReactNode;
 
-const MARGIN = 10;
+const MARGIN = 4;
 const DELAY_BEFORE = 200;
 const DELAY_TO_CLOSE = 100;
 
@@ -31,10 +31,100 @@ const noContext: TooltipContext<any> = {
 const ReactTooltipContext = React.createContext(noContext);
 
 /**
- * Tooltip provider
+ * Compute position of the tooltip window
  */
 
 type Side = 'left' | 'bottom' | 'right' | 'top';
+interface Position {
+   side: Side;
+   top?: number | undefined;
+   bottom?: number | undefined;
+   left?: number | undefined;
+   right?: number | undefined;
+}
+
+const computePos = (
+   anchor: Element|undefined,
+   tooltipWidth: number,
+   tooltipHeight: number,
+   defaultSide: Side,
+): Position => {
+   if (!anchor) {
+      return { side: defaultSide };
+   }
+
+   const b  = anchor.getBoundingClientRect();
+
+   const tbw = tooltipWidth;
+   const tbh = tooltipHeight;
+
+   const ww = document.documentElement.clientWidth;
+   const wh = document.documentElement.clientHeight;
+   let side = defaultSide;
+   let r: Position = {side};
+   const isValid = (r: Position) =>
+      (r.top === undefined ? true : 0 <= r.top && r.top + tbh <= wh)
+      && (r.left === undefined ? true : 0 <= r.left && r.left + tbw <= ww)
+      && (r.right === undefined ? true : 0 <= r.right - tbw && r.right <= ww);
+
+   for (let attempt = 0; attempt < 4; attempt++) {
+      switch (side) {
+         case 'bottom':
+            r = {
+               side,
+               left: window.scrollX + clamp(
+                  b.left + b.width / 2 - tbw / 2,
+                  0, ww - tbw),
+               top: window.scrollY + b.bottom + MARGIN,
+            };
+            side = 'right';
+            break;
+
+         case 'right':
+            r = {
+               side,
+               left: window.scrollX + b.right + MARGIN,
+               top: window.scrollY + clamp(
+                  b.top + b.height / 2 - tbh / 2,
+                  0, wh - tbh),
+            };
+            side = 'top';
+            break;
+
+         case 'top':
+            r = {
+               side,
+               left: window.scrollX + clamp(
+                  b.left + b.width / 2 - tbw / 2,
+                  0, ww - tbw),
+               top: window.scrollY + b.top - tbh - MARGIN,
+            };
+            side = 'left';
+            break;
+
+         case 'left':
+            r = {
+               side,
+               right: ww - b.left + MARGIN,
+               top: window.scrollY + clamp(
+                  b.top + b.height / 2 - tbh / 2,
+                  0, wh - tbh),
+            };
+            side = 'bottom';
+            break;
+      }
+
+      if (isValid(r)) {
+         return r;
+      }
+   }
+   return r;  //  return the last candidate anyway
+}
+
+/**
+ * Tooltip provider
+ */
+
 interface TooltipData {
    on?: Element;
    element?: React.ReactNode;
@@ -47,19 +137,49 @@ const noTooltipData: TooltipData = {
 export const TooltipProvider: React.FC<{}> = p => {
    const [data, setData] = React.useState(noTooltipData);
    const tooltipRef = React.useRef<Element|null>();
-   const side = React.useRef<Side>('bottom');
    const timeout = React.useRef(-1);
+   const [pos, setPos] = React.useState<Position>({ side: 'bottom' });
+   const obs = React.useRef<ResizeObserver|undefined>();
+
+   /**
+    * Called every time the <tooltip> element is mounted, or this callback
+    * changes (so when data.on changes)
+    */
+   const setRef = React.useCallback(
+      (e: Element|null) => {
+         tooltipRef.current = e;
+
+         if (obs.current) {
+            obs.current.disconnect();
+         }
+
+         if (e) {
+            obs.current = new ResizeObserver(
+               (entries) => {
+                  for (let entry of entries) {
+                     setPos(d => {
+                        // ??? 15 and 20 are empirical numbers. Would be better
+                        // to use entry.borderBoxSize, but this is an object
+                        // in firefox, and typescript (and standard) expect an
+                        // array.
+                        return computePos(
+                           data.on            /* anchor */,
+                           entry.contentRect.width + 15,
+                           entry.contentRect.height + 20,
+                           d.side             /* defaultSide */,
+                        );
+                     });
+                  }
+               }
+            );
+            obs.current?.observe(e);
+         }
+      },
+      [data.on]
+   );
 
    const hide = React.useCallback(
-      () => {
-         timeout.current && window.clearTimeout(timeout.current);
-         timeout.current = window.setTimeout(
-            () => {
-               timeout.current = -1;
-               setData({visible: false});
-            },
-            DELAY_TO_CLOSE);
-      },
+      () => setData(d => ({ ...d, on: undefined })),
       [],
    );
 
@@ -78,12 +198,12 @@ export const TooltipProvider: React.FC<{}> = p => {
          }
 
          if (r === undefined || r === null) {
-            hide();
+            setData(d => ({ ...d, on: undefined }));  // hide
          } else {
-            setData({element: r, on, visible: false, side: 'bottom'});
+            setData({element: r, on, visible: false});
          }
       },
-      [hide],
+      [],
    );
 
    const ctx = React.useMemo(
@@ -91,80 +211,34 @@ export const TooltipProvider: React.FC<{}> = p => {
       [show, hide],
    );
 
-   let top = 0;
-   let left = 0;
    if (data.on && tooltipRef.current) {
-      const b = data.on.getBoundingClientRect();
-      const ww = document.documentElement.clientWidth;
-      const wh = document.documentElement.clientHeight;
-      const w = tooltipRef.current.clientWidth;
-      const h = tooltipRef.current.clientHeight;
-
-      for (let attempt = 0; attempt < 4; attempt++) {
-         if (side.current === 'bottom') {
-            left = window.scrollX + Math.min(
-               b.left + b.width / 2,
-               ww - w/ 2);
-            top = window.scrollY + b.bottom + MARGIN;
-            if (top + h <= wh) {
-               break;
-            }
-            side.current = 'right';
-         }
-         if (side.current === 'right') {
-            left = window.scrollX + b.right + MARGIN;
-            top = window.scrollY + Math.min(
-               b.top + b.height / 2,
-               wh - h / 2)
-            if (left + w <= ww) {
-               break;
-            }
-            side.current = 'top';
-         }
-         if (side.current === 'top') {
-            left = window.scrollX + Math.min(
-               b.left + b.width / 2,
-               ww - w/ 2);
-            top = window.scrollY + b.top - b.height - MARGIN;
-            if (top + h <= wh) {
-               break;
-            }
-            side.current = 'left';
-         }
-         if (side.current === 'left') {
-            left = window.scrollX + b.left - w + MARGIN;
-            top = window.scrollY + Math.min(
-               b.top + b.height / 2,
-               wh - h / 2,
-            )
-            if (left + w <= ww) {
-               break;
-            }
-            side.current = 'bottom';
-         }
-      }
-
       if (!data.visible) {
-         //  Let React update the DOM, to compute sizes, then move the element
-         //  in place.
          timeout.current !== -1 && window.clearTimeout(timeout.current);
          timeout.current = window.setTimeout(
             () => {
                timeout.current = -1;
-               if (tooltipRef.current) {
-                  setData(d => ({...d, visible: true}));
-               }
+               setData(d => ({ ...d, visible: true }));
             },
-            //  If we already have a tooltip open, reuse it immediately
-            timeout.current === -1 ? DELAY_BEFORE : 0,
+            DELAY_BEFORE,
+         );
+      }
+   } else {
+      if (data.visible) {
+         timeout.current !== -1 && window.clearTimeout(timeout.current);
+         timeout.current = window.setTimeout(
+            () => {
+               timeout.current = -1;
+               setData({ visible: false });
+            },
+            DELAY_TO_CLOSE
          );
       }
    }
 
    const c = classes(
       'tooltip',
-      data.visible && data.on ? 'visible' : 'hidden',
-      side.current,
+      data.on && tooltipRef.current ? 'visible' : 'hidden',
+      pos.side,
    );
 
    return (
@@ -174,8 +248,13 @@ export const TooltipProvider: React.FC<{}> = p => {
             ReactDOM.createPortal(
                <div
                   className={c}
-                  ref={e => tooltipRef.current = e}
-                  style={{top, left}}
+                  ref={setRef}
+                  style={{
+                     top: pos.top,
+                     left: pos.left,
+                     right: pos.right,
+                     bottom: pos.bottom,
+                  }}
                >
                   {data.element}
                </div>,
