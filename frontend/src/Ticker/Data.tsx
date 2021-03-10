@@ -1,4 +1,5 @@
 import { RowData } from 'Ticker/types';
+import { pastValue } from 'Ticker/Past';
 import { dateForm } from 'services/utils';
 import { DateDisplay } from 'Dates';
 import { LogicalRow } from 'List/ListWithColumns';
@@ -16,7 +17,7 @@ export interface ColumnType {
    className?: string;
    tooltip?: (data: RowData) => React.ReactNode;
    cell: (data: RowData) => React.ReactNode;
-   compare: (left: RowData, right: RowData) => number;
+   compare?: (left: RowData, right: RowData) => number;
    foot?: (data: LogicalRow<RowData, any>[]) => React.ReactNode;
 }
 
@@ -225,6 +226,20 @@ export const columnPeriodPL: ColumnType = {
          forceSign={true}
       />,
    tooltip: (r: RowData) => "Equity minus total amount invested",
+}
+
+export const columnLatest: ColumnType = {
+   id: "Last",
+   title: "Latest known price",
+   className: 'amount',
+   cell: (r: RowData) =>
+      <Numeric
+         amount={
+            r.ticker.is_currency
+            ? NaN
+            : pastValue(r.ticker, r.acc, 0).toPrice }
+         commodity={r.currencyId}
+      />,
 }
 
 export const columnPeriodReturn: ColumnType = {

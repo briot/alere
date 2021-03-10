@@ -9,7 +9,7 @@ import AccountName from 'Account';
 import ListWithColumns, { Column, LogicalRow } from 'List/ListWithColumns';
 import { ColumnType, columnEquity, columnTotalReturn, columnAnnualizedReturn,
    columnPL, columnWeighedAverage, columnPeriodPL, columnGains,
-   columnAverageCost, columnPeriodReturn,
+   columnAverageCost, columnPeriodReturn, columnLatest,
    columnShares, columnInvested } from 'Ticker/Data';
 import useTickers from 'services/useTickers';
 import usePriceSources from 'services/usePriceSources';
@@ -52,6 +52,7 @@ const dataColumns: ColumnType[] = [
    columnAnnualizedReturn,
    columnAverageCost,
    columnWeighedAverage,
+   columnLatest,
 ];
 const columns: Column<RowData, InvestmentsProps>[] =
    dataColumns.map(c => ({ ...c, cellTitle: c.tooltip }));

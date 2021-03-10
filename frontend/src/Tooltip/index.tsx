@@ -20,7 +20,7 @@ export interface TooltipProps<T> {
  */
 
 interface TooltipContext<T> {
-   show: (on: Element, d: TooltipProps<T>) => void,
+   show: (on: Element|null, d: TooltipProps<T>) => void,
    hide: () => void;
 }
 const noContext: TooltipContext<any> = {
@@ -184,7 +184,7 @@ export const TooltipProvider: React.FC<{}> = p => {
    );
 
    const show = React.useCallback(
-      (on: Element, d: TooltipProps<any>) => {
+      (on: Element|null, d: TooltipProps<any>) => {
          let r: React.ReactNode | undefined;
 
          try {
@@ -197,7 +197,7 @@ export const TooltipProvider: React.FC<{}> = p => {
             r = undefined;
          }
 
-         if (r === undefined || r === null) {
+         if (on === null || r === undefined || r === null) {
             setData(d => ({ ...d, on: undefined }));  // hide
          } else {
             setData({element: r, on, visible: false});
@@ -276,17 +276,17 @@ interface TooltipPropsWithChild<T> extends TooltipProps<T> {
 }
 
 const Tooltip: React.FC<TooltipPropsWithChild<any>> = p => {
+   const ref = React.useRef<Element>(null);
    const tooltip = useTooltip();
 
    const handleMouseEnter = React.useCallback(
-      (n: React.MouseEvent) =>
-         tooltip.show(
-            n.target as Element,
-            {
-               tooltip: p.tooltip,
-               tooltipData: p.tooltipData,
-            }
-         ),
+      () => tooltip.show(
+         ref.current,
+         {
+            tooltip: p.tooltip,
+            tooltipData: p.tooltipData,
+         }
+      ),
       [p.tooltip, p.tooltipData, tooltip]
    );
 
@@ -302,6 +302,7 @@ const Tooltip: React.FC<TooltipPropsWithChild<any>> = p => {
          React.Children.only(p.children), {
             onMouseEnter: handleMouseEnter,
             onMouseLeave: tooltip.hide,
+            ref,
          }
       )
    );
