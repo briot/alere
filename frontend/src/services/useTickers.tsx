@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { THRESHOLD, Ticker } from 'Ticker/types';
 import { ClosePrice } from 'PriceGraph';
 import { DateRange, rangeToHttp } from 'Dates';
@@ -49,7 +50,6 @@ const useTickers = (
    const accs = useAccountIds(accountIds);
    const ids = accs.accounts.map(a => a.id).sort().join(',');
    const nan_dec = (n: number|null) => n === null ? NaN : n;
-
    const tickers = useFetch<Ticker[], TickerJSON[]>({
       url: `/api/quotes?currency=${currencyId}`
          + (commodity ? `&commodities=${commodity}` : '')
@@ -86,15 +86,28 @@ const useTickers = (
                   roi: nan_dec(a.end.roi),
                   weighted_avg: nan_dec(a.end.weighted_avg),
                },
-            }))
-            .filter(a => !hideIfNoShare
-               || t.is_currency
-               || Math.abs(a.end.shares) > THRESHOLD)
-         })).filter(t => !hideIfNoShare || t.accounts.length > 0);
+            })),
+         }));
       },
    });
 
-   return tickers;
+   const [ filtered, setFiltered ] = React.useState<Ticker[]>([]);
+
+   React.useEffect(
+      () => {
+         setFiltered((tickers?.data ?? []).map(
+            f => ({
+               ...f,
+               accounts: f.accounts.filter(
+                  a => !hideIfNoShare
+                     || f.is_currency
+                     || Math.abs(a.end.shares) > THRESHOLD),
+            })).filter(t => !hideIfNoShare || t.accounts.length > 0));
+      },
+      [tickers.data, hideIfNoShare],
+   );
+
+   return filtered;
 }
 
 export default useTickers;

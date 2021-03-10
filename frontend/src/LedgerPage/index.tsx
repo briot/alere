@@ -81,7 +81,7 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
    const { pushAccount } = useHistory();
    const transactions = useTransactions(accounts, range);
 
-   const { data: tickers } = useTickers(
+   const tickers = useTickers(
       prefs.currencyId        /* currencyId */,
       accounts.map(a => a.id) /* accountIds */,
       "forever"               /* range */,

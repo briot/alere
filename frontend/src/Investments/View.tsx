@@ -37,8 +37,6 @@ const columnAccountName: ColumnType = {
       r1.acc.account.name.localeCompare(r2.acc.account.name),
 };
 
-// const columnGainLastYear: Column<RowData, InvestmentsProps> = {
-
 const dataColumns: ColumnType[] = [
    columnAccountName,
    columnEquity,
@@ -59,7 +57,7 @@ const columns: Column<RowData, InvestmentsProps>[] =
 
 const Investments: React.FC<InvestmentsProps> = p => {
    const { prefs } = usePrefs();
-   const { data } = useTickers(
+   const data = useTickers(
       prefs.currencyId, 'all' /* accountIds */, p.range, p.hideIfNoShare);
    const doNothing = React.useCallback(() => {}, []);
    const [sorted, setSorted] = React.useState('');

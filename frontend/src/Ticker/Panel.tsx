@@ -32,7 +32,7 @@ const TickerPanel: React.FC<PanelProps<TickerPanelProps>> = p => {
    const { prefs } = usePrefs();
 
    // Download the ticker info, unless ticker is specified and is a Ticker
-   const { data } = useTickers(
+   const data = useTickers(
       prefs.currencyId /* currencyId */,
       p.props.accountIds  /* accountIds */,
       p.props.range    /* range */,
