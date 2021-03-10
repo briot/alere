@@ -1,4 +1,5 @@
 import * as React from 'react';
+import useFetch from 'services/useFetch';
 
 export type AccountId = number;
 export type CommodityId = number;
@@ -150,24 +151,6 @@ export class Account {
 export class AccountList {
    private accounts: Map<AccountId, Account>;
 
-   static async fetch() {
-      const resp = await window.fetch('/api/account/list');
-      const acc: [AccountJSON[], Commodity[],
-                  AccountKindJSON[], InstitutionJSON[]] =
-         await resp.json();
-
-      const comm: { [id: number /*CommodityId*/]: Commodity} = {};
-      acc[1].forEach(c => comm[c.id] = c);
-
-      const kinds: { [id: string /*AccountKindId*/]: AccountKindJSON } = {};
-      acc[2].forEach(c => kinds[c.id] = c);
-
-      const inst: { [id: string /*InstitutionId*/]: InstitutionJSON } = {};
-      acc[3].forEach(c => inst[c.id] = c);
-
-      return new AccountList(acc[0], comm, kinds, inst, true);
-   }
-
    constructor(
       acc: AccountJSON[],
       public allCommodities: { [id: number /*CommodityId*/]: Commodity},
@@ -233,42 +216,40 @@ export const cmpAccounts = (a : Account|undefined, b: Account|undefined) => {
 interface IAccountsContext {
    accounts: AccountList;
    commodities: { [id: number /*CommodityId*/]: Commodity};
-
-   refresh: () => void;
-   // Call refresh() to request a refresh of the list of accounts
 }
 
 const noContext: IAccountsContext = {
    accounts: new AccountList([], {}, {}, {}, false /* loaded */),
    commodities: {},
-   refresh: () => {},
 }
 
 const AccountsContext = React.createContext(noContext);
+type ServerJSON = [
+   AccountJSON[], Commodity[], AccountKindJSON[], InstitutionJSON[]
+];
 
 export const AccountsProvider: React.FC<{}> = p => {
-   const [ctx, setCtx] = React.useState<IAccountsContext>(noContext);
+   const { data } = useFetch<IAccountsContext, ServerJSON>({
+      url: '/api/account/list',
+      parse: (json: ServerJSON) => {
+         const comm: { [id: number /*CommodityId*/]: Commodity} = {};
+         json[1].forEach(c => comm[c.id] = c);
 
-   const refresh = React.useCallback(
-      async () => {
-         const accounts = await AccountList.fetch();
-         setCtx({accounts,
-                 commodities: accounts.allCommodities,
-                 refresh});
-      },
-      []
-   );
+         const kinds: { [id: string /*AccountKindId*/]: AccountKindJSON } = {};
+         json[2].forEach(c => kinds[c.id] = c);
 
-   // Initial loading
-   React.useEffect(
-      () => {
-         refresh();
+         const inst: { [id: string /*InstitutionId*/]: InstitutionJSON } = {};
+         json[3].forEach(c => inst[c.id] = c);
+
+         return {
+            accounts: new AccountList(json[0], comm, kinds, inst, true),
+            commodities: comm,
+         };
       },
-      [refresh]
-   );
+   });
 
    return (
-      <AccountsContext.Provider value={ctx}>
+      <AccountsContext.Provider value={data || noContext}>
          {p.children}
       </AccountsContext.Provider>
    );

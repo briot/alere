@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Upload from 'Form/Upload';
-import useAccounts from 'services/useAccounts';
 import usePost from 'services/usePost';
+import { useQueryClient } from 'react-query';
 import './Welcome.scss';
 
 enum Mode {
@@ -14,10 +14,10 @@ export interface WelcomeProps {
 
 const Welcome: React.FC<WelcomeProps> = p => {
    const [mode, setMode] = React.useState(Mode.CHOICES);
-   const { refresh } = useAccounts();
+   const client = useQueryClient();
    const importer = usePost({
       url: '/api/import/kmymoney',
-      onSuccess: refresh,
+      onSuccess: () => client.invalidateQueries(),
       onError: () => {
          throw new Error("Could not upload file");
       },
