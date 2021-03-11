@@ -10,7 +10,8 @@ import ListWithColumns, { Column, LogicalRow } from 'List/ListWithColumns';
 import { ColumnType, columnEquity, columnTotalReturn, columnAnnualizedReturn,
    columnPL, columnWeighedAverage, columnPeriodPL, columnGains,
    columnAverageCost, columnPeriodReturn, columnLatest,
-   columnShares, columnInvested } from 'Ticker/Data';
+   columnShares, columnInvested,
+   Aggregated, aggregate} from 'Ticker/Data';
 import useTickers from 'services/useTickers';
 import usePriceSources from 'services/usePriceSources';
 import './Investments.scss';
@@ -52,7 +53,7 @@ const dataColumns: ColumnType[] = [
    columnWeighedAverage,
    columnLatest,
 ];
-const columns: Column<RowData, InvestmentsProps>[] =
+const columns: Column<RowData, InvestmentsProps, Aggregated>[] =
    dataColumns.map(c => ({ ...c, cellTitle: c.tooltip }));
 
 const Investments: React.FC<InvestmentsProps> = p => {
@@ -65,14 +66,14 @@ const Investments: React.FC<InvestmentsProps> = p => {
 
    const cols = React.useMemo(
       () => {
-         const columnPriceSource: Column<RowData, InvestmentsProps> = {
+         const columnSource: Column<RowData, InvestmentsProps, Aggregated> = {
             id: 'Source',
             cell: (r: RowData) => sources[r.ticker.source]?.name,
             compare: (r1: RowData, r2: RowData) =>
                (sources[r1.ticker.source].name ?? '')
                   .localeCompare(sources[r2.ticker.source].name ?? ''),
          }
-         return [...columns, columnPriceSource];
+         return [...columns, columnSource];
       },
       [sources],
    );
@@ -82,7 +83,7 @@ const Investments: React.FC<InvestmentsProps> = p => {
    // different dates)
    const dateRange = toDates(p.range);
 
-   const rows: LogicalRow<RowData, InvestmentsProps>[] = React.useMemo(
+   const rows: LogicalRow<RowData, InvestmentsProps, Aggregated>[] = React.useMemo(
       () => data?.flatMap(ticker => ticker.accounts.map(acc => ({
          key: `${ticker.id}--${acc.account.id}`,
          data: computeTicker(ticker, acc, prefs, dateRange),
@@ -93,6 +94,7 @@ const Investments: React.FC<InvestmentsProps> = p => {
    if (p.asTable) {
       return (
          <ListWithColumns
+            aggregate={aggregate}
             className="investmentsTable"
             columns={cols}
             rows={rows}

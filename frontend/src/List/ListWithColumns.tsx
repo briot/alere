@@ -11,27 +11,36 @@ export enum AlternateRows {
    PARENT,     // color of a row depends on the top-level parent
 }
 
-export interface RowDetails<T, SETTINGS> {
+export interface RowDetails<T, SETTINGS, AGGREGATED> {
    isExpanded: boolean|undefined,  // undefined if not expandable
-   logic: LogicalRow<T, SETTINGS>,           // the matching logical row
+   logic: LogicalRow<T, SETTINGS, AGGREGATED>, // the matching logical row
 }
 
 /**
  * Description for each column in the array
+ *    T is the type of data for one row
+ *    SETTINGS is the configuration parameters for the table
+ *    AGGREGATED is some optional precomputed data to summarize the table, in
+ *       case for instance one footer column needs data from other footers.
  */
-export interface Column<T, SETTINGS> {
+export interface Column<T, SETTINGS=any, AGGREGATED=any> {
    id: string; // unique id for this column
 
    head?: string | ((settings: SETTINGS) => React.ReactNode);
-   // defaults to id
+   //  What to display in the column header. Defaults to `id`
 
    className?: string;
    title?: string;   // tooltip on header
-   cell?: (data: T, details: RowDetails<T, SETTINGS>, settings: SETTINGS)
-      => React.ReactNode;
+   cell?: (data: T,
+           details: RowDetails<T, SETTINGS, AGGREGATED>,
+           settings: SETTINGS) => React.ReactNode;
    cellTitle?: (data: T) => React.ReactNode;  // tooltip on cell
-   foot?: string | ((data: LogicalRow<T, SETTINGS>[], settings: SETTINGS)
-      => React.ReactNode);
+
+   foot?: string | (
+      (all_rows: LogicalRow<T, SETTINGS, AGGREGATED>[],
+       agg: AGGREGATED|undefined,
+       settings: SETTINGS) => React.ReactNode);
+   //  Compute what should be displayed in the footer.
 
    compare?: (left: T, right: T) => number;
    // Used for sorting. The column is not sortable if this is undefined
@@ -42,12 +51,13 @@ export interface Column<T, SETTINGS> {
  * A row can be expanded (like a tree) to reveal children rows (which themselves
  * can have children rows).
  */
-export interface LogicalRow<T, SETTINGS> {
+export interface LogicalRow<T, SETTINGS, AGGREGATED> {
    key: string|number;    //  unique id for this row (used a index in a Map)
    data: T;
-   getChildren?: (d: T, settings: SETTINGS) => LogicalRow<T, SETTINGS>[];
+   getChildren?:
+      (d: T, settings: SETTINGS) => LogicalRow<T, SETTINGS, AGGREGATED>[];
 
-   columnsOverride?: Column<T, SETTINGS>[];
+   columnsOverride?: Column<T, SETTINGS, AGGREGATED>[];
    // In case a row should display a different set of columns, those columns
    // can be set here. They might not be properly aligned with the others,
    // though !
@@ -59,21 +69,21 @@ export interface LogicalRow<T, SETTINGS> {
  * works we need to create different rows to avoid having to create all the DOM
  * nodes upfront
  */
-interface PhysicalRow<T, SETTINGS> {
-   logicalRow: LogicalRow<T, SETTINGS>; // points to the logical row
+interface PhysicalRow<T, SETTINGS, AGGREGATED> {
+   logicalRow: LogicalRow<T, SETTINGS, AGGREGATED>; // points to the logical row
    topRowIndex: number; // index of the top parent row (for alternate colors)
    expandable: boolean;
    level: number;       // nesting level
 }
 
-const computePhysicalRows = <T extends unknown, SETTINGS> (
-   r: LogicalRow<T, SETTINGS>,
+const computePhysicalRows = <T extends unknown, SETTINGS, AGGREGATED> (
+   r: LogicalRow<T, SETTINGS, AGGREGATED>,
    settings: SETTINGS,
    expanded: Map<number|string, boolean>,
    level: number,
    defaultExpand: boolean,
    topRowIndex: number,
-): PhysicalRow<T, SETTINGS>[] => {
+): PhysicalRow<T, SETTINGS, AGGREGATED>[] => {
    const children = r.getChildren?.(r.data, settings);
    const isExpanded = expanded.get(r.key) ?? defaultExpand;
    const result = [{
@@ -99,21 +109,21 @@ const computePhysicalRows = <T extends unknown, SETTINGS> (
 }
 
 
-interface PhysicalRows<T, SETTINGS> {
-   rows: PhysicalRow<T, SETTINGS>[];
+interface PhysicalRows<T, SETTINGS, AGGREGATED> {
+   rows: PhysicalRow<T, SETTINGS, AGGREGATED>[];
    expanded: Map<number|string, boolean>;
    expandableRows: boolean;  // at least one row is expandable
 }
 
 
-const usePhysicalRows = <T extends unknown, SETTINGS> (
-   rows: LogicalRow<T, SETTINGS>[],
+const usePhysicalRows = <T extends unknown, SETTINGS, AGGREGATED> (
+   rows: LogicalRow<T, SETTINGS, AGGREGATED>[],
    settings: SETTINGS,
    defaultExpand: boolean,
 ) => {
    //  Compute the initial set of rows
    const [phys, setPhys] = React.useState<
-      PhysicalRows<T, SETTINGS>|undefined
+      PhysicalRows<T, SETTINGS, AGGREGATED>|undefined
    >();
 
    React.useEffect(
@@ -188,14 +198,19 @@ const usePhysicalRows = <T extends unknown, SETTINGS> (
  *  - nesting of rows (to show a tree)
  */
 
-interface ListWithColumnsProps<T, SETTINGS> {
-   columns: (undefined | Column<T, SETTINGS>) [];
-   rows: LogicalRow<T, SETTINGS> [];
+interface ListWithColumnsProps<T, SETTINGS, AGGREGATED> {
+   columns: (undefined | Column<T, SETTINGS, AGGREGATED>) [];
+   rows: LogicalRow<T, SETTINGS, AGGREGATED> [];
    className?: string;
    indentNested?: boolean;
    borders?: boolean;
    defaultExpand?: boolean;
    alternate?: AlternateRows;
+
+   aggregate?: (rows: LogicalRow<T, SETTINGS, AGGREGATED>[]) => AGGREGATED;
+   //  Compute some summary information for the table, to be passed on to the
+   //  columns when showing the footer. This is recomputed whenever the data
+   //  changes, or the visibility of rows
 
    sortOn?: string;                  //  "+colid" or "-colid"
    setSortOn?: (on: string) => void; //  called when user wants to sort
@@ -203,16 +218,17 @@ interface ListWithColumnsProps<T, SETTINGS> {
    scrollToBottom?: boolean;
    //  If true, automatically show bottom row by default
 
-   footColumnsOverride?: Column<T, SETTINGS>[];
+   footColumnsOverride?: Column<T, SETTINGS, AGGREGATED>[];
    //  Columns to use for the footer, if the default columns are not
    //  appropriate
 
    settings: SETTINGS;
 }
 
-const ListWithColumns = <T extends unknown, SETTINGS> (
-   p: ListWithColumnsProps<T, SETTINGS>,
+const ListWithColumns = <T extends unknown, SETTINGS, AGGREGATED=any> (
+   p: ListWithColumnsProps<T, SETTINGS, AGGREGATED>,
 ) => {
+   const { aggregate } = p;
    const list = React.createRef<FixedSizeList>();
    const oldRowCount = React.useRef(p.rows.length);
 
@@ -253,6 +269,12 @@ const ListWithColumns = <T extends unknown, SETTINGS> (
       },
       [phys.length, list, p.scrollToBottom]
    )
+
+   const [aggregated, setAggregated] = React.useState<AGGREGATED|undefined>();
+   React.useEffect(
+      () => setAggregated(aggregate?.(p.rows)),
+      [aggregate, p.rows],
+   );
 
    const getRow = React.useCallback(
       (q: ListChildComponentProps) => {
@@ -363,7 +385,7 @@ const ListWithColumns = <T extends unknown, SETTINGS> (
             footerColumns.map((c, idx) =>
                <Table.TH key={idx} className={c.className} >
                   {typeof c.foot === "function"
-                    ? c.foot(p.rows, p.settings)
+                    ? c.foot(p.rows, aggregated, p.settings)
                     : c.foot}
                </Table.TH>
             )

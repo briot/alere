@@ -36,7 +36,14 @@ interface LocalTreeNode {
    balance: Balance|undefined;
 }
 
-const columnAccountName: Column<LocalTreeNode, NetworthProps> = {
+interface Aggregated {
+}
+
+type ColumnType = Column<LocalTreeNode, NetworthProps, Aggregated>;
+type Row = LogicalRow<LocalTreeNode, NetworthProps, Aggregated>;
+type RowWithDetails = RowDetails<LocalTreeNode, NetworthProps, Aggregated>;
+
+const columnAccountName: ColumnType = {
    id: 'Account',
    cell: d => d.account
       ? <AccountName id={d.accountId} account={d.account} />
@@ -44,12 +51,12 @@ const columnAccountName: Column<LocalTreeNode, NetworthProps> = {
    foot: () => "Total",
 };
 
-const columnShares = (date_idx: number): Column<LocalTreeNode, NetworthProps> => ({
+const columnShares = (date_idx: number): ColumnType => ({
    id: `Shares${date_idx}`,
    head: 'Shares',
    className: 'price',
    cell: (d: LocalTreeNode,
-          details: RowDetails<LocalTreeNode, NetworthProps>,
+          details: RowWithDetails,
           settings: NetworthProps) =>
       details.isExpanded === false || !d.balance
       ? ''
@@ -63,12 +70,12 @@ const columnShares = (date_idx: number): Column<LocalTreeNode, NetworthProps> =>
 
 const columnPrice = (
    base: BalanceList, date_idx: number,
-): Column<LocalTreeNode, NetworthProps> => ({
+): ColumnType => ({
    id: `Price${date_idx}`,
    head: 'Price',
    className: 'price',
    cell: (d: LocalTreeNode,
-          details: RowDetails<LocalTreeNode, NetworthProps>,
+          details: RowWithDetails,
           settings: NetworthProps ) =>
       details.isExpanded === false || !d.balance
       ? ''
@@ -81,7 +88,7 @@ const columnPrice = (
 });
 
 const cumulatedValue = (
-   logic: LogicalRow<LocalTreeNode, NetworthProps>,
+   logic: Row,
    settings: NetworthProps,
    date_idx: number,
    isExpanded: boolean | undefined,
@@ -103,12 +110,12 @@ const cumulatedValue = (
 
 const columnValue = (
    base: BalanceList, date_idx: number,
-): Column<LocalTreeNode, NetworthProps> => ({
+): ColumnType => ({
    id: `Value${date_idx}`,
    head: dateToString(base.dates[date_idx]),
    className: 'amount',
    cell: (d: LocalTreeNode,
-          details: RowDetails<LocalTreeNode, NetworthProps>,
+          details: RowWithDetails,
           settings: NetworthProps) =>
       <Numeric
          amount={cumulatedValue(
@@ -116,7 +123,7 @@ const columnValue = (
          commodity={base.currencyId}
          scale={settings.roundValues ? 0 : undefined}
       />,
-   foot: (d: LogicalRow<LocalTreeNode, NetworthProps>[], settings: NetworthProps) =>
+   foot: (d: Row[], agg: Aggregated|undefined, settings: NetworthProps) =>
       <Numeric
          amount={base.totalValue[date_idx]}
          commodity={base.currencyId}
@@ -126,12 +133,12 @@ const columnValue = (
 
 const columnPercent = (
    base: BalanceList, date_idx: number,
-): Column<LocalTreeNode, NetworthProps> => ({
+): ColumnType => ({
    id: `Percent${date_idx}`,
    head: '% total',
    className: 'percent',
    cell: (d: LocalTreeNode,
-          details: RowDetails<LocalTreeNode, NetworthProps>,
+          details: RowWithDetails,
           settings: NetworthProps) =>
       <Numeric
          amount={
@@ -146,14 +153,14 @@ const columnPercent = (
 const columnDelta = (
    base: BalanceList, date_idx: number, ref: number,
    head: string, title: string,
-): Column<LocalTreeNode, NetworthProps> => {
+): ColumnType => {
    return {
       id: `${head}${date_idx}`,
       head,
       title,
       className: 'percent',
       cell: (d: LocalTreeNode,
-             details: RowDetails<LocalTreeNode, NetworthProps>,
+             details: RowWithDetails,
              settings: NetworthProps) => {
          const m = cumulatedValue(
             details.logic, settings, date_idx, details.isExpanded);
@@ -166,7 +173,7 @@ const columnDelta = (
               ) * 100;
          return <Numeric amount={delta} suffix="%" />;
       },
-      foot: (d: LogicalRow<LocalTreeNode, NetworthProps>[], settings: NetworthProps) =>
+      foot: (d: Row[], agg: Aggregated|undefined, settings: NetworthProps) =>
          <Numeric
             amount={
                (base.totalValue[ref] / base.totalValue[date_idx] - 1) * 100
@@ -205,7 +212,7 @@ const Networth: React.FC<NetworthProps> = p => {
       [accountToBalance]
    );
 
-   const rows: LogicalRow<LocalTreeNode, NetworthProps>[] = React.useMemo(
+   const rows: Row[] = React.useMemo(
       () => accountsToRows(
          accounts,
          Array.from(accountToBalance.keys()).map(a => accounts.getAccount(a)),

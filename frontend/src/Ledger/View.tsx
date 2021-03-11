@@ -530,7 +530,7 @@ const computeFirstSplit = (
  */
 
 const getChildren = (d: TableRowData, settings: ComputedBaseLedgerProps) => {
-   let result: LogicalRow<TableRowData, ComputedBaseLedgerProps>[] = [];
+   let result: LogicalRow<TableRowData, ComputedBaseLedgerProps, unknown>[] = [];
    const t = d.transaction;
 
    // Do we need a notes row ?
@@ -728,7 +728,7 @@ const Ledger: React.FC<ComputedBaseLedgerProps & ExtraProps> = p => {
       ]
       : [];
 
-   const rows: LogicalRow<TableRowData, ComputedBaseLedgerProps>[] = React.useMemo(
+   const rows: LogicalRow<TableRowData, ComputedBaseLedgerProps, unknown>[] = React.useMemo(
       () => p.transactions?.flatMap(t => [
             {
                data: {

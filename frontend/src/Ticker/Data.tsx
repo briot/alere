@@ -6,6 +6,46 @@ import { LogicalRow } from 'List/ListWithColumns';
 import Numeric from 'Numeric';
 
 /**
+ * Overall metrics for the whole table. Those are recomputed when the data
+ * changes, but not every time we need to refresh the display. This also lets
+ * us efficiently compute overall return-on-investment for instance, which
+ * requires the aggregation of multiple other columns.
+ */
+export interface Aggregated {
+   equity: number;
+   gains: number;
+   invested: number;
+   periodPL: number;
+   periodROI: number;
+   pl: number;
+   roi: number;
+}
+
+type Row = LogicalRow<RowData, any, Aggregated>;
+
+export const aggregate = (rows: Row[]) => {
+   const equity = rows.reduce((t, d) => t + d.data.acc.end.equity, 0);
+   const start_equity = rows.reduce((t, d) => t + d.data.acc.start.equity, 0);
+   const pl = rows.reduce((t, d) => t + d.data.acc.end.pl, 0);
+   const invested = rows.reduce((t, d) => t + d.data.acc.end.invested, 0);
+   const start_inv = rows.reduce((t, d) => t + d.data.acc.start.invested, 0);
+   const gains = rows.reduce((t, d) => t + d.data.acc.end.gains, 0);
+   const start_gains = rows.reduce((t, d) => t + d.data.acc.start.gains, 0);
+   const periodPL = rows.reduce(
+      (t, d) => t + d.data.acc.end.pl - d.data.acc.start.pl, 0);
+   return {
+      equity,
+      gains,
+      invested,
+      periodPL,
+      pl,
+      roi: (equity + gains) / invested,
+      periodROI:
+        (equity + gains - start_gains) / (start_equity + invested - start_inv),
+   }
+};
+
+/**
  * The data we provide in this package is compatible with a ListWithColumns,
  * but also can be used in other contexts that supports more extensive
  * tooltips.
@@ -18,7 +58,7 @@ export interface ColumnType {
    tooltip?: (data: RowData) => React.ReactNode;
    cell: (data: RowData) => React.ReactNode;
    compare?: (left: RowData, right: RowData) => number;
-   foot?: (data: LogicalRow<RowData, any>[]) => React.ReactNode;
+   foot?: (data: Row[], aggregated: Aggregated|undefined) => React.ReactNode;
 }
 
 const numComp = (n1: number, n2: number) =>
@@ -47,12 +87,9 @@ export const columnEquity: ColumnType = {
       <Numeric amount={r.acc.end.equity} commodity={r.currencyId} />,
    compare: (r1: RowData, r2: RowData) =>
       numComp(r1.acc.end.equity, r2.acc.end.equity),
-   foot: (data: LogicalRow<RowData, any>[]) =>
+   foot: (data: Row[], agg: Aggregated|undefined) =>
       <Numeric
-         amount={data.reduce(
-            (t: number, d: LogicalRow<RowData, any>) =>
-                t + d.data.acc.end.equity,
-            0)}
+         amount={agg?.equity}
          commodity={data[0]?.data.currencyId}
          forceSign={true}
       />,
@@ -71,6 +108,14 @@ export const columnTotalReturn: ColumnType = {
       />,
    compare: (r1: RowData, r2: RowData) =>
       numComp(r1.acc.end.roi, r2.acc.end.roi),
+   foot: (data: Row[], agg: Aggregated|undefined) =>
+      <Numeric
+         amount={((agg?.roi ?? NaN) - 1) * 100}
+         colored={true}
+         forceSign={true}
+         showArrow={true}
+         suffix='%'
+      />,
    tooltip: (r: RowData) => (
       <>
          <p>
@@ -123,12 +168,9 @@ export const columnPL: ColumnType = {
    compare: (r1: RowData, r2: RowData) =>
       numComp(r1.acc.end.pl, r2.acc.end.pl),
    tooltip: (r: RowData) => "Equity minus total amount invested",
-   foot: (data: LogicalRow<RowData, any>[]) =>
+   foot: (data: Row[], agg: Aggregated|undefined) =>
       <Numeric
-         amount={data.reduce(
-            (t: number, d: LogicalRow<RowData, any>) =>
-                t + d.data.acc.end.pl,
-            0)}
+         amount={agg?.pl}
          commodity={data[0]?.data.currencyId}
          forceSign={true}
       />,
@@ -141,12 +183,9 @@ export const columnInvested: ColumnType = {
       <Numeric amount={r.acc.end.invested} commodity={r.currencyId} />,
    compare: (r1: RowData, r2: RowData) =>
       numComp(r1.acc.end.invested, r2.acc.end.invested),
-   foot: (data: LogicalRow<RowData, any>[]) =>
+   foot: (data: Row[], agg: Aggregated|undefined) =>
       <Numeric
-         amount={data.reduce(
-            (t: number, d: LogicalRow<RowData, any>) =>
-                t + d.data.acc.end.invested,
-            0)}
+         amount={agg?.invested}
          commodity={data[0]?.data.currencyId}
          forceSign={true}
       />,
@@ -160,12 +199,9 @@ export const columnGains: ColumnType = {
       <Numeric amount={r.acc.end.gains} commodity={r.currencyId} />,
    compare: (r1: RowData, r2: RowData) =>
       numComp(r1.acc.end.gains, r2.acc.end.gains),
-   foot: (data: LogicalRow<RowData, any>[]) =>
+   foot: (data: Row[], agg: Aggregated|undefined) =>
       <Numeric
-         amount={data.reduce(
-            (t: number, d: LogicalRow<RowData, any>) =>
-                t + d.data.acc.end.gains,
-            0)}
+         amount={agg?.gains}
          commodity={data[0]?.data.currencyId}
          forceSign={true}
       />,
@@ -216,12 +252,9 @@ export const columnPeriodPL: ColumnType = {
    compare: (r1: RowData, r2: RowData) =>
       numComp(r1.acc.end.pl - r1.acc.start.pl,
               r2.acc.end.pl - r2.acc.start.pl),
-   foot: (data: LogicalRow<RowData, any>[]) =>
+   foot: (data: Row[], agg: Aggregated|undefined) =>
       <Numeric
-         amount={data.reduce(
-            (t: number, d: LogicalRow<RowData, any>) =>
-                t + d.data.acc.end.pl - d.data.acc.start.pl,
-            0)}
+         amount={agg?.periodPL}
          commodity={data[0]?.data.currencyId}
          forceSign={true}
       />,
@@ -351,6 +384,14 @@ export const columnPeriodReturn: ColumnType = {
           suffix="%"
       />
    ),
+   foot: (data: Row[], agg: Aggregated|undefined) =>
+      <Numeric
+         amount={((agg?.periodROI ?? NaN) - 1) * 100}
+         colored={true}
+         forceSign={true}
+         showArrow={true}
+         suffix='%'
+      />,
    compare: (r1: RowData, r2: RowData) =>
       numComp(r1.acc.period_roi, r2.acc.period_roi),
 }

@@ -97,7 +97,7 @@ const columns: Column<RowData, AccountsProps>[] = [
 const Accounts: React.FC<AccountsProps> = p => {
    const [sorted, setSorted] = React.useState('');
    const { accounts } = useAccounts();
-   const rows: LogicalRow<RowData, AccountsProps>[] = React.useMemo(
+   const rows: LogicalRow<RowData, AccountsProps, any>[] = React.useMemo(
       () => accounts_to_rows(
          accounts,
          accounts.allAccounts(),
