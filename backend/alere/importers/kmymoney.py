@@ -1,6 +1,7 @@
 import datetime
 import math
 import sqlite3
+import sys
 from alere import models
 from django.db import connection, transaction
 
@@ -55,15 +56,17 @@ def __import_key_values(cur):
             ):
             if key not in ignored:
                 ignored[key] = True
-                print('Ignored keyValue: account=%s  key=%s  value=%s (may have others with same key)' %
+                sys.stderr.write(
+                    'Ignored keyValue: account=%s  key=%s  value=%s (may have others with same key)\n' %
                         (id, key, data))
         elif key == 'kmm-online-source':
             sources[id] = data
         elif key == 'kmm-security-id':
             securityId[id] = data
         elif data:
-            print('Unknown keyValue: id=%s  key=%s  value=%s' %
-                    (id, key, data))
+            sys.stdedrr.write(
+                'Unknown keyValue: id=%s  key=%s  value=%s\n' %
+                (id, key, data))
 
     return closed, iban, forOpeningBalances, sources, securityId
 
@@ -105,7 +108,8 @@ def __import_currencies(cur, commodities, sources, security_id):
     cur.execute("SELECT kmmCurrencies.* FROM kmmCurrencies")
     for row in cur:
         if row['typeString'] != 'Currency':
-            print('Error: unexpected currency type: %s' % row['typeString'])
+            sys.stderr.write(
+                'Error: unexpected currency type: %s\n' % row['typeString'])
             continue
 
         qty_scale = int(row['smallestAccountFraction'])
@@ -120,9 +124,9 @@ def __import_currencies(cur, commodities, sources, security_id):
                     or old.qty_scale != qty_scale
                     or old.price_scale != price_scale
                 ):
-                print(
+                sys.stderr.write(
                     'Error: Currency %s already exists'
-                    ' but has different properties' % row['ISOcode']
+                    ' but has different properties\n' % row['ISOcode']
                 )
 
         except models.Commodities.DoesNotExist:
@@ -174,29 +178,29 @@ def __import_securities(
             commodities[row['id']] = old
 
             if old.name != row['name']:
-                print(
+                sys.stderr.write(
                     'Error: Security %s (%s) already exists'
-                    ' but has different name: %s' % (
+                    ' but has different name: %s\n' % (
                         row['id'], row['name'], old.name))
             elif old.symbol_after != row['symbol']:
-                print(
+                sys.stderr.write(
                     'Error: Security %s (%s) already exists'
-                    ' but has different symbol: %s' % (
+                    ' but has different symbol: %s\n' % (
                         row['id'], row['name'], old.symbol_after))
             elif old.kind != kind:
-                print(
+                sys.stderr.write(
                     'Error: Security %s (%s) already exists'
-                    ' but has different kind: %s != %s' % (
+                    ' but has different kind: %s != %s\n' % (
                         row['id'], row['name'], old.kind, kind))
             elif old.qty_scale != qty_scale:
-                print(
+                sys.stderr.write(
                     'Error: Security %s (%s) already exists'
-                    ' but has different qty_scale: %s != %s' % (
+                    ' but has different qty_scale: %s != %s\n' % (
                         row['id'], row['name'], old.qty_scale, qty_scale))
             elif old.price_scale != price_scale:
-                print(
+                sys.stderr.write(
                     'Error: Security %s (%s) already exists'
-                    ' but has different price_scale: %s != %s' % (
+                    ' but has different price_scale: %s != %s\n' % (
                         row['id'], row['name'], old.price_scale, price_scale))
 
         except models.Commodities.DoesNotExist:
@@ -277,9 +281,23 @@ def __import_prices(cur, commodities, price_sources):
         """
     )
     for row in cur:
+        try:
+            origin = commodities[row['fromId']]
+        except KeyError:
+            sys.stderr.write('Ignore price for %s, security not found\n' % (
+                row['fromId'], ))
+            continue
+
+        try:
+            target = commodities[row['toId']]
+        except KeyError:
+            sys.stderr.write('Ignore price in %s, security not found\n' % (
+                row['toId'], ))
+            continue
+
         models.Prices.objects.create(
-            origin=commodities[row['fromId']],
-            target=commodities[row['toId']],
+            origin=origin,
+            target=target,
             date=__time(row['priceDate']),
             scaled_price=__scaled_price(
                 row['price'],
