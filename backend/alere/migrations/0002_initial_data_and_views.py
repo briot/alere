@@ -362,92 +362,83 @@ class Migration(migrations.Migration):
 
         DROP VIEW IF EXISTS alr_invested;
         CREATE VIEW alr_invested AS
+           WITH internal_splits AS (
+              SELECT s2.transaction_id,
+                 s2.account_id,
+                 xrate.target_id,
+                 CAST(s2.scaled_qty         --  number of shares
+                      * s2.scaled_price     --  price per share
+                      * xrate.scaled_price  --  convert to currency
+                        AS FLOAT)
+                    / (s2a.commodity_scu    --  scale of scaled_qty
+                      * xrate.price_scale   --  scale of xrate.scaled_price
+                      * c2.price_scale)     --  scale of s2.scaled_price
+                AS value
+              FROM
+                 alr_splits s2
+
+                 --  All the splits that transfer money between two accounts
+                 --  (they do not modify overall networth).
+                 JOIN alr_accounts s2a
+                    ON (s2.account_id=s2a.id
+                        AND s2a.kind_id IN ({invested_flags}))
+                 JOIN alr_commodities c2 ON (s2a.commodity_id = c2.id)
+
+                 --  To handle multi-currencies, we convert the prices to a
+                 --  common currency
+                 JOIN alr_price_history_with_turnkey xrate
+                    ON (s2.currency_id=xrate.origin_id
+                        AND s2.post_date >= xrate.mindate
+                        AND s2.post_date < xrate.maxdate)
+           )
+
            SELECT
               a.id AS account_id,
               a.commodity_id,
-              xrate.target_id as currency_id, --  currency for investment,..
+              s2.target_id as currency_id, --  currency for investment,..
               s.post_date AS mindate,
               COALESCE(
-                 LEAD(s.post_date)
-                    OVER (PARTITION BY s.account_id, xrate.target_id
-                          ORDER by s.post_date),
+                 LEAD(s.post_date) OVER win,
                  '2999-12-31 00:00:00'
                 ) AS maxdate,
               CAST(SUM(CASE WHEN s.account_id = s2.account_id
                             THEN s.scaled_qty ELSE 0 END)
-                 OVER (PARTITION BY s.account_id, xrate.target_id
-                       ORDER BY s.post_date
-                       ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+                 OVER win
                  AS FLOAT
                 ) / a.commodity_scu
                 AS shares,
-              SUM(CASE WHEN s.account_id <> s2.account_id AND s2.scaled_qty < 0
-                       THEN CAST(-s2.scaled_qty        --  number of shares
-                                 * s2.scaled_price     --  price per share
-                                 * xrate.scaled_price  --  convert to currency
-                                 AS FLOAT)
-                            / (s2a.commodity_scu   --  scale scaled_qty
-                              * xrate.price_scale  --  scale xrate.scaled_price
-                              * c2.price_scale)    --  scale s2.scaled_price
+              SUM(CASE WHEN s.account_id <> s2.account_id AND s2.value < 0
+                       THEN -s2.value
                        ELSE 0 END)
-                 OVER (PARTITION BY s.account_id, xrate.target_id
-                       ORDER BY s.post_date
-                       ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+                 OVER win
                  AS invested,
-              SUM(CASE WHEN s.account_id <> s2.account_id AND s2.scaled_qty > 0
-                       THEN CAST(s2.scaled_qty        --  number of shares
-                                 * s2.scaled_price     --  price per share
-                                 * xrate.scaled_price  --  convert to currency
-                                 AS FLOAT)
-                            / (s2a.commodity_scu   --  scale scaled_qty
-                              * xrate.price_scale  --  scale xrate.scaled_price
-                              * c2.price_scale)    --  scale s2.scaled_price
+              SUM(CASE WHEN s.account_id <> s2.account_id AND s2.value > 0
+                       THEN s2.value
                        ELSE 0 END)
-                 OVER (PARTITION BY s.account_id, xrate.target_id
-                       ORDER BY s.post_date
-                       ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+                 OVER win
                  AS realized_gain,
               SUM(CASE WHEN s.account_id <> s2.account_id
-                         AND s2.scaled_qty <> 0
+                         AND s2.value <> 0
                          AND s.scaled_qty <> 0
-                       THEN CAST(abs(s2.scaled_qty)    --  number of shares
-                                 * s2.scaled_price     --  price per share
-                                 * xrate.scaled_price  --  convert to currency
-                                 AS FLOAT)
-                            / (s2a.commodity_scu   --  scale scaled_qty
-                              * xrate.price_scale  --  scale xrate.scaled_price
-                              * c2.price_scale)    --  scale s2.scaled_price
+                       THEN abs(s2.value)
                        ELSE 0 END)
-                 OVER (PARTITION BY s.account_id, xrate.target_id
-                       ORDER BY s.post_date
-                       ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+                 OVER win
                  AS invested_for_shares,
               CAST(SUM(CASE WHEN s.account_id <> s2.account_id
-                         AND s2.scaled_qty <> 0 AND s.scaled_qty <> 0
+                         AND s2.value <> 0 AND s.scaled_qty <> 0
                        THEN abs(s.scaled_qty) ELSE 0 END)
-                    OVER (PARTITION BY s.account_id, xrate.target_id
-                          ORDER BY s.post_date
-                          ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+                    OVER win
                    AS FLOAT)
                  / a.commodity_scu
                  AS shares_transacted
-           FROM alr_splits s
-              JOIN alr_splits s2 USING (transaction_id)
+            FROM alr_splits s
+              JOIN internal_splits s2 USING (transaction_id)
               JOIN alr_accounts a ON (s.account_id = a.id)
-
-              --  All the splits that transfer money between two accounts (they
-              --  do not modify overall networth).
-              JOIN alr_accounts s2a
-                 ON (s2.account_id=s2a.id
-                     AND s2a.kind_id IN ({invested_flags}))
-              JOIN alr_commodities c2 ON (s2a.commodity_id = c2.id)
-
-              --  To handle multi-currencies, we convert the prices to a
-              --  common currency
-              JOIN alr_price_history_with_turnkey xrate
-                 ON (s2.currency_id=xrate.origin_id
-                     AND s2.post_date >= xrate.mindate
-                     AND s2.post_date < xrate.maxdate)
+            WINDOW win AS (
+                PARTITION BY s.account_id, s2.target_id
+                ORDER BY s.post_date
+                ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+            )
         ;
 
         --  For all accounts, compute the return on investment at any point
