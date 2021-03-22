@@ -295,19 +295,57 @@ def __import_prices(cur, commodities, price_sources):
                 row['toId'], ))
             continue
 
-        models.Prices.objects.create(
-            origin=origin,
-            target=target,
-            date=__time(row['priceDate']),
-            scaled_price=__scaled_price(
-                row['price'],
-                scale=commodities.get(row['fromId']).price_scale,
-            ),
-            source=price_sources[row['priceSource']],
-        )
+        # kMyMoney sometimes has prices from Security->Currency which do not
+        # really make sense and are wrongly rounded on import. For instance:
+        #   fromId  toId     priceDate   price
+        #   ------  -------  ----------  ---------
+        #   EUR     E000041  2021-01-27  247/10000
+        # would be imported as a scaled price of "2", instead of "2.47"
+        # On import, try to preserve the maximum precision.
+
+        n, d = row['price'].split('/')
+        num = int(n)
+        den = int(d)
+
+        if num >= den:
+            models.Prices.objects.create(
+                origin=origin,
+                target=target,
+                date=__time(row['priceDate']),
+                scaled_price=__scaled_price(
+                    row['price'],
+                    scale=origin.price_scale,
+                ),
+                source=price_sources[row['priceSource']],
+            )
+        else:
+            models.Prices.objects.create(
+                origin=target,
+                target=origin,
+                date=__time(row['priceDate']),
+                scaled_price=__scaled_price(
+                    f'{d}/{n}',
+                    scale=target.price_scale,
+                ),
+                source=price_sources[row['priceSource']],
+            )
 
 
 def __import_transactions(cur, accounts, commodities):
+
+    # Example of multi-currency transaction:
+    #   kmmTransactions:
+    #   *  id=1   currencyId=USD
+    #   kmmSplits:
+    #   *  transactionId=1  account=brokerage(currency=EUR)
+    #      value=-1592.12 (expressed in kmmTransactions.currencyId USD)
+    #      shares=-1315.76 (expressions in split.account.currency EUR)
+    #      price= N/A
+    #   * transactionId=1   account=stock(currency=STOCK)
+    #      value=1592.12 (in kmmTransactions.currencyId USD)
+    #      shares=32     (in STOCK)
+    #      price=48.85   (in USD)
+
     cur.execute("""
         SELECT
            kmmTransactions.txType as transTxType,
@@ -340,7 +378,7 @@ def __import_transactions(cur, accounts, commodities):
             prev_trans_id = trans_id
 
         acc = accounts[row['accountId']]
-        currency = commodities[row['transCurrency']]
+        trans_currency = commodities[row['transCurrency']]
         reconcile = (
             models.ReconcileKinds.NEW
             if row['reconcileFlag'] == '0'
@@ -353,16 +391,21 @@ def __import_transactions(cur, accounts, commodities):
         if row['action'] in ('Dividend', ):
             # kmymoney sets "1.00" for the price, which does not reflect the
             # current price of the share at the time, so better have nothing
-            price = None
+            price = acc.commodity.price_scale
+            currency = acc.commodity
         elif row['price'] is None and acc.kind.flag != models.AccountFlags.STOCK:
             # for non-stock account. In kmymoney, foreign currencies are not
             # supported in transactions.
-            price = currency.price_scale
+            price = trans_currency.price_scale
+            currency = acc.commodity
         else:
             # for a stock account
             price = __scaled_price(
                 row['price'],
                 scale=acc.commodity.price_scale)
+            currency = trans_currency
+
+        # assert price is not None, "while processing %s" % dict(row)
 
         s = models.Splits.objects.create(
             transaction=trans,

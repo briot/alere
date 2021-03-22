@@ -6,24 +6,34 @@ import math
 
 class Position:
     def __init__(self, r: alere.models.RoI =None):
-        self.invested = r.invested if r is not None else 0
-        self.gains = r.realized_gain if r is not None else 0
-        self.weighted_avg = r.weighted_average if r is not None else 0
-        self.avg_cost = r.average_cost if r is not None else 0
-        self.roi = r.roi if r is not None else 0
-        self.pl = r.pl if r is not None else 0
-        self.shares = r.shares if r is not None else 0
-        self.equity = r.balance if r is not None else 0
+        if r is not None:
+            self.avg_cost = r.average_cost
+            self.equity = r.balance or 0
+            self.gains = r.realized_gain or 0
+            self.invested = r.invested
+            self.pl = r.pl
+            self.roi = r.roi
+            self.shares = r.shares
+            self.weighted_avg = r.weighted_average
+        else:
+            self.avg_cost = math.nan
+            self.equity = 0
+            self.gains = 0
+            self.invested = 0
+            self.pl = 0
+            self.roi = math.nan
+            self.shares = 0
+            self.weighted_avg = math.nan
 
     def to_json(self):
         return {
             "avg_cost": nan_enc(self.avg_cost),
             "equity": nan_enc(self.equity),
-            "gains": self.gains,
-            "invested": self.invested,
+            "gains": nan_enc(self.gains),
+            "invested": nan_enc(self.invested),
             "pl": nan_enc(self.pl),
             "roi": nan_enc(self.roi),
-            "shares": self.shares,
+            "shares": nan_enc(self.shares),
             "weighted_avg": nan_enc(self.weighted_avg),
         }
 
@@ -37,10 +47,10 @@ class Account:
     """
     def __init__(self, account_id):
         self.account_id = account_id
-        self.start = Position() # as of mindate
-        self.end = Position()   # as of maxdate
-        self.oldest = None      # date of oldest transaction (for annualized)
-        self.most_recent = None # most recent transaction
+        self.start = Position()  # as of mindate
+        self.end = Position()    # as of maxdate
+        self.oldest = None       # date of oldest transaction (for annualized)
+        self.most_recent = None  # most recent transaction
         self.prices = []
 
     def to_json(self):
@@ -166,10 +176,13 @@ class QuotesView(JSONView):
 
         query2 = alere.models.RoI.objects \
             .filter(account_id__in=accs.keys(),
-                    commodity_id=currency) \
+                    currency_id=currency) \
             .order_by("mindate")
 
         for r in query2:
+            # ??? prices might be given in a currency other than currency
+            # They could also each use a different currency
+
             a = accs[r.account_id]
 
             if a.oldest is None:

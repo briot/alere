@@ -1,4 +1,5 @@
 from .json import JSONView
+from forex_python.converter import CurrencyRates
 import alere
 import datetime
 import django.db
@@ -8,6 +9,9 @@ import yfinance as yf
 
 
 class OnlineView(JSONView):
+    __yahoo_tickers_currency = {}
+    # Mapping from ticker to currency for Yahoo
+
     def post_json(self, params, files, *args, **kwargs):
         self._update_yahoo(currency_id=1)
         self._cleanup_prices()
@@ -49,16 +53,17 @@ class OnlineView(JSONView):
             )
             cursor.execute("COMMIT")
 
-        # If we have two prices on the same day
+    def _update_forex(self):
+        """
+        Update exchange rates
+        """
+        c = CurrencyRates()
+        c.get_rate('USD', 'EUR')
 
     def _update_yahoo(self, currency_id):
         now = datetime.datetime.now().astimezone(datetime.timezone.utc) \
                 + datetime.timedelta(days=1)
         mindate = now - datetime.timedelta(days=370)
-
-        #####
-        # The target currency
-        currency = alere.models.Commodities.objects.get(id=currency_id)
 
         #####
         # Find the symbols
@@ -85,7 +90,31 @@ class OnlineView(JSONView):
                                   #  1wk,1mo,3mo" for interval
         )
 
-        # ??? This is not necessarily in "currency" ?
+        #####
+        # The target currencies
+        # ??? It is rather slow to get these currencies, because it has to
+        # be done symbol-by-symbol. We could also store the online currency
+        # in the database.
+
+        default_currency = alere.models.Commodities.objects.get(id=currency_id)
+
+        cids = set()
+        for t in tickers:
+            if t not in OnlineView.__yahoo_tickers_currency:
+                tk = yf.Ticker(t)
+                try:
+                    OnlineView.__yahoo_tickers_currency[t] = tk.info['currency']
+                except:
+                    print('Exception while fetching currency for %s' % t)
+                    OnlineView.__yahoo_tickers_currency[t] = \
+                        default_currency.iso_code
+            cids.add(OnlineView.__yahoo_tickers_currency[t])
+
+        currencies = {
+            c.iso_code: c
+            for c in alere.models.Commodities.objects.filter(iso_code__in=cids)
+        }
+
         data = yf.download(
             list(tickers.keys()),
             progress=False,
@@ -103,7 +132,9 @@ class OnlineView(JSONView):
         alere.models.Prices.objects.bulk_create((
             alere.models.Prices(
                 origin=tickers[ticker],
-                target=currency,
+                target=currencies[
+                    OnlineView.__yahoo_tickers_currency[ticker]
+                ],
                 date=datetime.datetime.fromtimestamp(
                     t.timestamp()).astimezone(datetime.timezone.utc),
                 scaled_price=int(v * tickers[ticker].price_scale),

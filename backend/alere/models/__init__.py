@@ -26,6 +26,7 @@ class PriceSources(AlereModel):
     """
     USER = 1
     YAHOO = 2
+    TRANSACTION = 3
 
     name = models.TextField()
 
@@ -451,7 +452,7 @@ class Splits(AlereModel):
     currency = models.ForeignKey(Commodities, on_delete=models.CASCADE)
     scaled_price = models.IntegerField(null=True)
     # The value of the split expressed in currency, scaled by
-    # accounts's commodity's price_scale.
+    # accounts.commodity.price_scale.
     #
     # For a Stock BUY or SELL, we would have 'currency' equal to 'EUR' for
     # instance, and scaled_price is the actual price we paid per stock.
@@ -471,7 +472,7 @@ class Splits(AlereModel):
     # look at the transaction itself and its other splits.
 
     scaled_qty = models.IntegerField()
-    # The amount is in account's commodity, scaled by account's commodity_scu
+    # The amount is in account's commodity, scaled by account.commodity_scu
     # This could be a number of shares when the account is a Stock account,
     # for instance.
 
@@ -512,27 +513,6 @@ class Splits(AlereModel):
                 self.scaled_price,
                 self.scaled_qty,
             )
-
-
-
-class Price_History(AlereModel):
-    """
-    Similar to Prices, but provides a range of dates [mindate, maxdate) during
-    which the price is valid.
-    This view is created manually in the database via migrations
-    """
-    origin = models.ForeignKey(
-        Commodities, on_delete=models.DO_NOTHING, related_name='price_history')
-    target = models.ForeignKey(
-        Commodities, on_delete=models.DO_NOTHING, related_name='+')
-    scaled_price = models.IntegerField()  # by origin's price_scale
-    mindate = models.DateTimeField()   # included in range
-    maxdate = models.DateTimeField()   # not included in range
-    source  = models.ForeignKey(PriceSources, on_delete=models.DO_NOTHING)
-
-    class Meta:
-        managed = False
-        db_table = prefix + "price_history"
 
 
 class Splits_With_Value(AlereModel):
@@ -690,7 +670,12 @@ class RoI(AlereModel):
     """
     Return-on-Investment at any point in time
     """
-    commodity = models.ForeignKey(
+    commodity = models.ForeignKey(  # which stock are we talking about ?
+        Commodities,
+        on_delete=models.DO_NOTHING,
+        related_name='+'
+    )
+    currency = models.ForeignKey(  # prices given in this currency
         Commodities,
         on_delete=models.DO_NOTHING,
         related_name='+'

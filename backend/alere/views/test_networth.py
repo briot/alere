@@ -10,7 +10,6 @@ class NetworthTestCase(BaseTest):
 
     def setUp(self):
         super().setUp()
-        self.maxDiff = None
 
         self.create_transaction(
             [Split(self.salary,  -1234, '2020-11-01'),
@@ -23,14 +22,15 @@ class NetworthTestCase(BaseTest):
              Split(self.checking, -1000, '2020-11-03')])
 
         # A transaction in a foreign currency.
-        # xrate:  1 EUR = 0.85 USD
+        # xrate:  1 USD = 0.85 EUR
         # bought 2.12 USD  (price_scale is 1000)
-        # equivalent to 1.80 EUR (qty_scale is 100)
+        # equivalent to 1.802 EUR (qty_scale is 100)
         self.create_transaction(
             [Split(self.groceries,
                    212,   # scaled by groceries'commodity (EUR), i.e. 100
                    '2020-11-25',
-                   self.usd, 850,  # scaled by usd qty_scale, i.e. 1000
+                   self.usd, 85,  # scaled by groceries.commodity.price_scale
+                                  # ie eur.price_scale ie 100
                 ),
              Split(self.checking,  -180, '2020-11-25')])
 
@@ -78,11 +78,6 @@ class NetworthTestCase(BaseTest):
 
     def test_ledger(self):
         self.assertEqual(
-            ledger(
-                ids=[self.checking.id],
-                mindate=self.convert_time('2010-01-01'),
-                maxdate=self.convert_time('2999-01-01'),
-            ),
             [
                 {'id': 1,
                  'date': '2020-11-01',
@@ -176,5 +171,10 @@ class NetworthTestCase(BaseTest):
                       'shares': -1.8,    # in EUR
                      }
                 ]}
-            ]
+            ],
+            ledger(
+                ids=[self.checking.id],
+                mindate=self.convert_time('2010-01-01'),
+                maxdate=self.convert_time('2999-01-01'),
+            )
         )
