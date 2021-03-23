@@ -78,6 +78,12 @@ class BaseTest(TestCase, ParamDecoder):
             name='taxes',
             commodity=kls.eur,
             commodity_scu=100)
+        kls.dividends = alere.models.Accounts.objects.create(
+            kind=alere.models.AccountKinds.objects.get(
+                flag=alere.models.AccountFlags.EXPENSE),
+            name='dividends',
+            commodity=kls.eur,
+            commodity_scu=100)
 
         kls.investment_eur = alere.models.Accounts.objects.create(
             kind=alere.models.AccountKinds.objects.get(

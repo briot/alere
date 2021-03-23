@@ -182,6 +182,23 @@ class Migration(migrations.Migration):
 
            UNION ALL
 
+           --  extract prices from transactions
+           SELECT s.currency_id AS origin_id,
+              a.commodity_id AS target_id,
+              CAST(target.price_scale * origin.price_scale AS FLOAT)
+                 / s.scaled_price,
+              s.post_date AS date,
+              {models.PriceSources.TRANSACTION} as source_id
+              FROM alr_splits s
+                 JOIN alr_commodities origin ON (s.currency_id=origin.id)
+                 JOIN alr_accounts a ON (s.account_id=a.id)
+                 JOIN alr_commodities target ON (a.commodity_id=target.id)
+              WHERE target.kind='{models.CommodityKinds.CURRENCY}'
+                 AND a.commodity_id <> s.currency_id
+                 AND s.scaled_price is NOT NULL
+
+           UNION ALL
+
            --  A currency always has a 1.0 exchange rate with itself. This
            --  simplifies the computation of balances later on
            SELECT c.id AS origin_id,

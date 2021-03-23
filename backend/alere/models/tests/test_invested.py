@@ -31,6 +31,39 @@ class InvestedTestCase(BaseTest):
                 scaled_price=100),
         ])
 
+        # Adding shares for free
+        self.create_transaction([
+            Split(
+                account=self.invest_stock_usd,
+                qty=1000,                 # adding 1 share for free
+                date='2020-03-01',
+                currency=self.usd,
+                scaled_price=None),       # price unspecified
+        ])
+
+        # Dividends (exchange of money but no change in shares)
+        self.create_transaction([
+            Split(
+                account=self.invest_stock_usd,
+                qty=0,                     # no change in number of stocks
+                date='2020-04-01 00:00:00',
+                currency=self.usd,
+                scaled_price=None),        # price of shares unspecified
+            Split(
+                account=self.checking,
+                qty=1890,                  # 1USD per action (21$ = 18.9 EUR)
+                date='2020-04-01 00:00:00',
+                currency=self.usd,
+                scaled_price=111),  # xrate: 1.11 USD = 1EUR
+                                # scaled by self.checking.commodity.price_scale
+            Split(
+                account=self.dividends,
+                qty=-1890,                 # 18.9 EUR
+                date='2020-04-01 00:00:00',
+                currency=self.eur,
+                scaled_price=100),
+        ])
+
         # ??? Add a case where origin_id is a currency and target_id a stock
         # ??? Add a test where no known xrate EUR<->USD is known. We should not
         #   lose information, perhaps default to a 1<->1 xrate
@@ -66,10 +99,17 @@ class InvestedTestCase(BaseTest):
                 [
                     (self.eur.id, self.eur.id, 100,
                         mind, PriceSources.TRANSACTION),
+
                     (self.eur.id, self.usd.id, xrate_100,
                         '2020-02-03 00:00:00', PriceSources.USER),
+                    (self.eur.id, self.usd.id, 111,
+                        '2020-04-01 00:00:00', PriceSources.TRANSACTION),
+
                     (self.usd.id, self.eur.id, 850,
                         '2020-02-03 00:00:00', PriceSources.USER),
+                    (self.usd.id, self.eur.id, 900.9009009009009,
+                        '2020-04-01 00:00:00', PriceSources.TRANSACTION),
+
                     (self.usd.id, self.usd.id, 1000,
                         mind, PriceSources.TRANSACTION),
                     (self.stock_usd.id, self.usd.id, 50000,
@@ -92,10 +132,17 @@ class InvestedTestCase(BaseTest):
                 [
                     (self.eur.id, self.eur.id, 100.0, 100,
                         mind, PriceSources.TRANSACTION),
+
                     (self.eur.id, self.usd.id, xrate_100, 100,
                         '2020-02-03 00:00:00', PriceSources.USER),
+                    (self.eur.id, self.usd.id, 111.0, 100,
+                        '2020-04-01 00:00:00', PriceSources.TRANSACTION),
+
                     (self.usd.id, self.eur.id, 850.0, 1000,
                         '2020-02-03 00:00:00', PriceSources.USER),
+                    (self.usd.id, self.eur.id, 900.9009009009009, 1000,
+                        '2020-04-01 00:00:00', PriceSources.TRANSACTION),
+
                     (self.usd.id, self.usd.id, 1000.0, 1000,
                         mind, PriceSources.TRANSACTION),
                     (self.stock_usd.id, self.eur.id, 42500.0, 1000,
@@ -125,10 +172,19 @@ class InvestedTestCase(BaseTest):
                 [
                     (self.eur.id, self.eur.id, 100.0, 100,
                         mind, maxd, PriceSources.TRANSACTION),
+
                     (self.eur.id, self.usd.id, xrate_100, 100,
-                        '2020-02-03 00:00:00', maxd, PriceSources.USER),
+                        '2020-02-03 00:00:00', '2020-04-01 00:00:00',
+                        PriceSources.USER),
+                    (self.eur.id, self.usd.id, 111.0, 100,
+                        '2020-04-01 00:00:00', maxd, PriceSources.TRANSACTION),
+
                     (self.usd.id, self.eur.id, 850.0, 1000,
-                        '2020-02-03 00:00:00', maxd, PriceSources.USER),
+                        '2020-02-03 00:00:00', '2020-04-01 00:00:00',
+                        PriceSources.USER),
+                    (self.usd.id, self.eur.id, 900.9009009009009, 1000,
+                        '2020-04-01 00:00:00', maxd, PriceSources.TRANSACTION),
+
                     (self.usd.id, self.usd.id, 1000.0, 1000,
                         mind, maxd, PriceSources.TRANSACTION),
 
@@ -189,10 +245,43 @@ class InvestedTestCase(BaseTest):
                      self.stock_usd.id,
                      self.eur.id,
                      datetime.datetime(2020, 2, 3, 0, 0, 0),
-                     maxd,
+                     '2020-03-01 00:00:00',
                      20.0,   # shares
                      870.0,  # invested
                      0,      # realized_gain
+                     870.0,  # invested_for_shares
+                     20.0,   # shares_transacted
+                    ),
+                    (self.invest_stock_usd.id,
+                     self.stock_usd.id,
+                     self.eur.id,
+                     datetime.datetime(2020, 3, 1, 0, 0, 0),
+                     '2020-04-01 00:00:00',
+                     21.0,   # shares  (one added)
+                     870.0,  # invested
+                     0,      # realized_gain
+                     870.0,  # invested_for_shares
+                     20.0,   # shares_transacted
+                    ),
+                    (self.invest_stock_usd.id,
+                     self.stock_usd.id,
+                     self.eur.id,
+                     datetime.datetime(2020, 4, 1, 0, 0, 0),
+                     '2020-04-01 00:00:00',
+                     21.0,   # shares  (one added)
+                     870.0,  # invested
+                     18.9,   # realized_gain (dividend)
+                     870.0,  # invested_for_shares
+                     20.0,   # shares_transacted
+                    ),
+                    (self.invest_stock_usd.id,
+                     self.stock_usd.id,
+                     self.eur.id,
+                     datetime.datetime(2020, 4, 1, 0, 0, 0),
+                     maxd,
+                     21.0,   # shares  (one added)
+                     870.0,  # invested
+                     18.9,   # realized_gain (dividend)
                      870.0,  # invested_for_shares
                      20.0,   # shares_transacted
                     ),
@@ -214,10 +303,43 @@ class InvestedTestCase(BaseTest):
                      self.stock_usd.id,
                      self.usd.id,
                      datetime.datetime(2020, 2, 3, 0, 0, 0),
-                     maxd,
+                     '2020-03-01 00:00:00',
                      20.0,   # shares
                      870.0 * xrate,  # invested
                      0,      # realized_gain
+                     870.0 * xrate,  # invested_for_shares
+                     20.0,   # shares_transacted
+                    ),
+                    (self.invest_stock_usd.id,
+                     self.stock_usd.id,
+                     self.usd.id,
+                     datetime.datetime(2020, 3, 1, 0, 0, 0),
+                     '2020-04-01 00:00:00',
+                     21.0,   # shares   (one added)
+                     870.0 * xrate,  # invested
+                     0,      # realized_gain
+                     870.0 * xrate,  # invested_for_shares
+                     20.0,   # shares_transacted
+                    ),
+                    (self.invest_stock_usd.id,
+                     self.stock_usd.id,
+                     self.usd.id,
+                     datetime.datetime(2020, 4, 1, 0, 0, 0),
+                     '2020-04-01 00:00:00',
+                     21.0,           # shares
+                     870.0 * xrate,  # invested
+                     18.9 * 1.11,    # realized_gain (dividend)
+                     870.0 * xrate,  # invested_for_shares
+                     20.0,   # shares_transacted
+                    ),
+                    (self.invest_stock_usd.id,
+                     self.stock_usd.id,
+                     self.usd.id,
+                     datetime.datetime(2020, 4, 1, 0, 0, 0),
+                     maxd,
+                     21.0,   # shares
+                     870.0 * xrate,  # invested
+                     18.9 * 1.11,    # realized_gain (dividend)
                      870.0 * xrate,  # invested_for_shares
                      20.0,   # shares_transacted
                     ),
@@ -248,7 +370,7 @@ class InvestedTestCase(BaseTest):
                 20.0,                  # shares
                 867 - 870.0,           # Profit and Loss
                 867 / 870),            # roi
-             ('2020-02-07', '2999-12-31',
+             ('2020-02-07', '2020-03-01',
                 'STOCK_USD', 'EURO',   # that stock, prices in USD
                 833.0,                 # balance: USD
                 870.0,                 # invested: USD
@@ -256,6 +378,30 @@ class InvestedTestCase(BaseTest):
                 20.0,                  # shares
                 833 - 870.0,           # Profit and Loss
                 833 / 870),            # roi
+             ('2020-03-01', '2020-04-01',
+                'STOCK_USD', 'EURO',   # that stock, prices in USD
+                874.65,                # balance: USD
+                870.0,                 # invested: USD
+                0,                     # gains
+                21.0,                  # shares
+                874.65 - 870.0,        # Profit and Loss
+                874.65 / 870.0),       # roi
+             ('2020-04-01', '2020-04-01',
+                'STOCK_USD', 'EURO',   # that stock, prices in USD
+                874.65,                # balance: USD
+                870.0,                 # invested: USD
+                18.9,                  # gains
+                21.0,                  # shares
+                (874.65+18.9) - 870,   # Profit and Loss
+                (874.65+18.9) / 870),  # roi
+             ('2020-04-01', '2999-12-31',
+                'STOCK_USD', 'EURO',   # that stock, prices in USD
+                874.65,                # balance: USD
+                870.0,                 # invested: USD
+                18.9,                  # gains
+                21.0,                  # shares
+                (874.65+18.9) - 870,   # Profit and Loss
+                (874.65+18.9) / 870),  # roi
 
              # same but in USD
              ('2020-02-03', '2020-02-05',
@@ -274,7 +420,7 @@ class InvestedTestCase(BaseTest):
                 20.0,                  # shares
                 1020 - 870 * xrate,    # Profit and Loss
                 1020 / (870 * xrate)), # roi
-             ('2020-02-07', '2999-12-31',
+             ('2020-02-07', '2020-03-01',
                 'STOCK_USD', 'USD',    # that stock, prices in USD
                 980.0,                 # balance: USD
                 870.0 * xrate,         # invested: USD
@@ -282,6 +428,30 @@ class InvestedTestCase(BaseTest):
                 20.0,                  # shares
                 980 - 870 * xrate,     # Profit and Loss
                 980 / (870 * xrate)),  # roi
+             ('2020-03-01', '2020-04-01',
+                'STOCK_USD', 'USD',    # that stock, prices in USD
+                1029.0,                # balance: USD
+                870.0 * xrate,         # invested: USD
+                0,                     # gains
+                21.0,                  # shares
+                1029 - 870 * xrate,    # Profit and Loss
+                1029 / (870 * xrate)), # roi
+             ('2020-04-01', '2020-04-01',
+                'STOCK_USD', 'USD',    # that stock, prices in USD
+                1029.0,                # balance: USD
+                870.0 * xrate,         # invested: USD
+                20.979,                # gains
+                21.0,                  # shares
+                (1029+20.979) - 870 * xrate,     # Profit and Loss
+                (1029+20.979) / (870 * xrate)),  # roi
+             ('2020-04-01', '2999-12-31',
+                'STOCK_USD', 'USD',    # that stock, prices in USD
+                1029.0,                # balance: USD
+                870.0 * xrate,         # invested: USD
+                20.979,                # gains
+                21.0,                  # shares
+                (1029+20.979) - 870 * xrate,     # Profit and Loss
+                (1029+20.979) / (870 * xrate)),  # roi
             ],
             [(r.mindate.strftime('%Y-%m-%d'),
               r.maxdate.strftime('%Y-%m-%d'),
