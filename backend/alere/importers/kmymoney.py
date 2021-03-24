@@ -402,7 +402,8 @@ def __import_transactions(cur, accounts, commodities):
             # for a stock account
             price = __scaled_price(
                 row['price'],
-                scale=acc.commodity.price_scale)
+                scale=acc.commodity.price_scale
+            ) or acc.commodity.price_scale
             currency = trans_currency
 
         # assert price is not None, "while processing %s" % dict(row)

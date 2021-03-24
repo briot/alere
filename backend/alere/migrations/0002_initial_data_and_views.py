@@ -178,7 +178,6 @@ class Migration(migrations.Migration):
                  JOIN alr_accounts a ON (s.account_id=a.id)
               WHERE t.kind='{models.CommodityKinds.CURRENCY}'
                  AND a.commodity_id <> s.currency_id
-                 AND s.scaled_price is NOT NULL
 
            UNION ALL
 
@@ -195,7 +194,6 @@ class Migration(migrations.Migration):
                  JOIN alr_commodities target ON (a.commodity_id=target.id)
               WHERE target.kind='{models.CommodityKinds.CURRENCY}'
                  AND a.commodity_id <> s.currency_id
-                 AND s.scaled_price is NOT NULL
 
            UNION ALL
 

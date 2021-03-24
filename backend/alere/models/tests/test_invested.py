@@ -37,8 +37,8 @@ class InvestedTestCase(BaseTest):
                 account=self.invest_stock_usd,
                 qty=1000,                 # adding 1 share for free
                 date='2020-03-01',
-                currency=self.usd,
-                scaled_price=None),       # price unspecified
+                currency=self.stock_usd,  # do not specify a share price
+                scaled_price=1000),
         ])
 
         # Dividends (exchange of money but no change in shares)
@@ -49,15 +49,14 @@ class InvestedTestCase(BaseTest):
                 account=self.invest_stock_usd,
                 qty=0,                     # no change in number of stocks
                 date='2020-04-01 00:00:00',
-                currency=self.usd,
-                scaled_price=None),        # price of shares unspecified
+                currency=self.stock_usd,
+                scaled_price=1000),        # do not specify share price
             Split(
                 account=self.checking,
                 qty=1890,                  # 1USD per action (21$ = 18.9 EUR)
                 date='2020-04-01 00:00:00',
                 currency=self.usd,
                 scaled_price=111),  # xrate: 1.11 USD = 1EUR
-                                # scaled by self.checking.commodity.price_scale
             Split(
                 account=self.dividends,
                 qty=-1890,                 # 18.9 EUR
@@ -229,9 +228,6 @@ class InvestedTestCase(BaseTest):
             )
             self.assertListEqual(
                 [
-                    # ??? Why is the time sometimes represented as string and
-                    # sometimes not ?
-
                     (self.invest_stock_usd.id,
                      self.stock_usd.id,
                      self.eur.id,

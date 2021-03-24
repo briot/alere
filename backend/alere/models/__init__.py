@@ -449,10 +449,19 @@ class Splits(AlereModel):
         Accounts, on_delete=models.CASCADE, related_name='splits',
     )
 
+    scaled_qty = models.IntegerField()
+    # The amount is in account's commodity, scaled by account.commodity_scu
+    # This could be a number of shares when the account is a Stock account,
+    # for instance, or a number of EUR for a checking account.
+
+    scaled_price = models.IntegerField(null=False)
     currency = models.ForeignKey(Commodities, on_delete=models.CASCADE)
-    scaled_price = models.IntegerField(null=True)
-    # The value of the split expressed in currency, scaled by
-    # accounts.commodity.price_scale.
+    # The actual value of the split (as users would see it on their
+    # bank accounts) expressed in currency is:
+    #
+    #                scaled_qty                      scaled_price
+    #  value = ---------------------------- * -----------------------------
+    #          accounts.commodity.qty_scale   accounts.commodity.price_scale
     #
     # For a Stock BUY or SELL, we would have 'currency' equal to 'EUR' for
     # instance, and scaled_price is the actual price we paid per stock.
@@ -462,19 +471,10 @@ class Splits(AlereModel):
     # rate "how many GBP per EUR" at the time of the transaction.
     #
     # For a transaction in the accounts currency, currency is set to the
-    # account's commodity, and scaled_price is 1 (modulo the scale).
+    # account's commodity, and scaled_price is price_scale
     #
-    # With these definition, the total amount of money spent in currency is
-    # always   scaled_price * scaled_qty
-    # The total increase or decrease of the account's commodity is
-    # always   scaled_qty
     # Note that this amount does not include any fees, for this you need to
     # look at the transaction itself and its other splits.
-
-    scaled_qty = models.IntegerField()
-    # The amount is in account's commodity, scaled by account.commodity_scu
-    # This could be a number of shares when the account is a Stock account,
-    # for instance.
 
     reconcile = models.CharField(
         max_length=1,
