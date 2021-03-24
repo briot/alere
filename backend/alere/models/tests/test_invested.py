@@ -42,6 +42,8 @@ class InvestedTestCase(BaseTest):
         ])
 
         # Dividends (exchange of money but no change in shares)
+        # ??? We never show the "21$ dividend". It is stored already converted
+        # to EUR
         self.create_transaction([
             Split(
                 account=self.invest_stock_usd,
@@ -348,13 +350,12 @@ class InvestedTestCase(BaseTest):
             )
 
         # We can now compute the return-on-investment at all times
-        # ??? why are dates missing the time
 
         q = RoI.objects.filter(
                account=self.invest_stock_usd,
             ).order_by('currency_id', 'mindate')
         self.assertListEqual(
-            [('2020-02-03', '2020-02-05',
+             [('2020-02-03 00:00:00', '2020-02-05 00:00:00',
                 'STOCK_USD', 'EURO',   # that stock, prices in USD
                 850.0,                 # balance: USD
                 870.0,                 # invested: USD
@@ -362,7 +363,7 @@ class InvestedTestCase(BaseTest):
                 20.0,                  # shares
                 850 - 870.0,           # Profit and Loss
                 850 / 870),            # roi
-             ('2020-02-05', '2020-02-07',
+             ('2020-02-05 00:00:00', '2020-02-07 00:00:00',
                 'STOCK_USD', 'EURO',   # that stock, prices in USD
                 867.0,                 # balance: USD
                 870.0,                 # invested: USD
@@ -370,7 +371,7 @@ class InvestedTestCase(BaseTest):
                 20.0,                  # shares
                 867 - 870.0,           # Profit and Loss
                 867 / 870),            # roi
-             ('2020-02-07', '2020-03-01',
+             ('2020-02-07 00:00:00', '2020-03-01 00:00:00',
                 'STOCK_USD', 'EURO',   # that stock, prices in USD
                 833.0,                 # balance: USD
                 870.0,                 # invested: USD
@@ -378,7 +379,7 @@ class InvestedTestCase(BaseTest):
                 20.0,                  # shares
                 833 - 870.0,           # Profit and Loss
                 833 / 870),            # roi
-             ('2020-03-01', '2020-04-01',
+             ('2020-03-01 00:00:00', '2020-04-01 00:00:00',
                 'STOCK_USD', 'EURO',   # that stock, prices in USD
                 874.65,                # balance: USD
                 870.0,                 # invested: USD
@@ -386,7 +387,7 @@ class InvestedTestCase(BaseTest):
                 21.0,                  # shares
                 874.65 - 870.0,        # Profit and Loss
                 874.65 / 870.0),       # roi
-             ('2020-04-01', '2020-04-01',
+             ('2020-04-01 00:00:00', '2020-04-01 00:00:00',
                 'STOCK_USD', 'EURO',   # that stock, prices in USD
                 874.65,                # balance: USD
                 870.0,                 # invested: USD
@@ -394,7 +395,7 @@ class InvestedTestCase(BaseTest):
                 21.0,                  # shares
                 (874.65+18.9) - 870,   # Profit and Loss
                 (874.65+18.9) / 870),  # roi
-             ('2020-04-01', '2999-12-31',
+             ('2020-04-01 00:00:00', '2999-12-31 00:00:00',
                 'STOCK_USD', 'EURO',   # that stock, prices in USD
                 874.65,                # balance: USD
                 870.0,                 # invested: USD
@@ -404,7 +405,7 @@ class InvestedTestCase(BaseTest):
                 (874.65+18.9) / 870),  # roi
 
              # same but in USD
-             ('2020-02-03', '2020-02-05',
+             ('2020-02-03 00:00:00', '2020-02-05 00:00:00',
                 'STOCK_USD', 'USD',    # that stock, prices in USD
                 1000.0,                # balance: USD
                 870.0 * xrate,         # invested: USD
@@ -412,7 +413,7 @@ class InvestedTestCase(BaseTest):
                 20.0,                  # shares
                 1000 - 870 * xrate,    # Profit and Loss
                 1000 / (870 * xrate)), # roi
-             ('2020-02-05', '2020-02-07',
+             ('2020-02-05 00:00:00', '2020-02-07 00:00:00',
                 'STOCK_USD', 'USD',    # that stock, prices in USD
                 1020.0,                # balance: USD
                 870.0 * xrate,         # invested: USD
@@ -420,7 +421,7 @@ class InvestedTestCase(BaseTest):
                 20.0,                  # shares
                 1020 - 870 * xrate,    # Profit and Loss
                 1020 / (870 * xrate)), # roi
-             ('2020-02-07', '2020-03-01',
+             ('2020-02-07 00:00:00', '2020-03-01 00:00:00',
                 'STOCK_USD', 'USD',    # that stock, prices in USD
                 980.0,                 # balance: USD
                 870.0 * xrate,         # invested: USD
@@ -428,7 +429,7 @@ class InvestedTestCase(BaseTest):
                 20.0,                  # shares
                 980 - 870 * xrate,     # Profit and Loss
                 980 / (870 * xrate)),  # roi
-             ('2020-03-01', '2020-04-01',
+             ('2020-03-01 00:00:00', '2020-04-01 00:00:00',
                 'STOCK_USD', 'USD',    # that stock, prices in USD
                 1029.0,                # balance: USD
                 870.0 * xrate,         # invested: USD
@@ -436,7 +437,7 @@ class InvestedTestCase(BaseTest):
                 21.0,                  # shares
                 1029 - 870 * xrate,    # Profit and Loss
                 1029 / (870 * xrate)), # roi
-             ('2020-04-01', '2020-04-01',
+             ('2020-04-01 00:00:00', '2020-04-01 00:00:00',
                 'STOCK_USD', 'USD',    # that stock, prices in USD
                 1029.0,                # balance: USD
                 870.0 * xrate,         # invested: USD
@@ -444,7 +445,7 @@ class InvestedTestCase(BaseTest):
                 21.0,                  # shares
                 (1029+20.979) - 870 * xrate,     # Profit and Loss
                 (1029+20.979) / (870 * xrate)),  # roi
-             ('2020-04-01', '2999-12-31',
+             ('2020-04-01 00:00:00', '2999-12-31 00:00:00',
                 'STOCK_USD', 'USD',    # that stock, prices in USD
                 1029.0,                # balance: USD
                 870.0 * xrate,         # invested: USD
@@ -453,8 +454,8 @@ class InvestedTestCase(BaseTest):
                 (1029+20.979) - 870 * xrate,     # Profit and Loss
                 (1029+20.979) / (870 * xrate)),  # roi
             ],
-            [(r.mindate.strftime('%Y-%m-%d'),
-              r.maxdate.strftime('%Y-%m-%d'),
+            [(r.mindate.strftime('%Y-%m-%d %H:%M:%S'),
+              r.maxdate.strftime('%Y-%m-%d %H:%M:%S'),
               r.commodity.name,
               r.currency.name,
               r.balance,
