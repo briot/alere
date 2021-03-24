@@ -229,20 +229,9 @@ class InvestedTestCase(BaseTest):
             )
             self.assertListEqual(
                 [
-                    # ??? Would be nice to combine those, since they are the
-                    # same transaction
+                    # ??? Why is the time sometimes represented as string and
+                    # sometimes not ?
 
-                    (self.invest_stock_usd.id,
-                     self.stock_usd.id,
-                     self.eur.id,
-                     datetime.datetime(2020, 2, 3, 0, 0, 0),
-                     '2020-02-03 00:00:00',
-                     0.0,    # shares
-                     870.0,  # invested
-                     0,      # realized_gain
-                     870.0,  # invested_for_shares
-                     20.0,   # shares_transacted
-                    ),
                     (self.invest_stock_usd.id,
                      self.stock_usd.id,
                      self.eur.id,
@@ -262,17 +251,6 @@ class InvestedTestCase(BaseTest):
                      21.0,   # shares  (one added)
                      870.0,  # invested
                      0,      # realized_gain
-                     870.0,  # invested_for_shares
-                     20.0,   # shares_transacted
-                    ),
-                    (self.invest_stock_usd.id,
-                     self.stock_usd.id,
-                     self.eur.id,
-                     datetime.datetime(2020, 4, 1, 0, 0, 0),
-                     '2020-04-01 00:00:00',
-                     21.0,   # shares  (one added)
-                     870.0,  # invested
-                     18.9,   # realized_gain (dividend)
                      870.0,  # invested_for_shares
                      20.0,   # shares_transacted
                     ),
@@ -294,17 +272,6 @@ class InvestedTestCase(BaseTest):
                      self.stock_usd.id,
                      self.usd.id,
                      datetime.datetime(2020, 2, 3, 0, 0, 0),
-                     '2020-02-03 00:00:00',
-                     0.0,    # shares
-                     870.0 * xrate,  # invested
-                     0,      # realized_gain
-                     870.0 * xrate,  # invested_for_shares
-                     20.0,   # shares_transacted
-                    ),
-                    (self.invest_stock_usd.id,
-                     self.stock_usd.id,
-                     self.usd.id,
-                     datetime.datetime(2020, 2, 3, 0, 0, 0),
                      '2020-03-01 00:00:00',
                      20.0,   # shares
                      870.0 * xrate,  # invested
@@ -320,17 +287,6 @@ class InvestedTestCase(BaseTest):
                      21.0,   # shares   (one added)
                      870.0 * xrate,  # invested
                      0,      # realized_gain
-                     870.0 * xrate,  # invested_for_shares
-                     20.0,   # shares_transacted
-                    ),
-                    (self.invest_stock_usd.id,
-                     self.stock_usd.id,
-                     self.usd.id,
-                     datetime.datetime(2020, 4, 1, 0, 0, 0),
-                     '2020-04-01 00:00:00',
-                     21.0,           # shares
-                     870.0 * xrate,  # invested
-                     18.9 * 1.11,    # realized_gain (dividend)
                      870.0 * xrate,  # invested_for_shares
                      20.0,   # shares_transacted
                     ),
@@ -387,14 +343,6 @@ class InvestedTestCase(BaseTest):
                 21.0,                  # shares
                 874.65 - 870.0,        # Profit and Loss
                 874.65 / 870.0),       # roi
-             ('2020-04-01 00:00:00', '2020-04-01 00:00:00',
-                'STOCK_USD', 'EURO',   # that stock, prices in USD
-                874.65,                # balance: USD
-                870.0,                 # invested: USD
-                18.9,                  # gains
-                21.0,                  # shares
-                (874.65+18.9) - 870,   # Profit and Loss
-                (874.65+18.9) / 870),  # roi
              ('2020-04-01 00:00:00', '2999-12-31 00:00:00',
                 'STOCK_USD', 'EURO',   # that stock, prices in USD
                 874.65,                # balance: USD
@@ -437,14 +385,6 @@ class InvestedTestCase(BaseTest):
                 21.0,                  # shares
                 1029 - 870 * xrate,    # Profit and Loss
                 1029 / (870 * xrate)), # roi
-             ('2020-04-01 00:00:00', '2020-04-01 00:00:00',
-                'STOCK_USD', 'USD',    # that stock, prices in USD
-                1029.0,                # balance: USD
-                870.0 * xrate,         # invested: USD
-                20.979,                # gains
-                21.0,                  # shares
-                (1029+20.979) - 870 * xrate,     # Profit and Loss
-                (1029+20.979) / (870 * xrate)),  # roi
              ('2020-04-01 00:00:00', '2999-12-31 00:00:00',
                 'STOCK_USD', 'USD',    # that stock, prices in USD
                 1029.0,                # balance: USD

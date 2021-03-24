@@ -7,7 +7,7 @@ import sys
 
 
 invested_flags = ",".join("'%s'" % f for f in models.AccountFlags.invested())
-
+armageddon = "'2999-12-31 00:00:00'"
 
 def create_views(apps, schema_editor):
     models.PriceSources.objects.create(
@@ -249,7 +249,7 @@ class Migration(migrations.Migration):
                 LEAD(p.date)
                    OVER (PARTITION BY p.origin_id, p.target_id
                          ORDER BY p.date),
-                '2999-12-31 00:00:00'
+                {armageddon}
              ) as maxdate,
              p.source_id
            FROM alr_raw_prices p
@@ -266,7 +266,7 @@ class Migration(migrations.Migration):
                 LEAD(p.date)
                    OVER (PARTITION BY p.origin_id, p.target_id
                          ORDER BY p.date),
-                '2999-12-31 00:00:00'
+                {armageddon}
              ) as maxdate,
              p.source_id
            FROM alr_raw_prices_with_turnkey p
@@ -283,7 +283,7 @@ class Migration(migrations.Migration):
                  LEAD(alr_splits.post_date)
                     OVER (PARTITION BY alr_accounts.id
                           ORDER by post_date),
-                 '2999-12-31 00:00:00'
+                 {armageddon}
                 ) AS maxdate,
               CAST( sum(alr_splits.scaled_qty)
                  OVER (PARTITION BY alr_accounts.id
@@ -407,55 +407,59 @@ class Migration(migrations.Migration):
                     ON (s2.currency_id=xrate.origin_id
                         AND s2.post_date >= xrate.mindate
                         AND s2.post_date < xrate.maxdate)
-           )
-
-           SELECT
-              a.id AS account_id,
-              a.commodity_id,
-              s2.target_id as currency_id, --  currency for investment,..
-              s.post_date AS mindate,
-              COALESCE(
-                 LEAD(s.post_date) OVER win,
-                 '2999-12-31 00:00:00'
-                ) AS maxdate,
-              CAST(SUM(CASE WHEN s.account_id = s2.account_id
-                            THEN s.scaled_qty ELSE 0 END)
-                 OVER win
-                 AS FLOAT
-                ) / a.commodity_scu
-                AS shares,
-              SUM(CASE WHEN s.account_id <> s2.account_id AND s2.value < 0
-                       THEN -s2.value
-                       ELSE 0 END)
-                 OVER win
-                 AS invested,
-              SUM(CASE WHEN s.account_id <> s2.account_id AND s2.value > 0
-                       THEN s2.value
-                       ELSE 0 END)
-                 OVER win
-                 AS realized_gain,
-              SUM(CASE WHEN s.account_id <> s2.account_id
-                         AND s2.value <> 0
-                         AND s.scaled_qty <> 0
-                       THEN abs(s2.value)
-                       ELSE 0 END)
-                 OVER win
-                 AS invested_for_shares,
-              CAST(SUM(CASE WHEN s.account_id <> s2.account_id
-                         AND s2.value <> 0 AND s.scaled_qty <> 0
-                       THEN abs(s.scaled_qty) ELSE 0 END)
+           ),
+           include_empty_range AS (
+              SELECT
+                 a.id AS account_id,
+                 a.commodity_id,
+                 s2.target_id as currency_id, --  currency for investment,..
+                 s.post_date AS mindate,
+                 COALESCE(
+                    LEAD(s.post_date) OVER win,
+                    {armageddon}
+                 ) AS maxdate,
+                 CAST(SUM(CASE WHEN s.account_id = s2.account_id
+                               THEN s.scaled_qty ELSE 0 END)
                     OVER win
-                   AS FLOAT)
-                 / a.commodity_scu
-                 AS shares_transacted
-            FROM alr_splits s
-              JOIN internal_splits s2 USING (transaction_id)
-              JOIN alr_accounts a ON (s.account_id = a.id)
-            WINDOW win AS (
-                PARTITION BY s.account_id, s2.target_id
-                ORDER BY s.post_date
-                ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            )
+                    AS FLOAT
+                   ) / a.commodity_scu
+                   AS shares,
+                 SUM(CASE WHEN s.account_id <> s2.account_id AND s2.value < 0
+                          THEN -s2.value
+                          ELSE 0 END)
+                    OVER win
+                    AS invested,
+                 SUM(CASE WHEN s.account_id <> s2.account_id AND s2.value > 0
+                          THEN s2.value
+                          ELSE 0 END)
+                    OVER win
+                    AS realized_gain,
+                 SUM(CASE WHEN s.account_id <> s2.account_id
+                            AND s2.value <> 0
+                            AND s.scaled_qty <> 0
+                          THEN abs(s2.value)
+                          ELSE 0 END)
+                    OVER win
+                    AS invested_for_shares,
+                 CAST(SUM(CASE WHEN s.account_id <> s2.account_id
+                            AND s2.value <> 0 AND s.scaled_qty <> 0
+                          THEN abs(s.scaled_qty) ELSE 0 END)
+                       OVER win
+                      AS FLOAT)
+                    / a.commodity_scu
+                    AS shares_transacted
+               FROM alr_splits s
+                 JOIN internal_splits s2 USING (transaction_id)
+                 JOIN alr_accounts a ON (s.account_id = a.id)
+               WINDOW win AS (
+                   PARTITION BY s.account_id, s2.target_id
+                   ORDER BY s.post_date
+                   ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+               )
+           )
+           SELECT *
+             FROM include_empty_range
+            WHERE mindate <> maxdate
         ;
 
         --  For all accounts, compute the return on investment at any point
