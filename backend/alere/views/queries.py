@@ -79,7 +79,7 @@ class Mean:
                  <= strftime("%%Y-%%m-%%d", months.date)
               AND strftime("%%Y-%%m-%%d", months.date)
                  < strftime("%%Y-%%m-%%d", alr_balances_currency.maxdate)
-              AND alr_balances_currency.commodity_id=%s
+              AND alr_balances_currency.currency_id=%s
               AND alr_balances_currency.account_id = alr_accounts.id
               AND alr_accounts.kind_id IN ({nw_kinds})
            GROUP BY months.date

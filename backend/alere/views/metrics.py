@@ -18,12 +18,12 @@ class MetricsView(JSONView):
         at_start = alere.models.Balances_Currency.objects \
             .filter(mindate__lte=mindate,
                     maxdate__gt=mindate,
-                    commodity_id=currency)
+                    currency_id=currency)
 
         at_end = alere.models.Balances_Currency.objects \
             .filter(mindate__lte=maxdate,
                     maxdate__gt=maxdate,
-                    commodity_id=currency)
+                    currency_id=currency)
 
         income = -(
             over_period \

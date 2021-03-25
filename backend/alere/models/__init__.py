@@ -604,7 +604,7 @@ class Balances_Currency(AlereModel):
     account = models.ForeignKey(
         Accounts, on_delete=models.DO_NOTHING, related_name='balance_currency')
 
-    commodity = models.ForeignKey(
+    currency = models.ForeignKey(  # in what currency are the prices given ?
         Commodities,
         on_delete=models.DO_NOTHING,
         related_name='+'

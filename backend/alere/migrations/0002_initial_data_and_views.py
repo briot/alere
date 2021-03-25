@@ -312,32 +312,32 @@ class Migration(migrations.Migration):
             SELECT
                alr_balances.id,
                alr_balances.account_id,
-               alr_commodities.id as commodity_id,
-               max(alr_balances.mindate, alr_price_history.mindate) as mindate,
-               min(alr_balances.maxdate, alr_price_history.maxdate) as maxdate,
-               CAST(alr_balances.balance * alr_price_history.scaled_price
+               alr_commodities.id as currency_id,
+               max(alr_balances.mindate, p.mindate) as mindate,
+               min(alr_balances.maxdate, p.maxdate) as maxdate,
+               CAST(alr_balances.balance * p.scaled_price
                     AS FLOAT)
                   / source.price_scale as balance,
                alr_balances.balance as shares,
-               CAST(alr_price_history.scaled_price AS FLOAT)
+               CAST(p.scaled_price AS FLOAT)
                   / source.price_scale
                   as computed_price
             FROM
                alr_balances,
-               alr_price_history,
+               alr_price_history_with_turnkey p,
                alr_commodities,
                alr_commodities source
             WHERE
                --  price from: the account's commodity
                source.id = alr_balances.commodity_id
-               AND alr_balances.commodity_id=alr_price_history.origin_id
+               AND alr_balances.commodity_id=p.origin_id
 
-               --  price target: the user's requested commoditty
-               AND alr_price_history.target_id=alr_commodities.id
+               --  price target: the user's requested currency
+               AND p.target_id=alr_commodities.id
 
                --  intervals intersect
-               AND alr_balances.mindate < alr_price_history.maxdate
-               AND alr_price_history.mindate < alr_balances.maxdate
+               AND alr_balances.mindate < p.maxdate
+               AND p.mindate < alr_balances.maxdate
 
                --  target commodities can only be currencies
                AND alr_commodities.kind='C'
