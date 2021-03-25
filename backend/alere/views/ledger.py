@@ -74,6 +74,7 @@ def ledger(
             "accountId": s.account_id,
             "date": s.post_date.strftime("%Y-%m-%d"),
             "amount": s.value,
+            "currency": s.value_commodity_id,
             "reconcile": s.reconcile,
             "shares": s.scaled_qty / s.account.commodity_scu,
             "price": s.computed_price,

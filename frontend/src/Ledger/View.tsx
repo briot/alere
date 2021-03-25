@@ -12,6 +12,7 @@ import ListWithColumns, {
 import { Account, AccountId, CommodityId } from 'services/useAccounts';
 import useAccountIds, {
    AccountIdSet, AccountList } from 'services/useAccountIds';
+import { Preferences } from 'services/usePrefs';
 import './Ledger.css';
 
 const SPLIT = '--split--';
@@ -49,6 +50,7 @@ export interface BaseLedgerProps {
 
 export interface ComputedBaseLedgerProps extends BaseLedgerProps {
    transactions: Transaction[]; // use it instead of fetching
+   prefs : Preferences;
 }
 
 interface TableRowData {
@@ -58,6 +60,11 @@ interface TableRowData {
    account: undefined|Account;   // destination account
    split: MAIN_TYPE | Split;  // what kind of row we are showing
 }
+
+const hideCommodity = (
+   s: Split|undefined, settings: ComputedBaseLedgerProps
+) =>
+   s?.currency === settings.prefs.currencyId;
 
 const columnDate: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "date",
@@ -83,7 +90,7 @@ const columnNum: Column<TableRowData, ComputedBaseLedgerProps> = {
 const columnSummary: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "Summary",
    className: "summary",
-   cell: (d: TableRowData) => {
+   cell: (d: TableRowData, _: any, settings) => {
       const amount =
          d.account === undefined  //  not for one specific account
          ? amountIncomeExpense(d.transaction)
@@ -92,7 +99,8 @@ const columnSummary: Column<TableRowData, ComputedBaseLedgerProps> = {
          <>
             <Numeric
                amount={amount}
-               commodity={d.firstRowSplit?.account?.commodity}
+               commodity={d.firstRowSplit?.currency}
+               hideCommodity={hideCommodity(d.firstRowSplit, settings)}
             />
             &nbsp;=&nbsp;
             {
@@ -105,7 +113,8 @@ const columnSummary: Column<TableRowData, ComputedBaseLedgerProps> = {
                         <span>{ s.amount >= 0 ? ' - ' : ' + ' }</span>
                         <Numeric
                            amount={Math.abs(s.amount)}
-                           commodity={s.account?.commodity}
+                           commodity={s.currency}
+                           hideCommodity={hideCommodity(s, settings)}
                         />
                         &nbsp;(
                            <AccountName
@@ -179,14 +188,19 @@ const columnAmount: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "Amount",
    className: "amount",
    compare: (a, b) => a.firstRowSplit.amount - b.firstRowSplit.amount,
-   cell: (d: TableRowData) =>
+   cell: (d: TableRowData, _: any, settings) =>
       <Numeric
          amount={d.split === MAIN ? d.firstRowSplit.amount : d.split.amount}
-         hideCommodity={true}
+         hideCommodity={
+            hideCommodity(
+               d.split === MAIN  ? d.firstRowSplit : d.split,
+               settings
+            )
+         }
          commodity={
             d.split === MAIN
-            ? d.firstRowSplit.account?.commodity
-            : d.split.account?.commodity
+            ? d.firstRowSplit.currency
+            : d.split.currency
          }
       />
 }
@@ -195,19 +209,19 @@ const columnWidthdraw: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "Payment",
    className: "amount",
    compare: (a, b) => a.firstRowSplit.amount - b.firstRowSplit.amount,
-   cell: (d: TableRowData) =>
+   cell: (d: TableRowData, _, settings) =>
       d.split === MAIN
       ? (d.firstRowSplit.amount < 0 &&
           <Numeric
              amount={Math.abs(d.firstRowSplit.amount)}
-             commodity={d.firstRowSplit.account?.commodity}
-             hideCommodity={true}
+             commodity={d.firstRowSplit.currency}
+             hideCommodity={hideCommodity(d.firstRowSplit, settings)}
            />)
       : (d.split.amount < 0 &&
           <Numeric
              amount={Math.abs(d.split.amount)}
-             commodity={d.split.account?.commodity}
-             hideCommodity={true}
+             commodity={d.split.currency}
+             hideCommodity={hideCommodity(d.split, settings)}
           />)
 }
 
@@ -215,19 +229,19 @@ const columnDeposit: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "Deposit",
    className: "amount",
    compare: (a, b) => a.firstRowSplit.amount - b.firstRowSplit.amount,
-   cell: (d: TableRowData) =>
+   cell: (d: TableRowData, _, settings) =>
       d.split === MAIN
       ? (d.firstRowSplit.amount >= 0 &&
          <Numeric
             amount={d.firstRowSplit.amount}
-            commodity={d.firstRowSplit.account?.commodity}
-            hideCommodity={true}
+            commodity={d.firstRowSplit.currency}
+            hideCommodity={hideCommodity(d.firstRowSplit, settings)}
          />)
       : (d.split.amount >= 0 &&
          <Numeric
             amount={d.split.amount}
-            commodity={d.split.account?.commodity}
-            hideCommodity={true}
+            commodity={d.split.currency}
+            hideCommodity={hideCommodity(d.split, settings)}
          />)
 }
 
@@ -241,7 +255,7 @@ const columnShares: Column<TableRowData, ComputedBaseLedgerProps> = {
       ? (
          <Numeric
             amount={d.firstRowSplit.shares}
-            commodity={d.account?.commodity}  //  the account's commodity
+            commodity={d.firstRowSplit.currency}
             hideCommodity={true}
             scale={Math.log10(d.account?.commodity_scu ?? 100)}
          />
@@ -261,27 +275,19 @@ const columnPrice: Column<TableRowData, ComputedBaseLedgerProps> = {
    compare: (a, b) =>
       (a.firstRowSplit.price ?? 0) - (b.firstRowSplit.price ?? 0),
    title: "Price of one share at the time of the transaction",
-   cell: (d: TableRowData) =>
+   cell: (d: TableRowData, _: any, settings: ComputedBaseLedgerProps) =>
       d.split === MAIN
       ? (
          <Numeric
             amount={d.firstRowSplit.price}
-            commodity={
-               d.accounts.accounts.length > 1
-               ? undefined
-               : d.accounts.accounts[0]?.commodity
-            }
-            hideCommodity={true}
+            commodity={d.firstRowSplit.currency}
+            hideCommodity={hideCommodity(d.firstRowSplit, settings)}
          />
       ) : d.account?.id === d.split.accountId ? (
          <Numeric
             amount={d.split.price}
-            commodity={
-               d.accounts.accounts.length > 1
-               ? undefined
-               : d.accounts.accounts[0]?.commodity
-            }
-            hideCommodity={true}
+            commodity={d.split.currency}
+            hideCommodity={hideCommodity(d.split, settings)}
          />
       ) : undefined
 }
@@ -303,11 +309,12 @@ const columnBalance: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "Balance",
    className: "amount",
    title: "Current worth at the time of the transaction. For stock accounts, this is the number of stocks times their price at the time (not the cumulated amount you have bought or sold for)",
-   cell: (d: TableRowData) =>
+   cell: (d: TableRowData, _, settings) =>
       d.split === MAIN &&
       <Numeric
          amount={d.transaction.balance}
-         commodity={d.firstRowSplit.account?.commodity}
+         commodity={d.firstRowSplit.currency}
+         hideCommodity={hideCommodity(d.firstRowSplit, settings)}
       />
 }
 
@@ -478,6 +485,7 @@ const computeFirstSplit = (
          accounts.accounts.length > 1
          ? amountIncomeExpense(t)
          : amountForAccounts(t, accounts.accounts),
+      currency: sa[0]?.currency,
    };
 
    switch (p.split_mode) {

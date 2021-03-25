@@ -7,6 +7,7 @@ import { Transaction } from 'Transaction';
 import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
 import Settings from 'Ledger/Settings';
 import { capitalize } from 'services/utils';
+import usePrefs from 'services/usePrefs';
 
 export interface LedgerPanelProps extends PanelBaseProps, BaseLedgerProps {
    type: 'ledger';
@@ -17,6 +18,7 @@ const LedgerPanel: React.FC<
    & { transactions?: Transaction[] } // possibly precomputed
 > = p => {
    const { accounts, title } = useAccountIds(p.props.accountIds);
+   const { prefs } = usePrefs();
    const transactions = useTransactions(
       accounts, p.props.range, p.transactions);
    const setSortOn = (sortOn: string) => p.save({ sortOn });
@@ -44,6 +46,7 @@ const LedgerPanel: React.FC<
          <Ledger
             {...p.props}
             transactions={transactions}
+            prefs={prefs}
             setSortOn={setSortOn}
          />
       </Panel>

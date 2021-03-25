@@ -89,6 +89,7 @@ class NetworthTestCase(BaseTest):
                  'splits': [
                      {'accountId': self.salary.id,
                       'amount': -12.34,
+                      'currency': 1,
                       'date': '2020-11-01',
                       'price': 1.0,
                       'reconcile': 'n',
@@ -96,6 +97,7 @@ class NetworthTestCase(BaseTest):
                      },
                      {'accountId': self.checking.id,
                       'amount': 12.34,
+                      'currency': 1,
                       'date': '2020-11-02',
                       'price': 1.0,
                       'reconcile': 'n',
@@ -112,6 +114,7 @@ class NetworthTestCase(BaseTest):
                  'splits': [
                      {'accountId': self.salary.id,
                       'date': '2020-11-03',
+                      'currency': 1,
                       'amount': -1.0,
                       'reconcile': 'n',
                       'shares': -1.0,
@@ -119,6 +122,7 @@ class NetworthTestCase(BaseTest):
                      },
                      {'accountId': self.checking.id,
                       'date': '2020-11-04',
+                      'currency': 1,
                       'amount': 1.0,
                       'reconcile': 'n',
                       'shares': 1.0,
@@ -135,6 +139,7 @@ class NetworthTestCase(BaseTest):
                  'splits': [
                      {'accountId': self.salary.id,
                       'date': '2020-11-03',
+                      'currency': 1,
                       'amount': 10.0,
                       'reconcile': 'n',
                       'shares': 10.0,
@@ -142,6 +147,7 @@ class NetworthTestCase(BaseTest):
                       },
                      {'accountId': self.checking.id,
                       'date': '2020-11-03',
+                      'currency': 1,
                       'amount': -10.0,
                       'reconcile': 'n',
                       'shares': -10.0,
@@ -159,6 +165,7 @@ class NetworthTestCase(BaseTest):
                      {'accountId': self.groceries.id,
                       'amount': 1.802,   # in EUR
                       'date': '2020-11-25',
+                      'currency': 2,
                       'price': 0.85,     # conversion rate
                       'reconcile': 'n',
                       'shares': 2.12,    # in USD
@@ -166,6 +173,7 @@ class NetworthTestCase(BaseTest):
                      {'accountId': self.checking.id,
                       'amount': -1.8,    # in EUR
                       'date': '2020-11-25',
+                      'currency': 1,
                       'price': 1.0,
                       'reconcile': 'n',
                       'shares': -1.8,    # in EUR

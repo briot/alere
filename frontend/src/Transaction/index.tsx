@@ -1,4 +1,4 @@
-import { Account, AccountId } from 'services/useAccounts';
+import { Account, AccountId, CommodityId } from 'services/useAccounts';
 
 export type TransactionId = string;
 
@@ -7,8 +7,9 @@ export interface Split {
    reconcile?: string;
    date: string;     // date the split was completed
    amount: number;
-   shares?: number;  //  for stock accounts
-   price?: number;
+   currency: CommodityId | undefined, // amount is given in that currency
+   shares?: number;  //  for stock accounts, in account.commodity
+   price?: number;   // in currency
 
    account: Account|undefined;   // not sent via JSON
 }
