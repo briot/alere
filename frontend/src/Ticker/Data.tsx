@@ -74,6 +74,7 @@ export const columnShares: ColumnType = {
          amount={r.ticker.is_currency ? NaN : r.acc.end.shares}
          commodity={r.acc.account.commodity}
          hideCommodity={true}
+         scale={Math.log10(r.acc.account.commodity_scu)}
       />,
    compare: (r1: RowData, r2: RowData) =>
       numComp(r1.acc.end.shares, r2.acc.end.shares),

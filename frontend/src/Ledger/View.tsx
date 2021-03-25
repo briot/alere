@@ -243,12 +243,14 @@ const columnShares: Column<TableRowData, ComputedBaseLedgerProps> = {
             amount={d.firstRowSplit.shares}
             commodity={d.account?.commodity}  //  the account's commodity
             hideCommodity={true}
+            scale={Math.log10(d.account?.commodity_scu ?? 100)}
          />
       ) : d.account?.id === d.split.accountId ? (
          <Numeric
             amount={d.split.shares}
             commodity={d.account?.commodity}  //  the account's commodity
             hideCommodity={true}
+            scale={Math.log10(d.account?.commodity_scu ?? 100)}
          />
       ) : undefined
 }
