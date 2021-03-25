@@ -29,8 +29,8 @@ class NetworthTestCase(BaseTest):
             [Split(self.groceries,
                    212,   # scaled by groceries'commodity (EUR), i.e. 100
                    '2020-11-25',
-                   self.usd, 85,  # scaled by groceries.commodity.price_scale
-                                  # ie eur.price_scale ie 100
+                   value_commodity=self.usd,
+                   value=1802,
                 ),
              Split(self.checking,  -180, '2020-11-25')])
 
@@ -157,7 +157,7 @@ class NetworthTestCase(BaseTest):
                  'checknum': None,
                  'splits': [
                      {'accountId': self.groceries.id,
-                      'amount': 1.8019999999999998,    # in EUR
+                      'amount': 1.802,   # in EUR
                       'date': '2020-11-25',
                       'price': 0.85,     # conversion rate
                       'reconcile': 'n',

@@ -13,7 +13,7 @@ class MetricsView(JSONView):
         over_period = alere.models.Splits_With_Value.objects \
             .filter(post_date__gte=mindate,
                     post_date__lte=maxdate,
-                    value_currency=currency)
+                    value_commodity=currency)
 
         at_start = alere.models.Balances_Currency.objects \
             .filter(mindate__lte=mindate,

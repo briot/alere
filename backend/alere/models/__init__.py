@@ -56,18 +56,6 @@ class Commodities(AlereModel):
         )
     # What kind of commodity this is
 
-    qty_scale = models.IntegerField(default=100)
-    # The smallest unit users can buy or sell. For instance, 100 => 0.01 units.
-    # All quantities expressed in the commodity should be divided by this
-    # qty_scale to get the actual number.
-    #
-    # When you buy 0.23 shares of AAPL at 120 USD, and assuming the qty_scale
-    # for AAPL is set to 100, information in the split is stored as:
-    #     split1: account AAPL,       qty = 23  (commodity is AAPL)
-    #     split2: account investment, qty=12000 (commodity is USD)
-    #
-    # The accounts themselves potentially use a different commodity_scu
-
     price_scale = models.IntegerField(default=100)
     # Scaling used in the Prices table.
 
@@ -356,8 +344,6 @@ class Accounts(AlereModel):
     commodity_scu = models.IntegerField()
     # The Smallest Currency Unit for the commodity, in this account.
     # This is provided as a scaling factor: 100 => 0.01 precision.
-    # In general, it is equal to the commodity's qty_scale. But some brokers
-    # sometimes use a different factor here.
     #
     # For instance, a EUR checking account will typically have two decimal
     # digits precision, so the commodity_scu is "100".
@@ -445,36 +431,45 @@ class Splits(AlereModel):
     transaction = models.ForeignKey(
         Transactions, on_delete=models.CASCADE, related_name='splits',
     )
-    account     = models.ForeignKey(
+    account = models.ForeignKey(
         Accounts, on_delete=models.CASCADE, related_name='splits',
     )
 
     scaled_qty = models.IntegerField()
-    # The amount is in account's commodity, scaled by account.commodity_scu
+    # The amount of the transaction, as seen on the bank statement.
+    # This is given in the account.commodity, scaled by account.commodity_scu.
+    #
     # This could be a number of shares when the account is a Stock account,
     # for instance, or a number of EUR for a checking account.
 
-    scaled_price = models.IntegerField(null=False)
-    currency = models.ForeignKey(Commodities, on_delete=models.CASCADE)
-    # The actual value of the split (as users would see it on their
-    # bank accounts) expressed in currency is:
+    scaled_value = models.IntegerField()
+    value_commodity = models.ForeignKey(Commodities, on_delete=models.CASCADE)
+    # The amount of the transaction as original made.
+    # Scaled by  value_commodity.price_scale
+    # This is potentially given in another currency or commodity.
+    # The goal is to support multiple currencies transactions.
+    # Here are various ways this value can be used:
     #
-    #                scaled_qty                      scaled_price
-    #  value = ---------------------------- * -----------------------------
-    #          accounts.commodity.qty_scale   accounts.commodity.price_scale
+    # * a 1000 EUR transaction for an account in EUR. In this case, value is
+    #   useless and does not provide any additional information.
+    #       qty   = 1000 EUR  (scaled)
+    #       value = 1000 EUR
     #
-    # For a Stock BUY or SELL, we would have 'currency' equal to 'EUR' for
-    # instance, and scaled_price is the actual price we paid per stock.
+    # * an ATM operation of 100 USD for the same account in EUR while abroad.
+    #   Exchange rate at the time: 0.85 EUR = 1 USD
+    #       qty   = 85 EUR  (as shown on your bank statement)
+    #       value = 100 USD (the amount you actually withdrew)
+    #   So value is used to show you exactly the amount you manipulated. The
+    #   exchange rate can be computed from qty and value.
     #
-    # For a transaction in a foreign currency, currency would be that foreign
-    # currency ('GBP' for instance) and scaled_price would be the conversion
-    # rate "how many GBP per EUR" at the time of the transaction.
-    #
-    # For a transaction in the accounts currency, currency is set to the
-    # account's commodity, and scaled_price is price_scale
-    #
-    # Note that this amount does not include any fees, for this you need to
-    # look at the transaction itself and its other splits.
+    # * Buying 10 shares for AAPL at 120 USD. There are several splits here,
+    #   one where we increase the number of shares in the STOCK account:
+    #       qty   = 10 AAPL
+    #       value = 1200 USD
+    #   The money came from an investment account in EUR, which has its own
+    #   split for the same transaction:
+    #       qty   = 1020 EUR
+    #       value = 1200 USD
 
     reconcile = models.CharField(
         max_length=1,
@@ -482,7 +477,6 @@ class Splits(AlereModel):
         default=ReconcileKinds.NEW
     )
     reconcile_date = models.DateTimeField(null=True)
-    # Reconciliation state
 
     post_date   = models.DateTimeField()
     # When has the split impacted the account.
@@ -493,8 +487,8 @@ class Splits(AlereModel):
     #   post_date for accountB: 2020-01-03  (+x EUR)
     #        (took a few days to be credited)
     #
-    # kmymoney and gnucash seem to only store the timestamp at the transaction
-    # level
+    # kmymoney and gnucash seem to have the same flexibility in their database,
+    # but not take advantage of it in the user interface.
 
     # ??? action     (kmymoney uses this for ADD,BUY,...)
     #     we can likely represent those by having qty be null for some of the
@@ -531,9 +525,6 @@ class Splits_With_Value(AlereModel):
     account     = models.ForeignKey(
         Accounts, on_delete=models.CASCADE, related_name='+',
     )
-    currency = models.ForeignKey(
-        Commodities, on_delete=models.CASCADE, related_name='+')
-    scaled_price = models.IntegerField()
     scaled_qty = models.IntegerField()
     reconcile = models.CharField(
         max_length=1,
@@ -542,14 +533,14 @@ class Splits_With_Value(AlereModel):
     )
     reconcile_date = models.DateTimeField(null=True)
     post_date   = models.DateTimeField()
-
-    value_currency = models.ForeignKey(
+    value_commodity = models.ForeignKey(
         Commodities, on_delete=models.DO_NOTHING, related_name='+')
+
     value = models.FloatField()
-    # The value of the split given in value_currency
+    # The value of the split given in value_currency, unscaled
 
     computed_price = models.FloatField()
-    # The price of one share at the time of the transaction
+    # The price of one share at the time of the transaction, in currency
 
     class Meta:
         managed = False

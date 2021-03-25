@@ -130,13 +130,12 @@ def __import_currencies(cur, commodities, sources, security_id):
                 )
 
         except models.Commodities.DoesNotExist:
-            commodities[row['ISOcode']] = models.Commodities.objects.create(
+            c = commodities[row['ISOcode']] = models.Commodities.objects.create(
                 name=row['name'],
                 symbol_before="",
                 symbol_after=row['symbolString'],
                 iso_code=row['ISOcode'],
                 kind=models.CommodityKinds.CURRENCY,
-                qty_scale=qty_scale,
                 price_scale=price_scale,
                 quote_source=(
                     models.PriceSources.get(sources[row['ISOcode']])
@@ -149,6 +148,7 @@ def __import_currencies(cur, commodities, sources, security_id):
                     else None
                 ),
             )
+            c.qty_scale = qty_scale  # only used in this importer
 
         # ??? ignored: symbol1  = unicode code point for the symbol
         # ??? ignored: symbol2
@@ -204,16 +204,17 @@ def __import_securities(
                         row['id'], row['name'], old.price_scale, price_scale))
 
         except models.Commodities.DoesNotExist:
-            commodities[row['id']] = models.Commodities.objects.create(
+            c = commodities[row['id']] = models.Commodities.objects.create(
                 name=row['name'],
                 symbol_before="",
                 symbol_after=security_id.get(row['id'], row['symbol']),
                 kind=kind,
-                qty_scale=int(row['smallestAccountFraction']),
                 price_scale=price_scale,
                 quote_source=price_sources.get(sources.get(row['id']), None),
                 quote_symbol=row['symbol'],   # ticker
             )
+            c.qty_scale = qty_scale
+
             # ??? ignored: pricePrecision
             # ??? ignored: tradingMarket
             # ??? ignored: tradingCurrency
@@ -271,7 +272,7 @@ def __scaled_price(text, scale: int):
 
     # ??? There might be rounding errors if kmymoney used a denominator which
     # isn't a factor of scale.
-    return int(int(num) * (scale / int(den)))
+    return int(int(num) * scale / int(den))
 
 
 def __import_prices(cur, commodities, price_sources):
@@ -388,32 +389,33 @@ def __import_transactions(cur, accounts, commodities):
         )
         shares = __scaled_price(row['shares'], scale=acc.commodity_scu)
 
-        if row['action'] in ('Dividend', ):
+        if row['action'] in ('Dividend', 'Add') or row['price'] is None:
             # kmymoney sets "1.00" for the price, which does not reflect the
-            # current price of the share at the time, so better have nothing
-            price = acc.commodity.price_scale
+            # current price of the share at the time, so better have nothing.
+            #
+            # In kmymoney, foreign currencies are not supported in
+            # transactions.
             currency = acc.commodity
-        elif row['price'] is None and acc.kind.flag != models.AccountFlags.STOCK:
-            # for non-stock account. In kmymoney, foreign currencies are not
-            # supported in transactions.
-            price = trans_currency.price_scale
-            currency = acc.commodity
+            scaled_value = shares
         else:
             # for a stock account
-            price = __scaled_price(
-                row['price'],
-                scale=acc.commodity.price_scale
-            ) or acc.commodity.price_scale
+            price = __scaled_price(row['price'], scale=1e6)
             currency = trans_currency
+            scaled_value = (
+                shares * price * currency.price_scale
+                / (1e6                   # scale for price
+                   * acc.commodity_scu   # scale for shares
+                )
+            )
 
         # assert price is not None, "while processing %s" % dict(row)
 
         s = models.Splits.objects.create(
             transaction=trans,
             account=acc,
-            currency=currency,
-            scaled_price=price,
             scaled_qty=shares,
+            scaled_value=scaled_value,
+            value_commodity=currency,
             reconcile=reconcile,
             reconcile_date=__time(row['reconcileDate']),
             post_date=__time(row['postDate']),

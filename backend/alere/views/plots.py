@@ -24,7 +24,7 @@ class CategoryPlotView(JSONView):
         query = alere.models.Splits_With_Value.objects \
             .filter(post_date__gte=mindate,
                     post_date__lte=maxdate,
-                    value_currency_id=currency,
+                    value_commodity_id=currency,
                     account__kind__in=flags) \
             .values('account_id') \
             .annotate(Sum('value')) \

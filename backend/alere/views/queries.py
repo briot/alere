@@ -155,7 +155,7 @@ class Mean:
                             strftime("%%Y-%%m", months.date))
                      JOIN alr_accounts
                         ON (alr_splits_with_value.account_id=alr_accounts.id)
-                  WHERE alr_splits_with_value.value_currency_id=%s
+                  WHERE alr_splits_with_value.value_commodity_id=%s
                   GROUP BY months.date
                ) tmp
               """

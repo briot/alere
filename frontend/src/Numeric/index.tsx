@@ -44,9 +44,10 @@ const Numeric: React.FC<NumericProps> = ({
    const val = amount.toFixed(
       scale !== undefined
       ? scale
-      : comm?.qty_scale === undefined
-      ? 2
-      : Math.log10(comm.qty_scale));
+      : 2
+      //  Should get from account.commodity_scu
+      // : Math.log10(comm.qty_scale)
+   );
 
    let str = val.split('.');  // separator used by toFixed
    if (str[0].length >= 4) {

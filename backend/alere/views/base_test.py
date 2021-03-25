@@ -7,17 +7,17 @@ from .json import ParamDecoder
 
 
 class Split:
-    def __init__(self, account, qty, date, currency=None, scaled_price=100):
-        """
-        scaled_price is scaled by account.commodity.price_scale
-        qty is scaled by account's commodity's qty_scale.
-        Default currency is EUR
-        """
+    def __init__(
+            self, account,
+            qty,   # in account.commodity, scaled by account.commodity_scu
+            date,
+            value_commodity=None,
+            value=None): # scaled by value_commodity.price_scale
         self.account = account
         self.qty = qty
         self.date = date
-        self.currency = currency
-        self.scaled_price = scaled_price
+        self.value_commodity = value_commodity or account.commodity
+        self.value = value if value is not None else qty
 
 
 class BaseTest(TestCase, ParamDecoder):
@@ -31,17 +31,17 @@ class BaseTest(TestCase, ParamDecoder):
         kls.eur = alere.models.Commodities.objects.create(
             name='EURO', symbol_before='', symbol_after='EUR',
             iso_code='EUR', kind=alere.models.CommodityKinds.CURRENCY,
-            qty_scale=100, price_scale=100)
+            price_scale=100)
 
         kls.usd = alere.models.Commodities.objects.create(
             name='USD', symbol_before='', symbol_after='USD',
             iso_code='USD', kind=alere.models.CommodityKinds.CURRENCY,
-            qty_scale=1000, price_scale=1000)
+            price_scale=1000)
 
         kls.stock_usd = alere.models.Commodities.objects.create(
             name='STOCK_USD', symbol_before='', symbol_after='SUD',
             iso_code='SUD', kind=alere.models.CommodityKinds.STOCK,
-            qty_scale=1000, price_scale=1000)
+            price_scale=1000)
 
         # accounts
         kls.checking = alere.models.Accounts.objects.create(
@@ -110,10 +110,10 @@ class BaseTest(TestCase, ParamDecoder):
             for s in splits:
                 t.splits.create(
                     account=s.account,
-                    currency=self.eur if s.currency is None else s.currency,
-                    scaled_price=s.scaled_price,
-                    scaled_qty=s.qty,
                     post_date=self.convert_time(s.date),
+                    scaled_qty=s.qty,
+                    value_commodity=s.value_commodity,
+                    scaled_value=s.value
                 )
             t.save()
             return t

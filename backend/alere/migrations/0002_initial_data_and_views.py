@@ -167,33 +167,45 @@ class Migration(migrations.Migration):
 
            UNION ALL
 
-           --  extract prices from transactions
+           --  extract prices from transactions.
            SELECT a.commodity_id AS origin_id,
-              s.currency_id AS target_id,
-              s.scaled_price,
+              s.value_commodity_id AS target_id,
+              CAST(s.scaled_value
+                   * a.commodity_scu    --  scale for s.scaled_qty
+                   * curr.price_scale   --  to get a scaled value
+                   AS FLOAT)
+                 / (s.scaled_qty
+                    * t.price_scale     --  scale for s.scaled_value
+                ),
               s.post_date AS date,
               {models.PriceSources.TRANSACTION} as source_id
               FROM alr_splits s
-                 JOIN alr_commodities t ON (s.currency_id=t.id)
+                 JOIN alr_commodities t ON (s.value_commodity_id=t.id)
                  JOIN alr_accounts a ON (s.account_id=a.id)
+                 JOIN alr_commodities curr ON (a.commodity_id=curr.id)
               WHERE t.kind='{models.CommodityKinds.CURRENCY}'
-                 AND a.commodity_id <> s.currency_id
+                 AND a.commodity_id <> s.value_commodity_id
 
            UNION ALL
 
            --  extract prices from transactions
-           SELECT s.currency_id AS origin_id,
+           SELECT s.value_commodity_id AS origin_id,
               a.commodity_id AS target_id,
-              CAST(target.price_scale * origin.price_scale AS FLOAT)
-                 / s.scaled_price,
+              CAST(s.scaled_qty
+                   * t.price_scale   --  scale for s.scaled_value
+                   * t.price_scale   --  to get a scaled value
+                   AS FLOAT)
+                  / (s.scaled_value
+                     * a.commodity_scu    --  scale for s.scaled_qty
+                    ),
               s.post_date AS date,
               {models.PriceSources.TRANSACTION} as source_id
               FROM alr_splits s
-                 JOIN alr_commodities origin ON (s.currency_id=origin.id)
+                 JOIN alr_commodities t ON (s.value_commodity_id=t.id)
                  JOIN alr_accounts a ON (s.account_id=a.id)
-                 JOIN alr_commodities target ON (a.commodity_id=target.id)
-              WHERE target.kind='{models.CommodityKinds.CURRENCY}'
-                 AND a.commodity_id <> s.currency_id
+                 JOIN alr_commodities curr ON (a.commodity_id=curr.id)
+              WHERE curr.kind='{models.CommodityKinds.CURRENCY}'
+                 AND a.commodity_id <> s.value_commodity_id
 
            UNION ALL
 
@@ -336,19 +348,18 @@ class Migration(migrations.Migration):
             SELECT
                row_number() OVER () as id,   --  for django's sake
                alr_splits.*,
-               alr_splits.currency_id AS value_currency_id,
-               alr_accounts.commodity_id,
-               CAST(alr_splits.scaled_price * alr_splits.scaled_qty AS FLOAT)
+               CAST(alr_splits.scaled_value AS FLOAT)
                   / alr_commodities.price_scale
-                  / alr_accounts.commodity_scu
                   AS value,
-               CAST(alr_splits.scaled_price AS FLOAT)
-                  / alr_commodities.price_scale AS computed_price
+               CAST(alr_splits.scaled_value
+                    * alr_accounts.commodity_scu AS FLOAT)
+                  / (alr_splits.scaled_qty * alr_commodities.price_scale)
+                  AS computed_price
             FROM
                alr_splits
                JOIN alr_accounts ON (alr_splits.account_id=alr_accounts.id)
                JOIN alr_commodities
-                  ON (alr_accounts.commodity_id=alr_commodities.id)
+                  ON (alr_splits.value_commodity_id=alr_commodities.id)
         ;
 
         DROP VIEW IF EXISTS alr_latest_price;
@@ -381,13 +392,11 @@ class Migration(migrations.Migration):
               SELECT s2.transaction_id,
                  s2.account_id,
                  xrate.target_id,
-                 CAST(s2.scaled_qty         --  number of shares
-                      * s2.scaled_price     --  price per share
+                 CAST(s2.scaled_value       --  number of shares
                       * xrate.scaled_price  --  convert to currency
                         AS FLOAT)
-                    / (s2a.commodity_scu    --  scale of scaled_qty
-                      * xrate.price_scale   --  scale of xrate.scaled_price
-                      * c2.price_scale)     --  scale of s2.scaled_price
+                    / (c2.price_scale       --  scale of scaled_value
+                      * xrate.price_scale)  --  scale of xrate.scaled_price
                 AS value
               FROM
                  alr_splits s2
@@ -397,12 +406,12 @@ class Migration(migrations.Migration):
                  JOIN alr_accounts s2a
                     ON (s2.account_id=s2a.id
                         AND s2a.kind_id IN ({invested_flags}))
-                 JOIN alr_commodities c2 ON (s2a.commodity_id = c2.id)
+                 JOIN alr_commodities c2 ON (s2.value_commodity_id = c2.id)
 
                  --  To handle multi-currencies, we convert the prices to a
                  --  common currency
                  JOIN alr_price_history_with_turnkey xrate
-                    ON (s2.currency_id=xrate.origin_id
+                    ON (s2.value_commodity_id=xrate.origin_id
                         AND s2.post_date >= xrate.mindate
                         AND s2.post_date < xrate.maxdate)
            ),

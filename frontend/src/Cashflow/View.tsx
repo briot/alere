@@ -14,7 +14,6 @@ const commMonths: Commodity = {
    name: "month",
    symbol_before: '',
    symbol_after: 'months',
-   qty_scale: 1,
    price_scale: 1,
    is_currency: false,
 }
