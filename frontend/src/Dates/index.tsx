@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Select } from 'Form';
 import RoundButton from 'RoundButton';
+import { mod } from 'services/utils';
 import './Dates.css';
 
 export type RelativeDate =
@@ -51,10 +52,15 @@ const startOfMonth = (d: Date, months: number) => {
 }
 
 /**
- * same day, last month
+ * same day, last month. When the day doesn't exist, move to the last valid
+ * day in that month.
  */
-const addMonth = (d: Date, months: number) => {
-   d.setMonth(d.getMonth() + months);
+export const addMonth = (d: Date, months: number) => {
+   const m = d.getMonth() + months;
+   d.setMonth(m);
+   if (d.getMonth() !== mod(m, 12)) {
+      d.setDate(0);
+   }
 }
 
 const addDay = (d: Date, days: number) => {

@@ -33,6 +33,14 @@ export const capitalize = (str: string): string => {
    );
 }
 
+/**
+ * Javascript handles modulo strangely with negative numbers:
+ * For instance, when computing with months, twelve months ago is
+ *   (2 - 12) % 12    => -10 in javascript
+ * With this function, we get 2 as expected
+ */
+export const mod = (n: number, m: number) => ((n % m) + m) % m;
+
 
 /**
  * Human-readable description of a date. This is an approximation, so
