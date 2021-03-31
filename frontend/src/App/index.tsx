@@ -1,32 +1,39 @@
-import React from 'react';
-import { Route, Switch } from "react-router-dom";
-import Dashboard from 'Dashboard';
-import LeftSideBar from 'LeftSideBar';
-import RightSideBar from 'RightSideBar';
-import LedgerPage from 'LedgerPage';
 import AccountsPage from 'AccountsPage';
-import InvestmentPage from 'InvestmentsPage';
-import usePrefs from 'services/usePrefs';
+import Dashboard from 'Dashboard';
 import Header, { HeaderProps } from 'Header';
-import StyleGuide from 'StyleGuide';
+import InvestmentPage from 'InvestmentsPage';
+import LedgerPage from 'LedgerPage';
+import LeftSideBar from 'LeftSideBar';
+import React from 'react';
+import RightSideBar from 'RightSideBar';
 import Spinner from 'Spinner';
-import { PanelBaseProps } from 'Dashboard/Panel';
-import { IncomeExpensePanelProps, registerIE } from 'IncomeExpense/Panel';
-import { NetworthPanelProps, registerNetworth } from 'NetWorth/Panel';
-import { LedgerPanelProps, registerLedger } from 'Ledger/Panel';
+import StyleGuide from 'StyleGuide';
+import useAccounts from 'services/useAccounts';
+import usePrefs from 'services/usePrefs';
+import { AccountsProvider } from 'services/useAccounts';
+import { BrowserRouter } from "react-router-dom";
 import { CashflowPanelProps, registerCashflow } from 'Cashflow/Panel';
+import { HistProvider } from 'services/useHistory';
+import { IncomeExpensePanelProps, registerIE } from 'IncomeExpense/Panel';
+import { LedgerPanelProps, registerLedger } from 'Ledger/Panel';
 import { MeanPanelProps, registerMean } from 'Mean/Panel';
-import { registerPriceHistory } from 'PriceHistory/Panel';
-import { registerInvestments } from 'Investments/Panel';
-import { registerTicker } from 'Ticker/Panel';
-import { registerRecent } from 'Recent/Panel';
-import { registerAccounts } from 'Accounts/Panel';
-import { WelcomePanelProps, registerWelcome } from 'Welcome/Panel';
 import { NetworthHistoryPanelProps,
    registerNetworthHistory } from 'NWHistory/Panel';
+import { NetworthPanelProps, registerNetworth } from 'NetWorth/Panel';
+import { PanelBaseProps } from 'Dashboard/Panel';
+import { PrefProvider } from 'services/usePrefs';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { Route, Switch } from "react-router-dom";
 import { SplitMode, NotesMode } from 'Ledger/View';
+import { TooltipProvider } from 'Tooltip';
 import { TreeMode } from 'services/useAccountTree';
-import useAccounts from 'services/useAccounts';
+import { WelcomePanelProps, registerWelcome } from 'Welcome/Panel';
+import { registerAccounts } from 'Accounts/Panel';
+import { registerInvestments } from 'Investments/Panel';
+import { registerPriceHistory } from 'PriceHistory/Panel';
+import { registerRecent } from 'Recent/Panel';
+import { registerTicker } from 'Ticker/Panel';
+
 import './App.css';
 import "font-awesome/css/font-awesome.min.css";
 
@@ -42,6 +49,14 @@ registerPriceHistory();
 registerRecent();
 registerTicker();
 registerWelcome();
+
+const queryClient = new QueryClient({
+   defaultOptions: {
+     queries: {
+       staleTime: 5 * 60000,  // 5min
+     },
+   },
+});
 
 const defaultOverview: PanelBaseProps[] = [
    {
@@ -117,7 +132,7 @@ const defaultOverview: PanelBaseProps[] = [
    } as NetworthHistoryPanelProps,
 ];
 
-const App: React.FC<{}> = () => {
+const Main: React.FC<{}> = () => {
    const { prefs } = usePrefs();
    const [ header, setHeader ] = React.useState<HeaderProps>({});
    const { accounts } = useAccounts();
@@ -179,6 +194,26 @@ const App: React.FC<{}> = () => {
             </div>
          </Route>
       </Switch>
+   );
+}
+
+const App: React.FC<{}> = () => {
+   return (
+      <React.StrictMode>
+          <BrowserRouter>
+             <QueryClientProvider client={queryClient}>
+                <TooltipProvider>
+                   <PrefProvider>
+                      <HistProvider>
+                         <AccountsProvider>
+                            <Main />
+                         </AccountsProvider>
+                      </HistProvider>
+                   </PrefProvider>
+                </TooltipProvider>
+            </QueryClientProvider>
+          </BrowserRouter>
+      </React.StrictMode>
    );
 }
 

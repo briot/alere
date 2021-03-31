@@ -3,3 +3,14 @@
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom/extend-expect';
+
+
+/**
+ * mock the resizeObserver, which doesn't exist in the test environment
+ */
+class ResizeObserver {
+    observe() {} // do nothing
+    unobserve() {} // do nothing
+    disconnect() {} // do nothing
+}
+window.ResizeObserver = ResizeObserver;

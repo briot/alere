@@ -2,7 +2,10 @@
   "scripts": {
     "frontend": "cd frontend; npm start",
     "backend": "./env/bin/python3 ./backend/manage.py migrate; ./env/bin/python3 ./backend/manage.py runserver 8000",
-    "tests": "./env/bin/python3 ./backend/manage.py test alere --parallel --verbosity=2"
+    "btests": "./env/bin/python3 ./backend/manage.py test alere --parallel --verbosity=2",
+    "ftests": "cd frontend; npm test --coverage --detectLeaks -forceExit",
+    "tests": "npm run btests; npm run ftests"
+
 
   }
 }
