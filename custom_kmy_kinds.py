@@ -14,6 +14,7 @@ m = [
     ( 24,  models.AccountFlags.MISC_TAX),           # taxe habitation
     ( 25,  models.AccountFlags.INCOME_TAX),         # impots revenu
     ( 63,  models.AccountFlags.WORK_INCOME),        # chomage
+    ( 99,  models.AccountFlags.INVESTMENT),         # habitation principale
     ( 124, models.AccountFlags.INVESTMENT),         # assurance-vie Manu Bourso
     ( 126, models.AccountFlags.EQUITY),             # reconciliation
     ( 127, models.AccountFlags.INVESTMENT),         # solesio

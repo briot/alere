@@ -141,7 +141,9 @@ class AccountFlags(models.TextChoices):
     # An account used to trade one security
 
     ASSET = 'A'
-    # A non-monetary asset (real-estate, car,...) that you want to track
+    # A non-monetary asset (real-estate, car,...) that you want to track.
+    # You could also use INVESTMENT if you want to see them in the Investment
+    # page.
 
     BANK = 'B'
     # A bank account (saving, checking,...)
@@ -173,6 +175,10 @@ class AccountFlags(models.TextChoices):
 
     @classmethod
     def trading(klass):
+        """
+        Which accounts should be displayed in the Investment and Performance
+        views
+        """
         return (
             klass.INVESTMENT,
             klass.STOCK,
@@ -241,7 +247,8 @@ class AccountFlags(models.TextChoices):
     def invested(klass):
         """
         All accounts used to compute invested amount (for stocks and
-        investment accounts)
+        investment accounts). This is money that already belongs to the user
+        and is moved between accounts.
         """
         return (
             klass.BANK,
