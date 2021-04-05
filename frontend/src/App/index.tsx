@@ -2,6 +2,7 @@ import AccountsPage from 'AccountsPage';
 import Dashboard from 'Dashboard';
 import Header, { HeaderProps } from 'Header';
 import InvestmentPage from 'InvestmentsPage';
+import PerformancePage from 'PerformancePage';
 import LedgerPage from 'LedgerPage';
 import LeftSideBar from 'LeftSideBar';
 import React from 'react';
@@ -30,6 +31,7 @@ import { TreeMode } from 'services/useAccountTree';
 import { WelcomePanelProps, registerWelcome } from 'Welcome/Panel';
 import { registerAccounts } from 'Accounts/Panel';
 import { registerInvestments } from 'Investments/Panel';
+import { registerPerformance } from 'Performance/Panel';
 import { registerPriceHistory } from 'PriceHistory/Panel';
 import { registerRecent } from 'Recent/Panel';
 import { registerTicker } from 'Ticker/Panel';
@@ -45,6 +47,7 @@ registerLedger();
 registerMean();
 registerNetworth();
 registerNetworthHistory();
+registerPerformance();
 registerPriceHistory();
 registerRecent();
 registerTicker();
@@ -179,6 +182,9 @@ const Main: React.FC<{}> = () => {
                          </Route>
                          <Route path="/investments">
                             <InvestmentPage setHeader={setHeader} />
+                         </Route>
+                         <Route path="/performance">
+                            <PerformancePage setHeader={setHeader} />
                          </Route>
                          <Route>
                             <Dashboard

@@ -13,9 +13,9 @@ const InvestmentsPanel: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
    return (
       <Panel
          {...p}
-         className={p.props.asTable ? 'astable' : 'asgrid'}
+         className='asgrid'
          header={{
-            name: `Investments (${r.possessive} performance)`,
+            name: `Investments (${r.possessive} period)`,
          }}
          Settings={
             <Settings
