@@ -1,11 +1,16 @@
 .dashboard {
+   --num-cols: 4;
+
+   --num-cols-minus-one: calc(var(--num-cols) - 1);
+   --w: calc(100% - var(--num-cols-minus-one) * var(--col-gap));
+   --cw: calc(var(--w) / var(--num-cols));
+
    flex: 1 1;
 
    --panel-height: 150px;
 
    display: grid;
-   /* 200px is so that we have at most 4 columns */
-   grid-template-columns: repeat(auto-fit, minmax(200px, 24%));
+   grid-template-columns: repeat(auto-fit, minmax(200px, var(--cw)));
    grid-template-rows: repeat(auto-fit, minmax(var(--panel-height), auto));
 
    grid-auto-flow: row;  /* dense */
