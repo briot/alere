@@ -92,7 +92,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='AccountKinds',
             fields=[
-                ('flag', models.TextField(choices=[('IP', 'Passive Income'), ('IW', 'Work Income'), ('IM', 'Misc Income'), ('IU', 'Unrealized Gains'), ('EX', 'Expense'), ('TI', 'Income Tax'), ('TM', 'Misc Tax'), ('L', 'Liability'), ('S', 'Stock'), ('A', 'Asset'), ('B', 'Bank'), ('I', 'Investment'), ('EQ', 'Equity')], max_length=2, primary_key=True, serialize=False)),
+                ('flag', models.TextField(choices=[('IP', 'Passive Income'), ('IW', 'Work Income'), ('IM', 'Misc Income'), ('IU', 'Unrealized Gains'), ('EX', 'Expense'), ('TI', 'Income Tax'), ('TM', 'Misc Tax'), ('L', 'Liability'), ('S', 'Stock'), ('A', 'Asset'), ('B', 'Bank'), ('I', 'Investment'), ('NL', 'Non Liquid Investment'), ('EQ', 'Equity')], max_length=2, primary_key=True, serialize=False)),
                 ('name', models.TextField()),
                 ('name_when_positive', models.TextField()),
                 ('name_when_negative', models.TextField()),

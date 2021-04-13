@@ -141,9 +141,12 @@ class AccountFlags(models.TextChoices):
     # An account used to trade one security
 
     ASSET = 'A'
-    # A non-monetary asset (real-estate, car,...) that you want to track.
+    # A non-monetary asset (car,...) that you want to track.
     # You could also use INVESTMENT if you want to see them in the Investment
     # page.
+    # Real-estate can either be tracked as an ASSET (if you do not intend to
+    # change its value, or do not need to track performance), or as a
+    # NON_LIQUID_INVESTMENT.
 
     BANK = 'B'
     # A bank account (saving, checking,...)
@@ -152,6 +155,11 @@ class AccountFlags(models.TextChoices):
     # An investment account. These will in general be used to trade stocks,
     # though occasionally it can be used for other accounts that you want to
     # see in the investments page.
+
+    NON_LIQUID_INVESTMENT = 'NL'
+    # Similar to investments (and visible in the Investments view), counted
+    # differently in the Metrics view.
+    # Typically used for real-estate
 
     EQUITY = 'EQ'
     # Money used to initialized the database. This will typically contain
@@ -182,6 +190,7 @@ class AccountFlags(models.TextChoices):
         return (
             klass.INVESTMENT,
             klass.STOCK,
+            klass.NON_LIQUID_INVESTMENT,
         )
 
     @classmethod
@@ -241,6 +250,7 @@ class AccountFlags(models.TextChoices):
             klass.STOCK,
             klass.INVESTMENT,
             klass.LIABILITY,
+            klass.NON_LIQUID_INVESTMENT,
         )
 
     @classmethod
@@ -254,6 +264,7 @@ class AccountFlags(models.TextChoices):
             klass.BANK,
             klass.ASSET,
             klass.STOCK,
+            klass.NON_LIQUID_INVESTMENT,
             klass.INVESTMENT,
             klass.LIABILITY,
             klass.EQUITY,
