@@ -3,7 +3,15 @@ import math
 import sqlite3
 import sys
 from alere import models
+from decimal import Decimal, ROUND_DOWN, ROUND_UP
 from django.db import connection, transaction
+
+
+def print_to_stderr(msg):
+    sys.stderr.write(msg)
+
+log_error = print_to_stderr
+# meant to be overridden in tests
 
 
 def __import_key_values(cur):
@@ -56,15 +64,15 @@ def __import_key_values(cur):
             ):
             if key not in ignored:
                 ignored[key] = True
-                sys.stderr.write(
-                    'Ignored keyValue: account=%s  key=%s  value=%s (may have others with same key)\n' %
-                        (id, key, data))
+                log_error(
+                    'Ignored keyValue: account=%s  key=%s  value=%s'
+                    ' (may have others with same key)\n' % (id, key, data))
         elif key == 'kmm-online-source':
             sources[id] = data
         elif key == 'kmm-security-id':
             securityId[id] = data
         elif data:
-            sys.stdedrr.write(
+            log_error(
                 'Unknown keyValue: id=%s  key=%s  value=%s\n' %
                 (id, key, data))
 
@@ -108,7 +116,7 @@ def __import_currencies(cur, commodities, sources, security_id):
     cur.execute("SELECT kmmCurrencies.* FROM kmmCurrencies")
     for row in cur:
         if row['typeString'] != 'Currency':
-            sys.stderr.write(
+            log_error(
                 'Error: unexpected currency type: %s\n' % row['typeString'])
             continue
 
@@ -124,7 +132,7 @@ def __import_currencies(cur, commodities, sources, security_id):
                     or old.qty_scale != qty_scale
                     or old.price_scale != price_scale
                 ):
-                sys.stderr.write(
+                log_error(
                     'Error: Currency %s already exists'
                     ' but has different properties\n' % row['ISOcode']
                 )
@@ -178,27 +186,27 @@ def __import_securities(
             commodities[row['id']] = old
 
             if old.name != row['name']:
-                sys.stderr.write(
+                log_error(
                     'Error: Security %s (%s) already exists'
                     ' but has different name: %s\n' % (
                         row['id'], row['name'], old.name))
             elif old.symbol_after != row['symbol']:
-                sys.stderr.write(
+                log_error(
                     'Error: Security %s (%s) already exists'
                     ' but has different symbol: %s\n' % (
                         row['id'], row['name'], old.symbol_after))
             elif old.kind != kind:
-                sys.stderr.write(
+                log_error(
                     'Error: Security %s (%s) already exists'
                     ' but has different kind: %s != %s\n' % (
                         row['id'], row['name'], old.kind, kind))
             elif old.qty_scale != qty_scale:
-                sys.stderr.write(
+                log_error(
                     'Error: Security %s (%s) already exists'
                     ' but has different qty_scale: %s != %s\n' % (
                         row['id'], row['name'], old.qty_scale, qty_scale))
             elif old.price_scale != price_scale:
-                sys.stderr.write(
+                log_error(
                     'Error: Security %s (%s) already exists'
                     ' but has different price_scale: %s != %s\n' % (
                         row['id'], row['name'], old.price_scale, price_scale))
@@ -260,19 +268,90 @@ def __time(val):
         else None
     )
 
-def __scaled_price(text, scale: int):
+def scaled_price(text, scale: int, inverse_scale: int =0):
     """
     Convert a price read from kmymoney into a scaled price, where scale
-    is the currency's scale
+    is the currency's scale.
+    There might be rounding errors because we want to represent things as
+    integers, with a fixed scaling factor (??? should we change that), so
+    we try to find the best representation, possibly storing the inverse of
+    the number.
+    For instance, with a scale of 100 (so two digits precision):
+
+        EUR->E000041    price=247/10000  = 0.0247
+
+        Round down  | Round up    | Inverse, round down | Inverse round up |
+        ------------+-------------+---------------------+------------------+
+          2/100     |    3/100    | 4048 / 100          | 4049 / 100       |
+          0.02      |    0.03     | 0,02470355731       | 0,02469745616    |
+          -23.5%    |    +17.66%  |   +0.0144%          |  -0.0103%  <==== |
+
+    But
+        price = 24712/10000 = 2.4712
+        Round down  | Round up    | Inverse, round down | Inverse round up |
+        ------------+-------------+---------------------+------------------+
+        247/100     | 248/100     | 40/100              | 41/100           |
+         2.47       |   2.48      |   2.5               |  2,4390243902    |
+        -0.048% <== |  +0.35%     |  +1.152%            | -1.3119%         |
+
+    And
+        USD->EUR   price = 1051/1250 = 0.8408
+        Round down  | Round up    | Inverse, round down | Inverse round up |
+        ------------+-------------+---------------------+------------------+
+          84/100    | 85/100      | 118/100             | 119/100          |
+          0.84      | 0.85        | 0,8474576271        | 0,8403361345     |
+          -0.0952%  | +1.082%     | +0.785%             | -0.0552% <===    |
+
+    :param inverse_scale:
+       if 0, do not consider the inverse
     """
     if not text:
-        return None
+        return None, False
 
     num, den = text.split('/')
 
-    # ??? There might be rounding errors if kmymoney used a denominator which
-    # isn't a factor of scale.
-    return int(int(num) * scale / int(den))
+    d = Decimal(num) / Decimal(den)  # the reference number from kMyMoney
+
+    if d.is_zero():
+        return 0, False
+
+    # Direct import, shall we round up or down ?
+
+    d1 = d.quantize(Decimal(1) / scale, rounding=ROUND_DOWN)
+    err1 = Decimal('Inf') if d1.is_zero() else ((d / d1 - 1) * 100)
+
+    d2 = d.quantize(Decimal(1) / scale, rounding=ROUND_UP)
+    err2 = Decimal('Inf') if d2.is_zero() else ((1 - d / d2) * 100)
+
+    if err2 < err1:
+        d1 = d2
+        err1 = err2
+
+    if inverse_scale != 0:
+        # Import as reverse, shall we round up or down ?
+        d3 = (1 / d).quantize(Decimal(1) / inverse_scale, rounding=ROUND_DOWN)
+        err3 = Decimal('Inf') if d3.is_zero() else ((1 - d * d3) * 100)
+
+        d4 = (1 / d).quantize(Decimal(1) / inverse_scale, rounding=ROUND_UP)
+        err4 = Decimal('Inf') if d4.is_zero() else ((d * d4 - 1) * 100)
+
+        if err4 < err3:
+            d3 = d4
+            err3 = err4
+
+        # which import, after all ?
+        if err3 < err1:
+            if err3 > 0.1:
+                log_error(
+                    'WARNING: price %s (%s) imported with'
+                    ' rounding error %+.4f%%\n' % (text, d, err3))
+            return int((d3 * inverse_scale).to_integral_value()), True
+
+    if err1 > 0.1:
+        log_error(
+            'WARNING: price %s (%s) imported with'
+            ' rounding error %+.4f%%\n' % (text, d, err1))
+    return int((d1 * scale).to_integral_value()), False
 
 
 def __import_prices(cur, commodities, price_sources):
@@ -285,14 +364,14 @@ def __import_prices(cur, commodities, price_sources):
         try:
             origin = commodities[row['fromId']]
         except KeyError:
-            sys.stderr.write('Ignore price for %s, security not found\n' % (
+            log_error('Ignore price for %s, security not found\n' % (
                 row['fromId'], ))
             continue
 
         try:
             target = commodities[row['toId']]
         except KeyError:
-            sys.stderr.write('Ignore price in %s, security not found\n' % (
+            log_error('Ignore price in %s, security not found\n' % (
                 row['toId'], ))
             continue
 
@@ -301,33 +380,41 @@ def __import_prices(cur, commodities, price_sources):
         #   fromId  toId     priceDate   price
         #   ------  -------  ----------  ---------
         #   EUR     E000041  2021-01-27  247/10000
-        # would be imported as a scaled price of "2", instead of "2.47"
-        # On import, try to preserve the maximum precision.
+        # would be imported as a scaled price of "2" (when scale is 100),
+        #    0.02 differs by -19% of the original !
+        # instead of "2.47". On import, try to preserve the maximum precision.
+        # If instead we store 10000/247=40.4858299 as 40.48 for the reverse
+        # operation, we get better results
+        #    1/40.48 = 0,02470355731  differs by 0.014% of the original
+        #
+        # With different numbers, the result is not as good though. For
+        # instance:
+        #    USD    EUR   1051/1250             (i.e. 0.8408)
+        # where price_scale is 100 for both currencies (in kMyMoney,
+        # smallCashFraction is 100).
+        #    we could either store 84/100   (differs by -0.1% of the original)
+        #    or store the reverse 1250/1051=1.189343  as 1.18
+        #       (1 / 1.18 = 0.847457, which differs by 0.8% of the original)
 
-        n, d = row['price'].split('/')
-        num = int(n)
-        den = int(d)
+        approx, inverse = scaled_price(
+            row['price'],
+            scale=int(origin.price_scale),
+            inverse_scale=int(target.price_scale))
 
-        if num >= den:
-            models.Prices.objects.create(
-                origin=origin,
-                target=target,
-                date=__time(row['priceDate']),
-                scaled_price=__scaled_price(
-                    row['price'],
-                    scale=origin.price_scale,
-                ),
-                source=price_sources[row['priceSource']],
-            )
-        else:
+        if inverse:
             models.Prices.objects.create(
                 origin=target,
                 target=origin,
                 date=__time(row['priceDate']),
-                scaled_price=__scaled_price(
-                    f'{d}/{n}',
-                    scale=target.price_scale,
-                ),
+                scaled_price=approx,
+                source=price_sources[row['priceSource']],
+            )
+        else:
+            models.Prices.objects.create(
+                origin=origin,
+                target=target,
+                date=__time(row['priceDate']),
+                scaled_price=approx,
                 source=price_sources[row['priceSource']],
             )
 
@@ -387,7 +474,9 @@ def __import_transactions(cur, accounts, commodities):
             if row['reconcileFlag'] == '1'
             else models.ReconcileKinds.RECONCILED
         )
-        shares = __scaled_price(row['shares'], scale=acc.commodity_scu)
+
+        shares, _ = scaled_price(
+            row['shares'], scale=acc.commodity_scu, inverse_scale=0)
 
         if row['action'] in ('Dividend', 'Add') or row['price'] is None:
             # kmymoney sets "1.00" for the price, which does not reflect the
@@ -399,11 +488,14 @@ def __import_transactions(cur, accounts, commodities):
             scaled_value = shares
         else:
             # for a stock account
-            price = __scaled_price(row['price'], scale=1e6)
+            S = 1_000_000
+
+            price, _ = scaled_price(
+                row['price'], scale=S, inverse_scale=0)
             currency = trans_currency
             scaled_value = (
                 shares * price * currency.price_scale
-                / (1e6                   # scale for price
+                / (S                     # scale for price
                    * acc.commodity_scu   # scale for shares
                 )
             )
