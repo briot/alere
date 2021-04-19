@@ -15,16 +15,22 @@ m = [
     ( 25,  models.AccountFlags.INCOME_TAX),         # impots revenu
     ( 63,  models.AccountFlags.WORK_INCOME),        # chomage
     ( 99,  models.AccountFlags.NON_LIQUID_INVESTMENT), # habitation principale
-    ( 124, models.AccountFlags.INVESTMENT),         # assurance-vie Manu Bourso
-    ( 126, models.AccountFlags.EQUITY),             # reconciliation
-    ( 127, models.AccountFlags.INVESTMENT),         # solesio
-    ( 146, models.AccountFlags.UNREALIZED_GAINS),   # plus-value potentielle
-    ( 150, models.AccountFlags.PASSIVE_INCOME),     # interets
-    ( 152, models.AccountFlags.MISC_TAX),           # CSG
-    ( 156, models.AccountFlags.INVESTMENT),         # assurance-vie Anaelle
-    ( 159, models.AccountFlags.INCOME_TAX),         # URSAFF
-    ( 166, models.AccountFlags.MISC_INCOME),        # heritage
-    ( 179, models.AccountFlags.INVESTMENT),         # sequoia manu
+    ( 122, models.AccountFlags.INVESTMENT),         # assurance-vie Manu Bourso
+    ( 124, models.AccountFlags.EQUITY),             # reconciliation
+    ( 125, models.AccountFlags.INVESTMENT),         # solesio
+    ( 139, models.AccountFlags.UNREALIZED_GAINS),   # plus-value potentielle
+    ( 143, models.AccountFlags.PASSIVE_INCOME),     # interets
+    ( 145, models.AccountFlags.MISC_TAX),           # CSG
+    ( 148, models.AccountFlags.INVESTMENT),         # evolution Tiphaine
+    ( 149, models.AccountFlags.INVESTMENT),         # assurance-vie Anaelle
+    ( 150, models.AccountFlags.INVESTMENT),         # assurance-vie Erwann
+    ( 151, models.AccountFlags.INVESTMENT),         # assurance-vie Tiphaine
+    ( 152, models.AccountFlags.INCOME_TAX),         # URSAFF
+    ( 159, models.AccountFlags.MISC_INCOME),        # heritage
+    ( 172, models.AccountFlags.INVESTMENT),         # sequoia manu
+    ( 175, models.AccountFlags.INVESTMENT),         # assurance-vie fortuneo
+    ( 176, models.AccountFlags.INVESTMENT),         # evolution Erwann
+    ( 177, models.AccountFlags.INVESTMENT),         # evolution Anaelle
 
 ]
 
