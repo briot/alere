@@ -8,7 +8,7 @@ const defaultPanels = [
    {
       type: 'investments',
       colspan: 4,
-      rowspan: 4,
+      rowspan: 1,
       hideIfNoShare: true,
       showWALine: false,
       showACLine: true,

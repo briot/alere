@@ -3,6 +3,7 @@ import Dashboard from 'Dashboard';
 import Header, { HeaderProps } from 'Header';
 import InvestmentPage from 'InvestmentsPage';
 import PerformancePage from 'PerformancePage';
+import NetworthPage from 'NetWorthPage';
 import LedgerPage from 'LedgerPage';
 import LeftSideBar from 'LeftSideBar';
 import React from 'react';
@@ -185,6 +186,9 @@ const Main: React.FC<{}> = () => {
                          </Route>
                          <Route path="/performance">
                             <PerformancePage setHeader={setHeader} />
+                         </Route>
+                         <Route path="/networth">
+                            <NetworthPage setHeader={setHeader} />
                          </Route>
                          <Route>
                             <Dashboard

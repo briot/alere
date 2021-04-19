@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { FixedSizeList } from 'react-window';
 import { ListChildComponentProps } from 'react-window';
+import classes from 'services/classes';
 import Table from 'List';
 
 const INDENT_LEVEL = 16;  // should match CSS --exp-padding-level
@@ -44,6 +45,9 @@ export interface Column<T, SETTINGS=any, AGGREGATED=any> {
 
    compare?: (left: T, right: T) => number;
    // Used for sorting. The column is not sortable if this is undefined
+
+   rightBorder?: boolean;
+   //  Whether we should show a border on the right of cells
 }
 
 /**
@@ -306,7 +310,10 @@ const ListWithColumns = <T extends unknown, SETTINGS, AGGREGATED=any> (
                theCols.map((c, idx) =>
                   <Table.TD
                      key={c.id}
-                     className={c.className}
+                     className={classes(
+                        c.className,
+                        c.rightBorder && 'rightBorder',
+                     )}
                      tooltip={c.cellTitle}
                      tooltipData={logic.data}
                      style={{
@@ -354,7 +361,10 @@ const ListWithColumns = <T extends unknown, SETTINGS, AGGREGATED=any> (
          cols.map((c, idx) =>
             <Table.TH
                key={idx}
-               className={c.className}
+               className={classes(
+                  c.className,
+                  c.rightBorder && 'rightBorder',
+               )}
                tooltip={c.title}
                sortable={c.compare !== undefined && p.setSortOn !== undefined}
                asc={p.sortOn === undefined ||p.sortOn.slice(1) !== c.id

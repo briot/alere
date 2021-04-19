@@ -47,6 +47,14 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
          />
          <RoundButton
             fa="fa-bank"
+            selected={location.pathname.startsWith('/networth/')}
+            disabled={!accounts.has_accounts()}
+            text="Networth"
+            size='large'
+            url="/networth/"
+          />
+         <RoundButton
+            fa="fa-bank"
             selected={location.pathname.startsWith('/investments/')}
             disabled={!accounts.has_accounts()}
             text="Investments"

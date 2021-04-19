@@ -53,6 +53,10 @@
       border-top: 1px solid var(--table-color);
    }
 
+   :is(.th,.td).rightBorder {
+      border-right: 1px solid var(--table-color);
+   }
+
    /**
     * Always display the scrollbar: otherwise it ends up resizing the width of
     * tbody when it appears, and the header's width is no longer in sync. We
@@ -67,12 +71,6 @@
       width: 100%;
    }
 
-   .thead .tr,
-   .tfoot .tr {
-      // Thanks to box-sizing, we do not have to take into account
-      // exp-padding-left when we compute the size
-      width: calc(100% - var(--scrollbar-width));
-   }
    .tbody > div {
       scrollbar-color: var(--scrollbar-fg) var(--scrollbar-bg);  /* firefox */
 
@@ -118,8 +116,8 @@
    &.expandableRows {
       --exp-padding-left: 16px;  // match JS INDENT_LEVEL
 
-      .tr.expandable .td:first-child::before,
-      .trgroup.expandable .td:first-child::before {
+      .tr.expandable :is(.td,.th):first-child::before,
+      .trgroup.expandable :is(.td,.th):first-child::before {
          content: '';
          font: normal normal normal 14px/1 FontAwesome;
          text-rendering: auto;

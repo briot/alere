@@ -58,12 +58,13 @@ const columnShares = (date_idx: number): ColumnType => ({
    cell: (d: LocalTreeNode,
           details: RowWithDetails,
           settings: NetworthProps) =>
-      details.isExpanded === false || !d.balance
-      ? ''
+      details.isExpanded === false || !d.balance || !d.account?.kind.is_stock
+      ? '-'
       : (
          <Numeric
             amount={d.balance.atDate[date_idx]?.shares}
             commodity={d.account?.commodity}
+            hideCommodity={true}
          />
       ),
 });
@@ -77,8 +78,8 @@ const columnPrice = (
    cell: (d: LocalTreeNode,
           details: RowWithDetails,
           settings: NetworthProps ) =>
-      details.isExpanded === false || !d.balance
-      ? ''
+      details.isExpanded === false || !d.balance || !d.account?.kind.is_stock
+      ? '-'
       : (
          <Numeric
             amount={d.balance.atDate[date_idx]?.price}
@@ -221,11 +222,9 @@ const Networth: React.FC<NetworthProps> = p => {
       [accounts, accountToBalance, p.treeMode, createRow]
    );
 
-   const columns: (undefined | Column<LocalTreeNode, NetworthProps>)[] = React.useMemo(
-      () => [
-            undefined,  /* typescript workaround */
-            columnAccountName,
-         ].concat(p.dates.flatMap((_, date_idx) => [
+   const colsForDate = React.useCallback(
+      (date_idx: number) => {
+         const r = [
             p.showShares ? columnShares(date_idx) : undefined,
             p.showPrice ? columnPrice(balances, date_idx) : undefined,
             p.showValue ? columnValue(balances, date_idx) : undefined,
@@ -241,9 +240,24 @@ const Networth: React.FC<NetworthProps> = p => {
                   balances, date_idx, p.dates.length - 1, 'ΔLast',
                   'Delta between this column and the last column')
                : undefined,
-         ])),
-      [p.dates, p.showShares, p.showPrice, p.showValue,
+         ].filter(d => d !== undefined) as ColumnType[];
+
+         if (r.length) {
+            r[r.length - 1].rightBorder = true;
+         }
+
+         return r;
+      },
+      [p.showShares, p.showPrice, p.showValue, p.dates.length,
        balances, p.showPercent, p.showDeltaLast, p.showDeltaNext]
+   );
+
+   const columns: (undefined | Column<LocalTreeNode, NetworthProps>)[] = React.useMemo(
+      () => [
+            undefined,  /* typescript workaround */
+            columnAccountName,
+         ].concat(p.dates.flatMap((_, date_idx) => colsForDate(date_idx))),
+      [p.dates, colsForDate]
    );
 
    return (
