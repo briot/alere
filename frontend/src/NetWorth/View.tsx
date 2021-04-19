@@ -191,7 +191,7 @@ const Networth: React.FC<NetworthProps> = p => {
    const accountToBalance = React.useMemo(
       () => {
          const r: Map<AccountId, Balance> = new Map();
-         balances.list
+         balances?.list
             // Remove lines below the threshold
             .filter(n =>
                n.atDate.find(a =>
