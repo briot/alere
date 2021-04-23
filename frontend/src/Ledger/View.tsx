@@ -165,7 +165,7 @@ const columnFromTo: Column<TableRowData, ComputedBaseLedgerProps> = {
    cell: (d: TableRowData) =>
       d.split === MAIN
       ? (d.firstRowSplit.accountId === SPLIT_ID
-         ? SPLIT
+         ? (d.transaction.memo || SPLIT)
          : <AccountName
              id={d.firstRowSplit.accountId}
              account={d.firstRowSplit.account}

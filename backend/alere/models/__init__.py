@@ -529,6 +529,7 @@ class Splits(AlereModel):
     #     we can likely represent those by having qty be null for some of the
     #     splits: if for the stock account, we had a dividend; if null for
     #     currency ('EUR'), this is adding or removing stocks.
+    #     Reinvested dividends are harder to track though.
 
     class Meta:
         db_table = prefix + "splits"

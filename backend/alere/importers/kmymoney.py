@@ -524,10 +524,19 @@ def __import_transactions(cur, accounts, commodities, payees):
             post_date=__time(row['postDate']),
         )
 
-        # ??? Should lookup in Payee table
-        if row['payee']:
-            trans.payee = row['payee']
-        trans.memo = trans.memo + (row['memo'] or "")
+        trans.memo = "\n".join([
+            f
+            for f in [
+                trans.memo,
+                row['memo'],
+                'Add Shares' if row['action'] == 'Add' else None,
+                'Buy Shares' if row['action'] == 'Buy' else None,
+                'Dividends' if row['action'] == 'Dividend' else None,
+                'Reinvested dividend' if row['action'] == 'Reinvest' else None,
+            ]
+            if f
+        ])
+
         trans.check_number = trans.check_number + (row['checkNumber'] or "")
 
     if trans:
