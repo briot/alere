@@ -137,20 +137,23 @@ const columnMemo: Column<TableRowData, ComputedBaseLedgerProps> = {
    compare: (a, b) =>
       (a.transaction.memo ?? '').localeCompare(b.transaction.memo ?? ''),
    cell: (d: TableRowData) =>
-      d.transaction.memo ? d.transaction.memo : 'No memo'
+      d.split === MAIN
+      ? (d.transaction.memo ? d.transaction.memo : '')
+      : '',
 }
+
+const PayeeLink: React.FC<{payee: string|undefined}> = p =>
+   p.payee === undefined
+   ? null
+   : <Link to={`/payee/${p.payee}`}>{p.payee}</Link>;
 
 const columnPayee: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "Payee",
    className: "payee",
-   compare: (a, b) =>
-      (a.transaction.payee ?? '').localeCompare(b.transaction.payee ?? ''),
    cell: (d: TableRowData) =>
       d.split === MAIN
-      ? ( <Link to={`/payee/${d.transaction.payee}`}>
-             {d.transaction.payee}
-          </Link>
-      ) : ''
+      ? <PayeeLink payee={d.firstRowSplit.payee} />
+      : <PayeeLink payee={d.split.payee} />
 }
 
 const columnFromTo: Column<TableRowData, ComputedBaseLedgerProps> = {
@@ -486,6 +489,9 @@ const computeFirstSplit = (
          ? amountIncomeExpense(t)
          : amountForAccounts(t, accounts.accounts),
       currency: sa[0]?.currency,
+
+      //  ??? Use the first available payee
+      payee: t.splits.map(s => s.payee).filter(p => p)[0],
    };
 
    switch (p.split_mode) {
@@ -526,7 +532,13 @@ const computeFirstSplit = (
                }
             }
 
-            s = {...s2, amount: s.amount, shares: s.shares, price: s.price};
+            s = {
+               ...s2,
+               amount: s.amount,
+               shares: s.shares,
+               price: s.price,
+               payee: s.payee,
+            };
          }
          break;
    }

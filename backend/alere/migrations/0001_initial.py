@@ -150,6 +150,16 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='Payees',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.TextField()),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
+        migrations.CreateModel(
             name='PriceSources',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -165,7 +175,6 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('timestamp', models.DateTimeField()),
                 ('memo', models.TextField(null=True)),
-                ('payee', models.TextField(null=True)),
                 ('check_number', models.TextField(null=True)),
             ],
             options={
@@ -182,6 +191,7 @@ class Migration(migrations.Migration):
                 ('reconcile_date', models.DateTimeField(null=True)),
                 ('post_date', models.DateTimeField()),
                 ('account', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='splits', to='alere.accounts')),
+                ('payee', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='splits', to='alere.payees')),
                 ('transaction', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='splits', to='alere.transactions')),
                 ('value_commodity', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='alere.commodities')),
             ],

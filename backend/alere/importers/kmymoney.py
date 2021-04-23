@@ -419,7 +419,16 @@ def __import_prices(cur, commodities, price_sources):
             )
 
 
-def __import_transactions(cur, accounts, commodities):
+def __import_payees(cur, payees):
+
+    cur.execute("""SELECT kmmPayees.* FROM kmmPayees""")
+    for row in cur:
+        payees[row['id']] = models.Payees.objects.create(
+            name=row['name'],
+        )
+
+
+def __import_transactions(cur, accounts, commodities, payees):
 
     # Example of multi-currency transaction:
     #   kmmTransactions:
@@ -440,10 +449,8 @@ def __import_transactions(cur, accounts, commodities):
            kmmTransactions.postDate as transPostDate,
            kmmTransactions.memo as transMemo,
            kmmTransactions.currencyId as transCurrency,
-           kmmSplits.*,
-           kmmPayees.name as payee
+           kmmSplits.*
         FROM kmmTransactions, kmmSplits
-           LEFT JOIN kmmPayees ON (kmmSplits.payeeId=kmmPayees.id)
         WHERE kmmTransactions.id=kmmSplits.transactionId
         ORDER BY transactionId
         """
@@ -460,7 +467,6 @@ def __import_transactions(cur, accounts, commodities):
             trans = models.Transactions.objects.create(
                 timestamp=__time(row['transPostDate']),
                 memo=row['transMemo'] or "",
-                payee=None,
                 check_number="",
             )
             prev_trans_id = trans_id
@@ -504,6 +510,11 @@ def __import_transactions(cur, accounts, commodities):
 
         s = models.Splits.objects.create(
             transaction=trans,
+            payee=(
+               None if acc.kind.flag in models.AccountFlags.networth()
+               else payees[row['payeeId']] if row['payeeId']
+               else None
+            ),
             account=acc,
             scaled_qty=shares,
             scaled_value=scaled_value,
@@ -547,12 +558,15 @@ def import_kmymoney(filename):
             price_sources = __import_price_sources(cur)
 
             commodities = {}
+            payees = {}
+            accounts = {}
+            parents = {}
+
             __import_currencies(cur, commodities, sources, security_id)
             __import_securities(
                 cur, commodities, sources, security_id, price_sources)
+            __import_payees(cur, payees)
 
-            accounts = {}
-            parents = {}
             cur.execute(
                 """
                 SELECT kmmAccounts.*
@@ -592,4 +606,4 @@ def import_kmymoney(filename):
                     accounts[child].save()
 
             __import_prices(cur, commodities, price_sources)
-            __import_transactions(cur, accounts, commodities)
+            __import_transactions(cur, accounts, commodities, payees)

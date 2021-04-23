@@ -404,11 +404,6 @@ class Transactions(AlereModel):
 
     memo = models.TextField(null=True)
 
-    payee = models.TextField(null=True)
-    # kmymoney has this in the Split, which means different splits of a given
-    # transaction can have a different payee. The GUI doesn't seem to support
-    # that though.
-
     check_number = models.TextField(null=True)
 
     # is_scheduled = models.Boolean()   # kmyMoney has txType = ('N', 'S')
@@ -425,6 +420,25 @@ class ReconcileKinds(models.TextChoices):
     NEW = 'n', 'New transaction'
     CLEARED = 'C', 'Cleared'
     RECONCILED = 'R', 'Reconciled'
+
+
+class Payees(AlereModel):
+    """
+    """
+    name = models.TextField()
+
+    # ??? reference
+    # ??? email
+    # ??? addressStreet
+    # ??? addressCity
+    # ??? addressZipcode
+    # ??? addressState
+    # ??? telephone
+    # ??? notes
+    # ??? defaultAccountId
+    # ??? matchDate
+    # ??? matchIgnoreCase
+    # ??? matchKeys
 
 
 class Splits(AlereModel):
@@ -452,6 +466,9 @@ class Splits(AlereModel):
     account = models.ForeignKey(
         Accounts, on_delete=models.CASCADE, related_name='splits',
     )
+
+    payee = models.ForeignKey(
+        Payees, on_delete=models.CASCADE, null=True, related_name='splits')
 
     scaled_qty = models.IntegerField()
     # The amount of the transaction, as seen on the bank statement.
@@ -543,6 +560,8 @@ class Splits_With_Value(AlereModel):
     account     = models.ForeignKey(
         Accounts, on_delete=models.CASCADE, related_name='+',
     )
+    payee = models.ForeignKey(
+        Payees, on_delete=models.CASCADE, null=True, related_name='+')
     scaled_qty = models.IntegerField()
     reconcile = models.CharField(
         max_length=1,

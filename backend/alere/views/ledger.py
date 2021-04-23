@@ -13,7 +13,7 @@ def ledger(
         maxdate: datetime.datetime,
     ):
     q = alere.models.Splits_With_Value.objects \
-        .select_related('transaction', 'account') \
+        .select_related('transaction', 'account', 'payee') \
         .order_by('transaction__timestamp', 'transaction_id')
 
     if ids:
@@ -65,7 +65,6 @@ def ledger(
                 "balance": 0,
                 "balanceShares": 0,
                 "memo": s.transaction.memo,
-                "payee": s.transaction.payee,
                 "checknum": s.transaction.check_number,
                 "splits": [],
             }
@@ -78,6 +77,7 @@ def ledger(
             "reconcile": s.reconcile,
             "shares": s.scaled_qty / s.account.commodity_scu,
             "price": s.computed_price,
+            "payee": s.payee.name if s.payee else None,
         })
 
     if current is not None:

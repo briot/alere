@@ -12,6 +12,7 @@ export interface Split {
    price?: number;   // in currency
 
    account: Account|undefined;   // not sent via JSON
+   payee?: string;   // the third party involved in the transaction
 }
 
 export interface Transaction {
@@ -24,7 +25,6 @@ export interface Transaction {
                      // account only).
    memo?: string;
    checknum?: string;
-   payee?: string;   // the third party involved in the transaction
 }
 
 /**
