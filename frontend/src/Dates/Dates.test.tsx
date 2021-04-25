@@ -1,5 +1,5 @@
 import React from 'react';
-import { addMonth } from 'Dates';
+import { addMonth, dateToDate, monthCount } from 'Dates';
 
 test('adding months', () => {
    const d1 = new Date('2021-03-31 00:00:00Z');
@@ -27,3 +27,34 @@ test('adding months', () => {
    expect(d5).toStrictEqual(new Date('2020-03-31 00:00:00Z'));
 });
 
+test('monthCount', () => {
+   const now = new Date();
+   expect(monthCount('1day')).toStrictEqual(1);
+   expect(monthCount('1month')).toStrictEqual(1);
+   expect(monthCount('3months')).toStrictEqual(3);
+   expect(monthCount('month so far')).toStrictEqual(1);
+   expect(monthCount('last month')).toStrictEqual(1);
+   expect(monthCount('3years')).toStrictEqual(36);
+   expect(monthCount('5years')).toStrictEqual(60);
+   expect(monthCount('current year')).toStrictEqual(12);
+   expect(monthCount('last year')).toStrictEqual(12);
+   expect(monthCount('current year so far')).toStrictEqual(now.getMonth() + 1);
+   expect(monthCount('forever')).toStrictEqual(NaN);
+   expect(monthCount('future')).toStrictEqual(NaN);
+});
+
+test('datetoDate', () => {
+   const now = new Date();
+   const startOfYear = new Date(now.getFullYear(), 0, 1);
+   expect(dateToDate('start of year')).toStrictEqual(startOfYear);
+
+   const endOfYear = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+   expect(dateToDate('end of year')).toStrictEqual(endOfYear);
+
+   const endOfLastYear = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59);
+   expect(dateToDate('end of last year')).toStrictEqual(endOfLastYear);
+
+   const endOf2Year = new Date(now.getFullYear() - 2, 11, 31, 23, 59, 59);
+   expect(dateToDate('end of 2 years ago')).toStrictEqual(endOf2Year);
+
+});
