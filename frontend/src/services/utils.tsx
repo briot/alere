@@ -41,7 +41,6 @@ export const capitalize = (str: string): string => {
  */
 export const mod = (n: number, m: number) => ((n % m) + m) % m;
 
-
 /**
  * Human-readable description of a date. This is an approximation, so
  * that we can display "6m" when we are approximately 6 months in the past,
@@ -70,3 +69,27 @@ export const humanDateInterval = (ms: number) => {
  * Formatting dates
  */
 export const dateForm = d3TimeFormat.timeFormat("%Y-%m-%d");
+
+/**
+ * Given an array, creates one or more arrays by grouping item using a key.
+ * For instance:
+ *   const arr = [{a: 1, b: 2}, {a: 1, b: 3}, {a: 3, b: 4}]
+ *   const groupByA = groupBy('a');
+ *   groupByA(arr)
+ * gives:
+ *   {1: [{a: 1, b: 2}, {a: 1, b: 3}], 3: [{a: 3, b: 4}]}
+ */
+
+export const groupBy = <
+   T extends Record<string|number, any>,
+   K extends keyof T
+>(
+   array: T[] | undefined, key: K
+): Record<T[K], T[]> => (array ?? []).reduce(
+   (byVal, obj) => {
+      const value = obj[key]
+      byVal[value] = (byVal[value] || []).concat(obj)
+      return byVal
+   },
+   {} as Record<T[K], T[]>
+)

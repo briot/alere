@@ -24,7 +24,7 @@ const LedgerPanel: React.FC<
    const setSortOn = (sortOn: string) => p.save({ sortOn });
    const r = p.props.range
       ? rangeDisplay(p.props.range)
-      : rangeDisplay("forever");
+      : rangeDisplay("all");
 
    if (accounts.length === 0) {
       return null;

@@ -10,7 +10,7 @@ const defaultPanels = [
       colspan: 4,
       rowspan: 4,
       hideIfNoShare: true,
-      range: "1year",
+      range: "1 year",
    } as PerformancePanelProps,
 ];
 

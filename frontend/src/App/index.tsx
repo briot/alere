@@ -82,7 +82,7 @@ const defaultOverview: PanelBaseProps[] = [
       colspan: 2,
       expenses: true,
       roundValues: true,
-      range: '1year',
+      range: '1 year',
    } as IncomeExpensePanelProps,
    {
       type: 'incomeexpenses',
@@ -90,11 +90,11 @@ const defaultOverview: PanelBaseProps[] = [
       colspan: 2,
       expenses: false,
       roundValues: true,
-      range: '1year',
+      range: '1 year',
    } as IncomeExpensePanelProps,
    {
       type: 'metrics',
-      range: "1year",
+      range: "1 year",
       roundValues: true,
       rowspan: 4,
       colspan: 2,
@@ -102,7 +102,7 @@ const defaultOverview: PanelBaseProps[] = [
    {
       type: 'ledger',
       accountIds: 'assets',
-      range: 'future',
+      range: 'upcoming',
       notes_mode: NotesMode.ONE_LINE,
       split_mode: SplitMode.COLLAPSED,
       borders: false,
@@ -115,7 +115,7 @@ const defaultOverview: PanelBaseProps[] = [
    } as LedgerPanelProps,
    {
       type: 'mean',
-      range: '1year',
+      range: '1 year',
       prior: 2,
       after: 2,
       showExpenses: true,
@@ -128,7 +128,7 @@ const defaultOverview: PanelBaseProps[] = [
    } as MeanPanelProps,
    {
       type: 'nwhist',
-      range: 'forever',
+      range: 'all',
       prior: 2,
       after: 2,
       rowspan: 1,

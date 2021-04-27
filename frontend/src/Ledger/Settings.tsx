@@ -20,7 +20,7 @@ const Settings: React.FC<PanelProps<LedgerPanelProps>> = p => {
    const changeAlt = (alternateColors: boolean) => p.save({ alternateColors });
    const changeExpand = (defaultExpand: boolean) => p.save({ defaultExpand });
    const changeValueColumn = (valueColumn: boolean) => p.save({ valueColumn });
-   const changeRestrict = (restrictExpandArrow: boolean) => 
+   const changeRestrict = (restrictExpandArrow: boolean) =>
       p.save({ restrictExpandArrow });
 
    return (
@@ -103,7 +103,7 @@ const Settings: React.FC<PanelProps<LedgerPanelProps>> = p => {
             !p.excludeFields?.includes("range") &&
             <DateRangePicker
                text="Time period"
-               value={p.props.range || 'forever'}
+               value={p.props.range ?? 'all'}
                onChange={changeRange}
             />
          }

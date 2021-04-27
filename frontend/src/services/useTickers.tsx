@@ -41,7 +41,7 @@ interface TickerJSON {
 const useTickers = (
    currencyId: CommodityId,  // what currency should prices be given in
    accountIds: AccountIdSet, // restrict to a specific set of accounts
-   range: DateRange = "forever",
+   range: DateRange = "all",
    hideIfNoShare?: boolean,  // ignore commodities not owned by user
    commodity?: CommodityId,  // restrict to some specific commodities
    skip?: boolean,           // if true, do not fetch anything

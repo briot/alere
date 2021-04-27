@@ -40,8 +40,8 @@ const defaultPanels = [
       ticker: undefined,
       acc: undefined,     // computed in Ticker/Panel
       accountIds: 'all',  // overridden later
-      range: "forever",
-      dateRange: toDates("forever"),
+      range: "all",
+      dateRange: toDates("all"),
    } as TickerPanelProps,
    {
       type: 'ledger',
@@ -75,7 +75,7 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
 
    const { search } = useLocation();
    const query = new URLSearchParams(search);
-   const range: DateRange = query.get('range') as DateRange|null || "forever";
+   const range: DateRange = query.get('range') as DateRange|null || "all";
 
    const history = useRouterHistory();
    const { pushAccount } = useHistory();
@@ -84,7 +84,7 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
    const tickers = useTickers(
       prefs.currencyId        /* currencyId */,
       accounts.map(a => a.id) /* accountIds */,
-      "forever"               /* range */,
+      "all"                   /* range */,
       false                   /* hideIfNoShare */,
       undefined               /* commodity */,
       accounts.length !== 1   /* skip */,

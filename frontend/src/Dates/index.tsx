@@ -1,80 +1,59 @@
 import * as React from 'react';
-import { Select } from 'Form';
+import { divider, Option, Select } from 'Form';
 import RoundButton from 'RoundButton';
 import { mod } from 'services/utils';
 import './Dates.css';
 
-export type RelativeDate =
-   "today"                 |
-   "yesterday"             |
-   "tomorrow"              |
-   "1 month ago"           |
-   "2 months ago"          |
-   "3 months ago"          |
-   "1 year ago"            |
-   "2 years ago"           |
-   "3 years ago"           |
-   "4 years ago"           |
-   "5 years ago"           |
-   "start of month"        |
-   "end of month"          |
-   "start of last month"   |
-   "end of last month"     |
-   "end of 2 months ago"   |
-   "end of 3 months ago"   |
-   "end of 4 months ago"   |
-   "start of year"         |
-   "start of last year"    |
-   "start of 2 years ago"  |
-   "start of 3 years ago"  |
-   "end of year"           |
-   "end of last year"      |
-   "end of 2 years ago"    |
-   "end of 3 years ago"    |
-   "epoch"                 |
-   "armageddon";
-
 /**
  * Modifies d in place to set the last day n months ago
  */
-const endOfMonth = (d: Date, months: number) => {
+const endOfMonth = (months: number) => {
+   const d = new Date();
    d.setDate(1);
    d.setMonth(d.getMonth() + months + 1);
    d.setHours(0);
    d.setMinutes(0);
    d.setSeconds(0);
    d.setMilliseconds(-1); // move back to previous month
+   return d;
 }
 
-const startOfMonth = (d: Date, months: number) => {
+const startOfMonth = (months: number) => {
+   const d = new Date();
    d.setDate(1);
    d.setMonth(d.getMonth() + months);
    d.setHours(0);
    d.setMinutes(0);
    d.setSeconds(0);
    d.setMilliseconds(0);
+   return d;
 }
 
 /**
  * same day, last month. When the day doesn't exist, move to the last valid
  * day in that month.
  */
-export const addMonth = (d: Date, months: number) => {
+export const addMonth = (months: number) => {
+   const d = new Date();
    const m = d.getMonth() + months;
    d.setMonth(m);
    if (d.getMonth() !== mod(m, 12)) {
       d.setDate(0);
    }
+   return d;
 }
 
-const addDay = (d: Date, days: number) => {
+const addDay = (days: number) => {
+   const d = new Date();
    d.setDate(d.getDate() + days);
+   return d;
 }
 
 /**
  * Modifies d in place to set the last day of the year, n years ago
  */
-const endOfYear = (d: Date, years: number) => {
+const endOfYear = (years: number) => {
+   const d = new Date();
    d.setMonth(11);
    d.setDate(31);
    d.setHours(23);
@@ -82,9 +61,11 @@ const endOfYear = (d: Date, years: number) => {
    d.setSeconds(59);
    d.setMilliseconds(0);
    d.setFullYear(d.getFullYear() + years);
+   return d;
 }
 
-const startOfYear = (d: Date, years: number) => {
+const startOfYear = (years: number) => {
+   const d = new Date();
    d.setFullYear(d.getFullYear() + years);
    d.setDate(1);
    d.setMonth(0);
@@ -92,53 +73,121 @@ const startOfYear = (d: Date, years: number) => {
    d.setMinutes(0);
    d.setSeconds(0);
    d.setMilliseconds(0);
-}
-
-export const dateToDate = (when: RelativeDate): Date => {
-   let d: Date = new Date();
-
-   switch (when) {
-      case "today":                 break;
-      case "tomorrow":              addDay(d, 1);         break;
-      case "yesterday":             addDay(d, -1);        break;
-      case "start of month":        startOfMonth(d, 0);   break;
-      case "end of month":          endOfMonth(d, 0);     break;
-      case "start of last month":   startOfMonth(d, -1);  break;
-      case "end of last month":     endOfMonth(d, -1);    break;
-      case "end of 2 months ago":   endOfMonth(d, -2);    break;
-      case "end of 3 months ago":   endOfMonth(d, -3);    break;
-      case "end of 4 months ago":   endOfMonth(d, -4);    break;
-      case "1 month ago":           addMonth(d, -1);      break;
-      case "2 months ago":          addMonth(d, -2);      break;
-      case "3 months ago":          addMonth(d, -3);      break;
-      case "1 year ago":            addMonth(d, -12);     break;
-      case "2 years ago":           addMonth(d, -24);     break;
-      case "3 years ago":           addMonth(d, -36);     break;
-      case "4 years ago":           addMonth(d, -48);     break;
-      case "5 years ago":           addMonth(d, -60);     break;
-      case "start of year":         startOfYear(d, 0);    break;
-      case 'end of year':           endOfYear(d, 0);      break;
-      case 'start of last year':    startOfYear(d, -1);   break;
-      case 'start of 2 years ago':  startOfYear(d, -2);   break;
-      case 'start of 3 years ago':  startOfYear(d, -3);   break;
-      case 'end of last year':      endOfYear(d, -1);     break;
-      case 'end of 2 years ago':    endOfYear(d, -2);     break;
-      case 'end of 3 years ago':    endOfYear(d, -3);     break;
-      case "epoch":
-         d.setDate(1);
-         d.setMonth(0);
-         d.setFullYear(1970);
-         break;
-      case "armageddon":
-         d.setDate(1);
-         d.setMonth(0);
-         d.setFullYear(2200);
-         break;
-      default:
-         break;
-   }
    return d;
 }
+
+interface RelativeDateType {
+   group: number;
+   toDate: () => Date;
+   text?: string;
+}
+
+export type RelativeDate = 'today' | 'yesterday' | 'tomorrow'
+   | 'start of month' | 'start of last month' | 'start of 2 months ago'
+   | 'start of 3 months ago' | 'start of 4 months ago'
+   | 'end of month' | 'end of last month' | 'end of 2 months ago'
+   | 'end of 3 months ago' | 'end of 4 months ago'
+   | '1 month ago' | '2 months ago' | '3 months ago'
+   | '1 year ago' | '2 years ago' | '3 years ago' | '4 years ago'
+   | '5 years ago' | 'start of last year' | 'start of year'
+   | 'start of 2 years ago' | 'start of 3 years ago'
+   | 'end of year' | 'end of last year' | 'end of 2 years ago'
+   | 'end of 3 years ago' | 'epoch' | 'armageddon';
+
+const relativeDates: Record<RelativeDate, RelativeDateType> = {
+   "today":                 {group: 0, toDate: () => addDay(0)},
+   "yesterday":             {group: 0, toDate: () => addDay(-1)},
+   "tomorrow":              {group: 0, toDate: () => addDay(1)},
+
+   "start of month":        {group: 1, toDate: () => startOfMonth(0)},
+   "start of last month":   {group: 1, toDate: () => startOfMonth(-1)},
+   "start of 2 months ago": {group: 1, toDate: () => startOfMonth(-2)},
+   "start of 3 months ago": {group: 1, toDate: () => startOfMonth(-3)},
+   "start of 4 months ago": {group: 1, toDate: () => startOfMonth(-4)},
+
+   "end of month":          {group: 2, toDate: () => endOfMonth(0)},
+   "end of last month":     {group: 2, toDate: () => endOfMonth(-1)},
+   "end of 2 months ago":   {group: 2, toDate: () => endOfMonth(-2)},
+   "end of 3 months ago":   {group: 2, toDate: () => endOfMonth(-3)},
+   "end of 4 months ago":   {group: 2, toDate: () => endOfMonth(-4)},
+
+   "1 month ago":           {group: 3, toDate: () => addMonth(-1)},
+   "2 months ago":          {group: 3, toDate: () => addMonth(-2)},
+   "3 months ago":          {group: 3, toDate: () => addMonth(-3)},
+
+   "1 year ago":            {group: 4, toDate: () => addMonth(-12)},
+   "2 years ago":           {group: 4, toDate: () => addMonth(-24)},
+   "3 years ago":           {group: 4, toDate: () => addMonth(-36)},
+   "4 years ago":           {group: 4, toDate: () => addMonth(-48)},
+   "5 years ago":           {group: 4, toDate: () => addMonth(-60)},
+
+   "start of year":         {group: 5, toDate: () => startOfYear(0)},
+   "start of last year":    {group: 5, toDate: () => startOfYear(-1)},
+   "start of 2 years ago":
+      {group: 5, text: "start of year (2 years ago)",
+       toDate: () => startOfYear(-2)},
+   "start of 3 years ago":
+      {group: 5, text: "start of year (3 years ago)",
+       toDate: () => startOfYear(-3)},
+
+   "end of year":           {group: 6, toDate: () => endOfYear(0)},
+   "end of last year":      {group: 6, toDate: () => endOfYear(-1)},
+   "end of 2 years ago":
+      {group: 6, text: "end of year (2 years ago)",
+       toDate: () => endOfYear(-2)},
+   "end of 3 years ago":
+      {group: 6, text: "end of year (3 years ago)",
+       toDate: () => endOfYear(-3)},
+
+   "epoch":
+      {group: 7, text: "earliest date", toDate: () => new Date(1970, 0, 1)},
+   "armageddon":
+      {group: 7, text: "future",        toDate: () => new Date(2200, 0, 1)},
+}
+
+interface DateRangeType {
+   range: [RelativeDate, RelativeDate];
+   poss?: string;  // possessive, defaults to the key
+   text?: string;  // for select box, defaults to the key
+   group: number;
+}
+
+export type DateRange = '1 day' | '1 month' | '2 months' | '3 months'
+   | 'current month' | 'month so far' | 'last month' | '1 year' | '2 years'
+   | '3 years' | '4 years' | '5 years' | 'current year so far' | 'current year'
+   | 'last year' | '2 years ago' | '3 years ago' | 'all' | 'upcoming';
+
+const dateRanges: Record<DateRange, DateRangeType> = {
+   '1 day':    { range: ['yesterday', 'today'], poss: "yesterday's", group: 0},
+   '1 month':       { range: ['1 month ago', 'today'],               group: 1},
+   '2 months':      { range: ['2 months ago', 'today'],              group: 1},
+   '3 months':      { range: ['3 months ago', 'today'],              group: 1},
+   'current month': { range: ['start of month', 'end of month'],     group: 1},
+   'month so far':  { range: ['start of month', 'today'],            group: 1},
+   'last month': {
+      range: ['start of last month', 'end of last month'],           group: 1},
+   '1 year':              { range: ['1 year ago', 'today'],          group: 2},
+   '2 years':             { range: ['2 years ago', 'today'],         group: 2},
+   '3 years':             { range: ['3 years ago', 'today'],         group: 2},
+   '4 years':             { range: ['4 years ago', 'today'],         group: 2},
+   '5 years':             { range: ['5 years ago', 'today'],         group: 2},
+   'current year so far': { range: ['start of year', 'today'],       group: 3},
+   'current year':        { range: ['start of year', 'end of year'], group: 3},
+   'last year': { range: ['start of last year', 'end of last year'], group: 3},
+   '2 years ago': {
+      range: ['start of 2 years ago', 'end of 2 years ago'],         group: 3},
+   '3 years ago': {
+      range: ['start of 3 years ago', 'end of 3 years ago'],         group: 3},
+   'all': { range: ['epoch', 'armageddon'], text: "All dates",       group: 4},
+   'upcoming': {
+      range: ['tomorrow', 'armageddon'],
+      text: "In the future",
+      group: 4,
+   },
+}
+
+export const dateToDate = (when: RelativeDate): Date =>
+   relativeDates[when]?.toDate() ?? new Date();
 
 export const formatDate = (d: Date): string => {
    const y = ('0' + d.getFullYear()).slice(-4);
@@ -150,69 +199,11 @@ export const formatDate = (d: Date): string => {
 export const dateToString = (when: RelativeDate): string =>
    formatDate(dateToDate(when));
 
-export type DateRange =
-   '1day'                 |
-   '1month'               |
-   '2months'              |
-   '3months'              |
-   '1year'                |
-   '2years'               |
-   '3years'               |
-   '4years'               |
-   '5years'               |
-   'current month'        |
-   'month so far'         |
-   'last month'           |
-   'current year so far'  |
-   'current year'         |
-   'last year'            |
-   '2 years ago'          |
-   '3 years ago'          |
-   'forever'              |
-   'future'
-   ;
+const rangeToDate = (name: DateRange): [RelativeDate, RelativeDate] =>
+   dateRanges[name]?.range ?? ['today', 'today'];
 
-const rangeToDate = (name: DateRange): [RelativeDate, RelativeDate] => {
-   switch (name) {
-      case '1day':          return ['yesterday', 'today'];
-      case '1month':        return ['1 month ago', 'today'];
-      case '2months':       return ['2 months ago', 'today'];
-      case '3months':       return ['3 months ago', 'today'];
-      case '1year':         return ['1 year ago', 'today'];
-      case '2years':        return ['2 years ago', 'today'];
-      case '3years':        return ['3 years ago', 'today'];
-      case '4years':        return ['4 years ago', 'today'];
-      case '5years':        return ['5 years ago', 'today'];
-      case 'current month': return ['start of month', 'end of month'];
-      case 'month so far':  return ['start of month', 'today'];
-      case 'last month':    return ['start of last month', 'end of last month'];
-      case 'current year so far':  return ['start of year', 'today'];
-      case 'current year':  return ['start of year', 'end of year'];
-      case 'last year':     return ['start of last year', 'end of last year'];
-      case '2 years ago':   return ['start of 2 years ago', 'end of 2 years ago'];
-      case '3 years ago':   return ['start of 3 years ago', 'end of 3 years ago'];
-      case 'forever':       return ['epoch', 'armageddon'];
-      case 'future':        return ['tomorrow', 'armageddon'];
-      default:              return ['today', 'today'];
-   }
-}
-
-const possessive = (name: DateRange): string => {
-   switch (name) {
-      case '1day':          return "yesterday's";
-      case '1month':        return "1 month";
-      case '2months':       return "2 months";
-      case '3months':       return "3 months";
-      case '1year':         return "1 year";
-      case '2years':        return "2 years";
-      case '3years':        return "3 years";
-      case '4years':        return "4 years";
-      case '5years':        return "5 years";
-      case 'forever':       return "all";
-      case 'future':        return "upcoming";
-      default:              return name;
-   }
-}
+const possessive = (name: DateRange): string =>
+   dateRanges[name]?.poss ?? name;
 
 export const toDates = (name: DateRange): [Date, Date] => {
    const r = rangeToDate(name);
@@ -235,7 +226,7 @@ interface RangeDisplay {
 }
 
 export const rangeDisplay = (name: DateRange): RangeDisplay => {
-   if (name === 'forever') {
+   if (name === 'all') {
       return {
          as_dates: 'for all dates',
          possessive: "",
@@ -252,7 +243,7 @@ export const rangeDisplay = (name: DateRange): RangeDisplay => {
 }
 
 export const monthCount = (name: DateRange): number => {
-   if (name === 'future' || name === 'forever') {
+   if (name === 'upcoming' || name === 'all') {
       return NaN;
    }
 
@@ -275,33 +266,27 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = p => {
       (val: string) => onChange?.(val as DateRange),
       [onChange]
    );
+   const groups = Object.entries(dateRanges).reduce(
+      (groups, [key, val]) => ({
+         prev: val.group,
+         options: [
+            ...groups.options,
+            ...(groups.prev !== val.group ? [divider] : []),
+            { text: val.text || key, value: key as DateRange}
+         ],
+      }),
+      {
+         prev: 0,
+         options: [] as Array<Option<DateRange>>,
+      }
+   );
 
    return (
       <Select
          onChange={localChange}
          text={p.text}
          value={p.value}
-         options={[
-            {text: "1 day",               value: "1day"},
-            {text: "1 month",             value: "1month" },
-            {text: "2 months",            value: "2months" },
-            {text: "3 months",            value: "3months" },
-            {text: "1 year",              value: "1year" },
-            {text: "2 years",             value: "2years" },
-            {text: "3 years",             value: "3years" },
-            {text: "4 years",             value: "4years" },
-            {text: "5 years",             value: "5years" },
-            {text: "Month so far",        value: "month so far" },
-            {text: "Current month",       value: "current month" },
-            {text: "Last month",          value: "last month" },
-            {text: "Current year",        value: "current year" },
-            {text: "Current year so far", value: "current year so far" },
-            {text: "Last year",           value: "last year" },
-            {text: "2 years ago",         value: "2 years ago" },
-            {text: "3 years ago",         value: "3 years ago" },
-            {text: "All dates",           value: "forever" },
-            {text: "In the future",       value: "future" },
-         ]}
+         options={groups.options}
       />
    );
 }
@@ -318,43 +303,30 @@ export const RelativeDatePicker: React.FC<RelativeDatePickerProps> = p => {
       [onChange]
    );
 
+   const groups = Object.entries(relativeDates).reduce(
+      (groups, [key, val]) => ({
+         prev: val.group,
+         options: [
+            ...groups.options,
+            ...(groups.prev !== val.group ? [divider] : []),
+            { text: val.text ?? key, value: key as RelativeDate }
+         ],
+      }),
+      {
+         prev: 0,
+         options: [] as Array<Option<RelativeDate>>,
+      }
+   );
+
    return (
       <Select
          onChange={localChange}
          text={p.text}
          value={p.value}
-         options={[
-            {text: "today",                value: "today"},
-            {text: "1 month ago",          value: "1 month ago"},
-            {text: "2 months ago",         value: "2 months ago"},
-            {text: "3 months ago",         value: "3 months ago"},
-            {text: "1 year ago",           value: "1 year ago"},
-            {text: "2 year ago",           value: "2 year ago"},
-            {text: "3 year ago",           value: "3 year ago"},
-            {text: "4 year ago",           value: "4 year ago"},
-            {text: "5 year ago",           value: "5 year ago"},
-            {text: "start of month",       value: "start of month"},
-            {text: "end of month",         value: "end of month"},
-            {text: "start of last month",  value: "start of last month"},
-            {text: "end of last month",    value: "end of last month"},
-            {text: "end of 2 months ago",  value: "end of 2 months ago"},
-            {text: "end of 3 months ago",  value: "end of 3 months ago"},
-            {text: "end of 4 months ago",  value: "end of 4 months ago"},
-            {text: "start of year",        value: "start of year"},
-            {text: "start of last year",   value: "start of last year"},
-            {text: "start of year (2 years ago)", value: "start of 2 years ago"},
-            {text: "start of year (3 years ago)", value: "start of 3 years ago"},
-            {text: "end of year",          value: "end of year"},
-            {text: "end of last year",     value: "end of last year"},
-            {text: "end of year (2 years ago)", value: "end of 2 years ago"},
-            {text: "end of year (3 years ago)", value: "end of 3 years ago"},
-            {text: "earliest date",        value: "epoch"},
-            {text: "future",               value: "armageddon"},
-         ]}
+         options={groups.options}
       />
    );
 }
-
 
 interface MultiDatePickerProps {
    onChange: (val: RelativeDate[]) => void;

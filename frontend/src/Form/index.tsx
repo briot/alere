@@ -164,6 +164,8 @@ export interface Option<T> {
    style?: React.CSSProperties;  // when showing the text in the menu
 }
 
+export const divider: Option<any> = {value: 'divider'};
+
 
 interface SelectProps<T> extends SharedInputProps {
    onChange?: (val: T) => void;
