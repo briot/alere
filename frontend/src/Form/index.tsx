@@ -178,7 +178,7 @@ interface SelectProps<T> extends SharedInputProps {
    format?: (value: T) => string|undefined;  //  formatting the selected
 }
 
-export const Select = <T, > (p: SelectProps<T>) => {
+export const Select = <T extends any> (p: SelectProps<T>) => {
    const ROW_HEIGHT = 20;
 
    const { onChange } = p;
@@ -215,7 +215,8 @@ export const Select = <T, > (p: SelectProps<T>) => {
                <>
                   <div className="text" >
                      {
-                        (selected?.value && selected.value !== "divider"
+                        (selected.value !== undefined
+                           && selected.value !== "divider"
                            && p.format?.(selected.value))
                         ?? selected?.text
                         ?? selected?.value
