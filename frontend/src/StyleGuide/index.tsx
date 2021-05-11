@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Button, Checkbox, Input, Select } from 'Form';
 import RoundButton from 'RoundButton';
-import './StyleGuide.css';
+import './StyleGuide.scss';
 
 const StyleContent: React.FC<{}> = p => {
    const form = () => {
@@ -116,39 +116,40 @@ warmly elinor.
    return (
       <>
          <h4>Palette</h4>
-         <div className="palette">
-            <span className="color100">color-100</span>
-            <span className="color200">color-200</span>
-            <span className="color300">color-300</span>
-            <span className="color400">color-400</span>
-            <span className="color500">color-500</span>
-            <span className="color600">color-600</span>
-            <span className="color700">color-700</span>
-            <span className="color800">color-800</span>
-            <span className="color900">color-900</span>
-         </div>
-         <div className="palette">
-            <span className="gray100">gray-100</span>
-            <span className="gray200">gray-200</span>
-            <span className="gray300">gray-300</span>
-            <span className="gray400">gray-400</span>
-            <span className="gray500">gray-500</span>
-            <span className="gray600">gray-600</span>
-            <span className="gray700">gray-700</span>
-            <span className="gray800">gray-800</span>
-            <span className="gray900">gray-900</span>
-         </div>
-         <div className="palette">
-            <span className="invalid100">invalid-100</span>
-            <span className="invalid200">invalid-200</span>
-            <span className="invalid300">invalid-300</span>
-            <span className="invalid400">invalid-400</span>
-            <span className="invalid500">invalid-500</span>
-            <span className="invalid600">invalid-600</span>
-            <span className="invalid700">invalid-700</span>
-            <span className="invalid800">invalid-800</span>
-            <span className="invalid900">invalid-900</span>
-         </div>
+         {
+            [
+               "red", "pink", "purple", "indigo", "blue", "cyan", "teal",
+               "green", "yellow", "orange",
+
+               "",
+
+               "red-mantine", "pink-mantine", "grape-mantine", "violet-mantine",
+               "indigo-mantine", "blue-mantine", "cyan-mantine", "teal-mantine",
+               "green-mantine", "lime-mantine", "yellow-mantine",
+               "orange-mantine",
+
+               "",
+
+               "gray",
+            ].map(color =>
+               <div className="palette">
+               {
+                  color === ""
+                  ? <div />
+                  : Array.from(Array(9).keys()).map((_, variant) =>
+                     <div
+                        style={{
+                           background: `var(--${color}-${(variant +1) * 100})`,
+                           color: `var(--fg-${color}-${(variant + 1) * 100})`
+                        }}
+                     >
+                        {color}-{(variant + 1) * 100}
+                     </div>
+                  )
+               }
+               </div>
+            )
+         }
 
          <h4>Forms</h4>
          <div className="twocolumn">

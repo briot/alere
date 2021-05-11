@@ -1,5 +1,6 @@
 .panel {
    color: var(--panel-fg);
+   background: var(--panel-background);
    box-shadow: 6px 6px 10px 0 var(--shadow-color);
    border: 1px solid var(--shadow-color);
 
@@ -9,6 +10,10 @@
    .panel {
       /* when nested, like Investments page */
       margin-top: 5px;
+
+      .header h5 {
+         color: var(--panel-fg);  // override h5 color below for Ticker
+      }
    }
 
    .header {
@@ -17,11 +22,11 @@
       justify-content: space-between;
       align-items: center;
       padding: 5px 10px 5px 10px;
-      background: var(--panel-background);
 
       h5 {
          flex: 1 1;
          font-variant: small-caps;
+         color: var(--panel-title-fg);
       }
       .group {
          flex: 0 0;
@@ -36,7 +41,6 @@
       display: flex;
       flex-flow: column nowrap;
       padding: 0 10px 5px 10px;
-      background: var(--panel-background);
    }
 
    .settingsMenu {

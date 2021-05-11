@@ -263,7 +263,7 @@ const Mean: React.FC<MeanProps> = p => {
                   { p.showUnrealized &&
                     getArea('value_unrealized',
                             'var(--positive-fg2)',
-                            'var(--positive-fg-border)',
+                            'var(--positive-fg2-border)',
                             'income') }
                   { p.showExpenses &&
                     getArea('value_exp',

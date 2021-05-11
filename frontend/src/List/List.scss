@@ -178,6 +178,7 @@
    .tbody .trgroup:hover .tr,
    .tbody .tr:hover {
       background: var(--table-hover-background);
+      color: var(--table-hover-foreground);
    }
 
    /**

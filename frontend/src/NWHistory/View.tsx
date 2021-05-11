@@ -97,8 +97,8 @@ const NetworthHistory: React.FC<NetworthHistoryProps> = p => {
                   />
                   <Bar
                      dataKey="networth"
-                     fill="var(--positive-fg)"
-                     stroke="var(--positive-fg-border"
+                     fill="var(--graph-nw)"
+                     stroke="var(--graph-nw-border"
                      isAnimationActive={false}
                   />
                </ComposedChart>

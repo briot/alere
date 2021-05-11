@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as d3ScaleChromatic from 'd3-scale-chromatic';
+import * as d3Scale from 'd3-scale';
 import { Legend, PieChart, PieLabelRenderProps,
          Pie, Cell, Tooltip, TooltipProps } from 'recharts';
 import { DateRange, rangeToHttp } from 'Dates';
@@ -136,16 +136,19 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
            </span>
          );
 
-   const mapToRange = (index: number, length: number, min: number, max: number) =>
-      min + (index / (length - 1)) * (max - min);
+   const style = getComputedStyle(document.getElementById('app'));
+   const color1 = style.getPropertyValue(
+      p.expenses ? "--expense-gradient-1" : "--income-gradient-1");
+   const color2 = style.getPropertyValue(
+      p.expenses ? "--expense-gradient-2" : "--income-gradient-2");
+   const color3 = style.getPropertyValue(
+      p.expenses ? "--expense-gradient-3" : "--income-gradient-3");
 
-
-   const color = p.expenses
-      ? (index: number) => d3ScaleChromatic.interpolateYlOrRd(
-         mapToRange(index, data.items.length, 1.0, 0.5))
-      : (index: number) => d3ScaleChromatic.interpolateYlGn(
-         mapToRange(index, data.items.length, 1.0, 0.5))
-   ;
+   const modulo = 10;
+   const colorScale = d3Scale.scaleLinear<string>()
+      .domain([0, Math.min(modulo, data.items.length - 1)])
+      .range([color1, color2]);
+   const color = (index: number) => colorScale(index % modulo);
 
    return (
       <div className="columns">

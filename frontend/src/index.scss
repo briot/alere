@@ -1,90 +1,7 @@
 /* base colors, from bootstrap:
  * https://v5.getbootstrap.com/docs/5.0/customize/color/
  */
-$blue:     #0d6efd !default;
-$indigo:   #6610f2 !default;
-$purple:   #6f42c1 !default;
-$pink:     #d63384 !default;
-$red:      #dc3545 !default;
-$orange:   #fd7e14 !default;
-$yellow:   #ffc107 !default;
-$green:    #198754 !default;
-$teal:     #20c997 !default;
-$cyan:     #0dcaf0 !default;
-
-$theme-color-interval: 8% !default;  /* how different are shades of a color */
-
-@function tint-color($color, $level) {
-  @return mix(white, $color, $level * $theme-color-interval);
-}
-@function shade-color($color, $level) {
-  @return mix(black, $color, $level * $theme-color-interval);
-}
-@function black-or-white($color) {
-   // Compute brightness: see
-   // https://www.smashingmagazine.com/2020/07/css-techniques-legibility/
-   $brightness: red($color) * 0.299 + green($color) * 0.587 + blue($color) * 0.114;
-   @if $brightness >= 128 {
-      @return "var(--gray-900)";
-   } @else {
-      @return #c0c0c0;
-   }
-}
-
-@mixin generate-color-vars($key, $base) {
-   $v-100: tint-color($base, 8) !default;
-   $v-200: tint-color($base, 6) !default;
-   $v-300: tint-color($base, 4) !default;
-   $v-400: tint-color($base, 2) !default;
-   $v-600: shade-color($base, 2) !default;
-   $v-700: shade-color($base, 4) !default;
-   $v-800: shade-color($base, 6) !default;
-   $v-900: shade-color($base, 8) !default;
-   --#{$key}-100-10p: #{rgba($v-100, 0.1)};
-   --#{$key}-100-20p: #{rgba($v-100, 0.2)};
-   --#{$key}-100: #{$v-100};
-   --#{$key}-200: #{$v-200};
-   --#{$key}-300: #{$v-300};
-   --#{$key}-300-10p: #{rgba($v-300, 0.1)};
-   --#{$key}-300-20p: #{rgba($v-300, 0.2)};
-   --#{$key}-300-30p: #{rgba($v-300, 0.3)};
-   --#{$key}-300-60p: #{rgba($v-300, 0.6)};
-   --#{$key}-300-80p: #{rgba($v-300, 0.8)};
-   --#{$key}-400: #{$v-400};
-   --#{$key}-400-10p: #{rgba($v-400, 0.1)};
-   --#{$key}-400-20p: #{rgba($v-400, 0.2)};
-   --#{$key}-400-30p: #{rgba($v-400, 0.3)};
-   --#{$key}-400-80p: #{rgba($v-400, 0.8)};
-   --#{$key}-400-90p: #{rgba($v-400, 0.9)};
-   --#{$key}-400-95p: #{rgba($v-400, 0.95)};
-   --#{$key}-500: #{$base};
-   --#{$key}-500-10p: #{rgba($base, 0.1)};
-   --#{$key}-500-20p: #{rgba($base, 0.2)};
-   --#{$key}-500-30p: #{rgba($base, 0.3)};
-   --#{$key}-500-50p: #{rgba($base, 0.5)};
-   --#{$key}-500-60p: #{rgba($base, 0.6)};
-   --#{$key}-500-70p: #{rgba($base, 0.7)};
-   --#{$key}-500-80p: #{rgba($base, 0.8)};
-   --#{$key}-600: #{$v-600};
-   --#{$key}-700: #{$v-700};
-   --#{$key}-800: #{$v-800};
-   --#{$key}-800-20p: #{rgba($v-800, 0.2)};
-   --#{$key}-800-50p: #{rgba($v-800, 0.5)};
-   --#{$key}-800-95p: #{rgba($v-800, 0.95)};
-   --#{$key}-900: #{$v-900};
-   --#{$key}-900-20p: #{rgba($v-900, 0.2)};
-   --#{$key}-900-40p: #{rgba($v-900, 0.4)};
-   --#{$key}-900-80p: #{rgba($v-900, 0.8)};
-   --fg-#{$key}-100: #{black-or-white($v-100)};
-   --fg-#{$key}-200: #{black-or-white($v-200)};
-   --fg-#{$key}-300: #{black-or-white($v-300)};
-   --fg-#{$key}-400: #{black-or-white($v-400)};
-   --fg-#{$key}-500: #{black-or-white($base)};
-   --fg-#{$key}-600: #{black-or-white($v-600)};
-   --fg-#{$key}-700: #{black-or-white($v-700)};
-   --fg-#{$key}-800: #{black-or-white($v-800)};
-   --fg-#{$key}-900: #{black-or-white($v-900)};
-}
+@import "shared";
 
 /**
  * Define the application color palette. These are all the colors we can use
@@ -93,24 +10,43 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
  */
 
 :root {
-   @include generate-color-vars(color, $green);
-   @include generate-color-vars(invalid, $red);
-   @include generate-color-vars(green, $green);
-   @include generate-color-vars(red, $red);
-   @include generate-color-vars(teal, $teal);
+   @include generate-color-vars(color, $blue-mantine);
+   @include generate-color-vars(invalid, $red-mantine);
+
+   @include generate-color-vars(teal, $teal-mantine);
+   @include generate-color-vars(green, $green-mantine);
+   @include generate-color-vars(lime, $lime-mantine);
+
+   @include generate-color-vars(red, $red-mantine);
+   @include generate-color-vars(pink, $pink-mantine);
+   @include generate-color-vars(grape, $grape-mantine);
+
    @include generate-color-vars(gray, #adb5bd);
    white-fg: #{black-or-white(white)};  // foreground to use on top of white
 
-   --font-size: 16px;
-   --font-size-sidebar: 15px;
-   --font-size-tool: 13px;
+   // Harmonic scales, used for various purposes
+   --ratio: 1.5;
+   --s-5: calc(var(--s-4) / var(--ratio));
+   --s-4: calc(var(--s-3) / var(--ratio));
+   --s-3: calc(var(--s-2) / var(--ratio));
+   --s-2: calc(var(--s-1) / var(--ratio));
+   --s-1: calc(var(--s0) / var(--ratio));
+   --s0: 1rem;
+   --s1: calc(var(--s0) * var(--ratio));
+   --s2: calc(var(--s1) * var(--ratio));
+   --s3: calc(var(--s2) * var(--ratio));
+   --s4: calc(var(--s3) * var(--ratio));
+   --s5: calc(var(--s4) * var(--ratio));
+
+   --font-size-sidebar: 1rem;
+   --font-size-tool: 0.8rem;
    --scrollbar-width: 15px;  /* for webkit + chrome */
    --table-vert-border-width: 0px;
    --table-horiz-border-width: 0px;
-   --header-tool-height: 40px;
-   --nm-offset: 6px;
-   --nm-blur: 10px;
-   --nm-inset: 8px;
+   --header-tool-height: 2.5rem;
+   --nm-offset: 0.33rem;
+   --nm-blur: 0.625rem;
+   --nm-inset: 0.5rem;
 
    --zindex-dropdown:       1000;
    --zindex-sticky:         1020;
@@ -128,35 +64,46 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
  */
 
 .darkpalette {
-   --page-background: #1f1f1f; // var(--gray-900);
-   --panel-background: var(--gray-900);
-   --panel-fg: var(--fg-gray-900);
+   --page-background: rgb(29,30,48);
+   --panel-background: rgb(1,1,10);
+   --panel-fg: #ced4da;
    --panel-fg-low-contrast: var(--gray-200);
+   --panel-title-fg: var(--color-300);
    --background-summary-popup: rgba(0,0,0,0.9);
    --summary-background: rgba(255,255,255,0.2);
    --table-color: #b1afaf;
-   --table-hover-background: var(--gray-700);
+   --table-hover-background: var(--color-600);
+   --table-hover-foreground: var(--fg-color-600);
    --table-row-first-background: none;
    --table-row-details-background: none;
    --table-row-details-fg: var(--gray-600);
+   --table-border: var(--gray-800);
    --table-alternate-row: var(--color-300-10p);
    --focus-color: var(--color-500);
-   --tooltip-bg: var(--gray-800-95p);
+   --tooltip-bg: var(--gray-800-90p);
 
    --danger: var(--invalid-500);
    --danger-fg: var(--fg-invalid-500);
 
    --positive-fg: var(--green-300);
-   --positive-fg2: var(--gray-300-80p);
-   --positive-fg-border: var(--green-200);
-   --negative-fg: var(--invalid-400);
-   --negative-fg-border: var(--invalid-300);
+   --positive-fg-border: var(--green-300);
+   --positive-fg2: var(--green-300-80p);
+   --positive-fg2-border: var(--green-300-80p);
+   --negative-fg: var(--red-400);
+   --negative-fg-border: var(--red-300);
+
+   --income-gradient-1: var(--green-600);
+   --income-gradient-2: #ffffff;
+   --expense-gradient-1: var(--red-600);
+   --expense-gradient-2: #ffffff;
 
    --cartesian-grid: var(--gray-700);
-   --graph-price: var(--gray-500);
-   --graph-roi: var(--green-500);
+   --graph-price: var(--gray-100);
+   --graph-roi: var(--green-300);
    --graph-shares: var(--red-500);
    --graph-holding: var(--teal-500);
+   --graph-nw: var(--color-600);
+   --graph-nw-border: var(--color-600);
 
    --input-background: var(--gray-700);
    --input-foreground: var(--gray-fg-700);
@@ -169,14 +116,14 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --input-error-border: var(--invalid-100);
    --input-error-foreground: var(--fg-invalid-300);
 
-   --neumorph-light: rgba(58,58,58,.6);
-   --neumorph-dark: rgba(0,0,0,.2);
+   --neumorph-light: var(--gray-200-10p); // rgba(20,30,48,.99);
+   --neumorph-dark: rgba(1,1,10,.8); // var(--gray-900-60p); // rgba(#343a40,.95);
    --neumorph-selected-dark: rgba(40,40,40,.2);
-   --neumorph-fg: var(--color-300);  // foreground in roundbuttons
+   --neumorph-fg: var(--color-400); // foreground in selected roundbuttons
 
    --expand-arrow-color: var(--gray-700);
 
-   --shadow-color: var(--gray-900-40p);
+   --shadow-color: var(--gray-900-20p);
 
    --tool-color: var(--fg-gray-900);
    --tool-background: var(--gray-900);
@@ -191,23 +138,32 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --panel-background: #fbfbfb;
    --panel-fg: var(--fg-gray-100);
    --panel-fg-low-contrast: var(--gray-500);
+   --panel-title-fg: var(--color-700);
    --background-summary-popup: rgba(0,0,0,0.9);
    --summary-background: rgba(255,255,255,0.2);
    --focus-color: var(--color-500);
-   --tooltip-bg: var(--gray-400-95p);
+   --tooltip-bg: var(--gray-400-90p);
    --table-color: #b1afaf;
-   --table-hover-background: var(--gray-100);
+   --table-border: var(--shadow-color);
+   --table-hover-background: var(--color-200);
+   --table-hover-foreground: var(--fg-color-200);
    --table-row-first-background: none;
    --table-row-details-background: none;
    --table-row-details-fg: var(--gray-500);
    --table-alternate-row: var(--color-100-10p);
 
+   --income-gradient-1: var(--green-600);
+   --income-gradient-2: var(--green-200);
+   --expense-gradient-1: var(--red-600);
+   --expense-gradient-2: var(--red-200);
+
    --danger: var(--invalid-500);
    --danger-fg: var(--fg-invalid-500);
 
    --positive-fg: var(--green-400);
-   --positive-fg2: var(--gray-300-80p);
-   --positive-fg-border: var(--green-200);
+   --positive-fg-border: var(--green-400);
+   --positive-fg2: var(--green-400-50p);
+   --positive-fg2-border: var(--green-400-50p);
    --negative-fg: var(--invalid-500);
    --negative-fg-border: var(--invalid-400);
 
@@ -228,6 +184,8 @@ $theme-color-interval: 8% !default;  /* how different are shades of a color */
    --graph-roi: var(--green-500);
    --graph-shares: var(--red-500);
    --graph-holding: var(--teal-500);
+   --graph-nw: var(--color-200);
+   --graph-nw-border: var(--color-200);
 
    --neumorph-light: rgba(255,255,255,0.5);
    --neumorph-dark: rgba(70,70,70,.12);
@@ -250,7 +208,6 @@ body {
    margin: 0;
    -webkit-font-smoothing: antialiased;
    -moz-osx-font-smoothing: grayscale;
-   font-size: var(--font-size);
 
    /* See http://clagnut.com/sandbox/font-size-adjust-ex.html */
    font-family: sans-serif;
@@ -261,32 +218,32 @@ body {
  * https://www.smashingmagazine.com/2020/07/css-techniques-legibility/
  */
 h1 {
-    font-size: 2.5em;
+    font-size: 2.5rem;
     line-height: calc(1ex / 0.42);
     margin: calc(1ex / 0.42 / 2) 0;
 }
 h2 {
-    font-size: 2em;
+    font-size: 2rem;
     line-height: calc(1ex / 0.42);
     margin: calc(1ex / 0.42 / 2) 0;
 }
 h3 {
-    font-size: 1.75em;
+    font-size: 1.75rem;
     line-height: calc(1ex / 0.38);
     margin: calc(1ex / 0.38 / 2) 0;
 }
 h4 {
-    font-size: 1.5em;
+    font-size: 1.5rem;
     line-height: calc(1ex / 0.37);
     margin: calc(1ex / 0.37 / 2) 0;
 }
 h5 {
-    font-size: 1em;
+    font-size: 1rem;
     line-height: calc(1ex / 0.37);
     margin: calc(1ex / 0.37 / 2) 0;
 }
 p {
-    font-size: 1em;
+    font-size: 1rem;
     line-height: calc(1ex / 0.32);
     margin: calc(1ex / 0.32 / 2) 0;
 }
