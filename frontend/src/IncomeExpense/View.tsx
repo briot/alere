@@ -136,13 +136,12 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
            </span>
          );
 
-   const style = getComputedStyle(document.getElementById('app'));
+   const style = getComputedStyle(
+      document.getElementById('app') || document.documentElement);
    const color1 = style.getPropertyValue(
       p.expenses ? "--expense-gradient-1" : "--income-gradient-1");
    const color2 = style.getPropertyValue(
       p.expenses ? "--expense-gradient-2" : "--income-gradient-2");
-   const color3 = style.getPropertyValue(
-      p.expenses ? "--expense-gradient-3" : "--income-gradient-3");
 
    const modulo = 10;
    const colorScale = d3Scale.scaleLinear<string>()
@@ -153,7 +152,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
    return (
       <div className="columns">
          <div className="total">
-            <h4>Total</h4>
+            <h5>Total</h5>
             <Numeric
                amount={data.total}
                commodity={prefs.currencyId}
