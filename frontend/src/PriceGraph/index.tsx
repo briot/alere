@@ -79,7 +79,6 @@ const PriceGraph: React.FC<PriceGraphProps> = p => {
                        <td>
                           <Numeric
                              amount={data.roi}
-                             colored={true}
                              forceSign={true}
                              showArrow={true}
                              suffix='%'
@@ -164,6 +163,10 @@ const PriceGraph: React.FC<PriceGraphProps> = p => {
       () => setState(state => nullState),
       []
    );
+
+   if (!hist.length) {
+      return null;
+   }
 
    return (
       <div className="priceGraph">

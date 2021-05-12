@@ -8,6 +8,9 @@ export interface PriceHistoryPanelProps extends PanelBaseProps, PriceGraphProps 
 }
 
 const PriceHistoryPanel: React.FC<PanelProps<PriceHistoryPanelProps>> = p => {
+   if (!p.props.prices.length) {
+      return null;
+   }
    return (
       <Panel
          {...p}
