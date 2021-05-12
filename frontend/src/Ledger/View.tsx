@@ -326,59 +326,69 @@ const columnTotal = (v: Totals): Column<TableRowData, ComputedBaseLedgerProps> =
    foot: () => (
       <>
          {
-            v.selected &&
-            <Table.TD>
-               selected:
-               <Numeric
-                  amount={v.selected}
-                  commodity={v.commodity}
-                  hideCommodity={true}
-               />
-            </Table.TD>
+            v.selected
+            ? (
+               <Table.TD>
+                  selected:
+                  <Numeric
+                     amount={v.selected}
+                     commodity={v.commodity}
+                     hideCommodity={true}
+                  />
+               </Table.TD>
+            ) : null
          }
          {
-            v.reconciled &&
-            <Table.TD>
-               reconciled:
-               <Numeric
-                  amount={v.reconciled}
-                  commodity={v.commodity}
-                  hideCommodity={true}
-               />
-            </Table.TD>
+            v.reconciled
+            ? (
+               <Table.TD>
+                  reconciled:
+                  <Numeric
+                     amount={v.reconciled}
+                     commodity={v.commodity}
+                     hideCommodity={true}
+                  />
+               </Table.TD>
+            ) : null
          }
          {
-            v.cleared &&
-            <Table.TD>
-               cleared:
-               <Numeric
-                  amount={v.cleared}
-                  commodity={v.commodity}
-                  hideCommodity={true}
-               />
-            </Table.TD>
+            v.cleared
+            ? (
+               <Table.TD>
+                  cleared:
+                  <Numeric
+                     amount={v.cleared}
+                     commodity={v.commodity}
+                     hideCommodity={true}
+                  />
+               </Table.TD>
+            ) : null
          }
          {
-            v.present &&
-            <Table.TD>
-               present:
-               <Numeric
-                  amount={v.present}
-                  commodity={v.commodity}
-                  hideCommodity={true}
-               />
-            </Table.TD>
+            v.present
+            ? (
+               <Table.TD>
+                  present:
+                  <Numeric
+                     amount={v.present}
+                     commodity={v.commodity}
+                     hideCommodity={true}
+                  />
+               </Table.TD>
+            ) : null
          }
          {
-            v.future && v.future !== v.present &&
-            <Table.TD>
-               future:
-               <Numeric
-                  amount={v.future}
-                  commodity={v.commodity}
-                  hideCommodity={true}
-               />
-            </Table.TD>
+            v.future && v.future !== v.present
+            ? (
+               <Table.TD>
+                  future:
+                  <Numeric
+                     amount={v.future}
+                     commodity={v.commodity}
+                     hideCommodity={true}
+                  />
+               </Table.TD>
+            ) : null
          }
       </>
    )
