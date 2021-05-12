@@ -51,11 +51,11 @@ $theme-color-interval: 7% !default;  /* how different are shades of a color */
           if($variant == 5, $base,
              shade-color($base, 2 * $variant - 10)));
 
-      --#{$key}-#{$variant * 100}: #{$c};
-      --fg-#{$key}-#{$variant * 100}: #{black-or-white($c)};
+      --#{"" + $key}-#{$variant * 100}: #{$c};
+      --fg-#{"" + $key}-#{$variant * 100}: #{black-or-white($c)};
 
       @for $alpha from 1 through 9 {
-         --#{$key}-#{$variant * 100}-#{$alpha * 10}p: #{rgba($c, $alpha / 10)};
+         --#{"" + $key}-#{$variant * 100}-#{$alpha * 10}p: #{rgba($c, $alpha / 10)};
       }
    }
 }
