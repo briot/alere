@@ -9,20 +9,13 @@
  * See https://www.smashingmagazine.com/2020/08/application-color-schemes-css-custom-properties/
  */
 
-:root {
+.lightpalette,
+.darkpalette {
    @include generate-color-vars(color, $blue-mantine);
    @include generate-color-vars(invalid, $red-mantine);
-
-   @include generate-color-vars(teal, $teal-mantine);
    @include generate-color-vars(green, $green-mantine);
-   @include generate-color-vars(lime, $lime-mantine);
-
    @include generate-color-vars(red, $red-mantine);
-   @include generate-color-vars(pink, $pink-mantine);
-   @include generate-color-vars(grape, $grape-mantine);
-
    @include generate-color-vars(gray, #adb5bd);
-   white-fg: #{black-or-white(white)};  // foreground to use on top of white
 
    // Harmonic scales, used for various purposes
    --ratio: 1.5;
@@ -64,6 +57,11 @@
  */
 
 .darkpalette {
+   // foreground colors to use on either dark background colors or
+   // light background colors.
+   --fg-for-dark-colors: #f8f9fa;
+   --fg-for-light-colors: #212529;
+
    --page-background: rgb(29,30,48);
    --panel-background: rgb(1,1,10);
    --panel-fg: #ced4da;
@@ -134,6 +132,9 @@
 
 }
 .lightpalette {
+   --fg-for-dark-colors: #f8f9fa;
+   --fg-for-light-colors: #212529;
+
    --page-background: var(--gray-100);
    --panel-background: #fbfbfb;
    --panel-fg: var(--fg-gray-100);
@@ -168,7 +169,7 @@
    --negative-fg-border: var(--invalid-400);
 
    --input-background: white;
-   --input-foreground: var(--white-fg);
+   --input-foreground: var(--fg-for-light-colors);
    --input-border: var(--gray-100);
    --input-primary-background: var(--color-500);
    --input-primary-foreground: var(--fg-color-500);

@@ -38,9 +38,9 @@ $theme-color-interval: 7% !default;  /* how different are shades of a color */
    // https://www.smashingmagazine.com/2020/07/css-techniques-legibility/
    $brightness: red($color) * 0.299 + green($color) * 0.587 + blue($color) * 0.114;
    @if $brightness >= 128 {
-      @return #212529;
+      @return var(--fg-for-light-colors);
    } @else {
-      @return #f8f9fa;
+      @return var(--fg-for-dark-colors); // #f8f9fa;
    }
 }
 
