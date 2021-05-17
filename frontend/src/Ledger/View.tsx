@@ -305,6 +305,7 @@ const columnSharesBalance: Column<TableRowData, ComputedBaseLedgerProps> = {
          amount={d.transaction?.balanceShares}
          commodity={d.account?.commodity}  //  the account's commodity
          hideCommodity={true}
+         scale={Math.log10(d.account?.commodity_scu ?? 100)}
       />
 }
 
