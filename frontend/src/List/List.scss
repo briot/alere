@@ -118,46 +118,40 @@
 
       .tr.expandable :is(.td,.th):first-child::before,
       .trgroup.expandable :is(.td,.th):first-child::before {
-         content: '';
+         content: "\f0da";
          font: normal normal normal 14px/1 FontAwesome;
          text-rendering: auto;
          width: var(--exp-padding-left);
          margin-left: calc(var(--exp-padding-left) * -1);
          font-size: 1.4em;
-         margin-top: 5px;
          -webkit-font-smoothing: antialiased;
          -moz-osx-font-smoothing: grayscale;
          display: block;
          cursor: pointer;
          float: left;
          color: var(--expand-arrow-color);
+         transition: transform 0.8s;
 
          position: absolute; // arrow not hidden by the cell's overflow:hidden
       }
       .tr.collapsed,
       .trgroup.collapsed {
-         .tr:not(:first-child) .th,
-         .tr:not(:first-child) .td {
+         .tr:not(:first-child) :is(.th,.td) {
             transition: height 0.2s, padding 0.2s;
             height: 0;
             padding: 0 0;
          }
          & .td:first-child::before {
-            content: "\f0da";
-            transform: rotateZ(0) translate(25%,0%);
-            transition: transform 0.2s;
+            transform: rotateZ(0) translate(0,0);
          }
       }
       .tr.expanded,
       .trgroup.expanded {
-         .tr:not(:first-child) .th,
-         .tr:not(:first-child) .td {
+         .tr:not(:first-child) :is(.th,.td) {
             transition: height 0.2s, padding 0.2s;
          }
          & .td:first-child::before {
-            content: "\f0da";
-            transform: rotateZ(90deg) translate(25%,0%);
-            transition: transform 0.2s;
+            transform: rotateZ(90deg) translate(25%,20%);
          }
       }
 

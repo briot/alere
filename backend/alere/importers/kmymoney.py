@@ -529,8 +529,10 @@ def __import_transactions(cur, accounts, commodities, payees):
             for f in [
                 trans.memo,
                 row['memo'],
-                'Add Shares' if row['action'] == 'Add' else None,
-                'Buy Shares' if row['action'] == 'Buy' else None,
+                ('Add Shares' if shares >= 0 else 'Remove Shares')
+                    if row['action'] == 'Add' else None,
+                ('Buy Shares' if shares >= 0 else 'Sell Shares')
+                    if row['action'] == 'Buy' else None,
                 'Dividends' if row['action'] == 'Dividend' else None,
                 'Reinvested dividend' if row['action'] == 'Reinvest' else None,
             ]
