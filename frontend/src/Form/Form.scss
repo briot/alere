@@ -2,6 +2,12 @@ form {
    --vert-spacing: .5em;
 }
 
+input:focus,
+button:focus,
+select:focus {
+   outline: 3px solid var(--input-focus-color);
+}
+
 input,
 button,
 select {
@@ -12,15 +18,15 @@ select {
 }
 .primary :is(input, .select),
 button.primary {
-   background-color: var(--input-primary-background);
+   background-color: var(--input-primary-bg);
    border: 1px solid var(--input-primary-border);
-   color: var(--input-primary-foreground);
+   color: var(--input-primary-fg);
 }
 input:invalid,
 .select.invalid {
-   background-color: var(--input-error-background);
+   background-color: var(--input-error-bg);
    border-color: var(--input-error-border);
-   color: var(--input-error-foreground);
+   color: var(--input-error-fg);
 }
 
 .disabled button:hover {
@@ -30,8 +36,8 @@ button:hover {
    filter: brightness(var(--input-brightness-hover));
 }
 button.danger {
-   background-color: var(--danger);
-   color: var(--danger-fg);
+   background-color: var(--input-invalid);
+   color: var(--input-invalid-fg);
 }
 .disabled,
 .disabled :is(span, input, button, .selector),
@@ -124,7 +130,8 @@ form .select option {
       align-items: center;  // center vertically
 
       &:hover {
-         background: var(--table-hover-background);
+         background: var(--table-hover-bg);
+         color: var(--table-hover-fg);
       }
 
       &.selected {
@@ -156,23 +163,23 @@ form .checkbox input {
    appearance: none;
    height: 1.8em;
    width: 1.8em;
-   border: 1px solid var(--input-primary-background);
+   border: 1px solid var(--input-primary-border);
    border-radius: 0.5em;
    cursor: pointer;
 }
 form .checkbox > input:checked {
-   border: 1px solid var(--input-primary-background);
-   background-color: var(--input-primary-background);
+   border: 1px solid var(--input-primary-border);
+   background-color: var(--input-primary-bg);
    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
     
 }
 form .checkbox > input:indeterminate {
-   border: 1px solid var(--input-primary-background);
-   background-color: var(--input-primary-background);
+   border: 1px solid var(--input-primary-border);
+   background-color: var(--input-primary-bg);
    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10h8'/%3e%3c/svg%3e");
 }
 form .checkbox > input:active {
-    border: 2px solid var(--input-primary-background); 
+    border: 2px solid var(--input-primary-border); 
 }
 
 button {

@@ -59,7 +59,7 @@ const PriceGraph: React.FC<PriceGraphProps> = p => {
      if (d.active && d.payload && d.payload.length) {
         const data: ClosePrice = d.payload[0].payload;
         return (
-           <div className="graph-tooltip">
+           <div className="tooltip-base">
               <p className="label">
                  { dateForm(new Date(data.t)) }
               </p>

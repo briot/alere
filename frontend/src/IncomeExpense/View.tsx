@@ -62,7 +62,7 @@ const CustomTooltip = (p: TooltipProps<number, string> & {data: DataType} ) => {
    const total = p.data.items.reduce((t: number, d: DataItemType) => t + d.value, 0);
    return p.active
      ? (
-       <div className="customTooltip" >
+       <div className="tooltip-base" >
            <AccountName
               id={pay.payload.accountId}
               account={pay.payload.account}

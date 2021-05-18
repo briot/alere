@@ -46,7 +46,7 @@ const CustomTooltip = (
 
    return d && p.active
       ? (
-         <div className="customTooltip">
+         <div className="tooltip-base customTooltip">
             <h5>{d.date}</h5>
             <Numeric
                amount={d.networth}
@@ -97,8 +97,8 @@ const NetworthHistory: React.FC<NetworthHistoryProps> = p => {
                   />
                   <Bar
                      dataKey="networth"
-                     fill="var(--graph-nw)"
-                     stroke="var(--graph-nw-border"
+                     fill="var(--graph-networth)"
+                     stroke="var(--graph-networth"
                      isAnimationActive={false}
                   />
                </ComposedChart>

@@ -89,7 +89,7 @@ const CustomTooltip = (
 
    return d && p.active
       ? (
-         <div className="customTooltip">
+         <div className="tooltip-base customTooltip">
             <h5>{d.date}</h5>
             <table>
                <tbody>

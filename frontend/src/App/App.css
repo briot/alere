@@ -1,5 +1,5 @@
 .page {
-   background: var(--page-background);
+   background: var(--page-bg);
    color: var(--panel-fg);
 }
 
@@ -54,12 +54,6 @@
 
 .italic {
    font-style: italic;
-}
-
-input:focus,
-button:focus,
-select:focus {
-   outline: 3px solid var(--focus-color);
 }
 
 a {

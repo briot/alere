@@ -23,7 +23,7 @@ const Past: React.FC<PastValue> = p => {
                  />
             }
          </div>
-         <div className="tooltip">
+         <div className="tooltip tooltip-base">
             <table>
                <tbody>
                   <tr>

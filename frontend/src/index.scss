@@ -1,6 +1,6 @@
-/* base colors, from bootstrap:
- * https://v5.getbootstrap.com/docs/5.0/customize/color/
- */
+@use "sass:list";
+@use "sass:string";
+
 @import "shared";
 
 /**
@@ -9,8 +9,7 @@
  * See https://www.smashingmagazine.com/2020/08/application-color-schemes-css-custom-properties/
  */
 
-.lightpalette,
-.darkpalette {
+.lightpalette, .darkpalette {
    @include generate-color-vars(color, $blue-mantine);
    @include generate-color-vars(invalid, $red-mantine);
    @include generate-color-vars(green, $green-mantine);
@@ -33,7 +32,7 @@
 
    --font-size-sidebar: 1rem;
    --font-size-tool: 0.8rem;
-   --scrollbar-width: 15px;  /* for webkit + chrome */
+   --scrollbar-width: 15px;  /* for webkit and chrome */
    --table-vert-border-width: 0px;
    --table-horiz-border-width: 0px;
    --header-tool-height: 2.5rem;
@@ -51,156 +50,107 @@
 }
 
 /**
- * Define functional colors.
+ * Define semantic colors.
  * At this level, we do not worry about the value of the colors, but about
- * their functions.
+ * their functions. Each element in the map is a list of colors, one per theme.
  */
+$themes: (
+   // foreground colors to use on either dark background colors or
+   // light background colors. Those are used automatically by the function
+   // generate-color-vars
+   fg-for-dark-colors:         #f8f9fa,
+   fg-for-light-colors:        #212529,
+
+   page-bg:                    [ rgb(29,30,48),         --gray-100 ],
+   panel-border:               --shadow-color,
+   panel-bg:                   [ rgb(1,1,10),           #fbfbfb ],
+   panel-fg:                   [ --fg-for-dark-colors,  --fg-gray-100 ],
+   panel-title-fg:             [ --color-300,           --color-700 ],
+   shadow-color:               [ --neumorph-light,      --neumorph-dark ],
+
+   tooltip-bg:                 [ --gray-800,       --gray-400 ],
+   tooltip-fg:                 [ --gray-fg-800,    --gray-fg-400 ],
+   tooltip-border:             [ --gray-700,       --gray-500 ],
+
+   // Colors for tables
+   table-alternate-row:        [ --color-300-10,   --color-100-10p ],
+   table-border:               --cartesian-grid,
+   table-expand-arrow-color:   [ --gray-500,       --gray-700 ],
+   table-hover-bg:             [ --color-600,      --color-200 ],
+   table-hover-fg:             [ --fg-color-600,   --fg-color-200 ],
+   table-row-details-fg:       [ --gray-600,       --gray-500 ],
+
+   // Colors used for the text of positive or negative numbers. Those are
+   // displayed on --panel-bg colors.
+   positive-fg:                [ --green-300,      --green-700 ],
+   negative-fg:                [ --red-400,        --red-700 ],
+
+   // Colors for the Income-Expenses panel. These are used to create gradients
+   income-gradient-1:          [ --green-600,      --green-700 ],
+   income-gradient-2:          [ #ffffff,          --green-400 ],
+   expense-gradient-1:         [ --red-600,        --red-700   ],
+   expense-gradient-2:         [ #ffffff,          --red-400   ],
+
+   // The background grid in graphs
+   cartesian-grid:             [ --gray-700,       --gray-500  ],
+
+   // Colors for the various graphs
+   graph-price:                [ --gray-100,       --gray-500  ],
+   graph-roi:                  [ --green-300,      --green-600 ],
+   graph-shares:               [ --gray-300,       --gray-800  ],
+   graph-holding:              [ --color-500,      --color-200 ],
+   graph-networth:             [ --color-600,      --color-200 ],
+   graph-mean-realized:        [ --green-400,      --green-600 ],
+   graph-mean-unrealized:      [ --green-400-50p,  --green-600-50p ],
+   graph-mean-expenses:        [ --red-500,        --red-600 ],
+
+   // Colors used in forms
+   input-background:           [ --gray-700,       white ],
+   input-border:               [ --gray-900,       --gray-100 ],
+   input-brightness-hover:     [ 115%,             85% ],
+   input-error-bg:             [ --invalid-300,    --invalid-100 ],
+   input-error-border:         [ --invalid-100,    --invalid-300 ],
+   input-error-fg:             [ --fg-invalid-300, --fg-invalid-100 ],
+   input-focus-color:          --color-500,
+   input-foreground:           [ --gray-fg-700,    --fg-for-light-colors],
+   input-invalid-fg:           --fg-invalid-500,
+   input-invalid:              --invalid-500,
+   input-primary-bg:           --color-500,
+   input-primary-border:       --color-600,
+   input-primary-fg:           --fg-color-500,
+
+   // Colors for neumorphism on buttons. Those are the shadows, and the
+   // foreground color on selected buttons
+   neumorph-dark:              [ rgba(1,1,10,.8),     rgba(70,70,70,.12) ],
+   neumorph-fg:                [ --color-400,         --color-700 ],
+   neumorph-light:             [ --gray-200-10p,      rgba(255,255,255,0.5) ],
+   neumorph-selected-dark:     [ rgba(40,40,40,.2),   rgb(120,120,120,.12) ],
+
+   // Colors for scrollbars
+   scrollbar-fg:               --color-200,
+   scrollbar-bg:               --panel-bg,
+   scrollbar-border:           none,
+);
+
+@mixin themed($index) {
+  @each $key, $colors in $themes {
+     // Extract the color from the list (if we have a list)
+     $raw: if(type-of($colors) == list, list.nth($colors, $index), $colors);
+
+     // If we have the name of a CSS variable, add var()
+     $c: if(type-of($raw) == string,
+            if(string.slice($raw, 1, 2) == "--", "var(" + $raw + ")", $raw),
+            $raw);
+
+     --#{$key}: #{$c};
+  }
+}
 
 .darkpalette {
-   // foreground colors to use on either dark background colors or
-   // light background colors.
-   --fg-for-dark-colors: #f8f9fa;
-   --fg-for-light-colors: #212529;
-
-   --page-background: rgb(29,30,48);
-   --panel-background: rgb(1,1,10);
-   --panel-fg: #ced4da;
-   --panel-fg-low-contrast: var(--gray-200);
-   --panel-title-fg: var(--color-300);
-   --background-summary-popup: rgba(0,0,0,0.9);
-   --summary-background: rgba(255,255,255,0.2);
-   --table-color: #b1afaf;
-   --table-hover-background: var(--color-600);
-   --table-hover-foreground: var(--fg-color-600);
-   --table-row-first-background: none;
-   --table-row-details-background: none;
-   --table-row-details-fg: var(--gray-600);
-   --table-border: var(--gray-800);
-   --table-alternate-row: var(--color-300-10p);
-   --focus-color: var(--color-500);
-   --tooltip-bg: var(--gray-800-90p);
-
-   --danger: var(--invalid-500);
-   --danger-fg: var(--fg-invalid-500);
-
-   --positive-fg: var(--green-300);  // positive values
-   --negative-fg: var(--red-400);    // negative values
-
-   --income-gradient-1: var(--green-600);
-   --income-gradient-2: #ffffff;
-   --expense-gradient-1: var(--red-600);
-   --expense-gradient-2: #ffffff;
-
-   --cartesian-grid: var(--gray-700);
-   --graph-price: var(--gray-100);
-   --graph-roi: var(--green-300);
-   --graph-shares: var(--gray-300);
-   --graph-holding: var(--color-500);
-   --graph-nw: var(--color-600);
-   --graph-nw-border: var(--color-600);
-   --graph-mean-realized: var(--green-300);
-   --graph-mean-unrealized: var(--green-300-50p);
-   --graph-mean-expenses: var(--red-400);
-
-   --input-background: var(--gray-700);
-   --input-foreground: var(--gray-fg-700);
-   --input-border: var(--gray-900);
-   --input-primary-background: var(--color-500);
-   --input-primary-foreground: var(--fg-color-500);
-   --input-primary-border: var(--color-600);
-   --input-brightness-hover: 115%;
-   --input-error-background: var(--invalid-300);
-   --input-error-border: var(--invalid-100);
-   --input-error-foreground: var(--fg-invalid-300);
-
-   --neumorph-light: var(--gray-200-10p); // rgba(20,30,48,.99);
-   --neumorph-dark: rgba(1,1,10,.8); // var(--gray-900-60p); // rgba(#343a40,.95);
-   --neumorph-selected-dark: rgba(40,40,40,.2);
-   --neumorph-fg: var(--color-400); // foreground in selected roundbuttons
-
-   --expand-arrow-color: var(--gray-500);
-
-   --shadow-color: var(--gray-900-20p);
-
-   --tool-color: var(--fg-gray-900);
-   --tool-background: var(--gray-900);
-
-   --scrollbar-fg: var(--color-200);
-   --scrollbar-bg: var(--panel-background);
-   --scrollbar-border: none;
-
+   @include themed(1);
 }
 .lightpalette {
-   --fg-for-dark-colors: #f8f9fa;
-   --fg-for-light-colors: #212529;
-
-   --page-background: var(--gray-100);
-   --panel-background: #fbfbfb;
-   --panel-fg: var(--fg-gray-100);
-   --panel-fg-low-contrast: var(--gray-500);
-   --panel-title-fg: var(--color-700);
-   --background-summary-popup: rgba(0,0,0,0.9);
-   --summary-background: rgba(255,255,255,0.2);
-   --focus-color: var(--color-500);
-   --tooltip-bg: var(--gray-400-90p);
-   --table-color: #b1afaf;
-   --table-border: var(--shadow-color);
-   --table-hover-background: var(--color-200);
-   --table-hover-foreground: var(--fg-color-200);
-   --table-row-first-background: none;
-   --table-row-details-background: none;
-   --table-row-details-fg: var(--gray-500);
-   --table-alternate-row: var(--color-100-10p);
-
-   --income-gradient-1: var(--green-700);
-   --income-gradient-2: var(--green-400);
-   --expense-gradient-1: var(--red-700);
-   --expense-gradient-2: var(--red-400);
-
-   --danger: var(--invalid-500);
-   --danger-fg: var(--fg-invalid-500);
-
-   --positive-fg: var(--green-700);
-   --negative-fg: var(--red-700);
-
-   --input-background: white;
-   --input-foreground: var(--fg-for-light-colors);
-   --input-border: var(--gray-100);
-   --input-primary-background: var(--color-500);
-   --input-primary-foreground: var(--fg-color-500);
-   --input-primary-border: var(--color-600);
-   --input-brightness-hover: 85%;
-   --input-error-background: var(--invalid-100);
-   --input-error-border: var(--invalid-300);
-   --input-error-foreground: var(--fg-invalid-100);
-
-   --cartesian-grid: var(--gray-500);
-
-   --graph-price: var(--gray-500);
-   --graph-roi: var(--green-600);
-   --graph-shares: var(--gray-800);
-   --graph-holding: var(--color-200);
-   --graph-nw: var(--color-200);
-   --graph-nw-border: var(--color-200);
-   --graph-mean-realized: var(--green-400);
-   --graph-mean-unrealized: var(--green-400-50p);
-   --graph-mean-expenses: var(--red-500);
-
-   --neumorph-light: rgba(255,255,255,0.5);
-   --neumorph-dark: rgba(70,70,70,.12);
-   --neumorph-selected-dark: rgba(120,120,120,.12);
-   --neumorph-fg: var(--color-700);  // foreground in roundbuttons
-
-   --expand-arrow-color: var(--gray-700);
-
-   --shadow-color: var(--neumorph-dark);
-
-   --tool-color: var(--fg-gray-200);
-   --tool-background: var(--gray-200);
-
-   --scrollbar-fg: var(--color-200);
-   --scrollbar-bg: var(--panel-background);
-   --scrollbar-border: none;
+   @include themed(2);
 }
 
 body {

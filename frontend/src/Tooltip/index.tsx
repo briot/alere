@@ -236,6 +236,7 @@ export const TooltipProvider: React.FC<{}> = p => {
    }
 
    const c = classes(
+      'tooltip-base',
       'tooltip',
       data.on && tooltipRef.current ? 'visible' : 'hidden',
       pos.side,

@@ -1,8 +1,8 @@
 .panel {
    color: var(--panel-fg);
-   background: var(--panel-background);
+   background: var(--panel-bg);
    box-shadow: 6px 6px 10px 0 var(--shadow-color);
-   border: 1px solid var(--shadow-color);
+   border: 1px solid var(--panel-border);
 
    display: flex;
    flex-flow: column nowrap;

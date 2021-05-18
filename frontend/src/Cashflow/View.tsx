@@ -140,7 +140,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
    }) => (
       <Table.TR
          tooltip={r.tooltip}
-         style={{borderTop: r.border ? "1px solid var(--table-color)" : ""}}
+         style={{borderTop: r.border ? "1px solid var(--table-border)" : ""}}
       >
         {r.bold ? (
            <>
