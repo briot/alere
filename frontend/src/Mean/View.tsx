@@ -184,13 +184,12 @@ const CustomTooltip = (
       : null;
 }
 
-const getArea = (key: string, fill: string,
-   stroke: string, stackId: string,
+const getArea = (key: string, color: string, stackId: string,
 ) => (
    <Bar
       dataKey={key}
-      fill={fill}
-      stroke={stroke}
+      fill={color}
+      stroke={color}
       stackId={stackId}
       isAnimationActive={false}
    />
@@ -257,23 +256,20 @@ const Mean: React.FC<MeanProps> = p => {
                   />
                   { p.showIncome &&
                     getArea('value_realized',
-                            'var(--positive-fg)',
-                            'var(--positive-fg-border)',
+                            'var(--graph-mean-realized)',
                             'income') }
                   { p.showUnrealized &&
                     getArea('value_unrealized',
-                            'var(--positive-fg2)',
-                            'var(--positive-fg2-border)',
+                            'var(--graph-mean-unrealized)',
                             'income') }
                   { p.showExpenses &&
                     getArea('value_exp',
-                            'var(--negative-fg)',
-                            'var(--negative-fg-border)',
+                            'var(--graph-mean-expenses)',
                             'expenses') }
                   { p.showIncome && p.showMean &&
-                    getLine('average_income', 'var(--positive-fg-border)') }
+                    getLine('average_income', 'var(--graph-mean-realized)') }
                   { p.showExpenses && p.showMean &&
-                    getLine ('avg_exp', 'var(--negative-fg-border)') }
+                    getLine ('avg_exp', 'var(--graph-mean-expenses)') }
                </ComposedChart>
             )
          }

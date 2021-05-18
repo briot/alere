@@ -30,7 +30,7 @@ const useTransactions = (
          }
          return trans;
       },
- });
+   });
    return data as Transaction[];
 }
 

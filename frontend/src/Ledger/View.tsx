@@ -511,11 +511,17 @@ const computeFirstSplit = (
       case SplitMode.SUMMARY:
          if (t.splits.length < 3) {
             // Find the split for the account itself, to get balance
-            const splits =
-               accounts.accounts.length > 1
-               ? incomeExpenseSplits(t)[0]
-               : sa![0];
-            const s2 = {...splits};
+            s = {
+               ...(
+                  accounts.accounts.length > 1
+                  ? incomeExpenseSplits(t)[0]
+                  : sa![0]
+               ),
+               amount: s.amount,
+               shares: s.shares,
+               price: s.price,
+               payee: s.payee,
+            };
 
             // If we have a single account selected for the ledger, then we
             // display the target account in the first line.
@@ -528,28 +534,20 @@ const computeFirstSplit = (
             if (accounts.accounts.length === 1) {
                for (const s3 of t.splits) {
                   if (s3.account && !accounts.accounts.includes(s3.account)) {
-                     s2.account = s3.account;
-                     s2.accountId = s3.accountId;
+                     s.account = s3.account;
+                     s.accountId = s3.accountId;
                      break;
                   }
                }
             } else {
                for (const s3 of t.splits) {
                   if (s3.account && accounts.accounts.includes(s3.account)) {
-                     s2.account = s3.account;
-                     s2.accountId = s3.accountId;
+                     s.account = s3.account;
+                     s.accountId = s3.accountId;
                      break;
                   }
                }
             }
-
-            s = {
-               ...s2,
-               amount: s.amount,
-               shares: s.shares,
-               price: s.price,
-               payee: s.payee,
-            };
          }
          break;
    }

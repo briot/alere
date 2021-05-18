@@ -83,12 +83,8 @@
    --danger: var(--invalid-500);
    --danger-fg: var(--fg-invalid-500);
 
-   --positive-fg: var(--green-300);
-   --positive-fg-border: var(--green-300);
-   --positive-fg2: var(--green-300-80p);
-   --positive-fg2-border: var(--green-300-80p);
-   --negative-fg: var(--red-400);
-   --negative-fg-border: var(--red-300);
+   --positive-fg: var(--green-300);  // positive values
+   --negative-fg: var(--red-400);    // negative values
 
    --income-gradient-1: var(--green-600);
    --income-gradient-2: #ffffff;
@@ -98,10 +94,13 @@
    --cartesian-grid: var(--gray-700);
    --graph-price: var(--gray-100);
    --graph-roi: var(--green-300);
-   --graph-shares: var(--red-500);
-   --graph-holding: var(--teal-500);
+   --graph-shares: var(--gray-300);
+   --graph-holding: var(--color-500);
    --graph-nw: var(--color-600);
    --graph-nw-border: var(--color-600);
+   --graph-mean-realized: var(--green-300);
+   --graph-mean-unrealized: var(--green-300-50p);
+   --graph-mean-expenses: var(--red-400);
 
    --input-background: var(--gray-700);
    --input-foreground: var(--gray-fg-700);
@@ -119,7 +118,7 @@
    --neumorph-selected-dark: rgba(40,40,40,.2);
    --neumorph-fg: var(--color-400); // foreground in selected roundbuttons
 
-   --expand-arrow-color: var(--gray-700);
+   --expand-arrow-color: var(--gray-500);
 
    --shadow-color: var(--gray-900-20p);
 
@@ -161,12 +160,8 @@
    --danger: var(--invalid-500);
    --danger-fg: var(--fg-invalid-500);
 
-   --positive-fg: var(--green-400);
-   --positive-fg-border: var(--green-400);
-   --positive-fg2: var(--green-400-50p);
-   --positive-fg2-border: var(--green-400-50p);
-   --negative-fg: var(--invalid-500);
-   --negative-fg-border: var(--invalid-400);
+   --positive-fg: var(--green-700);
+   --negative-fg: var(--red-700);
 
    --input-background: white;
    --input-foreground: var(--fg-for-light-colors);
@@ -183,10 +178,13 @@
 
    --graph-price: var(--gray-500);
    --graph-roi: var(--green-600);
-   --graph-shares: var(--red-500);
-   --graph-holding: var(--teal-200);
+   --graph-shares: var(--gray-800);
+   --graph-holding: var(--color-200);
    --graph-nw: var(--color-200);
    --graph-nw-border: var(--color-200);
+   --graph-mean-realized: var(--green-400);
+   --graph-mean-unrealized: var(--green-400-50p);
+   --graph-mean-expenses: var(--red-500);
 
    --neumorph-light: rgba(255,255,255,0.5);
    --neumorph-dark: rgba(70,70,70,.12);
