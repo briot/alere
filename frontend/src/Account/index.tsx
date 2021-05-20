@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import useAccounts, { Account, AccountId } from 'services/useAccounts';
-import { AccountIdSet } from 'services/useAccountIds';
-import useAccountTree, { TreeMode, TreeNode } from 'services/useAccountTree';
-import { Checkbox, Select, Option } from 'Form';
-import ListWithColumns, { AlternateRows, Column } from 'List/ListWithColumns';
-import accounts_to_rows from 'List/ListAccounts';
-import List from 'List';
-import Tooltip from 'Tooltip';
+import useAccounts, { Account, AccountId } from '@/services/useAccounts';
+import { AccountIdSet } from '@/services/useAccountIds';
+import useAccountTree, { TreeMode, TreeNode } from '@/services/useAccountTree';
+import { Checkbox, Select, Option } from '@/Form';
+import ListWithColumns, { AlternateRows, Column } from '@/List/ListWithColumns';
+import accounts_to_rows from '@/List/ListAccounts';
+import List from '@/List';
+import Tooltip from '@/Tooltip';
 import "./Account.scss";
 
 interface SelectTreeNode {

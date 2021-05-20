@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { DateRange, rangeToHttp } from 'Dates';
+import { DateRange, rangeToHttp } from '@/Dates';
 import { ComposedChart, XAxis, YAxis, CartesianGrid, Bar, ReferenceLine,
          Line, Tooltip, TooltipProps } from 'recharts';
-import { CommodityId } from 'services/useAccounts';
-import Numeric from 'Numeric';
-import usePrefs from 'services/usePrefs';
+import { CommodityId } from '@/services/useAccounts';
+import Numeric from '@/Numeric';
+import usePrefs from '@/services/usePrefs';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import useFetch from 'services/useFetch';
+import useFetch from '@/services/useFetch';
 import './Mean.scss';
 
 interface Point {

@@ -1,10 +1,10 @@
 import * as React from 'react';
-import IncomeExpense, { IncomeExpenseProps } from 'IncomeExpense/View';
-import Settings from 'IncomeExpense/Settings';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
-import { rangeDisplay } from 'Dates';
-import { capitalize } from 'services/utils';
-import useAccounts from 'services/useAccounts';
+import IncomeExpense, { IncomeExpenseProps } from '@/IncomeExpense/View';
+import Settings from '@/IncomeExpense/Settings';
+import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import { rangeDisplay } from '@/Dates';
+import { capitalize } from '@/services/utils';
+import useAccounts from '@/services/useAccounts';
 
 export interface IncomeExpensePanelProps
    extends PanelBaseProps, IncomeExpenseProps {

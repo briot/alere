@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { PanelBaseProps, PANELS } from 'Dashboard/Panel';
-import { SetHeader } from 'Header';
-import useSettings from 'services/useSettings';
-import classes from 'services/classes';
+import { PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import { SetHeader } from '@/Header';
+import useSettings from '@/services/useSettings';
+import classes from '@/services/classes';
 import './Dashboard.scss';
 
 type Overrides = { [panel: string]: Partial<PanelBaseProps>};

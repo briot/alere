@@ -1,20 +1,20 @@
 import * as React from 'react';
 import { useHistory as useRouterHistory,
    useLocation, useParams } from 'react-router-dom';
-import useAccountIds from 'services/useAccountIds';
-import useHistory from 'services/useHistory';
-import useTransactions from 'services/useTransactions';
-import { toDates, DateRange } from 'Dates';
-import { SetHeader } from 'Header';
-import Dashboard from 'Dashboard';
-import { SplitMode, NotesMode } from 'Ledger/View';
-import { Account } from 'services/useAccounts';
-import { SelectAccount } from 'Account';
-import { LedgerPanelProps } from 'Ledger/Panel';
-import { PriceHistoryPanelProps } from 'PriceHistory/Panel';
-import { TickerPanelProps } from 'Ticker/Panel';
-import usePrefs from 'services/usePrefs';
-import useTickers from 'services/useTickers';
+import useAccountIds from '@/services/useAccountIds';
+import useHistory from '@/services/useHistory';
+import useTransactions from '@/services/useTransactions';
+import { toDates, DateRange } from '@/Dates';
+import { SetHeader } from '@/Header';
+import Dashboard from '@/Dashboard';
+import { SplitMode, NotesMode } from '@/Ledger/View';
+import { Account } from '@/services/useAccounts';
+import { SelectAccount } from '@/Account';
+import { LedgerPanelProps } from '@/Ledger/Panel';
+import { PriceHistoryPanelProps } from '@/PriceHistory/Panel';
+import { TickerPanelProps } from '@/Ticker/Panel';
+import usePrefs from '@/services/usePrefs';
+import useTickers from '@/services/useTickers';
 
 const defaultPanels = [
    {

@@ -1,10 +1,10 @@
 import * as React from 'react';
-import NetworthHistory, { NetworthHistoryProps } from 'NWHistory/View';
+import NetworthHistory, { NetworthHistoryProps } from '@/NWHistory/View';
 import Settings from './Settings';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
-import { rangeDisplay } from 'Dates';
-import { capitalize } from 'services/utils';
-import useAccounts from 'services/useAccounts';
+import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import { rangeDisplay } from '@/Dates';
+import { capitalize } from '@/services/utils';
+import useAccounts from '@/services/useAccounts';
 
 export interface NetworthHistoryPanelProps
 extends PanelBaseProps, NetworthHistoryProps {

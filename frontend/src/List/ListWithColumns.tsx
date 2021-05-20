@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { FixedSizeList } from 'react-window';
 import { ListChildComponentProps } from 'react-window';
-import classes from 'services/classes';
-import Table from 'List';
+import classes from '@/services/classes';
+import Table from '@/List';
 
 const INDENT_LEVEL = 16;  // should match CSS --exp-padding-level
 

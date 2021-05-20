@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import classes from 'services/classes';
-import { clamp, isFunc } from 'services/utils';
+import classes from '@/services/classes';
+import { clamp, isFunc } from '@/services/utils';
 import './Tooltip.scss';
 
 type TooltipFunc<T> = (d: T) => React.ReactNode;

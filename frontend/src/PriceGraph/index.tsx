@@ -3,11 +3,11 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import { ComposedChart, XAxis, YAxis, Area, Tooltip, Line, Legend,
          ReferenceArea,
          ReferenceLine, TooltipProps } from 'recharts';
-import { CommodityId } from 'services/useAccounts';
-import { dateForm, isNumeric } from 'services/utils';
-import RoundButton from 'RoundButton';
-import Numeric from 'Numeric';
-import usePrefs from 'services/usePrefs';
+import { CommodityId } from '@/services/useAccounts';
+import { dateForm, isNumeric } from '@/services/utils';
+import RoundButton from '@/RoundButton';
+import Numeric from '@/Numeric';
+import usePrefs from '@/services/usePrefs';
 import './PriceGraph.scss';
 
 const priceForm = (v: number) => v.toFixed(2);

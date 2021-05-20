@@ -1,6 +1,6 @@
 import React from 'react';
-import classes from 'services/classes';
-import useAccounts, { Commodity, CommodityId } from 'services/useAccounts';
+import classes from '@/services/classes';
+import useAccounts, { Commodity, CommodityId } from '@/services/useAccounts';
 import './Numeric.scss';
 
 const DECIMAL_SEP = ','

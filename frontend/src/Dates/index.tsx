@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { divider, Option, Select } from 'Form';
-import RoundButton from 'RoundButton';
-import { mod } from 'services/utils';
+import { divider, Option, Select } from '@/Form';
+import RoundButton from '@/RoundButton';
+import { mod } from '@/services/utils';
 import './Dates.scss';
 
 /**
@@ -33,8 +33,8 @@ const startOfMonth = (months: number) => {
  * same day, last month. When the day doesn't exist, move to the last valid
  * day in that month.
  */
-export const addMonth = (months: number) => {
-   const d = new Date();
+export const addMonth = (months: number, d?: Date) => {
+   d = d ?? new Date();
    const m = d.getMonth() + months;
    d.setMonth(m);
    if (d.getMonth() !== mod(m, 12)) {

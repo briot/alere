@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { PerformancePanelProps } from 'Performance/Panel';
-import { SetHeader } from 'Header';
-import Dashboard from 'Dashboard';
+import { PerformancePanelProps } from '@/Performance/Panel';
+import { SetHeader } from '@/Header';
+import Dashboard from '@/Dashboard';
 
 
 const defaultPanels = [

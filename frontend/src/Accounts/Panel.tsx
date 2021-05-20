@@ -1,6 +1,6 @@
 import * as React from 'react';
-import Accounts, { AccountsProps } from 'Accounts/View';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
+import Accounts, { AccountsProps } from '@/Accounts/View';
+import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
 
 export interface AccountsPanelProps extends PanelBaseProps, AccountsProps {
    type: 'accounts';

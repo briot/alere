@@ -1,8 +1,8 @@
 import * as React from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
-import Dropdown from 'Form/Dropdown';
-import classes from 'services/classes';
+import Dropdown from '@/Form/Dropdown';
+import classes from '@/services/classes';
 import "./Form.scss";
 
 interface SharedInputProps {

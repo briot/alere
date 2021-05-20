@@ -1,6 +1,6 @@
-import React from 'react';
+import * as React from 'react';
 import Recent, { RecentProps } from './View';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
+import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
 
 export interface RecentPanelProps extends PanelBaseProps, RecentProps {
    type: 'recent';

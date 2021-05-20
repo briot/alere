@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { Button, Checkbox, Input, Select } from 'Form';
-import RoundButton from 'RoundButton';
+import { Button, Checkbox, Input, Select } from '@/Form';
+import RoundButton from '@/RoundButton';
 import './StyleGuide.scss';
 
 const StyleContent: React.FC<{}> = p => {

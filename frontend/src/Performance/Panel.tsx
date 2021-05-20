@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { rangeDisplay } from 'Dates';
-import Performance, { PerformanceProps } from 'Performance/View';
-import Settings from 'Performance/Settings';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
+import { rangeDisplay } from '@/Dates';
+import Performance, { PerformanceProps } from '@/Performance/View';
+import Settings from '@/Performance/Settings';
+import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
 
 export interface PerformancePanelProps extends PanelBaseProps, PerformanceProps {
    type: 'performance';

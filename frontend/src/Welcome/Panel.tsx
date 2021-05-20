@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Welcome, { WelcomeProps } from './View';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
-import useAccounts from 'services/useAccounts';
+import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import useAccounts from '@/services/useAccounts';
 
 export interface WelcomePanelProps extends PanelBaseProps, WelcomeProps {
    type: 'welcome';

@@ -1,4 +1,4 @@
-import { Account, AccountId, CommodityId } from 'services/useAccounts';
+import { Account, AccountId, CommodityId } from '@/services/useAccounts';
 
 export type TransactionId = string;
 

@@ -1,6 +1,4 @@
-import React from 'react';
-import { render } from '@testing-library/react';
-import { mod } from 'services/utils';
+import { mod } from '@/services/utils';
 
 test('modulo', () => {
    expect(mod(10, 12)).toBe(10);

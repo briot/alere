@@ -1,9 +1,9 @@
 import * as React from 'react';
-import AccountName from 'Account';
-import useAccounts, { Account, AccountId } from 'services/useAccounts';
-import accounts_to_rows from 'List/ListAccounts';
-import { TreeMode } from 'services/useAccountTree';
-import ListWithColumns, { Column, LogicalRow } from 'List/ListWithColumns';
+import AccountName from '@/Account';
+import useAccounts, { Account, AccountId } from '@/services/useAccounts';
+import accounts_to_rows from '@/List/ListAccounts';
+import { TreeMode } from '@/services/useAccountTree';
+import ListWithColumns, { Column, LogicalRow } from '@/List/ListWithColumns';
 
 
 /**

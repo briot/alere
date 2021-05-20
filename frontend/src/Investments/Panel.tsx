@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { rangeDisplay } from 'Dates';
-import Investments, { InvestmentsProps } from 'Investments/View';
-import Settings from 'Investments/Settings';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
+import { rangeDisplay } from '@/Dates';
+import Investments, { InvestmentsProps } from '@/Investments/View';
+import Settings from '@/Investments/Settings';
+import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
 
 export interface InvestmentsPanelProps extends PanelBaseProps, InvestmentsProps {
    type: 'investments';

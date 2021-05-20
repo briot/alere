@@ -1,7 +1,7 @@
 import React from 'react';
-import Settings from 'Settings';
-import OnlineUpdate from 'Header/OnlineUpdate';
-import Tooltip from 'Tooltip';
+import Settings from '@/Settings';
+import OnlineUpdate from '@/Header/OnlineUpdate';
+import Tooltip from '@/Tooltip';
 import './Header.scss';
 
 export interface HeaderProps {

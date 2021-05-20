@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { CommodityId } from 'services/useAccounts';
+import { CommodityId } from '@/services/useAccounts';
 
 export interface Preferences {
    dark_mode: boolean;

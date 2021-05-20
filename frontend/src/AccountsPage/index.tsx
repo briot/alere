@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { SetHeader } from 'Header';
-import Dashboard from 'Dashboard';
-import { AccountsPanelProps } from 'Accounts/Panel';
+import { SetHeader } from '@/Header';
+import Dashboard from '@/Dashboard';
+import { AccountsPanelProps } from '@/Accounts/Panel';
 
 const defaultPanels = [
    {

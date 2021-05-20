@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { DateRange, rangeToHttp } from 'Dates';
+import { DateRange, rangeToHttp } from '@/Dates';
 import { ComposedChart, XAxis, YAxis, CartesianGrid, Bar,
          Tooltip, TooltipProps } from 'recharts';
-import { CommodityId } from 'services/useAccounts';
-import Numeric from 'Numeric';
-import usePrefs from 'services/usePrefs';
-import useFetch from 'services/useFetch';
+import { CommodityId } from '@/services/useAccounts';
+import Numeric from '@/Numeric';
+import usePrefs from '@/services/usePrefs';
+import useFetch from '@/services/useFetch';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import './NetworthHistory.scss';
 

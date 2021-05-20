@@ -1,13 +1,13 @@
 import * as React from 'react';
-import { SplitMode, NotesMode } from 'Ledger/View';
-import { LedgerPanelProps } from 'Ledger/Panel';
-import { Checkbox, Select } from 'Form';
-import { DateRange, DateRangePicker } from 'Dates';
-import { Account } from 'services/useAccounts';
-import { AccountIdSet } from 'services/useAccountIds';
-import { SelectMultiAccount } from 'Account';
-import useAccountIds from 'services/useAccountIds';
-import { PanelProps } from 'Dashboard/Panel';
+import { SplitMode, NotesMode } from '@/Ledger/View';
+import { LedgerPanelProps } from '@/Ledger/Panel';
+import { Checkbox, Select } from '@/Form';
+import { DateRange, DateRangePicker } from '@/Dates';
+import { Account } from '@/services/useAccounts';
+import { AccountIdSet } from '@/services/useAccountIds';
+import { SelectMultiAccount } from '@/Account';
+import useAccountIds from '@/services/useAccountIds';
+import { PanelProps } from '@/Dashboard/Panel';
 
 const Settings: React.FC<PanelProps<LedgerPanelProps>> = p => {
    const { accounts: allAccounts } = useAccountIds(p.props.accountIds);

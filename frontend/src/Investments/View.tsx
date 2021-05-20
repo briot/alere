@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { toDates, DateRange } from 'Dates';
-import usePrefs from '../services/usePrefs';
-import { TickerPanelProps } from 'Ticker/Panel';
-import { DashboardFromPanels } from 'Dashboard';
-import useTickers from 'services/useTickers';
+import { toDates, DateRange } from '@/Dates';
+import usePrefs from '@/services/usePrefs';
+import { TickerPanelProps } from '@/Ticker/Panel';
+import { DashboardFromPanels } from '@/Dashboard';
+import useTickers from '@/services/useTickers';
 import './Investments.scss';
 
 /**

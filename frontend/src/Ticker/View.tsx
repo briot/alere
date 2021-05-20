@@ -1,13 +1,13 @@
 import * as React from 'react';
-import usePrefs from 'services/usePrefs';
-import { AccountForTicker, RowData, Ticker } from 'Ticker/types';
-import { computeTicker } from 'Ticker/Compute';
-import Perfs from 'Ticker/Perf';
-import PriceGraph from 'PriceGraph';
+import usePrefs from '@/services/usePrefs';
+import { AccountForTicker, RowData, Ticker } from '@/Ticker/types';
+import { computeTicker } from '@/Ticker/Compute';
+import Perfs from '@/Ticker/Perf';
+import PriceGraph from '@/PriceGraph';
 import { ColumnType, columnEquity, columnTotalReturn,
    columnAnnualizedReturn, columnShares, columnAverageCost, columnPeriodReturn,
-   columnWeighedAverage, columnPL, columnInvested } from 'Ticker/Data';
-import Tooltip from 'Tooltip';
+   columnWeighedAverage, columnPL, columnInvested } from '@/Ticker/Data';
+import Tooltip from '@/Tooltip';
 import './Ticker.scss';
 
 const rowTooltip = (c: ColumnType) => {

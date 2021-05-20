@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { DateRangePicker, DateRange } from 'Dates';
-import { IncomeExpensePanelProps } from 'IncomeExpense/Panel';
-import { Checkbox } from 'Form';
-import { PanelProps } from 'Dashboard/Panel';
+import { DateRangePicker, DateRange } from '@/Dates';
+import { IncomeExpensePanelProps } from '@/IncomeExpense/Panel';
+import { Checkbox } from '@/Form';
+import { PanelProps } from '@/Dashboard/Panel';
 
 const Settings: React.FC<PanelProps<IncomeExpensePanelProps>> = p => {
    const changeExp   = (expenses: boolean) => p.save({ expenses });

@@ -1,7 +1,7 @@
-import { LogicalRow } from 'List/ListWithColumns';
+import { LogicalRow } from './ListWithColumns';
 import { computeTree, DataWithAccount,
-   TreeNode, TreeMode } from 'services/useAccountTree';
-import { Account, AccountList } from 'services/useAccounts';
+   TreeNode, TreeMode } from '@/services/useAccountTree';
+import { Account, AccountList } from '@/services/useAccounts';
 
 
 /**

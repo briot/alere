@@ -1,5 +1,5 @@
 import { useMutation } from 'react-query';
-import useCsrf from 'services/useCsrf';
+import useCsrf from '@/services/useCsrf';
 
 interface PostProps<RESULT, VARS> {
    url: string;

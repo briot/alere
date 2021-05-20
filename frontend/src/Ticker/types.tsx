@@ -1,5 +1,5 @@
-import { Account, CommodityId } from 'services/useAccounts';
-import { ClosePrice } from 'PriceGraph';
+import { Account, CommodityId } from '@/services/useAccounts';
+import { ClosePrice } from '@/PriceGraph';
 
 //  When do we consider a number of shares to be zero (for rounding errors)
 export const THRESHOLD = 0.00000001;

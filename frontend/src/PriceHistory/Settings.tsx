@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { Checkbox } from 'Form';
-import { PanelProps } from 'Dashboard/Panel';
-import { PriceHistoryPanelProps } from 'PriceHistory/Panel';
+import { Checkbox } from '@/Form';
+import { PanelProps } from '@/Dashboard/Panel';
+import { PriceHistoryPanelProps } from '@/PriceHistory/Panel';
 
 const Settings: React.FC<PanelProps<PriceHistoryPanelProps>> = p => {
    const changeShares = (show: boolean) => p.save({ showShares: show });

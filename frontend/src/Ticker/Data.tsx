@@ -1,9 +1,9 @@
-import { RowData } from 'Ticker/types';
-import { pastValue } from 'Ticker/Past';
-import { dateForm } from 'services/utils';
-import { DateDisplay } from 'Dates';
-import { LogicalRow } from 'List/ListWithColumns';
-import Numeric from 'Numeric';
+import { RowData } from '@/Ticker/types';
+import { pastValue } from '@/Ticker/Past';
+import { dateForm } from '@/services/utils';
+import { DateDisplay } from '@/Dates';
+import { LogicalRow } from '@/List/ListWithColumns';
+import Numeric from '@/Numeric';
 
 /**
  * Overall metrics for the whole table. Those are recomputed when the data

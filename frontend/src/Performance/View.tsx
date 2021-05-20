@@ -1,17 +1,17 @@
 import * as React from 'react';
-import { toDates, DateRange } from 'Dates';
-import usePrefs from '../services/usePrefs';
-import { computeTicker } from 'Ticker/Compute';
-import { RowData } from 'Ticker/types';
-import AccountName from 'Account';
-import ListWithColumns, { Column, LogicalRow } from 'List/ListWithColumns';
+import { toDates, DateRange } from '@/Dates';
+import usePrefs from '@/services/usePrefs';
+import { computeTicker } from '@/Ticker/Compute';
+import { RowData } from '@/Ticker/types';
+import AccountName from '@/Account';
+import ListWithColumns, { Column, LogicalRow } from '@/List/ListWithColumns';
 import { ColumnType, columnEquity, columnTotalReturn, columnAnnualizedReturn,
    columnPL, columnWeighedAverage, columnPeriodPL, columnGains,
    columnAverageCost, columnPeriodReturn, columnLatest,
    columnShares, columnInvested,
-   Aggregated, aggregate} from 'Ticker/Data';
-import useTickers from 'services/useTickers';
-import usePriceSources from 'services/usePriceSources';
+   Aggregated, aggregate} from '@/Ticker/Data';
+import useTickers from '@/services/useTickers';
+import usePriceSources from '@/services/usePriceSources';
 
 /**
  * Show all the user's investments

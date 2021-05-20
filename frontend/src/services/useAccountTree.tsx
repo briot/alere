@@ -1,6 +1,6 @@
 import * as React from 'react';
 import useAccounts, {
-   Account, AccountId, AccountList, cmpAccounts } from 'services/useAccounts';
+   Account, AccountId, AccountList, cmpAccounts } from '@/services/useAccounts';
 
 export interface DataWithAccount {
    account: Account|undefined;

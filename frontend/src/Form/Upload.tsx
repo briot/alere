@@ -1,6 +1,6 @@
 import * as React from "react";
-import Spinner from 'Spinner';
-import { Button } from 'Form';
+import Spinner from '@/Spinner';
+import { Button } from '@/Form';
 import "./Upload.scss";
 
 export interface UploadResult {

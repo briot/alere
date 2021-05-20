@@ -1,5 +1,5 @@
 import * as React from 'react';
-import useAccounts, { Account, AccountId } from 'services/useAccounts';
+import useAccounts, { Account, AccountId } from '@/services/useAccounts';
 
 /**
  * A user selects accounts for a panel either from an explicit list of

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import classes from 'services/classes';
+import classes from '@/services/classes';
 import './Dropdown.scss';
 
 interface DropdownProps {

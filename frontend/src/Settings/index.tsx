@@ -1,9 +1,9 @@
 import * as React from 'react';
-import usePrefs from 'services/usePrefs';
-import RoundButton from 'RoundButton';
-import Dropdown from '../Form/Dropdown';
-import { Checkbox, Select } from 'Form';
-import useAccounts, { CommodityId } from 'services/useAccounts';
+import usePrefs from '@/services/usePrefs';
+import RoundButton from '@/RoundButton';
+import Dropdown from '@/Form/Dropdown';
+import { Checkbox, Select } from '@/Form';
+import useAccounts, { CommodityId } from '@/services/useAccounts';
 
 interface SettingsProps {
 }

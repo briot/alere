@@ -1,6 +1,6 @@
 import React from 'react';
-import RoundButton from 'RoundButton';
-import usePost from 'services/usePost';
+import RoundButton from '@/RoundButton';
+import usePost from '@/services/usePost';
 import { useQueryClient } from 'react-query';
 
 

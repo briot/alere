@@ -1,10 +1,10 @@
 import * as React from 'react';
-import Mean, { MeanProps } from 'Mean/View';
-import Settings from 'Mean/Settings';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
-import { rangeDisplay } from 'Dates';
-import { capitalize } from 'services/utils';
-import useAccounts from 'services/useAccounts';
+import Mean, { MeanProps } from '@/Mean/View';
+import Settings from '@/Mean/Settings';
+import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import { rangeDisplay } from '@/Dates';
+import { capitalize } from '@/services/utils';
+import useAccounts from '@/services/useAccounts';
 
 export interface MeanPanelProps extends PanelBaseProps, MeanProps {
    type: 'mean';

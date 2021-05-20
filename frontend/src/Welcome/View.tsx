@@ -1,6 +1,6 @@
 import * as React from 'react';
-import Upload from 'Form/Upload';
-import usePost from 'services/usePost';
+import Upload from '@/Form/Upload';
+import usePost from '@/services/usePost';
 import { useQueryClient } from 'react-query';
 import './Welcome.scss';
 

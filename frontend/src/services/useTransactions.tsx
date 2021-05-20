@@ -1,7 +1,7 @@
-import useAccounts, { Account } from 'services/useAccounts';
-import { DateRange, rangeToHttp } from 'Dates';
-import { Transaction, incomeExpenseSplits } from 'Transaction';
-import useFetch from 'services/useFetch';
+import useAccounts, { Account } from '@/services/useAccounts';
+import { DateRange, rangeToHttp } from '@/Dates';
+import { Transaction, incomeExpenseSplits } from '@/Transaction';
+import useFetch from '@/services/useFetch';
 
 /**
  * Fetch a ledger from the server

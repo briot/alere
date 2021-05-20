@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { THRESHOLD, Ticker } from 'Ticker/types';
-import { ClosePrice } from 'PriceGraph';
-import { DateRange, rangeToHttp } from 'Dates';
-import useAccounts, { AccountId, CommodityId } from 'services/useAccounts';
-import useAccountIds, { AccountIdSet } from 'services/useAccountIds';
-import useFetch from 'services/useFetch';
+import { THRESHOLD, Ticker } from '@/Ticker/types';
+import { ClosePrice } from '@/PriceGraph';
+import { DateRange, rangeToHttp } from '@/Dates';
+import useAccounts, { AccountId, CommodityId } from '@/services/useAccounts';
+import useAccountIds, { AccountIdSet } from '@/services/useAccountIds';
+import useFetch from '@/services/useFetch';
 
 interface PositionJSON {
    avg_cost: number | null;  // null for NaN

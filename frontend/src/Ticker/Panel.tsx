@@ -1,14 +1,14 @@
 import * as React from 'react';
-import AccountName from 'Account';
-import { DateRange } from 'Dates';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
+import AccountName from '@/Account';
+import { DateRange } from '@/Dates';
+import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
 import TickerView, { TickerViewProps } from './View';
-import { AccountForTicker, Ticker } from 'Ticker/types';
-import { CommodityId } from 'services/useAccounts';
-import { AccountIdSet } from 'services/useAccountIds';
-import useTickers from 'services/useTickers';
-import usePrefs from 'services/usePrefs';
-import { isNumeric } from 'services/utils';
+import { AccountForTicker, Ticker } from '@/Ticker/types';
+import { CommodityId } from '@/services/useAccounts';
+import { AccountIdSet } from '@/services/useAccountIds';
+import useTickers from '@/services/useTickers';
+import usePrefs from '@/services/usePrefs';
+import { isNumeric } from '@/services/utils';
 
 export interface TickerPanelProps extends PanelBaseProps, TickerViewProps {
    type: 'ticker';

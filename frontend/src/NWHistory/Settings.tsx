@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { DateRange, DateRangePicker } from 'Dates';
-import { NumberInput } from 'Form';
-import { PanelProps } from 'Dashboard/Panel';
-import { NetworthHistoryPanelProps } from 'NWHistory/Panel';
+import { DateRange, DateRangePicker } from '@/Dates';
+import { NumberInput } from '@/Form';
+import { PanelProps } from '@/Dashboard/Panel';
+import { NetworthHistoryPanelProps } from '@/NWHistory/Panel';
 
 const Settings: React.FC<PanelProps<NetworthHistoryPanelProps>> = p => {
    const changeRange = (range: DateRange) => p.save({ range });

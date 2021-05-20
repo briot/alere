@@ -2,8 +2,8 @@ import * as React from 'react';
 import { VariableSizeList, FixedSizeList,
          ListChildComponentProps } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import classes from 'services/classes';
-import Tooltip, { TooltipProps } from 'Tooltip';
+import classes from '@/services/classes';
+import Tooltip, { TooltipProps } from '@/Tooltip';
 import './List.scss';
 
 const ROW_HEIGHT = 25;  // pixels

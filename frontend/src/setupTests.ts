@@ -3,6 +3,11 @@
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom/extend-expect';
+// import { queryCache } from "react-query";
+// import fetch from "jest-fetch-mock";
+// import "@testing-library/jest-dom"
+
+//  require("jest-fetch-mock").enableMocks();
 
 
 /**
@@ -14,3 +19,10 @@ class ResizeObserver {
     disconnect() {} // do nothing
 }
 window.ResizeObserver = ResizeObserver;
+
+
+beforeEach(() => {
+  jest.clearAllMocks()
+  //  fetch.resetMocks()
+  // queryCache.clear()
+})

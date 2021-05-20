@@ -1,7 +1,7 @@
 import * as React from 'react';
-import Settings from 'PriceHistory/Settings';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
-import PriceGraph, { PriceGraphProps } from 'PriceGraph';
+import Settings from '@/PriceHistory/Settings';
+import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import PriceGraph, { PriceGraphProps } from '@/PriceGraph';
 
 export interface PriceHistoryPanelProps extends PanelBaseProps, PriceGraphProps {
    type: 'pricehistory';

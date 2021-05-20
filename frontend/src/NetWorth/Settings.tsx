@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { NetworthPanelProps } from 'NetWorth/Panel';
-import { Checkbox, NumberInput, Select } from 'Form';
-import { RelativeDate, MultiDatePicker } from 'Dates';
-import { TreeMode } from 'services/useAccountTree';
-import { PanelProps } from 'Dashboard/Panel';
+import { NetworthPanelProps } from '@/NetWorth/Panel';
+import { Checkbox, NumberInput, Select } from '@/Form';
+import { RelativeDate, MultiDatePicker } from '@/Dates';
+import { TreeMode } from '@/services/useAccountTree';
+import { PanelProps } from '@/Dashboard/Panel';
 
 const Settings: React.FC<PanelProps<NetworthPanelProps>> = p => {
    const changeValue = (showValue: boolean) => p.save({ showValue });

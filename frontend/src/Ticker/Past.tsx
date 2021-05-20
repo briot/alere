@@ -1,8 +1,8 @@
 import * as d3Array from 'd3-array';
-import { CommodityId } from 'services/useAccounts';
-import { AccountForTicker, Ticker } from 'Ticker/types';
-import { ClosePrice } from 'PriceGraph';
-import { humanDateInterval } from 'services/utils';
+import { CommodityId } from '@/services/useAccounts';
+import { AccountForTicker, Ticker } from '@/Ticker/types';
+import { ClosePrice } from '@/PriceGraph';
+import { humanDateInterval } from '@/services/utils';
 
 const bisect = d3Array.bisector((d: ClosePrice) => d.t).right;
 

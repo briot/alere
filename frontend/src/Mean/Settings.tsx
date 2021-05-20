@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { DateRange, DateRangePicker } from 'Dates';
-import { Checkbox, NumberInput } from 'Form';
-import { PanelProps } from 'Dashboard/Panel';
-import { MeanPanelProps } from 'Mean/Panel';
+import { DateRange, DateRangePicker } from '@/Dates';
+import { Checkbox, NumberInput } from '@/Form';
+import { PanelProps } from '@/Dashboard/Panel';
+import { MeanPanelProps } from '@/Mean/Panel';
 
 const Settings: React.FC<PanelProps<MeanPanelProps>> = p => {
    const changeRange = (range: DateRange) => p.save({ range });

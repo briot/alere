@@ -1,15 +1,15 @@
 import * as React from 'react';
-import { RelativeDate, dateToString } from 'Dates';
-import Numeric from 'Numeric';
-import AccountName from 'Account';
-import { BalanceList } from 'services/useBalance';
-import usePrefs from 'services/usePrefs';
-import useAccounts, { Account, AccountId } from 'services/useAccounts';
-import { TreeMode } from 'services/useAccountTree';
-import accountsToRows from 'List/ListAccounts';
-import useBalance, { Balance } from 'services/useBalance';
+import { RelativeDate, dateToString } from '@/Dates';
+import Numeric from '@/Numeric';
+import AccountName from '@/Account';
+import { BalanceList } from '@/services/useBalance';
+import usePrefs from '@/services/usePrefs';
+import useAccounts, { Account, AccountId } from '@/services/useAccounts';
+import { TreeMode } from '@/services/useAccountTree';
+import accountsToRows from '@/List/ListAccounts';
+import useBalance, { Balance } from '@/services/useBalance';
 import ListWithColumns, {
-   AlternateRows, Column, LogicalRow, RowDetails } from 'List/ListWithColumns';
+   AlternateRows, Column, LogicalRow, RowDetails } from '@/List/ListWithColumns';
 import "./NetWorth.scss";
 
 export interface NetworthProps {

@@ -1,8 +1,8 @@
-import { AccountForTicker, Ticker } from 'Ticker/types';
-import { pastValue, PastValue } from 'Ticker/Past';
-import Numeric from 'Numeric';
-import { DateDisplay } from 'Dates';
-import { DAY_MS } from 'services/utils';
+import { AccountForTicker, Ticker } from '@/Ticker/types';
+import { pastValue, PastValue } from '@/Ticker/Past';
+import Numeric from '@/Numeric';
+import { DateDisplay } from '@/Dates';
+import { DAY_MS } from '@/services/utils';
 
 const PastHeader: React.FC<PastValue> = p => <th>{p.header}</th>;
 

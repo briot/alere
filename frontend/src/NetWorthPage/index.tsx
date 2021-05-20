@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { SetHeader } from 'Header';
-import Dashboard from 'Dashboard';
-import { NetworthPanelProps } from 'NetWorth/Panel';
-import { TreeMode } from 'services/useAccountTree';
+import { SetHeader } from '@/Header';
+import Dashboard from '@/Dashboard';
+import { NetworthPanelProps } from '@/NetWorth/Panel';
+import { TreeMode } from '@/services/useAccountTree';
 
 const defaultPanels = [
    {

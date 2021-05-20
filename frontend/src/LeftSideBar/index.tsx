@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { useLocation } from "react-router-dom";
-import useAccounts from 'services/useAccounts';
-import useHistory from 'services/useHistory';
-import RoundButton from 'RoundButton';
+import useAccounts from '@/services/useAccounts';
+import useHistory from '@/services/useHistory';
+import RoundButton from '@/RoundButton';
 import './LeftSideBar.scss';
 
 interface LeftSideBarProps {

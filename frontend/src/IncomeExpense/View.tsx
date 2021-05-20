@@ -2,13 +2,13 @@ import * as React from 'react';
 import * as d3Scale from 'd3-scale';
 import { Legend, PieChart, PieLabelRenderProps,
          Pie, Cell, Tooltip, TooltipProps } from 'recharts';
-import { DateRange, rangeToHttp } from 'Dates';
+import { DateRange, rangeToHttp } from '@/Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import Numeric from 'Numeric';
-import AccountName from 'Account';
-import useAccounts, { AccountId, Account } from 'services/useAccounts';
-import usePrefs from 'services/usePrefs';
-import useFetch from 'services/useFetch';
+import Numeric from '@/Numeric';
+import AccountName from '@/Account';
+import useAccounts, { AccountId, Account } from '@/services/useAccounts';
+import usePrefs from '@/services/usePrefs';
+import useFetch from '@/services/useFetch';
 import './IncomeExpense.scss';
 
 const NAME_KEY = "nam";

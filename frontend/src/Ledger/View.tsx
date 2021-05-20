@@ -1,18 +1,18 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { DateRange, dateToString } from 'Dates';
-import AccountName from 'Account';
-import Table from 'List';
+import { DateRange, dateToString } from '@/Dates';
+import AccountName from '@/Account';
+import Table from '@/List';
 import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
          incomeExpenseSplits, sharesForAccounts, priceForAccounts,
-         Split, Transaction } from 'Transaction';
-import Numeric from 'Numeric';
+         Split, Transaction } from '@/Transaction';
+import Numeric from '@/Numeric';
 import ListWithColumns, {
-   AlternateRows, Column, LogicalRow } from 'List/ListWithColumns';
-import { Account, AccountId, CommodityId } from 'services/useAccounts';
+   AlternateRows, Column, LogicalRow } from '@/List/ListWithColumns';
+import { Account, AccountId, CommodityId } from '@/services/useAccounts';
 import useAccountIds, {
-   AccountIdSet, AccountList } from 'services/useAccountIds';
-import { Preferences } from 'services/usePrefs';
+   AccountIdSet, AccountList } from '@/services/useAccountIds';
+import { Preferences } from '@/services/usePrefs';
 import './Ledger.scss';
 
 const SPLIT = '--split--';

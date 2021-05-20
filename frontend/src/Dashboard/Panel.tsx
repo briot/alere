@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { Select } from 'Form';
-import RoundButton from 'RoundButton';
-import Dropdown from 'Form/Dropdown';
-import { HeaderProps } from 'Header';
-import classes from 'services/classes';
-import Tooltip from 'Tooltip';
+import { Select } from '@/Form';
+import RoundButton from '@/RoundButton';
+import Dropdown from '@/Form/Dropdown';
+import { HeaderProps } from '@/Header';
+import classes from '@/services/classes';
+import Tooltip from '@/Tooltip';
 import './Panel.scss';
 
 /**

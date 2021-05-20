@@ -1,5 +1,5 @@
-import { AccountId, CommodityId } from 'services/useAccounts';
-import useFetch from 'services/useFetch';
+import { AccountId, CommodityId } from '@/services/useAccounts';
+import useFetch from '@/services/useFetch';
 
 interface Price {
    date: string;

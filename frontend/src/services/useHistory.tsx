@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { AccountId } from 'services/useAccounts';
+import { AccountId } from '@/services/useAccounts';
 
 interface HistoryLine {
    accountId: AccountId;

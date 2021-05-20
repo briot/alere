@@ -1,5 +1,5 @@
-import { AccountForTicker, Ticker } from 'Ticker/types';
-import { Preferences } from 'services/usePrefs';
+import { AccountForTicker, Ticker } from '@/Ticker/types';
+import { Preferences } from '@/services/usePrefs';
 
 /**
  * Compute various performance indicators for a security

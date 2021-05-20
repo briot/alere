@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { DateRangePicker, DateRange } from 'Dates';
-import { CashflowPanelProps } from 'Cashflow/Panel';
-import { PanelProps } from 'Dashboard/Panel';
-import { Checkbox } from 'Form';
+import { DateRangePicker, DateRange } from '@/Dates';
+import { CashflowPanelProps } from '@/Cashflow/Panel';
+import { PanelProps } from '@/Dashboard/Panel';
+import { Checkbox } from '@/Form';
 
 const Settings: React.FC<PanelProps<CashflowPanelProps>> = p => {
    const changeRange = (range: DateRange) => p.save({ range });

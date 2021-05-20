@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { DateRange, monthCount, rangeToHttp } from 'Dates';
-import { Commodity, CommodityId } from 'services/useAccounts';
+import { DateRange, monthCount, rangeToHttp } from '@/Dates';
+import { Commodity, CommodityId } from '@/services/useAccounts';
 import { Link } from 'react-router-dom';
-import Numeric from 'Numeric';
-import Table from 'List';
-import Tooltip, { TooltipProps } from 'Tooltip';
-import usePrefs from 'services/usePrefs';
-import useFetch from 'services/useFetch';
+import Numeric from '@/Numeric';
+import Table from '@/List';
+import Tooltip, { TooltipProps } from '@/Tooltip';
+import usePrefs from '@/services/usePrefs';
+import useFetch from '@/services/useFetch';
 import './Cashflow.scss';
 
 const commMonths: Commodity = {

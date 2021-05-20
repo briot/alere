@@ -1,5 +1,5 @@
 import * as React from 'react';
-import useFetch from 'services/useFetch';
+import useFetch from '@/services/useFetch';
 
 export type AccountId = number;
 export type CommodityId = number;

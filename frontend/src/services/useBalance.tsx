@@ -1,6 +1,6 @@
-import { AccountId, CommodityId } from 'services/useAccounts';
-import { RelativeDate, dateToString } from 'Dates';
-import useFetch from 'services/useFetch';
+import { AccountId, CommodityId } from '@/services/useAccounts';
+import { RelativeDate, dateToString } from '@/Dates';
+import useFetch from '@/services/useFetch';
 
 /**
  * The balance for a specific account, at a specific date.

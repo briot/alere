@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { DateRange, DateRangePicker } from 'Dates';
-import { InvestmentsPanelProps } from 'Investments/Panel';
-import { Checkbox } from 'Form';
-import { PanelProps } from 'Dashboard/Panel';
+import { DateRange, DateRangePicker } from '@/Dates';
+import { InvestmentsPanelProps } from '@/Investments/Panel';
+import { Checkbox } from '@/Form';
+import { PanelProps } from '@/Dashboard/Panel';
 
 const Settings: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
    const changeHide = (hideIfNoShare: boolean) => p.save?.({ hideIfNoShare });

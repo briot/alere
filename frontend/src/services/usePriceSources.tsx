@@ -1,4 +1,4 @@
-import useFetch from 'services/useFetch';
+import useFetch from '@/services/useFetch';
 
 export interface PriceSource {
    id: number;

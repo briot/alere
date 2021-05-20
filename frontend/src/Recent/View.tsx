@@ -1,8 +1,8 @@
 import React from 'react';
-import AccountName from 'Account';
-import useHistory from 'services/useHistory';
-import useAccounts from 'services/useAccounts';
-import RoundButton from 'RoundButton';
+import AccountName from '@/Account';
+import useHistory from '@/services/useHistory';
+import useAccounts from '@/services/useAccounts';
+import RoundButton from '@/RoundButton';
 
 export interface RecentProps {
 }

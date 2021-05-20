@@ -1,8 +1,8 @@
 import * as React from 'react';
-import Networth, { NetworthProps } from 'NetWorth/View';
-import Settings from 'NetWorth/Settings';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from 'Dashboard/Panel';
-import useAccounts from 'services/useAccounts';
+import Networth, { NetworthProps } from '@/NetWorth/View';
+import Settings from '@/NetWorth/Settings';
+import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import useAccounts from '@/services/useAccounts';
 
 export interface NetworthPanelProps extends PanelBaseProps, NetworthProps {
    type: 'networth';
