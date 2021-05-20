@@ -10,6 +10,13 @@
    .label {
       font-weight: bold;
    }
+
+   tr td:first-child {
+      text-align: left;
+   }
+   td {
+      text-align: right;
+   }
 }
 
 .tooltip {

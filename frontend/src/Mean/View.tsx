@@ -89,7 +89,7 @@ const CustomTooltip = (
 
    return d && p.active
       ? (
-         <div className="tooltip-base customTooltip">
+         <div className="tooltip-base">
             <h5>{d.date}</h5>
             <table>
                <tbody>
@@ -229,22 +229,18 @@ const Mean: React.FC<MeanProps> = p => {
                >
                   <XAxis
                      dataKey="date"
-                     tick={{fill: 'var(--cartesian-grid)'}}
                   />
                   <YAxis
                      domain={['auto', 'auto']}
                      tickFormatter={formatVal}
-                     tick={{fill: 'var(--cartesian-grid)'}}
                   />
                   <CartesianGrid
                       strokeDasharray="5 5"
-                      stroke="var(--cartesian-grid)"
                   />
                   <ReferenceLine
                      ifOverflow="extendDomain"
                      isFront={false}
                      y={9}
-                     stroke="var(--cartesian-grid)"
                   />
                   <Tooltip
                      content={

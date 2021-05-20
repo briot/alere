@@ -274,7 +274,7 @@ const columnShares: Column<TableRowData, ComputedBaseLedgerProps> = {
 
 const columnPrice: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "Price",
-   className: "amount",
+   className: "price",
    compare: (a, b) =>
       (a.firstRowSplit.price ?? 0) - (b.firstRowSplit.price ?? 0),
    title: "Price of one share at the time of the transaction",

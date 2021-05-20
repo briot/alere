@@ -214,7 +214,6 @@ const PriceGraph: React.FC<PriceGraphProps> = p => {
                      {/*
                      <CartesianGrid
                          strokeDasharray="5 5"
-                         stroke="var(--cartesian-grid)"
                      />
                      */}
                      {

@@ -1,14 +1,9 @@
-.priceHistory {
-   flex: 1 1;
-   font-size: 1em;
-   font-family: "minion pro", "myriad pro", "tahoma";
-   font-variant-numeric: oldstyle-nums tabular-nums;
-   font-variant-numeric: lining-nums tabular-nums;
-   font-size-adjust: 0.438;
+@import "../shared";
 
-   .recharts-cartesian-axis-ticks tspan {
-      fill: var(--panel-fg);
-   }
+.priceHistory {
+   @include numeric-font;
+
+   flex: 1 1;
 
    .roundButton {
       display: block;

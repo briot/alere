@@ -54,7 +54,7 @@ const columnAccountName: ColumnType = {
 const columnShares = (date_idx: number): ColumnType => ({
    id: `Shares${date_idx}`,
    head: 'Shares',
-   className: 'price',
+   className: 'shares',
    cell: (d: LocalTreeNode,
           details: RowWithDetails,
           settings: NetworthProps) =>

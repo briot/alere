@@ -1,14 +1,19 @@
+@import "../shared";
+
 .numeric {
-   font-family: "minion pro", "myriad pro", "tahoma";
-   font-variant-numeric: oldstyle-nums tabular-nums;
-   font-variant-numeric: lining-nums tabular-nums;
-   white-space: nowrap;
-   font-size-adjust: 0.438;
+   @include numeric-font;
 
    span.prefix {
       margin-right: 3px;
    }
    span.suffix {
       margin-left: 3px;
+   }
+
+   .positive {
+      color: var(--positive-fg);
+   }
+   .negative {
+      color: var(--negative-fg);
    }
 }

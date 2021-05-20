@@ -53,3 +53,11 @@ $orange-mantine: #ff922b !default;
       }
    }
 }
+
+@mixin numeric-font {
+   font-family: "minion pro", "myriad pro", "tahoma";
+   font-size-adjust: 0.438;
+   font-variant-numeric: lining-nums tabular-nums;
+//   font-variant-numeric: oldstyle-nums tabular-nums;
+   white-space: nowrap;
+}

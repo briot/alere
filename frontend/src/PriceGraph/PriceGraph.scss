@@ -1,9 +1,9 @@
+@import "../shared";
+
 .priceGraph {
+   @include numeric-font;
+
    flex: 1 1;
-   font-family: "minion pro", "myriad pro", "tahoma";
-   font-variant-numeric: oldstyle-nums tabular-nums;
-   font-variant-numeric: lining-nums tabular-nums;
-   font-size-adjust: 0.438;
 
    .roundButton {
       display: block;

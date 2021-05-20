@@ -24,7 +24,7 @@
          }
          .head {
             flex: 1;
-            color: var(--cartesian-grid);
+            color: var(--panel-faded-fg);
             white-space: nowrap;
          }
          .value {
@@ -42,11 +42,6 @@
       margin: 10px 0;
       display: flex;
       justify-content: space-between;
-   }
-
-   .recharts-cartesian-axis-tick-value {
-      font-size: 0.8em;
-      fill: var(--cartesian-grid);
    }
 
    .perf {

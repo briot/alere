@@ -1,3 +1,5 @@
+@import "../shared";
+
 .table {
    --row-height: 25px;       /* must match ROW_HEIGHT in javascript */
    --th-padding-top: 3px;
@@ -214,27 +216,26 @@
     */
    .date {
       flex: 0 1 11ch;
-   }
-   .td.date {
-      font-family: "minion pro", "myriad pro", "tahoma";
-      font-variant-numeric: oldstyle-nums tabular-nums;
-      font-variant-numeric: lining-nums tabular-nums;
-      font-size-adjust: 0.438;
+      @include numeric-font
    }
    .price {
-      flex: 0 1 65px;
+      flex: 0 1 10ch;
       text-align: right;
    }
    .amount {
-      flex: 0 1 100px;
+      flex: 0 1 11ch;
+      text-align: right;
+   }
+   .shares {
+      flex: 0 1 10ch;
       text-align: right;
    }
    .percent {
-      flex: 0 1 70px;
+      flex: 0 1 8ch;
       text-align: right;
    }
    .closed {
-      flex: 0 1 70px;
+      flex: 0 1 8ch;
    }
 }
 

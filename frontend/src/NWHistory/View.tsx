@@ -46,7 +46,7 @@ const CustomTooltip = (
 
    return d && p.active
       ? (
-         <div className="tooltip-base customTooltip">
+         <div className="tooltip-base">
             <h5>{d.date}</h5>
             <Numeric
                amount={d.networth}
@@ -76,16 +76,13 @@ const NetworthHistory: React.FC<NetworthHistoryProps> = p => {
                >
                   <XAxis
                      dataKey="date"
-                     tick={{fill: 'var(--cartesian-grid)'}}
                   />
                   <YAxis
                      domain={['auto', 'auto']}
                      tickFormatter={formatVal}
-                     tick={{fill: 'var(--cartesian-grid)'}}
                   />
                   <CartesianGrid
                       strokeDasharray="5 5"
-                      stroke="var(--cartesian-grid)"
                   />
                   <Tooltip
                      content={
