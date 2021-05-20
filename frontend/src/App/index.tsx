@@ -37,7 +37,7 @@ import { registerPriceHistory } from 'PriceHistory/Panel';
 import { registerRecent } from 'Recent/Panel';
 import { registerTicker } from 'Ticker/Panel';
 
-import './App.css';
+import './App.scss';
 import "font-awesome/css/font-awesome.min.css";
 
 registerAccounts();

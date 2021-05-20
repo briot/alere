@@ -2,7 +2,7 @@ import * as React from 'react';
 import { divider, Option, Select } from 'Form';
 import RoundButton from 'RoundButton';
 import { mod } from 'services/utils';
-import './Dates.css';
+import './Dates.scss';
 
 /**
  * Modifies d in place to set the last day n months ago

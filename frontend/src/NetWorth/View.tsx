@@ -10,7 +10,7 @@ import accountsToRows from 'List/ListAccounts';
 import useBalance, { Balance } from 'services/useBalance';
 import ListWithColumns, {
    AlternateRows, Column, LogicalRow, RowDetails } from 'List/ListWithColumns';
-import "./NetWorth.css";
+import "./NetWorth.scss";
 
 export interface NetworthProps {
    dates: RelativeDate[];

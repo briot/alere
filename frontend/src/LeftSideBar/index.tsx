@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import useAccounts from 'services/useAccounts';
 import useHistory from 'services/useHistory';
 import RoundButton from 'RoundButton';
-import './LeftSideBar.css';
+import './LeftSideBar.scss';
 
 interface LeftSideBarProps {
 }

@@ -1,9 +1,0 @@
-#rsidebar {
-   grid-area: rsidebar;
-   margin-right: var(--side-margin);
-}
-#rsidebar .dashboard {
-   grid-template-columns: 100%;
-   grid-template-rows: repeat(auto-fit, minmax(var(--panel-height), 1fr));
-   height: 100%;
-}

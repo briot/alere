@@ -13,7 +13,7 @@ import { Account, AccountId, CommodityId } from 'services/useAccounts';
 import useAccountIds, {
    AccountIdSet, AccountList } from 'services/useAccountIds';
 import { Preferences } from 'services/usePrefs';
-import './Ledger.css';
+import './Ledger.scss';
 
 const SPLIT = '--split--';
 const SPLIT_ID: AccountId = -1;

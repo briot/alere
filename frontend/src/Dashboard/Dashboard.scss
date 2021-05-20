@@ -19,9 +19,9 @@
    row-gap: var(--row-gap);
 
    justify-items: stretch;
-}
 
-.dashboard .panel {
-   min-height: var(--panel-height);
-   width: 100%;
+   .panel {
+      min-height: var(--panel-height);
+      width: 100%;
+   }
 }

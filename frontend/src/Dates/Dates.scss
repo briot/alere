@@ -1,15 +1,17 @@
 .multidate {
    margin: var(--vert-spacing) 0;
-}
-.multidate .row {
-   display: flex;
-   flex-flow: row nowrap;
-   align-items: center;
-   margin: 0 0 0 10px;
-   justify-content: flex-start;
-}
-.multidate .row .select {
-   flex: 1 1;
+
+   .row {
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: center;
+      margin: 0 0 0 10px;
+      justify-content: flex-start;
+
+      .select {
+         flex: 1 1;
+      }
+   }
 }
 
 .datevalue {

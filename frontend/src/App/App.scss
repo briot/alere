@@ -1,0 +1,118 @@
+.page {
+   background: var(--page-bg);
+   color: var(--panel-fg);
+}
+
+#app {
+   /* margins on the sides of the main page */
+   --side-margin: 10px;
+
+   --row-gap: 1rem;
+   --col-gap: 1rem;
+   min-width: 100vw;
+   min-height: 100vh;
+
+   --footer-height: 0px;
+   display: grid;
+   grid-template-columns: 1fr;
+   grid-template-rows: auto 1fr minmax(auto, 220px);
+   grid-template-areas:
+      "header"
+      "lsidebar"
+      "main"
+      "rsidebar"
+      "footer";
+   column-gap: var(--col-gap);
+   row-gap: var(--row-gap);
+   justify-items: stretch;
+
+   background-image: url('./coins2.png');
+   background-repeat: no-repeat;
+   background-position: right bottom;
+   background-size: auto 50%;
+
+   @media only screen and (min-width: 1025px) {
+      grid-template-columns: auto 1fr minmax(auto, 220px);
+      grid-template-rows: auto 1fr auto;
+      grid-template-areas:
+         "lheader header rheader"
+         "lsidebar main rsidebar"
+         "footer footer footer";
+   }
+}
+
+.main {
+   grid-area: main;
+}
+
+.main-area {
+   grid-area: main;
+   width: 100%;
+   height: 100%;
+
+   display: flex;
+   flex-flow: column nowrap;
+   gap: var(--row-gap);
+}
+
+.italic {
+   font-style: italic;
+}
+
+a {
+   color: inherit;
+   text-decoration: none;
+   &:hover {
+      text-decoration: underline;
+   }
+}
+
+.morph {
+   background: inherit;
+   border-width: 0;
+   box-shadow:
+       calc(var(--nm-offset) * -1) calc(var(--nm-offset) * -1)
+          var(--nm-blur) 0 var(--neumorph-light),
+       var(--nm-offset) var(--nm-offset)
+          var(--nm-blur) 0 var(--neumorph-dark);
+   &:hover {
+      box-shadow:
+          calc(var(--nm-offset) * -1) calc(var(--nm-offset) * -1)
+             var(--nm-blur) 0 var(--neumorph-light),
+          var(--nm-offset) var(--nm-offset)
+             var(--nm-blur) 0 var(--neumorph-dark),
+          inset calc(var(--nm-offset) * -1) calc(var(--nm-offset) * -1)
+             var(--nm-inset) 0 var(--neumorph-light),
+          inset var(--nm-offset) var(--nm-offset)
+             var(--nm-inset) 0 var(--neumorph-dark);
+      transition: box-shadow 0.1s;
+   }
+
+   &.disabled:hover,
+   .disabled &:hover {
+      box-shadow:
+          calc(var(--nm-offset) - 1) calc(var(--nm-offset) * -1)
+             var(--nm-blur) 0 var(--neumorph-light),
+          var(--nm-offset) var(--nm-offset)
+             var(--nm-blur) 0 var(--neumorph-dark);
+   }
+   .selected & {
+      transition: box-shadow 0.1s;
+      box-shadow:
+          calc(var(--nm-offset) * -1) calc(var(--nm-offset) * 1)
+             var(--nm-blur) 0 var(--neumorph-light),
+          var(--nm-offset) var(--nm-offset)
+             var(--nm-blur) 0 var(--neumorph-dark),
+          inset calc(var(--nm-offset) * -1) calc(var(--nm-offset) * -1)
+             var(--nm-blur) 0 var(--neumorph-light),
+          inset var(--nm-offset) var(--nm-offset)
+             var(--nm-blur) 0 var(--neumorph-dark);
+   }
+}
+
+.positive {
+   color: var(--positive-fg);
+}
+.negative {
+   color: var(--negative-fg);
+}

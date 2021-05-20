@@ -1,7 +1,7 @@
 import React from 'react';
 import Dashboard from 'Dashboard';
 import { RecentPanelProps } from 'Recent/Panel';
-import './RightSideBar.css';
+import './RightSideBar.scss';
 
 const defaultPanels = [
    {

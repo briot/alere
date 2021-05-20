@@ -1,0 +1,38 @@
+#header {
+   grid-area: header;
+
+   display: flex;
+   flex-flow: row nowrap;
+   justify-content: space-between;
+   align-items: stretch;
+   gap: var(--gap-horiz);
+
+   .group {
+      flex: 0;   /* Do not increase width or height of the group */
+      display: flex;
+      justify-content: center;   /* horizontally */
+      align-items: stretch;      /* vertically */
+   }
+
+   .title {
+      flex: 1 1;         /* Allow to expand as needed, to fit text */
+      font-size: 2em;
+      font-weight: bold;
+
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: space-between;
+      align-items: center;  /* center vertically */
+
+      .select {
+         flex: 1 1;
+
+         .dropdownButton {
+            background: none;
+         }
+         .selector .menu {
+            font-size: 1rem;
+         }
+      }
+   }
+}

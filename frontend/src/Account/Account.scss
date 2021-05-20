@@ -1,0 +1,20 @@
+.account {
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+   font-variant: none;
+
+   &.closed {
+      text-decoration: line-through;
+   }
+}
+
+.multiAccountSelect {
+   div {
+      background: var(--input-background);
+      white-space: nowrap;
+   }
+   label {
+      margin: 0;
+   }
+}

@@ -62,7 +62,7 @@ $themes: (
    fg-for-light-colors:        #212529,
 
    page-bg:                    [ rgb(29,30,48),         --gray-100 ],
-   panel-border:               --shadow-color,
+   panel-border:               [ --gray-800,            --gray-400 ],
    panel-bg:                   [ rgb(1,1,10),           #fbfbfb ],
    panel-fg:                   [ --fg-for-dark-colors,  --fg-gray-100 ],
    panel-title-fg:             [ --color-300,           --color-700 ],

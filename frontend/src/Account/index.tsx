@@ -8,7 +8,7 @@ import ListWithColumns, { AlternateRows, Column } from 'List/ListWithColumns';
 import accounts_to_rows from 'List/ListAccounts';
 import List from 'List';
 import Tooltip from 'Tooltip';
-import "./Account.css";
+import "./Account.scss";
 
 interface SelectTreeNode {
    account: Account | undefined;

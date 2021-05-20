@@ -3,7 +3,7 @@ import { PanelBaseProps, PANELS } from 'Dashboard/Panel';
 import { SetHeader } from 'Header';
 import useSettings from 'services/useSettings';
 import classes from 'services/classes';
-import './Dashboard.css';
+import './Dashboard.scss';
 
 type Overrides = { [panel: string]: Partial<PanelBaseProps>};
 

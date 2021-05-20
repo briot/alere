@@ -6,16 +6,16 @@
    flex-flow: column nowrap;  /* desktop */
 }
 
-
 @media only screen and (max-width: 1024px) {
    #lsidebar {
       flex-flow: row wrap;  /* tablet */
-   }
-   #lsidebar .roundButton span:last-child {
-      display: none;  /* hide text */
-   }
-   #lsidebar h3 {
-      display: none;
+
+      .roundButton span:last-child {
+         display: none;  /* hide text */
+      }
+      h3 {
+         display: none;
+      }
    }
 }
 

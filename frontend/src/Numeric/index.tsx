@@ -1,7 +1,7 @@
 import React from 'react';
 import classes from 'services/classes';
 import useAccounts, { Commodity, CommodityId } from 'services/useAccounts';
-import './Numeric.css';
+import './Numeric.scss';
 
 const DECIMAL_SEP = ','
 const GROUP_SEP = ' ';
