@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { RowData } from '@/Ticker/types';
 import { pastValue } from '@/Ticker/Past';
 import { dateForm } from '@/services/utils';

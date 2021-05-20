@@ -2,8 +2,6 @@ import * as React from 'react';
 import NetworthHistory, { NetworthHistoryProps } from '@/NWHistory/View';
 import Settings from './Settings';
 import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
-import { rangeDisplay } from '@/Dates';
-import { capitalize } from '@/services/utils';
 import useAccounts from '@/services/useAccounts';
 
 export interface NetworthHistoryPanelProps
@@ -17,12 +15,10 @@ const NetworthHistoryPanel: React.FC<PanelProps<NetworthHistoryPanelProps>> = p 
       return null;
    }
 
-   const r = rangeDisplay(p.props.range);
    return (
       <Panel
          {...p}
-         header={{name: capitalize(`${r.possessive}networth history`),
-                  tooltip: r.as_dates}}
+         header={{name: 'networth history', range: p.props.range }}
          Settings={
             <Settings
                props={p.props}

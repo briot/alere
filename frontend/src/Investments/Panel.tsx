@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { rangeDisplay } from '@/Dates';
 import Investments, { InvestmentsProps } from '@/Investments/View';
 import Settings from '@/Investments/Settings';
 import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
@@ -9,14 +8,11 @@ export interface InvestmentsPanelProps extends PanelBaseProps, InvestmentsProps 
 }
 
 const InvestmentsPanel: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
-   const r = rangeDisplay(p.props.range);
    return (
       <Panel
          {...p}
          className='asgrid'
-         header={{
-            name: `Investments (${r.possessive} period)`,
-         }}
+         header={{name: 'investments', range: p.props.range}}
          Settings={
             <Settings
                props={p.props}

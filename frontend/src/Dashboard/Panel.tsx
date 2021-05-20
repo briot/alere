@@ -2,9 +2,8 @@ import * as React from 'react';
 import { Select } from '@/Form';
 import RoundButton from '@/RoundButton';
 import Dropdown from '@/Form/Dropdown';
-import { HeaderProps } from '@/Header';
+import Header, { HeaderProps } from '@/Header';
 import classes from '@/services/classes';
-import Tooltip from '@/Tooltip';
 import './Panel.scss';
 
 /**
@@ -74,11 +73,7 @@ function Panel<T extends PanelBaseProps>(
         {
            !p.props.hidePanelHeader &&
            <div className="header">
-              <Tooltip tooltip={p.header.tooltip}>
-                 <h5>{p.header.name}</h5>
-              </Tooltip>
-              <div className="group">
-                 {p.header.buttons}
+              <Header {...p.header}>
                  {
                     p.Settings !== null &&
                     <Dropdown
@@ -125,7 +120,7 @@ function Panel<T extends PanelBaseProps>(
                     <span className="fa fa-info-circle" />
                     <span className="fa fa-window-close" />
                   */ }
-              </div>
+              </Header>
            </div>
         }
         <div className="content">

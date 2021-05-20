@@ -54,7 +54,7 @@ const TickerPanel: React.FC<PanelProps<TickerPanelProps>> = p => {
    return (
       <Panel
          {...p}
-         header={{name: (
+         header={{node: (
             <div>
                <AccountName
                   id={acc.account.id}

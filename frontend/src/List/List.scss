@@ -216,6 +216,8 @@
     */
    .date {
       flex: 0 1 11ch;
+   }
+   td.class {
       @include numeric-font
    }
    .price {

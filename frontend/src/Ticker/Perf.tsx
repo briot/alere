@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { AccountForTicker, Ticker } from '@/Ticker/types';
 import { pastValue, PastValue } from '@/Ticker/Past';
 import Numeric from '@/Numeric';

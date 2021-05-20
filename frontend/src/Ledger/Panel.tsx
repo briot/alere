@@ -1,12 +1,10 @@
 import * as React from 'react';
 import Ledger, { BaseLedgerProps } from '@/Ledger/View';
-import { rangeDisplay } from '@/Dates';
 import useAccountIds from '@/services/useAccountIds';
 import useTransactions from '@/services/useTransactions';
 import { Transaction } from '@/Transaction';
 import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
 import Settings from '@/Ledger/Settings';
-import { capitalize } from '@/services/utils';
 import usePrefs from '@/services/usePrefs';
 
 export interface LedgerPanelProps extends PanelBaseProps, BaseLedgerProps {
@@ -22,9 +20,6 @@ const LedgerPanel: React.FC<
    const transactions = useTransactions(
       accounts, p.props.range, p.transactions);
    const setSortOn = (sortOn: string) => p.save({ sortOn });
-   const r = p.props.range
-      ? rangeDisplay(p.props.range)
-      : rangeDisplay("all");
 
    if (accounts.length === 0) {
       return null;
@@ -33,8 +28,7 @@ const LedgerPanel: React.FC<
    return (
       <Panel
          {...p}
-         header={{name: capitalize(`${r.possessive}transactions, ${title}`),
-                  tooltip: r.as_dates }}
+         header={{name: title, range: p.props.range}}
          Settings={
             <Settings
                props={p.props}

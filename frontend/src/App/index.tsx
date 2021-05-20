@@ -12,6 +12,8 @@ import Spinner from '@/Spinner';
 import StyleGuide from '@/StyleGuide';
 import useAccounts from '@/services/useAccounts';
 import usePrefs from '@/services/usePrefs';
+import Settings from '@/Settings';
+import OnlineUpdate from '@/Header/OnlineUpdate';
 import { AccountsProvider } from '@/services/useAccounts';
 import { BrowserRouter } from "react-router-dom";
 import { CashflowPanelProps, registerCashflow } from '@/Cashflow/Panel';
@@ -152,7 +154,10 @@ const Main: React.FC<{}> = () => {
                className={
                   prefs.dark_mode ? 'page darkpalette' : 'page lightpalette' }
             >
-               <Header {...header} />
+               <Header {...header} >
+                  <OnlineUpdate />
+                  <Settings />
+               </Header>
                <LeftSideBar />
                <RightSideBar />
 

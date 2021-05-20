@@ -58,7 +58,7 @@
     "manage": "./env/bin/python3 ./backend/manage.py",
     "backend": "$npm_execpath run manage migrate; $npm_execpath run manage runserver 8000",
     "tests:backend": "$npm_execpath run manage test --parallel --verbosity=2",
-    "tests": "npm run tests:backend alere && npm run tests:frontend"
+    "tests": "$npm_execpath run tests:backend alere && $npm_execpath run tests:frontend"
   },
   "eslintConfig": {
     "extends": [

@@ -109,7 +109,7 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
    React.useEffect(
       () => {
          setHeader({  /* Keep arrow next to account name */
-            name:
+            node:
                accounts.length === 1
                ? (
                   <SelectAccount

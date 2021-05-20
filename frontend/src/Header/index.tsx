@@ -1,11 +1,13 @@
 import React from 'react';
-import Settings from '@/Settings';
-import OnlineUpdate from '@/Header/OnlineUpdate';
+import { DateRange, rangeDisplay } from '@/Dates';
 import Tooltip from '@/Tooltip';
+import { capitalize } from '@/services/utils';
 import './Header.scss';
 
 export interface HeaderProps {
-   name?: string|React.ReactNode;
+   name?: string;
+   node?: React.ReactNode;
+   range?: DateRange;  // timestamp used to compute values
    tooltip?: string;
    buttons?: React.ReactNode|React.ReactNode[];
 }
@@ -19,18 +21,24 @@ export interface SetHeader {
 }
 
 const Header: React.FC<HeaderProps> = p => {
+   const r = p.range ? rangeDisplay(p.range) : undefined;
    return (
       <div id='header'>
-         <Tooltip tooltip={p.tooltip}>
-            <div className='title'>
-                {p.name ?? ''}
-            </div>
+         <Tooltip tooltip={ p.tooltip ?? r?.as_dates }>
+            <h5>
+                {p.node}
+                {capitalize(p.name ?? '')}
+                {
+                   r?.text
+                   ? <span> &mdash; {r.text}</span>
+                   : ''
+                }
+            </h5>
          </Tooltip>
 
          <div className='group'>
             {p.buttons}
-            <OnlineUpdate />
-            <Settings />
+            {p.children}
          </div>
 
       </div>

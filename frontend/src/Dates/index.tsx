@@ -147,7 +147,6 @@ const relativeDates: Record<RelativeDate, RelativeDateType> = {
 
 interface DateRangeType {
    range: [RelativeDate, RelativeDate];
-   poss?: string;  // possessive, defaults to the key
    text?: string;  // for select box, defaults to the key
    group: number;
 }
@@ -158,7 +157,7 @@ export type DateRange = '1 day' | '1 month' | '2 months' | '3 months'
    | 'last year' | '2 years ago' | '3 years ago' | 'all' | 'upcoming';
 
 const dateRanges: Record<DateRange, DateRangeType> = {
-   '1 day':    { range: ['yesterday', 'today'], poss: "yesterday's", group: 0},
+   '1 day':    { range: ['yesterday', 'today'],                      group: 0},
    '1 month':       { range: ['1 month ago', 'today'],               group: 1},
    '2 months':      { range: ['2 months ago', 'today'],              group: 1},
    '3 months':      { range: ['3 months ago', 'today'],              group: 1},
@@ -202,9 +201,6 @@ export const dateToString = (when: RelativeDate): string =>
 const rangeToDate = (name: DateRange): [RelativeDate, RelativeDate] =>
    dateRanges[name]?.range ?? ['today', 'today'];
 
-const possessive = (name: DateRange): string =>
-   dateRanges[name]?.poss ?? name;
-
 export const toDates = (name: DateRange): [Date, Date] => {
    const r = rangeToDate(name);
    return [dateToDate(r[0]), dateToDate(r[1])];
@@ -222,14 +218,14 @@ export const rangeToHttp = (name: DateRange|undefined): string => {
 
 interface RangeDisplay {
    as_dates: string;   // 'from x to y'
-   possessive: string; // "z's "
+   text: string;
 }
 
 export const rangeDisplay = (name: DateRange): RangeDisplay => {
    if (name === 'all') {
       return {
          as_dates: 'for all dates',
-         possessive: "",
+         text: '',
       };
    }
    const r = rangeToDate(name);
@@ -238,7 +234,7 @@ export const rangeDisplay = (name: DateRange): RangeDisplay => {
 
    return {
       as_dates: `from ${min} to ${max}`,
-      possessive: `${possessive(name)} `,
+      text: dateRanges[name].text ?? name,
    }
 }
 

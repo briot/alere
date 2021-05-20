@@ -2,8 +2,6 @@ import * as React from 'react';
 import IncomeExpense, { IncomeExpenseProps } from '@/IncomeExpense/View';
 import Settings from '@/IncomeExpense/Settings';
 import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
-import { rangeDisplay } from '@/Dates';
-import { capitalize } from '@/services/utils';
 import useAccounts from '@/services/useAccounts';
 
 export interface IncomeExpensePanelProps
@@ -12,9 +10,6 @@ export interface IncomeExpensePanelProps
 }
 
 const IEPanel: React.FC<PanelProps<IncomeExpensePanelProps>> = p => {
-   const basetitle = p.props.expenses ? 'expenses': 'income';
-   const r = rangeDisplay(p.props.range);
-
    const { accounts } = useAccounts();
    if (!accounts.has_accounts()) {
       return null;
@@ -23,8 +18,8 @@ const IEPanel: React.FC<PanelProps<IncomeExpensePanelProps>> = p => {
    return (
       <Panel
          {...p}
-         header={{ name: capitalize(`${r.possessive}${basetitle}`),
-                   tooltip: r.as_dates}}
+         header={{ name: p.props.expenses ? 'expenses': 'income',
+                   range: p.props.range }}
          Settings={
             <Settings
                props={p.props}
