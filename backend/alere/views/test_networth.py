@@ -84,13 +84,13 @@ class NetworthTestCase(BaseTest):
                  'balance': 12.34,
                  'balanceShares': 12.34,
                  'memo': None,
-                 'payee': None,
                  'checknum': None,
                  'splits': [
                      {'accountId': self.salary.id,
                       'amount': -12.34,
                       'currency': 1,
                       'date': '2020-11-01',
+                      'payee': None,
                       'price': 1.0,
                       'reconcile': 'n',
                       'shares': -12.34,
@@ -99,6 +99,7 @@ class NetworthTestCase(BaseTest):
                       'amount': 12.34,
                       'currency': 1,
                       'date': '2020-11-02',
+                      'payee': None,
                       'price': 1.0,
                       'reconcile': 'n',
                       'shares': 12.34,
@@ -109,13 +110,13 @@ class NetworthTestCase(BaseTest):
                  'balance': 13.34,
                  'balanceShares': 13.34,
                  'memo': None,
-                 'payee': None,
                  'checknum': None,
                  'splits': [
                      {'accountId': self.salary.id,
                       'date': '2020-11-03',
                       'currency': 1,
                       'amount': -1.0,
+                      'payee': None,
                       'reconcile': 'n',
                       'shares': -1.0,
                       'price': 1.0
@@ -124,6 +125,7 @@ class NetworthTestCase(BaseTest):
                       'date': '2020-11-04',
                       'currency': 1,
                       'amount': 1.0,
+                      'payee': None,
                       'reconcile': 'n',
                       'shares': 1.0,
                       'price': 1.0
@@ -134,13 +136,13 @@ class NetworthTestCase(BaseTest):
                  'balance': 3.34,
                  'balanceShares': 3.34,
                  'memo': None,
-                 'payee': None,
                  'checknum': None,
                  'splits': [
                      {'accountId': self.salary.id,
                       'date': '2020-11-03',
                       'currency': 1,
                       'amount': 10.0,
+                      'payee': None,
                       'reconcile': 'n',
                       'shares': 10.0,
                       'price': 1.0
@@ -149,6 +151,7 @@ class NetworthTestCase(BaseTest):
                       'date': '2020-11-03',
                       'currency': 1,
                       'amount': -10.0,
+                      'payee': None,
                       'reconcile': 'n',
                       'shares': -10.0,
                       'price': 1.0
@@ -159,13 +162,13 @@ class NetworthTestCase(BaseTest):
                  'balance': 1.5399999999999998,
                  'balanceShares': 1.5399999999999998,   # 1.54 EUR
                  'memo': None,
-                 'payee': None,
                  'checknum': None,
                  'splits': [
                      {'accountId': self.groceries.id,
                       'amount': 1.802,   # in EUR
                       'date': '2020-11-25',
                       'currency': 2,
+                      'payee': None,
                       'price': 0.85,     # conversion rate
                       'reconcile': 'n',
                       'shares': 2.12,    # in USD
@@ -174,6 +177,7 @@ class NetworthTestCase(BaseTest):
                       'amount': -1.8,    # in EUR
                       'date': '2020-11-25',
                       'currency': 1,
+                      'payee': None,
                       'price': 1.0,
                       'reconcile': 'n',
                       'shares': -1.8,    # in EUR
