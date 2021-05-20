@@ -1,6 +1,6 @@
 env
 __pycache__
-backend/alere_db.sqlite3
+alere_db.sqlite3
 node_modules
 .DS_Store
 .vscode

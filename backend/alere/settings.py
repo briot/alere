@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'alere.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'alere_db.sqlite3'),
+        'NAME': os.path.join(BASE_DIR, '../alere_db.sqlite3'),
     }
 }
 
