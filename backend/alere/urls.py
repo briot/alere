@@ -33,14 +33,13 @@ def static(request):
     else:
         return django.views.static.serve(
             request,
-            os.path.join(STATIC_ROOT, 'index.html'),
+            os.path.join(STATIC_ROOT, '../index.html'),
             document_root='/')
 
 
 def send_csrf(request):
     t = Template("// {% csrf_token %}")
     c = Context(csrf(request))
-    print(t.render(c)) # MANU
     return HttpResponse(
         t.render(c),
         content_type='text/javascript',
