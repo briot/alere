@@ -1,6 +1,7 @@
+@import "../shared";
+
 .panel {
-   color: var(--panel-fg);
-   background: var(--panel-bg);
+   @include set-colors(panel);
    box-shadow: 6px 6px 10px 0 var(--shadow-color);
    border: 1px solid var(--panel-border);
 
@@ -12,7 +13,7 @@
       margin-top: 5px;
 
       .header h5 {
-         color: var(--panel-fg);  // override h5 color below for Ticker
+         @include set-colors(pane); // override h5 color below for Ticker
       }
    }
 
@@ -21,12 +22,12 @@
       flex-flow: row nowrap;
       justify-content: space-between;
       align-items: center;
-      padding: 5px 10px 5px 10px;
+      padding: 0 5px;
 
       h5 {
          flex: 1 1;
          font-variant: small-caps;
-         color: var(--panel-title-fg);
+         @include set-colors(panel-title);
       }
       .group {
          flex: 0 0;

@@ -1,5 +1,6 @@
+@import "../shared";
 .uploadForm {
-   background: var(--input-background);
+   @include set-colors(input);
    width: 400px;
    margin: 0 auto;
 
@@ -11,7 +12,6 @@
       outline-offset: -5px;
 
       .icon {
-         color: #555;
          font-size: 3em;
       }
       label {

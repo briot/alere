@@ -1,9 +1,10 @@
+@import "../shared";
+
 .tooltip-base {
-   background: var(--tooltip-bg);
+   @include set-colors(tooltip);
    border: 1px solid var(--tooltip-border);
    border-radius: 4px;
    box-shadow: 4px 4px 8px 0 var(--shadow-color);
-   color: var(--tooltip-fg);
    font-size: 1rem;
    padding: 5px;
 

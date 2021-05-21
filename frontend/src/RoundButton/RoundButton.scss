@@ -1,3 +1,5 @@
+@import "../shared";
+
 a.roundButton:hover {
    text-decoration: none;
 }
@@ -10,7 +12,6 @@ a.roundButton:hover {
    align-items: center;        /* align children vertically */
    justify-content: space-between;
    outline: none;
-   color: var(--input-foreground);
 
    span:first-child {
       border-width: 1px;
@@ -34,12 +35,9 @@ a.roundButton:hover {
    }
 
    &.selected {
-      span:first-child {
-         color: var(--neumorph-fg);
-      }
+      span:first-child,
       span:last-child {
-         color: var(--neumorph-fg);
-         Afont-weight: bold;
+         @include set-colors(neumorph);
       }
    }
 

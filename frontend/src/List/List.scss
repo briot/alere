@@ -109,7 +109,7 @@
     * Alternate row colors
     */
    .tr.odd {
-      background-color: var(--table-alternate-row);
+      @include set-colors(table-alternate-row);
    }
 
    /**
@@ -120,6 +120,7 @@
 
       .tr.expandable :is(.td,.th):first-child::before,
       .trgroup.expandable :is(.td,.th):first-child::before {
+         @include set-colors(table-expand-arrow);
          content: "\f0da";
          font: normal normal normal 14px/1 FontAwesome;
          text-rendering: auto;
@@ -131,7 +132,6 @@
          display: block;
          cursor: pointer;
          float: left;
-         color: var(--table-expand-arrow-color);
          transition: transform 0.8s;
 
          position: absolute; // arrow not hidden by the cell's overflow:hidden
@@ -173,8 +173,7 @@
     */
    .tbody .trgroup:hover .tr,
    .tbody .tr:hover {
-      background: var(--table-hover-bg);
-      color: var(--table-hover-fg);
+      @include set-colors(table-hover);
    }
 
    /**
@@ -247,8 +246,8 @@
 
 /* Warning for inconsistent data */
 .table .td.warn:before {
+   @include set-colors(table-warn);
    content: '\f06a';
    font: normal normal normal 14px/1 FontAwesome;
    margin-right: 2px;
-   color: #f2e154;
 }

@@ -1,3 +1,5 @@
+@import "../shared";
+
 // https://loading.io/css/
 .spinner {
    display: inline-block;
@@ -11,13 +13,13 @@
      transform-origin: 40px 40px;
    }
    div:after {
+      @include set-colors(panel);
      content: " ";
      display: block;
      position: absolute;
      width: 7px;
      height: 7px;
      border-radius: 50%;
-     background: var(--panel-fg);
      margin: -4px 0 0 -4px;
    }
    div:nth-child(1) {

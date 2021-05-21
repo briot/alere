@@ -58,15 +58,18 @@ $themes: (
    // foreground colors to use on either dark background colors or
    // light background colors. Those are used automatically by the function
    // generate-color-vars
-   fg-for-dark-colors:         #f8f9fa,
+   fg-for-dark-colors:         [ --gray-200,            #f8f9fa ],
    fg-for-light-colors:        #212529,
 
    page-bg:                    [ rgb(29,30,48),         --gray-100 ],
+   page-fg:                    [ --fg-for-dark-colors,  --fg-for-light-colors ],
    panel-border:               [ --gray-800,            --gray-400 ],
    panel-bg:                   [ rgb(1,1,10),           #fbfbfb ],
-   panel-fg:                   [ --fg-for-dark-colors,  --fg-gray-100 ],
+   panel-fg:                   [ --fg-for-dark-colors,  --fg-for-light-colors ],
    panel-faded-fg:             [ --gray-500,            --gray-500 ],
+   panel-faded-bg:             --panel-bg,
    panel-title-fg:             [ --color-300,           --color-700 ],
+   panel-title-bg:             --panel-bg,
    shadow-color:               [ --neumorph-light,      --neumorph-dark ],
 
    tooltip-bg:                 [ --gray-800,       --gray-400 ],
@@ -74,12 +77,16 @@ $themes: (
    tooltip-border:             [ --gray-700,       --gray-500 ],
 
    // Colors for tables
-   table-alternate-row:        [ --color-300-10,   --color-100-10p ],
+   table-alternate-row-bg:     [ --color-300-10,   --color-100-10p ],
    table-border:               [ --gray-700,       --gray-500 ],
-   table-expand-arrow-color:   [ --gray-500,       --gray-700 ],
+   table-expand-arrow-fg:      [ --gray-500,       --gray-700 ],
+   table-expand-arrow-bg:      --panel-bg,
    table-hover-bg:             [ --color-600,      --color-200 ],
    table-hover-fg:             [ --fg-color-600,   --fg-color-200 ],
    table-row-details-fg:       [ --gray-600,       --gray-500 ],
+   table-row-details-bg:       --panel-bg,
+   table-warn-fg:              --invalid-500,
+   table-warn-bg:              --panel-bg,
 
    // Colors used for the text of positive or negative numbers. Those are
    // displayed on --panel-bg colors.
@@ -106,16 +113,17 @@ $themes: (
    graph-mean-expenses:        [ --red-500,        --red-600 ],
 
    // Colors used in forms
-   input-background:           [ --gray-700,       white ],
+   input-bg:                   [ --gray-900,       white ],
+   input-fg:                   [ --fg-gray-900,    --fg-for-light-colors],
+
    input-border:               [ --gray-900,       --gray-100 ],
    input-brightness-hover:     [ 115%,             85% ],
    input-error-bg:             [ --invalid-300,    --invalid-100 ],
    input-error-border:         [ --invalid-100,    --invalid-300 ],
    input-error-fg:             [ --fg-invalid-300, --fg-invalid-100 ],
    input-focus-color:          --color-500,
-   input-foreground:           [ --gray-fg-700,    --fg-for-light-colors],
    input-invalid-fg:           --fg-invalid-500,
-   input-invalid:              --invalid-500,
+   input-invalid-bg:           --invalid-500,
    input-primary-bg:           --color-500,
    input-primary-border:       --color-600,
    input-primary-fg:           --fg-color-500,
@@ -216,13 +224,17 @@ a {
 }
 
 .morph {
-   background: inherit;
    border-width: 0;
    box-shadow:
        calc(var(--nm-offset) * -1) calc(var(--nm-offset) * -1)
           var(--nm-blur) 0 var(--neumorph-light),
        var(--nm-offset) var(--nm-offset)
           var(--nm-blur) 0 var(--neumorph-dark);
+
+   .panel & {
+      @include set-colors(panel);
+   }
+
    &:hover {
       box-shadow:
           calc(var(--nm-offset) * -1) calc(var(--nm-offset) * -1)

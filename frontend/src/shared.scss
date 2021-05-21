@@ -61,3 +61,8 @@ $orange-mantine: #ff922b !default;
 //   font-variant-numeric: oldstyle-nums tabular-nums;
    white-space: nowrap;
 }
+
+@mixin set-colors($name) {
+   color: var(--#{$name}-fg);
+   background: var(--#{$name}-bg);
+}

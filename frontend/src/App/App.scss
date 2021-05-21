@@ -1,6 +1,6 @@
+@import "../shared";
 .page {
-   background: var(--page-bg);
-   color: var(--panel-fg);
+   @include set-colors(page);
 }
 
 #app {

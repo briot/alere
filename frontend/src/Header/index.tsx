@@ -23,7 +23,7 @@ export interface SetHeader {
 const Header: React.FC<HeaderProps> = p => {
    const r = p.range ? rangeDisplay(p.range) : undefined;
    return (
-      <div id='header'>
+      <div className='header'>
          <Tooltip tooltip={ p.tooltip ?? r?.as_dates }>
             <h5>
                 {p.node}

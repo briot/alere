@@ -1,3 +1,5 @@
+@import "../shared";
+
 form {
    --vert-spacing: .5em;
 }
@@ -11,44 +13,41 @@ select:focus {
 input,
 button,
 select {
-   background-color: var(--input-background);
+   @include set-colors(input);
    border: 1px solid var(--input-border);
-   color: var(--input-foreground);
    padding: 0.25em;
+   font-size: 1rem;
 }
 .primary :is(input, .select),
 button.primary {
-   background-color: var(--input-primary-bg);
+   @include set-colors(input-primary);
    border: 1px solid var(--input-primary-border);
-   color: var(--input-primary-fg);
 }
 input:invalid,
 .select.invalid {
-   background-color: var(--input-error-bg);
+   @include set-colors(input-error);
    border-color: var(--input-error-border);
-   color: var(--input-error-fg);
 }
 
 .disabled button:hover {
-   filter: brightness(100%); /* keep normal background */
+   filter: brightness(100%); /* restore normal lightness */
 }
 button:hover {
    filter: brightness(var(--input-brightness-hover));
 }
 button.danger {
-   background-color: var(--input-invalid);
-   color: var(--input-invalid-fg);
+   @include set-colors(input-invalid);
 }
 .disabled,
 .disabled :is(span, input, button, .selector),
 button:disabled {
    pointer-events: none;
-   opacity: 0.5;
+   opacity: 0.75;
 }
 
 input[type=text] {
    flex: 1 1;
-   font-size: 0.8rem;
+   min-width: 120px;
 }
 
 form fieldset {
@@ -92,32 +91,8 @@ form .select option {
    --row-height: 20px;  /* must match ROW_HEIGHT in javascript */
    height: 100%;
 
-   .dropdown {
-      border: 1px solid var(--input-border);
-      flex: 1 1;   // use all available width in <select> boxes
-   }
-
-   .dropdownButton {
-      background: var(--input-background);
-      color: var(--input-foreground);
-      border: 1px solid var(--input-border);
-      height: 100%;
-      padding: 0 5px;
-      flex: 1 1;
-
-      .icon {
-         display: inline-block;
-         width: 20px;
-         height: 20px;
-         padding-left: 10px;
-         font-size: 1.2em;
-         margin-top: -1px;
-      }
-   }
-
    .menu {
-      background: var(--input-background);
-      color: var(--input-foreground);
+      @include set-colors(input);
       border: 1px solid var(--input-border);
       max-height: calc(15 * var(--row-height));
    }
@@ -130,8 +105,7 @@ form .select option {
       align-items: center;  // center vertically
 
       &:hover {
-         background: var(--table-hover-bg);
-         color: var(--table-hover-fg);
+         @include set-colors(table-hover);
       }
 
       &.selected {
@@ -145,7 +119,7 @@ form .select option {
          margin: 0.5em 0;
 
          &:hover {
-            background: none;
+            @include set-colors(input);
          }
       }
    }
@@ -169,14 +143,16 @@ form .checkbox input {
 }
 form .checkbox > input:checked {
    border: 1px solid var(--input-primary-border);
-   background-color: var(--input-primary-bg);
+   @include set-colors(input-primary);
    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
+   background-repeat: no-repeat;
     
 }
 form .checkbox > input:indeterminate {
    border: 1px solid var(--input-primary-border);
-   background-color: var(--input-primary-bg);
+   @include set-colors(input-primary);
    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10h8'/%3e%3c/svg%3e");
+   background-repeat: no-repeat;
 }
 form .checkbox > input:active {
     border: 2px solid var(--input-primary-border); 

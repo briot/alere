@@ -1,3 +1,4 @@
+@import "../shared";
 .ledgerTable {
    flex: 1 1;  /* ledger itself occupies as much space as possible */
 
@@ -6,7 +7,7 @@
    }
 
    .tr {
-      color: var(--table-row-details-fg);
+      @include set-colors(table-row-details);
       font-style: italic;
 
       .numeric {
