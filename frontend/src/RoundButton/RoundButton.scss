@@ -13,10 +13,12 @@ a.roundButton:hover {
    justify-content: space-between;
    outline: none;
 
+   &.selected {
+      @include set-colors(neumorph-selected);
+   }
+
    span:first-child {
-      border-width: 1px;
       border-radius: 50%;
-      margin: 5px 10px 5px 5px;
       width: var(--rb-width);
       height: var(--rb-height);
 
@@ -34,51 +36,42 @@ a.roundButton:hover {
       overflow: hidden;
    }
 
-   &.selected {
-      span:first-child,
-      span:last-child {
-         @include set-colors(neumorph);
-      }
-   }
-
    &.large {
-      --rb-width: 3rem;
-      --rb-height: 3rem;
+      --rb-width: 3.5rem;
+      --rb-height: 3.5rem;
       img {
-         width: 2.5rem;
+         width: 3.3rem;
       }
       .fa {
-         font-size: 1.3em;
+         font-size: 1.5em;
       }
    }
 
    &.normal {
-      --rb-width: 2.5rem;
-      --rb-height: 2.5rem;
+      --rb-width: 3rem;
+      --rb-height: 3rem;
       img {
          width: 2rem;
+      }
+      .fa {
+         font-size: 1.2em;
       }
    }
 
    &.small {
       --rb-width: 2rem;
       --rb-height: 2rem;
-      --nm-offset: 3px;  // neumorphism
-      --nm-blur: 5px;
       img {
          width: 1.5rem;
       }
       .fa {
-         font-size: 0.9em;
+         font-size: 1em;
       }
    }
 
    &.tiny {
       --rb-width: 1.4rem;
       --rb-height: 1.4rem;
-      --nm-offset: 2px;  // neumorphism
-      --nm-blur: 3px;
-      --nm-inset: 2px;
       img {
          width: 0.9rem;
       }

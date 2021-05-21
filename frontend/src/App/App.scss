@@ -26,10 +26,10 @@
    row-gap: var(--row-gap);
    justify-items: stretch;
 
-   background-image: url('./coins2.png');
-   background-repeat: no-repeat;
-   background-position: right bottom;
-   background-size: auto 50%;
+//   background-image: url('./coins2.png');
+//   background-repeat: no-repeat;
+//   background-position: right bottom;
+//   background-size: auto 50%;
 
    @media only screen and (min-width: 1025px) {
       grid-template-columns: auto 1fr minmax(auto, 220px);

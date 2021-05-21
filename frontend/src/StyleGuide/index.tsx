@@ -71,22 +71,22 @@ const StyleContent: React.FC<{}> = p => {
       return (
          <>
             <div className="wrappedRow">
-               <RoundButton fa="fa-book" size="large"  text="Large" url="#"/>
-               <RoundButton fa="fa-book" size="normal" text="Normal" url="#"/>
-               <RoundButton fa="fa-book" size="small"  text="Small" url="#"/>
-               <RoundButton fa="fa-book" size="tiny"   text="Tiny" url="#"/>
+               <RoundButton fa="fa-book" size="large"  text="L" url="#"/>
+               <RoundButton fa="fa-book" size="normal" text="N" url="#"/>
+               <RoundButton fa="fa-book" size="small"  text="S" url="#"/>
+               <RoundButton fa="fa-book" size="tiny"   text="T" url="#"/>
             </div>
             <div className="wrappedRow">
-               <RoundButton fa="fa-book" size="large"  disabled={true} text="Large" />
-               <RoundButton fa="fa-book" size="normal" disabled={true} text="Normal" />
-               <RoundButton fa="fa-book" size="small"  disabled={true} text="Small" />
-               <RoundButton fa="fa-book" size="tiny"   disabled={true} text="Tiny" />
+               <RoundButton fa="fa-book" size="large"  disabled={true} text="L" />
+               <RoundButton fa="fa-book" size="normal" disabled={true} text="N" />
+               <RoundButton fa="fa-book" size="small"  disabled={true} text="S" />
+               <RoundButton fa="fa-book" size="tiny"   disabled={true} text="T" />
             </div>
             <div className="wrappedRow">
-               <RoundButton fa="fa-book" size="large"  selected={true} text="Large" />
-               <RoundButton fa="fa-book" size="normal" selected={true} text="Normal" />
-               <RoundButton fa="fa-book" size="small"  selected={true} text="Small" />
-               <RoundButton fa="fa-book" size="tiny"   selected={true} text="Tiny" />
+               <RoundButton fa="fa-book" size="large"  selected={true} text="L" />
+               <RoundButton fa="fa-book" size="normal" selected={true} text="N" />
+               <RoundButton fa="fa-book" size="small"  selected={true} text="S" />
+               <RoundButton fa="fa-book" size="tiny"   selected={true} text="T" />
             </div>
          </>
       );
@@ -109,6 +109,8 @@ warmly elinor.
             <h2>H2 title</h2>
             <h3>H3 title</h3>
             <h4>H4 title</h4>
+            <h5>H5 title</h5>
+            <h6>H6 title</h6>
          </div>
       );
    }

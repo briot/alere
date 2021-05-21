@@ -36,9 +36,6 @@
    --table-vert-border-width: 0px;
    --table-horiz-border-width: 0px;
    --header-tool-height: 2.5rem;
-   --nm-offset: 0.33rem;
-   --nm-blur: 0.625rem;
-   --nm-inset: 0.5rem;
 
    --zindex-dropdown:       1000;
    --zindex-sticky:         1020;
@@ -61,16 +58,16 @@ $themes: (
    fg-for-dark-colors:         [ --gray-200,            #f8f9fa ],
    fg-for-light-colors:        #212529,
 
-   page-bg:                    [ rgb(29,30,48),         --gray-100 ],
+   page-bg:                    [ rgb(29,30,48),         #e0e5ec ],
    page-fg:                    [ --fg-for-dark-colors,  --fg-for-light-colors ],
    panel-border:               [ --gray-800,            --gray-400 ],
-   panel-bg:                   [ rgb(1,1,10),           #fbfbfb ],
+   panel-bg:                   [ #1a1a1a,               #efefef ],
    panel-fg:                   [ --fg-for-dark-colors,  --fg-for-light-colors ],
    panel-faded-fg:             [ --gray-500,            --gray-500 ],
    panel-faded-bg:             --panel-bg,
    panel-title-fg:             [ --color-300,           --color-700 ],
    panel-title-bg:             --panel-bg,
-   shadow-color:               [ --neumorph-light,      --neumorph-dark ],
+   shadow-color:               [ --gray-100-10p,         --gray-400-50p ],
 
    tooltip-bg:                 [ --gray-800,       --gray-400 ],
    tooltip-fg:                 [ --gray-fg-800,    --gray-fg-400 ],
@@ -128,12 +125,8 @@ $themes: (
    input-primary-border:       --color-600,
    input-primary-fg:           --fg-color-500,
 
-   // Colors for neumorphism on buttons. Those are the shadows, and the
-   // foreground color on selected buttons
-   neumorph-dark:              [ rgba(1,1,10,.8),     rgba(70,70,70,.12) ],
-   neumorph-fg:                [ --color-400,         --color-700 ],
-   neumorph-light:             [ --gray-200-10p,      rgba(255,255,255,0.5) ],
-   neumorph-selected-dark:     [ rgba(40,40,40,.2),   rgb(120,120,120,.12) ],
+   // Colors for neumorphism on buttons, when selected
+   neumorph-selected-fg:       [ --color-400,        --color-700 ],
 
    // Colors for scrollbars
    scrollbar-fg:               --color-200,
@@ -224,49 +217,11 @@ a {
 }
 
 .morph {
-   border-width: 0;
-   box-shadow:
-       calc(var(--nm-offset) * -1) calc(var(--nm-offset) * -1)
-          var(--nm-blur) 0 var(--neumorph-light),
-       var(--nm-offset) var(--nm-offset)
-          var(--nm-blur) 0 var(--neumorph-dark);
-
-   .panel & {
-      @include set-colors(panel);
+   .lightpalette & {
+      @include neumorphism(light);
    }
-
-   &:hover {
-      box-shadow:
-          calc(var(--nm-offset) * -1) calc(var(--nm-offset) * -1)
-             var(--nm-blur) 0 var(--neumorph-light),
-          var(--nm-offset) var(--nm-offset)
-             var(--nm-blur) 0 var(--neumorph-dark),
-          inset calc(var(--nm-offset) * -1) calc(var(--nm-offset) * -1)
-             var(--nm-inset) 0 var(--neumorph-light),
-          inset var(--nm-offset) var(--nm-offset)
-             var(--nm-inset) 0 var(--neumorph-dark);
-      transition: box-shadow 0.1s;
-   }
-
-   &.disabled:hover,
-   .disabled &:hover {
-      box-shadow:
-          calc(var(--nm-offset) - 1) calc(var(--nm-offset) * -1)
-             var(--nm-blur) 0 var(--neumorph-light),
-          var(--nm-offset) var(--nm-offset)
-             var(--nm-blur) 0 var(--neumorph-dark);
-   }
-   .selected & {
-      transition: box-shadow 0.1s;
-      box-shadow:
-          calc(var(--nm-offset) * -1) calc(var(--nm-offset) * 1)
-             var(--nm-blur) 0 var(--neumorph-light),
-          var(--nm-offset) var(--nm-offset)
-             var(--nm-blur) 0 var(--neumorph-dark),
-          inset calc(var(--nm-offset) * -1) calc(var(--nm-offset) * -1)
-             var(--nm-blur) 0 var(--neumorph-light),
-          inset var(--nm-offset) var(--nm-offset)
-             var(--nm-blur) 0 var(--neumorph-dark);
+   .darkpalette & {
+      @include neumorphism(dark);
    }
 }
 

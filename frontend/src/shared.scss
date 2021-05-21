@@ -1,3 +1,8 @@
+@use "sass:list";
+@use "sass:map";
+
+$use-neumorph-for-panels: false;
+
 // From bootstrap (https://v5.getbootstrap.com/docs/5.0/customize/color/)
 $blue:     #0d6efd !default;
 $indigo:   #6610f2 !default;
@@ -66,3 +71,79 @@ $orange-mantine: #ff922b !default;
    color: var(--#{$name}-fg);
    background: var(--#{$name}-bg);
 }
+
+/**
+ * From http://santhoshsivan.com/neu.html
+ * See also: https://neumorphism.io/#f9f5ff
+ * and https://github.com/Idean/Flutter-Neumorphic
+ */
+@mixin neumorphism($color, $distance: 5px, $direction: "topleft") {
+   $colors: (
+      dark:   [ inherit, #00000080, #3a3a3a60 ],
+      dark2:  [ 1A1B1E #151518, #242529 ],
+      light:  [ inherit, #a3b1c680, #ffffff ],
+      light2: [ #DEEAF6, #BECBD8, #F3F9FF ],
+      red:    [ #d12e2e, #b22727, #f03535 ],
+      blue:   [ #55b9f3, #489dcf, #62d5ff ],
+      green:  [ #2ead5b, #27934d, #35c769 ],
+      yellow: [ #eade39, #c7bd30, #ffff42 ],
+      ink:    [ #2d08b5, #220688, #380ae2 ],
+      purple: [ #8d75e6, #7863c4, #a287ff ],
+   );
+
+   --color: #{list.nth(map.get($colors, $color), 1)};
+   --color-dark: #{list.nth(map.get($colors, $color), 2)};
+   --color-light: #{list.nth(map.get($colors, $color), 3)};
+   --base-offset: #{$distance};
+   --offset: var(--base-offset);
+   --neg-offset: calc(var(--offset) * -1);
+   --blur-radius: calc(var(--offset) * 2);
+   --inset: ;
+
+   background: var(--color);
+   margin: calc(var(--base-offset) + 5px);
+
+   &.inset {
+      --inset: inset;
+      &:hover {
+         --offset: calc(var(--base-offset) * 1.4);
+      }
+   }
+   &:hover {
+      --offset: calc(var(--base-offset) * 0.4);
+      transition: box-shadow 0.1s;
+   }
+
+   @if $direction == "topleft" {
+      box-shadow:
+         var(--offset) var(--offset) var(--blur-radius)
+            var(--color-dark) var(--inset),
+         var(--neg-offset) var(--neg-offset) var(--blur-radius)
+            var(--color-light) var(--inset);
+   }
+   @else if $direction == "topright" {
+      box-shadow:
+         var(--neg-offset) var(--offset) var(--blur-radius)
+            var(--color-dark) var(--inset),
+         var(--offset)  var(--neg-offset) var(--blur-radius)
+            var(--color-light) var(--inset);
+   }
+   @else if $direction == "bottomleft" {
+      box-shadow:
+         var(--offset) var(--neg-offset) var(--blur-radius) 
+            var(--color-dark) var(--inset),
+         var(--neg-offset) var(--offset) var(--blur-radius)
+            var(--color-light) var(--inset);
+   }
+   @else if $direction == "bottomright" {
+      box-shadow:
+         var(--neg-offset) var(--neg-offset) var(--blur-radius)
+            var(--color-dark) var(--inset),
+         var(--offset) var(--offset) var(--blur-radius)
+           var(--color-light) var(--inset);
+   }
+   @else {
+      @error "Invalid direction #{$direction}"
+   }
+}
+
