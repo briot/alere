@@ -7,7 +7,7 @@ import './Tooltip.scss';
 type TooltipFunc<T> = (d: T) => React.ReactNode;
 
 const MARGIN = 4;
-const DELAY_BEFORE = 200;
+const DELAY_BEFORE = 600;
 const DELAY_TO_CLOSE = 100;
 
 export interface TooltipProps<T> {
@@ -179,7 +179,7 @@ export const TooltipProvider: React.FC<{}> = p => {
    );
 
    const hide = React.useCallback(
-      () => setData(d => ({ ...d, on: undefined })),
+      () => setData(d => ({ ...d, on: undefined, visible: false })),
       [],
    );
 
@@ -198,7 +198,7 @@ export const TooltipProvider: React.FC<{}> = p => {
          }
 
          if (on === null || r === undefined || r === null) {
-            setData(d => ({ ...d, on: undefined }));  // hide
+            setData(d => ({ ...d, visible: false, on: undefined }));  // hide
          } else {
             setData({element: r, on, visible: false});
          }
@@ -238,7 +238,7 @@ export const TooltipProvider: React.FC<{}> = p => {
    const c = classes(
       'tooltip-base',
       'tooltip',
-      data.on && tooltipRef.current ? 'visible' : 'hidden',
+      data.visible && data.on && tooltipRef.current ? 'visible' : 'hidden',
       pos.side,
    );
 
