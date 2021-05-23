@@ -214,29 +214,29 @@
     * result in different widths in header and body unfortunately.
     */
    .date {
-      flex: 0 1 11ch;
+      flex: 0 1 100px;
    }
    td.class {
       @include numeric-font
    }
    .price {
-      flex: 0 1 10ch;
+      flex: 0 1 100px;
       text-align: right;
    }
    .amount {
-      flex: 0 1 11ch;
+      flex: 0 1 110px;
       text-align: right;
    }
    .shares {
-      flex: 0 1 10ch;
+      flex: 0 1 110px;
       text-align: right;
    }
    .percent {
-      flex: 0 1 8ch;
+      flex: 0 1 100px;
       text-align: right;
    }
    .closed {
-      flex: 0 1 8ch;
+      flex: 0 1 60px;
    }
 }
 
