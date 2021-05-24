@@ -7,8 +7,8 @@
    }
 
    .tr {
-      @include set-colors(table-row-details);
-      font-style: italic;
+      //@include set-colors(table-row-details);
+      //font-style: italic;
 
       .numeric {
          font-size: 0.8rem;

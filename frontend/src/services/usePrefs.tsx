@@ -4,11 +4,15 @@ import { CommodityId } from '@/services/useAccounts';
 export interface Preferences {
    dark_mode: boolean;
    currencyId: CommodityId;
+   neumorph_mode: boolean;
+   text_on_left: boolean;  // whether to show text in LeftSideBar
 }
 
 const defaultPref: Preferences = {
    currencyId: 1,   // First available currency ?
    dark_mode: false,
+   neumorph_mode: false,
+   text_on_left: true,
 }
 
 interface PrefContext {

@@ -63,8 +63,8 @@ $themes: (
    panel-border:               [ --gray-800,            --gray-400 ],
    panel-bg:                   [ #1a1a1a,               #efefef ],
    panel-fg:                   [ --fg-for-dark-colors,  --fg-for-light-colors ],
-   panel-faded-fg:             [ --gray-500,            --gray-500 ],
-   panel-faded-bg:             --panel-bg,
+   panel-faded-fg:             [ --gray-800,            --gray-600 ],
+   panel-faded-bg:             none,
    panel-title-fg:             [ --color-300,           --color-700 ],
    panel-title-bg:             --panel-bg,
    shadow-color:               [ --gray-100-10p,         --gray-400-50p ],
@@ -217,12 +217,7 @@ a {
 }
 
 .morph {
-   .lightpalette & {
-      @include neumorphism(light);
-   }
-   .darkpalette & {
-      @include neumorphism(dark);
-   }
+   @include neumorphism();
 }
 
 .recharts {

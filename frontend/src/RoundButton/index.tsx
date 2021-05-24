@@ -8,6 +8,7 @@ interface RoundButtonProps {
    img?: string;    // or image url
 
    text?: string;   // shown besides the round button
+   showText?: boolean;
    tooltip?: string;
    selected?: boolean;
    disabled?: boolean;
@@ -28,7 +29,7 @@ const RoundButton: React.FC<RoundButtonProps> = p => {
            </span>
       }
       {
-         p.text &&
+         p.text && p.showText &&
          <span>{p.text}</span>
       }
       {
@@ -40,7 +41,7 @@ const RoundButton: React.FC<RoundButtonProps> = p => {
    const c = `roundButton ${p.selected ? 'selected' : ''} ${p.disabled ? 'disabled': ''} ${p.size || 'normal'}`;
 
    return (
-      <Tooltip tooltip={p.tooltip} >
+      <Tooltip tooltip={p.tooltip ?? p.text} >
       {
          p.onClick
          ? (

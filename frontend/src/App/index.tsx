@@ -14,6 +14,7 @@ import useAccounts from '@/services/useAccounts';
 import usePrefs from '@/services/usePrefs';
 import Settings from '@/Settings';
 import OnlineUpdate from '@/Header/OnlineUpdate';
+import classes from '@/services/classes';
 import { AccountsProvider } from '@/services/useAccounts';
 import { BrowserRouter } from "react-router-dom";
 import { CashflowPanelProps, registerCashflow } from '@/Cashflow/Panel';
@@ -142,6 +143,10 @@ const Main: React.FC<{}> = () => {
    const { prefs } = usePrefs();
    const [ header, setHeader ] = React.useState<HeaderProps>({});
    const { accounts } = useAccounts();
+   const c = classes(
+      'page',
+      prefs.neumorph_mode ? 'neumorph_mode' : 'not_neumorph_mode',
+   );
 
    return (
       <Switch>
@@ -149,63 +154,61 @@ const Main: React.FC<{}> = () => {
              <StyleGuide />
          </Route>
          <Route>
-            <div
-               id="app"
-               className={
-                  prefs.dark_mode ? 'page darkpalette' : 'page lightpalette' }
-            >
-               <Header {...header} >
-                  <OnlineUpdate />
-                  <Settings />
-               </Header>
-               <LeftSideBar />
-               <RightSideBar />
+            <div className={prefs.dark_mode ? 'darkpalette' : 'lightpalette'}>
+               <div id="app" className={c} >
+                  <Header {...header} >
+                     <OnlineUpdate />
+                     <Settings />
+                  </Header>
+                  <LeftSideBar />
+                  <RightSideBar />
 
-               {
-                  !accounts.loaded
-                  ? <div className="dashboard main"><Spinner /></div>
-                  : !accounts.has_accounts()
-                  ? (
-                     <Dashboard
-                        defaultPanels={[
-                           {
-                              type: 'welcome',
-                              rowspan: 4,
-                              colspan: 4,
-                           } as WelcomePanelProps,
-                        ]}
-                        setHeader={setHeader}
-                        className="main"
-                        name=''
-                     />
-                  ) : (
-                     <Switch>
-                         <Route path="/ledger/:accountIds" >
-                            <LedgerPage setHeader={setHeader} />
-                         </Route>
-                         <Route path="/accounts">
-                            <AccountsPage setHeader={setHeader} />
-                         </Route>
-                         <Route path="/investments">
-                            <InvestmentPage setHeader={setHeader} />
-                         </Route>
-                         <Route path="/performance">
-                            <PerformancePage setHeader={setHeader} />
-                         </Route>
-                         <Route path="/networth">
-                            <NetworthPage setHeader={setHeader} />
-                         </Route>
-                         <Route>
-                            <Dashboard
-                               defaultPanels={defaultOverview}
-                               setHeader={setHeader}
-                               className="main"
-                               name='Overview'
-                            />
-                         </Route>
-                     </Switch>
-                  )
-               }
+                  {
+                     !accounts.loaded
+                     ? <div className="dashboard main"><Spinner /></div>
+                     : !accounts.has_accounts()
+                     ? (
+                        <Dashboard
+                           defaultPanels={[
+                              {
+                                 type: 'welcome',
+                                 rowspan: 4,
+                                 colspan: 4,
+                              } as WelcomePanelProps,
+                           ]}
+                           setHeader={setHeader}
+                           className="main"
+                           name=''
+                        />
+                     ) : (
+                        <Switch>
+                            <Route path="/ledger/:accountIds" >
+                               <LedgerPage setHeader={setHeader} />
+                            </Route>
+                            <Route path="/accounts">
+                               <AccountsPage setHeader={setHeader} />
+                            </Route>
+                            <Route path="/investments">
+                               <InvestmentPage setHeader={setHeader} />
+                            </Route>
+                            <Route path="/performance">
+                               <PerformancePage setHeader={setHeader} />
+                            </Route>
+                            <Route path="/networth">
+                               <NetworthPage setHeader={setHeader} />
+                            </Route>
+                            <Route>
+                               <Dashboard
+                                  defaultPanels={defaultOverview}
+                                  setHeader={setHeader}
+                                  className="main"
+                                  name='Overview'
+                               />
+                            </Route>
+                        </Switch>
+                     )
+                  }
+               </div>
             </div>
          </Route>
       </Switch>

@@ -65,7 +65,8 @@ const computePos = (
    const isValid = (r: Position) =>
       (r.top === undefined ? true : 0 <= r.top && r.top + tbh <= wh)
       && (r.left === undefined ? true : 0 <= r.left && r.left + tbw <= ww)
-      && (r.right === undefined ? true : 0 <= r.right - tbw && r.right <= ww);
+      && (r.right === undefined ? true
+          : 0 <= b.x - r.right - tbw && b.x - r.right <= ww);
 
    for (let attempt = 0; attempt < 4; attempt++) {
       switch (side) {
@@ -113,6 +114,8 @@ const computePos = (
             side = 'bottom';
             break;
       }
+
+      window.console.log(r, tbw, ww, b); // MANU
 
       if (isValid(r)) {
          return r;

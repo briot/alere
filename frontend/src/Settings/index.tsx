@@ -14,6 +14,9 @@ const Settings: React.FC<SettingsProps> = p => {
    const changeDark = (dark_mode: boolean) => updatePrefs({ dark_mode });
    const changeCurrency =
       (currencyId: CommodityId) => updatePrefs({ currencyId });
+   const changeNeumorph =
+      (neumorph_mode: boolean) => updatePrefs({ neumorph_mode });
+   const changeTL = (text_on_left: boolean) => updatePrefs({ text_on_left });
 
    return (
       <Dropdown
@@ -36,6 +39,16 @@ const Settings: React.FC<SettingsProps> = p => {
                       checked={prefs.dark_mode}
                       onChange={changeDark}
                       text="Dark mode"
+                  />
+                  <Checkbox
+                      checked={prefs.neumorph_mode}
+                      onChange={changeNeumorph}
+                      text="Neumorphism mode"
+                  />
+                  <Checkbox
+                      checked={prefs.text_on_left}
+                      onChange={changeTL}
+                      text="Show text on left side"
                   />
 
                   <Select

@@ -1,18 +1,15 @@
 @import "../shared";
 
 .panel {
-   @if $use-neumorph-for-panels {
-      .lightpalette & {
-         @include neumorphism(light);
-      }
-      .darkpalette & {
-         @include neumorphism(dark);
-      }
-  } @else {
-     @include set-colors(panel);
-     box-shadow: 6px 6px 10px 0 var(--shadow-color);
-     border: 1px solid var(--panel-border);
-  }
+
+   .not_neumorph_mode & {
+      @include set-colors(panel);
+      box-shadow: 6px 6px 10px 0 var(--shadow-color);
+      border: 1px solid var(--panel-border);
+   }
+   .neumorph_mode & {
+      @include neumorphism($hover: false, $margin: false, $distance: 3px);
+   }
 
    display: flex;
    flex-flow: column nowrap;
@@ -43,7 +40,13 @@
       h5 {
          flex: 1 1;
          font-variant: small-caps;
-         @include set-colors(panel-title);
+
+         .not_neumorph_mode & {
+            @include set-colors(panel-title);
+         }
+         .neumorph_mode & {
+            color: var(--panel-title-fg);
+         }
       }
       .group {
          flex: 0 0;

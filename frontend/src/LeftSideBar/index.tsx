@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useLocation } from "react-router-dom";
 import useAccounts from '@/services/useAccounts';
 import useHistory from '@/services/useHistory';
+import usePrefs from '@/services/usePrefs';
 import RoundButton from '@/RoundButton';
 import './LeftSideBar.scss';
 
@@ -12,6 +13,7 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
    const location = useLocation();
    const { mostRecent } = useHistory();
    const { accounts } = useAccounts();
+   const { prefs } = usePrefs();
 
    return (
       <div id='lsidebar'>
@@ -21,6 +23,7 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
                       location.pathname === '/'}
             size='large'
             text="Overview"
+            showText={prefs.text_on_left}
             url="/dashboard"
          />
          <RoundButton
@@ -28,6 +31,7 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
             selected={location.pathname.startsWith('/accounts/')}
             disabled={!accounts.has_accounts()}
             text="Accounts"
+            showText={prefs.text_on_left}
             size='large'
             url="/accounts/"
          />
@@ -36,12 +40,14 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
             selected={location.pathname.startsWith('/ledger/')}
             disabled={!accounts.has_accounts() || mostRecent === undefined}
             text="Ledger"
+            showText={prefs.text_on_left}
             size='large'
             url={`/ledger/${mostRecent}`}
           />
          <RoundButton
             fa="fa-balance-scale"
             text="Budget"
+            showText={prefs.text_on_left}
             disabled={true}
             size='large'
          />
@@ -50,6 +56,7 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
             selected={location.pathname.startsWith('/networth/')}
             disabled={!accounts.has_accounts()}
             text="Networth"
+            showText={prefs.text_on_left}
             size='large'
             url="/networth/"
           />
@@ -58,6 +65,7 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
             selected={location.pathname.startsWith('/investments/')}
             disabled={!accounts.has_accounts()}
             text="Investments"
+            showText={prefs.text_on_left}
             size='large'
             url="/investments/"
           />
@@ -66,18 +74,21 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
             selected={location.pathname.startsWith('/performance/')}
             disabled={!accounts.has_accounts()}
             text="Performance"
+            showText={prefs.text_on_left}
             size='large'
             url="/performance/"
           />
          <RoundButton
             fa="fa-user"
             text="Payees"
+            showText={prefs.text_on_left}
             disabled={true}
             size='large'
           />
          <RoundButton
             fa="fa-pie-chart"
             text="Reports"
+            showText={prefs.text_on_left}
             disabled={true}
             size='large'
          />
