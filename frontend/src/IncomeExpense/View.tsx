@@ -2,6 +2,8 @@ import * as React from 'react';
 import * as d3Scale from 'd3-scale';
 import { Legend, PieChart, PieLabelRenderProps,
          Pie, Cell, Tooltip, TooltipProps } from 'recharts';
+import { XAxis, YAxis, BarChart, Bar, CartesianGrid,
+         LabelList } from "recharts";
 import { DateRange, rangeToHttp } from '@/Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from '@/Numeric';
@@ -12,6 +14,7 @@ import useFetch from '@/services/useFetch';
 import './IncomeExpense.scss';
 
 const NAME_KEY = "nam";
+const MIN_BAR_HEIGHT = 10;
 
 interface DataItemType {
    account: Account | undefined;
@@ -81,11 +84,11 @@ const CustomTooltip = (p: TooltipProps<number, string> & {data: DataType} ) => {
      ) : null;
 };
 
-
 export interface IncomeExpenseProps {
    expenses: boolean;
    range: DateRange;
    roundValues?: boolean;
+   showBars?: boolean;
 }
 
 const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
@@ -162,7 +165,44 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
          <div style={{ flex: '1 1 auto' }}>
             <AutoSizer>
             {
-               ({width, height}) => (
+               p.showBars ?
+                  ({width, height}) => (
+                  <div style={{width: width, height: height, overflow:'scroll'}} >
+                     <BarChart
+                        width={width}
+                        height={
+                           /* lines should have minimal height to keep label
+                            * readable */
+                           Math.max(data.items.length * MIN_BAR_HEIGHT, height)
+                        }
+                        className="incomeexpense"
+                        layout="vertical"
+                        data={data.items}
+                     >
+                        <XAxis
+                           dataKey="value"
+                           domain={['auto', 'auto']}
+                           type="number"
+                        />
+                        <YAxis dataKey={NAME_KEY} type="category" hide={true} />
+                        <CartesianGrid strokeDasharray="5 5" />
+                        <Tooltip content={<CustomTooltip data={data} />} />
+                        <Bar
+                            dataKey="value"
+                            fill={color1}
+                            isAnimationActive={false}
+                        >
+                           <LabelList
+                              dataKey={NAME_KEY}
+                              position="left"
+                              width={undefined /* do not break lines */}
+                           />
+                        </Bar>
+                     </BarChart>
+                  </div>
+
+               ) :
+                  ({width, height}) => (
                   <PieChart
                      width={width}
                      height={height}

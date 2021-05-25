@@ -80,15 +80,15 @@ $orange-mantine: #ff922b !default;
 ) {
    $colors: (
       dark:   [ inherit, #00000080, #3a3a3a60 ],
-      dark2:  [ 1A1B1E #151518, #242529 ],
+      // dark2:  [ 1A1B1E #151518, #242529 ],
       light:  [ inherit, #a3b1c680, #ffffff ],
-      light2: [ #DEEAF6, #BECBD8, #F3F9FF ],
-      red:    [ #d12e2e, #b22727, #f03535 ],
-      blue:   [ #55b9f3, #489dcf, #62d5ff ],
-      green:  [ #2ead5b, #27934d, #35c769 ],
-      yellow: [ #eade39, #c7bd30, #ffff42 ],
-      ink:    [ #2d08b5, #220688, #380ae2 ],
-      purple: [ #8d75e6, #7863c4, #a287ff ],
+      // light2: [ #DEEAF6, #BECBD8, #F3F9FF ],
+      // red:    [ #d12e2e, #b22727, #f03535 ],
+      // blue:   [ #55b9f3, #489dcf, #62d5ff ],
+      // green:  [ #2ead5b, #27934d, #35c769 ],
+      // yellow: [ #eade39, #c7bd30, #ffff42 ],
+      // ink:    [ #2d08b5, #220688, #380ae2 ],
+      // purple: [ #8d75e6, #7863c4, #a287ff ],
    );
 
    .lightpalette & {

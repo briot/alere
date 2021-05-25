@@ -232,5 +232,7 @@ a {
          stroke: var(--cartesian-grid);
       }
    }
-
+   &-label-list {
+      font-size: 0.6em;
+   }
 }
