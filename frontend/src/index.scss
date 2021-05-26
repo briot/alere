@@ -58,10 +58,12 @@ $themes: (
    fg-for-dark-colors:         [ --gray-200,            #f8f9fa ],
    fg-for-light-colors:        #212529,
 
+   // page-bg is also the panel background color when using neumorph mode (in
+   // which case panel-bg is unused).
    page-bg:                    [ rgb(29,30,48),         #e0e5ec ],
    page-fg:                    [ --fg-for-dark-colors,  --fg-for-light-colors ],
    panel-border:               [ --gray-800,            --gray-400 ],
-   panel-bg:                   [ #1a1a1a,               #efefef ],
+   panel-bg:                   [ #1a1a1a,               #fbfbfb ],
    panel-fg:                   [ --fg-for-dark-colors,  --fg-for-light-colors ],
    panel-faded-fg:             [ --gray-800,            --gray-600 ],
    panel-faded-bg:             none,
