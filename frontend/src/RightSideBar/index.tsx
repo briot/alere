@@ -1,5 +1,7 @@
 import React from 'react';
 import Dashboard from '@/Dashboard';
+import { PanelBaseProps } from '@/Dashboard/Panel';
+import useSettings from '@/services/useSettings';
 import { RecentPanelProps } from '@/Recent/Panel';
 import './RightSideBar.scss';
 
@@ -18,11 +20,15 @@ interface RightSideBarProps {
 
 const RightSideBar: React.FC<RightSideBarProps> = p => {
    const doNothing = React.useCallback(() => {}, []);
+   const { val, setVal } = useSettings<PanelBaseProps[]>(
+      'Right', defaultPanels);
+
    return (
       <div id='rsidebar'>
          <Dashboard
              name="rightside"
-             defaultPanels={defaultPanels}
+             panels={val}
+             savePanels={setVal}
              setHeader={doNothing}
          />
       </div>

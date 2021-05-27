@@ -2,7 +2,6 @@ import * as React from 'react';
 import { PanelBaseProps } from '@/Dashboard/Panel';
 import PANELS from '@/Dashboard/Register';
 import { SetHeader } from '@/Header';
-import useSettings from '@/services/useSettings';
 import classes from '@/services/classes';
 import './Dashboard.scss';
 
@@ -83,14 +82,13 @@ export const DashboardFromPanels: React.FC<DashboardFromPanelsProps> = p => {
 
 interface DashboardProps {
    name: string;     // dashboard name
-   defaultPanels: PanelBaseProps[],
    overrides?: Overrides;    //  Overrides settings for the panels
    className?: string;
+   panels: PanelBaseProps[],
+   savePanels: React.Dispatch<React.SetStateAction<PanelBaseProps[]>>;
 }
 const Dashboard: React.FC<DashboardProps & SetHeader> = p => {
    const { setHeader } = p;
-   const { val, setVal } =
-      useSettings<PanelBaseProps[]>(`dash-${p.name}`, p.defaultPanels);
 
    React.useEffect(
       () => setHeader({name: p.name}),
@@ -105,11 +103,11 @@ const Dashboard: React.FC<DashboardProps & SetHeader> = p => {
    return (
       <div className={c} >
          {
-            val.map((p2, idx) =>
+            p.panels.map((p2, idx) =>
                <PanelWrapper
                   key={idx}
                   panel={{...p2, ...p.overrides?.[p2.type]}}
-                  setPanels={setVal}
+                  setPanels={p.savePanels}
                   excludeFields={Object.keys(p.overrides?.[p2.type] ?? {})}
                   index={idx}
                />

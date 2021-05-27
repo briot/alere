@@ -39,8 +39,15 @@ interface PageProps {
    name: string;
 }
 export const Page: React.FC<PageProps & SetHeader> = React.memo(p => {
-   const { pages, deletePage } = usePages();
+   const { pages, deletePage, updatePage } = usePages();
    const page = pages[p.name];
+   const [ panels, setPanels ] = React.useState(page?.panels);
+
+   // Save to local storage
+   React.useEffect(
+      () => updatePage(p.name, panels),
+      [p.name, panels]
+   );
 
    React.useEffect(
       () => () => {
@@ -59,7 +66,8 @@ export const Page: React.FC<PageProps & SetHeader> = React.memo(p => {
        <Dashboard
           name={p.name}
           className="main"
-          defaultPanels={page.panels}
+          panels={panels}
+          savePanels={setPanels}
           setHeader={p.setHeader}
        />
    );

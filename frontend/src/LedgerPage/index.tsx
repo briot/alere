@@ -7,6 +7,7 @@ import useTransactions from '@/services/useTransactions';
 import { toDates, DateRange } from '@/Dates';
 import { SetHeader } from '@/Header';
 import Dashboard from '@/Dashboard';
+import { PanelBaseProps } from '@/Dashboard/Panel';
 import { SplitMode, NotesMode } from '@/Ledger/View';
 import { Account } from '@/services/useAccounts';
 import { SelectAccount } from '@/Account';
@@ -14,6 +15,7 @@ import { LedgerPanelProps } from '@/Ledger/Panel';
 import { PriceHistoryPanelProps } from '@/PriceHistory/Panel';
 import { TickerPanelProps } from '@/Ticker/Panel';
 import usePrefs from '@/services/usePrefs';
+import useSettings from '@/services/useSettings';
 import useTickers from '@/services/useTickers';
 
 const defaultPanels = [
@@ -68,6 +70,8 @@ interface LedgerPageProps {
 const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
    const { setHeader } = p;
    const { prefs } = usePrefs();
+   const { val, setVal } = useSettings<PanelBaseProps[]>(
+      'Ledger', defaultPanels);
 
    // list of account ids (as string)
    const { accountIds } = useParams<LedgerPageRouteProps>();
@@ -130,7 +134,8 @@ const LedgerPage: React.FC<LedgerPageProps & SetHeader> = p => {
       <Dashboard
          name='ledger'
          className="main"
-         defaultPanels={defaultPanels}
+         panels={val}
+         savePanels={setVal}
          setHeader={doNothing}
          overrides={
             {

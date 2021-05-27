@@ -18,6 +18,7 @@ import { SplitMode, NotesMode } from '@/Ledger/View';
 import { TreeMode } from '@/services/useAccountTree';
 import { WelcomePanelProps } from '@/Welcome/Panel';
 import { capitalize } from '@/services/utils';
+import useSettings from '@/services/useSettings';
 
 export type Disabled = undefined | boolean | (() => boolean) | 'need_accounts';
 
@@ -42,6 +43,9 @@ interface PagesContext {
 
    // Delete the page
    deletePage: (name: string) => void;
+
+   // Update an existing page
+   updatePage: (name: string, panels: PanelBaseProps[]) => void;
 }
 
 const defaultPages: Record<string, PageDescr> = {
@@ -223,20 +227,22 @@ const noContext: PagesContext = {
    pages: {},
    addPage: () => Promise.resolve(''),
    deletePage: () => null,
+   updatePage: () => null,
 }
 const ReactPagesContext = React.createContext(noContext);
-const KEY = "alerePages";
 
 export const PagesProvider: React.FC<{}> = p => {
+   const { val, setVal } = useSettings('Pages', defaultPages);
+
    const addPage = React.useCallback(
       (header: HeaderProps, panels: PanelBaseProps[], tmp?: boolean) => {
-         const name = capitalize(header.name ?? '');
          return new Promise<string>(
             (resolve, reject) => {
-               setData(old => {
+               setVal(old => {
+                  const name = capitalize(header.name ?? '');
                   let id = name;
-                  if (old.pages[id] !== undefined) {
-                     for (let index = 0; old.pages[id] !== undefined; index++) {
+                  if (old[id] !== undefined) {
+                     for (let index = 0; old[id] !== undefined; index++) {
                         id = `${name}_${index}`;
                      }
                   }
@@ -245,51 +251,45 @@ export const PagesProvider: React.FC<{}> = p => {
 
                   // To avoid a race condition (returning the url before we
                   // have registered the page), we resolve in a timeout.
-                  setTimeout(
-                     () => resolve(url),
-                     1
-                  );
+                  setTimeout(() => resolve(url), 1);
 
                   return {
                      ...old,
-                     pages: {...old.pages,
-                             [id]: {name, panels, url, tmp}},
+                     [id]: {name: id, panels, url, tmp},
                   };
                });
             }
          );
       },
-      []
+      [setVal]
    );
 
    const deletePage = React.useCallback(
       (name: string) => {
-         setData(old => {
+         setVal(old => {
             const cp = {...old};
-            delete cp.pages[name];
+            delete cp[name];
             return cp;
          });
       },
-      []
+      [setVal]
    );
 
-   const [ data, setData ] = React.useState<PagesContext>(
-      {pages: defaultPages, addPage, deletePage});
-
-   // On startup, load the list of pages from local storage
-   React.useEffect(
-      () => {
-         try {
-            const pages: Record<string, PageDescr> =
-               JSON.parse(localStorage.getItem(KEY) || '');
-            window.console.log('Loaded pages from localStorage');
-            setData(old => ({ ...old, pages: pages ?? defaultPages }));
-         } catch(e) {
-            window.console.log('No pages to load from localStorage');
-            setData(old => ({ ...old, pages: defaultPages }));
-         }
+   const updatePage = React.useCallback(
+      (name: string, panels: PanelBaseProps[]) => {
+          setVal(old => {
+             return {
+                ...old,
+                [name]: {...old[name], panels},
+             };
+          });
       },
-      []
+      [setVal]
+   );
+
+   const data = React.useMemo(
+      () => ({ pages: val, addPage, deletePage, updatePage }),
+      [val, addPage, deletePage, updatePage]
    );
 
    return (
