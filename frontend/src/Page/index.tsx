@@ -3,14 +3,14 @@
  */
 import * as React from 'react';
 import { useHistory, Redirect } from 'react-router-dom';
-import { SetHeader } from '@/Header';
+import { HeaderProps, SetHeader } from '@/Header';
 import Dashboard from '@/Dashboard';
 import { PanelBaseProps } from '@/Dashboard/Panel';
 import RoundButton from '@/RoundButton';
 import usePages from '@/services/usePages';
 
 interface PageButtonProps {
-   name: string;
+   name: HeaderProps;
    panel: PanelBaseProps;
 }
 
@@ -26,7 +26,6 @@ export const PageButton: React.FC<PageButtonProps> = p => {
    return (
       <RoundButton
          fa="fa-expand"
-         text={p.name}
          tooltip="Expand full screen"
          showText={false}
          size="tiny"

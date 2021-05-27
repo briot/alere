@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Accounts, { AccountsProps } from '@/Accounts/View';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import Panel, { PanelProps, PanelBaseProps } from '@/Dashboard/Panel';
 
 export interface AccountsPanelProps extends PanelBaseProps, AccountsProps {
    type: 'accounts';
@@ -26,5 +26,4 @@ const AccountsPanel: React.FC<PanelProps<AccountsPanelProps>> = p => {
       </Panel>
    );
 }
-
-export const registerAccounts = () => PANELS['accounts'] = AccountsPanel;
+export const registerAccounts = {'accounts': AccountsPanel};

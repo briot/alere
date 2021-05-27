@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Settings from '@/PriceHistory/Settings';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import Panel, { PanelProps, PanelBaseProps } from '@/Dashboard/Panel';
 import PriceGraph, { PriceGraphProps } from '@/PriceGraph';
 
 export interface PriceHistoryPanelProps extends PanelBaseProps, PriceGraphProps {
@@ -30,5 +30,4 @@ const PriceHistoryPanel: React.FC<PanelProps<PriceHistoryPanelProps>> = p => {
    );
 }
 
-export const registerPriceHistory =
-   () => PANELS['pricehistory'] = PriceHistoryPanel;
+export const registerPriceHistory = {'pricehistory': PriceHistoryPanel};

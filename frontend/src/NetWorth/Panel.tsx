@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Networth, { NetworthProps } from '@/NetWorth/View';
 import Settings from '@/NetWorth/Settings';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import Panel, { PanelProps, PanelBaseProps } from '@/Dashboard/Panel';
 import useAccounts from '@/services/useAccounts';
 
 export interface NetworthPanelProps extends PanelBaseProps, NetworthProps {
@@ -31,4 +31,4 @@ const NetworthPanel: React.FC<PanelProps<NetworthPanelProps>> = p => {
    );
 }
 
-export const registerNetworth = () => PANELS['networth'] = NetworthPanel;
+export const registerNetworth = {'networth': NetworthPanel};

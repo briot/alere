@@ -1,7 +1,7 @@
 import * as React from 'react';
 import NetworthHistory, { NetworthHistoryProps } from '@/NWHistory/View';
 import Settings from './Settings';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import Panel, { PanelProps, PanelBaseProps } from '@/Dashboard/Panel';
 import useAccounts from '@/services/useAccounts';
 
 export interface NetworthHistoryPanelProps
@@ -32,5 +32,4 @@ const NetworthHistoryPanel: React.FC<PanelProps<NetworthHistoryPanelProps>> = p 
    );
 }
 
-export const registerNetworthHistory =
-   () => PANELS['nwhist'] = NetworthHistoryPanel;
+export const registerNetworthHistory = {'nwhist': NetworthHistoryPanel};

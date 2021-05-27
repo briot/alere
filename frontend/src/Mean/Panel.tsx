@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Mean, { MeanProps } from '@/Mean/View';
 import Settings from '@/Mean/Settings';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import Panel, { PanelProps, PanelBaseProps } from '@/Dashboard/Panel';
 import useAccounts from '@/services/useAccounts';
 
 export interface MeanPanelProps extends PanelBaseProps, MeanProps {
@@ -37,4 +37,4 @@ const MeanPanel: React.FC<PanelProps<MeanPanelProps>> = p => {
    );
 }
 
-export const registerMean = () => PANELS['mean'] = MeanPanel;
+export const registerMean = {'mean': MeanPanel};

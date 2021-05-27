@@ -1,7 +1,7 @@
 import * as React from 'react';
 import AccountName from '@/Account';
 import { DateRange } from '@/Dates';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import Panel, { PanelProps, PanelBaseProps } from '@/Dashboard/Panel';
 import TickerView, { TickerViewProps } from './View';
 import { AccountForTicker, Ticker } from '@/Ticker/types';
 import { CommodityId } from '@/services/useAccounts';
@@ -73,5 +73,4 @@ const TickerPanel: React.FC<PanelProps<TickerPanelProps>> = p => {
       </Panel>
    );
 }
-export default TickerPanel;
-export const registerTicker = () => PANELS['ticker'] = TickerPanel;
+export const registerTicker = {'ticker': TickerPanel}

@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import { PanelBaseProps } from '@/Dashboard/Panel';
+import PANELS from '@/Dashboard/Register';
 import { SetHeader } from '@/Header';
 import useSettings from '@/services/useSettings';
 import classes from '@/services/classes';

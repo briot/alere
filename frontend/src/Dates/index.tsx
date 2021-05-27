@@ -234,7 +234,7 @@ export const rangeDisplay = (name: DateRange): RangeDisplay => {
 
    return {
       as_dates: `from ${min} to ${max}`,
-      text: dateRanges[name].text ?? name,
+      text: dateRanges[name]?.text ?? name,
    }
 }
 

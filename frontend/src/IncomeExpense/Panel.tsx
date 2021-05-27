@@ -1,7 +1,7 @@
 import * as React from 'react';
 import IncomeExpense, { IncomeExpenseProps } from '@/IncomeExpense/View';
 import Settings from '@/IncomeExpense/Settings';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import Panel, { PanelProps, PanelBaseProps } from '@/Dashboard/Panel';
 import useAccounts from '@/services/useAccounts';
 
 export interface IncomeExpensePanelProps
@@ -33,5 +33,5 @@ const IEPanel: React.FC<PanelProps<IncomeExpensePanelProps>> = p => {
    );
 }
 
-export const registerIE = () => PANELS['incomeexpenses'] = IEPanel;
+export const registerIE = {'incomeexpenses': IEPanel};
 

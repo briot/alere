@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Investments, { InvestmentsProps } from '@/Investments/View';
 import Settings from '@/Investments/Settings';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import Panel, { PanelProps, PanelBaseProps,} from '@/Dashboard/Panel';
 
 export interface InvestmentsPanelProps extends PanelBaseProps, InvestmentsProps {
    type: 'investments';
@@ -26,5 +26,4 @@ const InvestmentsPanel: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
    );
 }
 
-export const registerInvestments =
-   () => PANELS['investments'] = InvestmentsPanel;
+export const registerInvestments = {'investments': InvestmentsPanel};

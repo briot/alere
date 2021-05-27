@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Recent, { RecentProps } from './View';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import Panel, { PanelProps, PanelBaseProps } from '@/Dashboard/Panel';
 
 export interface RecentPanelProps extends PanelBaseProps, RecentProps {
    type: 'recent';
@@ -15,4 +15,4 @@ const RecentPanel: React.FC<PanelProps<RecentPanelProps>> = p => {
       </Panel>
    );
 }
-export const registerRecent = () => PANELS['recent'] = RecentPanel;
+export const registerRecent = {'recent': RecentPanel};

@@ -5,6 +5,7 @@
 import * as React from 'react';
 import { AccountsPanelProps } from '@/Accounts/Panel';
 import { CashflowPanelProps } from '@/Cashflow/Panel';
+import { HeaderProps } from '@/Header';
 import { IncomeExpensePanelProps } from '@/IncomeExpense/Panel';
 import { InvestmentsPanelProps } from '@/Investments/Panel';
 import { LedgerPanelProps } from '@/Ledger/Panel';
@@ -16,6 +17,7 @@ import { PerformancePanelProps } from '@/Performance/Panel';
 import { SplitMode, NotesMode } from '@/Ledger/View';
 import { TreeMode } from '@/services/useAccountTree';
 import { WelcomePanelProps } from '@/Welcome/Panel';
+import { capitalize } from '@/services/utils';
 
 export type Disabled = undefined | boolean | (() => boolean) | 'need_accounts';
 
@@ -35,7 +37,7 @@ interface PagesContext {
 
    // Create a new page, and return its id
    addPage: (
-      name: string, panels: PanelBaseProps[], tmp?: boolean
+      header: HeaderProps, panels: PanelBaseProps[], tmp?: boolean
       ) => Promise<string>;
 
    // Delete the page
@@ -218,7 +220,7 @@ const defaultPages: Record<string, PageDescr> = {
 };
 
 const noContext: PagesContext = {
-   pages: defaultPages,
+   pages: {},
    addPage: () => Promise.resolve(''),
    deletePage: () => null,
 }
@@ -226,20 +228,20 @@ const ReactPagesContext = React.createContext(noContext);
 const KEY = "alerePages";
 
 export const PagesProvider: React.FC<{}> = p => {
-   const [ data, setData ] = React.useState<PagesContext>(noContext);
    const addPage = React.useCallback(
-      (name: string, panels: PanelBaseProps[], tmp?: boolean) => {
+      (header: HeaderProps, panels: PanelBaseProps[], tmp?: boolean) => {
+         const name = capitalize(header.name ?? '');
          return new Promise<string>(
             (resolve, reject) => {
                setData(old => {
                   let id = name;
                   if (old.pages[id] !== undefined) {
                      for (let index = 0; old.pages[id] !== undefined; index++) {
-                        id = `name_${index}`;
+                        id = `${name}_${index}`;
                      }
                   }
 
-                  const url = `/page/${id}`;
+                  const url = `/${id}`;
 
                   // To avoid a race condition (returning the url before we
                   // have registered the page), we resolve in a timeout.
@@ -271,6 +273,9 @@ export const PagesProvider: React.FC<{}> = p => {
       []
    );
 
+   const [ data, setData ] = React.useState<PagesContext>(
+      {pages: defaultPages, addPage, deletePage});
+
    // On startup, load the list of pages from local storage
    React.useEffect(
       () => {
@@ -278,13 +283,13 @@ export const PagesProvider: React.FC<{}> = p => {
             const pages: Record<string, PageDescr> =
                JSON.parse(localStorage.getItem(KEY) || '');
             window.console.log('Loaded pages from localStorage');
-            setData({ pages, addPage, deletePage });
+            setData(old => ({ ...old, pages: pages ?? defaultPages }));
          } catch(e) {
             window.console.log('No pages to load from localStorage');
-            setData({ pages: defaultPages, addPage, deletePage });
+            setData(old => ({ ...old, pages: defaultPages }));
          }
       },
-      [addPage, deletePage]
+      []
    );
 
    return (

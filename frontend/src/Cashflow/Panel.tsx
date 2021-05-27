@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Cashflow, { CashflowProps } from '@/Cashflow/View';
 import Settings from '@/Cashflow/Settings';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import Panel, { PanelProps, PanelBaseProps } from '@/Dashboard/Panel';
 
 export interface CashflowPanelProps extends PanelBaseProps, CashflowProps {
    type: 'metrics';
@@ -25,4 +25,4 @@ const CashflowPanel: React.FC<PanelProps<CashflowPanelProps>> = p => {
    );
 }
 
-export const registerCashflow = () => PANELS['metrics'] = CashflowPanel;
+export const registerCashflow = {'metrics': CashflowPanel};

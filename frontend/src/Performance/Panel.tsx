@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Performance, { PerformanceProps } from '@/Performance/View';
 import Settings from '@/Performance/Settings';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import Panel, { PanelProps, PanelBaseProps } from '@/Dashboard/Panel';
 
 export interface PerformancePanelProps extends PanelBaseProps, PerformanceProps {
    type: 'performance';
@@ -26,5 +26,4 @@ const PerformancePanel: React.FC<PanelProps<PerformancePanelProps>> = p => {
    );
 }
 
-export const registerPerformance =
-   () => PANELS['performance'] = PerformancePanel;
+export const registerPerformance = {'performance': PerformancePanel};

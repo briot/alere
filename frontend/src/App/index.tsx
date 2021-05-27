@@ -19,36 +19,9 @@ import { PagesProvider } from '@/services/usePages';
 import { PrefProvider } from '@/services/usePrefs';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { TooltipProvider } from '@/Tooltip';
-import { registerAccounts } from '@/Accounts/Panel';
-import { registerCashflow } from '@/Cashflow/Panel';
-import { registerIE } from '@/IncomeExpense/Panel';
-import { registerInvestments } from '@/Investments/Panel';
-import { registerLedger } from '@/Ledger/Panel';
-import { registerMean } from '@/Mean/Panel';
-import { registerNetworth } from '@/NetWorth/Panel';
-import { registerNetworthHistory } from '@/NWHistory/Panel';
-import { registerPerformance } from '@/Performance/Panel';
-import { registerPriceHistory } from '@/PriceHistory/Panel';
-import { registerRecent } from '@/Recent/Panel';
-import { registerTicker } from '@/Ticker/Panel';
-import { registerWelcome } from '@/Welcome/Panel';
 
 import './App.scss';
 import "font-awesome/css/font-awesome.min.css";
-
-registerAccounts();
-registerCashflow();
-registerIE();
-registerInvestments();
-registerLedger();
-registerMean();
-registerNetworth();
-registerNetworthHistory();
-registerPerformance();
-registerPriceHistory();
-registerRecent();
-registerTicker();
-registerWelcome();
 
 const queryClient = new QueryClient({
    defaultOptions: {

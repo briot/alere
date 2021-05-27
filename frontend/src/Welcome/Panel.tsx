@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Welcome, { WelcomeProps } from './View';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import Panel, { PanelProps, PanelBaseProps } from '@/Dashboard/Panel';
 
 export interface WelcomePanelProps extends PanelBaseProps, WelcomeProps {
    type: 'welcome';
@@ -17,4 +17,4 @@ const WelcomePanel: React.FC<PanelProps<WelcomePanelProps>> = p => {
    );
 }
 
-export const registerWelcome = () => PANELS['welcome'] = WelcomePanel;
+export const registerWelcome = {'welcome': WelcomePanel};

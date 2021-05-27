@@ -3,7 +3,7 @@ import Ledger, { BaseLedgerProps } from '@/Ledger/View';
 import useAccountIds from '@/services/useAccountIds';
 import useTransactions from '@/services/useTransactions';
 import { Transaction } from '@/Transaction';
-import Panel, { PanelProps, PanelBaseProps, PANELS } from '@/Dashboard/Panel';
+import Panel, { PanelProps, PanelBaseProps } from '@/Dashboard/Panel';
 import Settings from '@/Ledger/Settings';
 import usePrefs from '@/services/usePrefs';
 
@@ -46,4 +46,4 @@ const LedgerPanel: React.FC<
       </Panel>
    );
 }
-export const registerLedger = () => PANELS['ledger'] = LedgerPanel;
+export const registerLedger = {'ledger': LedgerPanel};
