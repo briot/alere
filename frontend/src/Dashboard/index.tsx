@@ -33,9 +33,10 @@ const PanelWrapper: React.FC<PanelWrapperProps> = p => {
       [setPanels, p.index]
    );
 
-   // must start with an upper-case (for typescript), this is a component
+   // 'M' must start with an upper-case (for typescript), this is a component
    const M = PANELS[p.panel.type];
    if (!M) {
+      window.console.warn('No registered panel', p.panel.type, PANELS);
       return null;
    }
 

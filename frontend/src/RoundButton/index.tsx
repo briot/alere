@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import Tooltip from '@/Tooltip';
 import './RoundButton.scss';
 
+export type ButtonSizes = 'tiny'|'small'|'normal'|'large';
+
 interface RoundButtonProps {
    fa?: string;     // font-awesome icon name
    img?: string;    // or image url
@@ -12,7 +14,7 @@ interface RoundButtonProps {
    tooltip?: string;
    selected?: boolean;
    disabled?: boolean;
-   size?: 'tiny'|'small'|'normal'|'large';
+   size?: ButtonSizes;
 
    url?: string;          // the button should be a link
    onClick?: () => void;  // or a custom callback

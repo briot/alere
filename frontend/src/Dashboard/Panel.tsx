@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Select } from '@/Form';
 import RoundButton from '@/RoundButton';
+import { PageButton } from '@/Page';
 import Dropdown from '@/Form/Dropdown';
 import Header, { HeaderProps } from '@/Header';
 import classes from '@/services/classes';
@@ -32,7 +33,7 @@ export interface PanelProps <T extends PanelBaseProps> {
 }
 
 /**
- * The list of registered modules. Every type you define a new type of panel,
+ * The list of registered modules. Every time you define a new type of panel,
  * it should be registered in this object
  */
 export const PANELS: {[name: string]: React.FC<PanelProps<any>>} = {};
@@ -74,6 +75,10 @@ function Panel<T extends PanelBaseProps>(
            !p.props.hidePanelHeader &&
            <div className="header">
               <Header {...p.header}>
+                 <PageButton
+                     name={p.props.type}
+                     panel={p.props}
+                 />
                  {
                     p.Settings !== null &&
                     <Dropdown

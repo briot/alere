@@ -1,44 +1,37 @@
-import AccountsPage from '@/AccountsPage';
-import Dashboard from '@/Dashboard';
+import * as React from 'react';
+import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
 import Header, { HeaderProps } from '@/Header';
-import InvestmentPage from '@/InvestmentsPage';
-import PerformancePage from '@/PerformancePage';
-import NetworthPage from '@/NetWorthPage';
 import LedgerPage from '@/LedgerPage';
 import LeftSideBar from '@/LeftSideBar';
-import * as React from 'react';
+import OnlineUpdate from '@/Header/OnlineUpdate';
 import RightSideBar from '@/RightSideBar';
+import Settings from '@/Settings';
 import Spinner from '@/Spinner';
 import StyleGuide from '@/StyleGuide';
-import useAccounts from '@/services/useAccounts';
-import usePrefs from '@/services/usePrefs';
-import Settings from '@/Settings';
-import OnlineUpdate from '@/Header/OnlineUpdate';
 import classes from '@/services/classes';
+import useAccounts from '@/services/useAccounts';
+import usePages from '@/services/usePages';
+import usePrefs from '@/services/usePrefs';
 import { AccountsProvider } from '@/services/useAccounts';
-import { BrowserRouter } from "react-router-dom";
-import { CashflowPanelProps, registerCashflow } from '@/Cashflow/Panel';
 import { HistProvider } from '@/services/useHistory';
-import { IncomeExpensePanelProps, registerIE } from '@/IncomeExpense/Panel';
-import { LedgerPanelProps, registerLedger } from '@/Ledger/Panel';
-import { MeanPanelProps, registerMean } from '@/Mean/Panel';
-import { NetworthHistoryPanelProps,
-   registerNetworthHistory } from '@/NWHistory/Panel';
-import { NetworthPanelProps, registerNetworth } from '@/NetWorth/Panel';
-import { PanelBaseProps } from '@/Dashboard/Panel';
+import { Page } from '@/Page';
+import { PagesProvider } from '@/services/usePages';
 import { PrefProvider } from '@/services/usePrefs';
 import { QueryClient, QueryClientProvider } from 'react-query';
-import { Route, Switch } from "react-router-dom";
-import { SplitMode, NotesMode } from '@/Ledger/View';
 import { TooltipProvider } from '@/Tooltip';
-import { TreeMode } from '@/services/useAccountTree';
-import { WelcomePanelProps, registerWelcome } from '@/Welcome/Panel';
 import { registerAccounts } from '@/Accounts/Panel';
+import { registerCashflow } from '@/Cashflow/Panel';
+import { registerIE } from '@/IncomeExpense/Panel';
 import { registerInvestments } from '@/Investments/Panel';
+import { registerLedger } from '@/Ledger/Panel';
+import { registerMean } from '@/Mean/Panel';
+import { registerNetworth } from '@/NetWorth/Panel';
+import { registerNetworthHistory } from '@/NWHistory/Panel';
 import { registerPerformance } from '@/Performance/Panel';
 import { registerPriceHistory } from '@/PriceHistory/Panel';
 import { registerRecent } from '@/Recent/Panel';
 import { registerTicker } from '@/Ticker/Panel';
+import { registerWelcome } from '@/Welcome/Panel';
 
 import './App.scss';
 import "font-awesome/css/font-awesome.min.css";
@@ -65,84 +58,11 @@ const queryClient = new QueryClient({
    },
 });
 
-const defaultOverview: PanelBaseProps[] = [
-   {
-      type: 'networth',
-      rowspan: 2,
-      colspan: 2,
-      showValue: true,
-      showShares: false,
-      showPrice: false,
-      roundValues: true,
-      showDeltaLast: true,
-      threshold: 1e-6,
-      dates: ["1 year ago", "1 month ago", "today"],
-      treeMode: TreeMode.USER_DEFINED,
-   } as NetworthPanelProps,
-   {
-      type: 'incomeexpenses',
-      rowspan: 1,
-      colspan: 2,
-      expenses: false,
-      roundValues: true,
-      range: '1 year',
-   } as IncomeExpensePanelProps,
-   {
-      type: 'incomeexpenses',
-      rowspan: 1,
-      colspan: 2,
-      expenses: true,
-      roundValues: true,
-      range: '1 year',
-   } as IncomeExpensePanelProps,
-   {
-      type: 'metrics',
-      range: "1 year",
-      roundValues: true,
-      rowspan: 4,
-      colspan: 2,
-   } as CashflowPanelProps,
-   {
-      type: 'ledger',
-      accountIds: 'assets',
-      range: 'upcoming',
-      notes_mode: NotesMode.ONE_LINE,
-      split_mode: SplitMode.COLLAPSED,
-      borders: false,
-      defaultExpand: false,
-      valueColumn: true,
-      hideBalance: true,
-      hideReconcile: true,
-      rowspan: 1,
-      colspan: 2,
-   } as LedgerPanelProps,
-   {
-      type: 'mean',
-      range: '1 year',
-      prior: 2,
-      after: 2,
-      showExpenses: true,
-      showIncome: true,
-      showUnrealized: true,
-      negateExpenses: true,
-      showMean: true,
-      rowspan: 2,
-      colspan: 2,
-   } as MeanPanelProps,
-   {
-      type: 'nwhist',
-      range: 'all',
-      prior: 2,
-      after: 2,
-      rowspan: 1,
-      colspan: 2,
-   } as NetworthHistoryPanelProps,
-];
-
 const Main: React.FC<{}> = () => {
    const { prefs } = usePrefs();
    const [ header, setHeader ] = React.useState<HeaderProps>({});
    const { accounts } = useAccounts();
+   const { pages } = usePages();
    const c = classes(
       'page',
       prefs.neumorph_mode ? 'neumorph_mode' : 'not_neumorph_mode',
@@ -161,53 +81,31 @@ const Main: React.FC<{}> = () => {
                      <Settings />
                   </Header>
                   <LeftSideBar />
-                  <RightSideBar />
-
                   {
                      !accounts.loaded
                      ? <div className="dashboard main"><Spinner /></div>
                      : !accounts.has_accounts()
-                     ? (
-                        <Dashboard
-                           defaultPanels={[
-                              {
-                                 type: 'welcome',
-                                 rowspan: 4,
-                                 colspan: 4,
-                              } as WelcomePanelProps,
-                           ]}
-                           setHeader={setHeader}
-                           className="main"
-                           name=''
-                        />
-                     ) : (
+                     ? <Redirect to="/welcome" />
+                     : (
                         <Switch>
                             <Route path="/ledger/:accountIds" >
                                <LedgerPage setHeader={setHeader} />
                             </Route>
-                            <Route path="/accounts">
-                               <AccountsPage setHeader={setHeader} />
-                            </Route>
-                            <Route path="/investments">
-                               <InvestmentPage setHeader={setHeader} />
-                            </Route>
-                            <Route path="/performance">
-                               <PerformancePage setHeader={setHeader} />
-                            </Route>
-                            <Route path="/networth">
-                               <NetworthPage setHeader={setHeader} />
-                            </Route>
-                            <Route>
-                               <Dashboard
-                                  defaultPanels={defaultOverview}
-                                  setHeader={setHeader}
-                                  className="main"
-                                  name='Overview'
-                               />
-                            </Route>
+                            {
+                               Object.entries(pages).map(([name, page]) =>
+                                  <Route
+                                     key={name}
+                                     path={page.url}
+                                     exact={true}
+                                  >
+                                     <Page setHeader={setHeader} name={name} />
+                                  </Route>
+                               )
+                            }
                         </Switch>
                      )
                   }
+                  <RightSideBar />
                </div>
             </div>
          </Route>
@@ -224,7 +122,9 @@ const App: React.FC<{}> = () => {
                    <PrefProvider>
                       <HistProvider>
                          <AccountsProvider>
-                            <Main />
+                            <PagesProvider>
+                               <Main />
+                            </PagesProvider>
                          </AccountsProvider>
                       </HistProvider>
                    </PrefProvider>

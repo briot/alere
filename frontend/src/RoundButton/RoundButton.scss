@@ -70,13 +70,16 @@ a.roundButton:hover {
    }
 
    &.tiny {
-      --rb-width: 1.4rem;
-      --rb-height: 1.4rem;
-      img {
-         width: 0.9rem;
-      }
+      --rb-width: 1.0rem;
+      --rb-height: 1.0rem;
+//      img {
+//         width: 0.9rem;
+//      }
       .fa {
-         font-size: 0.8em;
+         font-size: 0.7em;
+      }
+      .morph {
+         margin: 2px;
       }
    }
 

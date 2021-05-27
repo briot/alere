@@ -115,8 +115,6 @@ const computePos = (
             break;
       }
 
-      window.console.log(r, tbw, ww, b); // MANU
-
       if (isValid(r)) {
          return r;
       }

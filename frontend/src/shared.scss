@@ -111,7 +111,7 @@ $orange-mantine: #ff922b !default;
    background: var(--color);
 
    @if $margin {
-      margin: calc(var(--base-offset) + 5px);
+      margin: calc(var(--base-offset) * 2);
    }
 
    &.inset {

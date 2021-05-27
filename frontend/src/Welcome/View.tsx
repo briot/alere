@@ -1,6 +1,7 @@
 import * as React from 'react';
 import Upload from '@/Form/Upload';
 import usePost from '@/services/usePost';
+import useAccounts from '@/services/useAccounts';
 import { useQueryClient } from 'react-query';
 import './Welcome.scss';
 
@@ -31,11 +32,21 @@ const Welcome: React.FC<WelcomeProps> = p => {
       importer.mutate(data);
    }
 
+   const { accounts } = useAccounts();
+   const has_accounts = accounts.has_accounts();
+
    return (
       <div className="welcome">
          <h1>Start importing accounts</h1>
-         <div className="importtypes">
+         {
+            has_accounts &&
+            <div>
+               You already have existing accounts. Importing would destroy
+               your database.
+            </div>
+         }
 
+         <div className="importtypes">
              <button disabled={true}>
                 <b>Manual</b>
                 <p>
@@ -51,7 +62,7 @@ const Welcome: React.FC<WelcomeProps> = p => {
                 </p>
              </button>
 
-             <button onClick={onKMyMoney} >
+             <button disabled={has_accounts} onClick={onKMyMoney} >
                 <b>
                    <img
                       src="https://kmymoney.org/assets/img/app_icon.png"
