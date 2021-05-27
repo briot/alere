@@ -294,6 +294,11 @@ const Tooltip: React.FC<TooltipPropsWithChild<any>> = p => {
       [p.tooltip, p.tooltipData, tooltip]
    );
 
+   React.useEffect(
+      () => { return () => tooltip.hide() },
+      [tooltip]
+   );
+
    // Insert the child itself in the tree, not a wrapper. Otherwise, the
    // tooltip would not work on a table cell for instance, nor in recharts.
    // When there is no tooltip, do not bother with setting extra event handlers
