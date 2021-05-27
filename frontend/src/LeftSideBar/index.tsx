@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import useAccounts from '@/services/useAccounts';
 import useHistory from '@/services/useHistory';
 import usePrefs from '@/services/usePrefs';
-import usePages, { Disabled } from '@/services/usePages';
+import { usePages, Disabled } from '@/services/usePages';
 import RoundButton from '@/RoundButton';
 import './LeftSideBar.scss';
 

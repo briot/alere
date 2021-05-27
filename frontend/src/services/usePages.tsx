@@ -299,5 +299,7 @@ export const PagesProvider: React.FC<{}> = p => {
    );
 }
 
-const usePages = () => React.useContext(ReactPagesContext);
-export default usePages;
+// Do not use 'export default' here. Otherwise, when we modify this package,
+// Vite fails to rerun App/index.tsx and the PageProvider, and we end up with
+// an empty list of pages for some reason.
+export const usePages = () => React.useContext(ReactPagesContext);

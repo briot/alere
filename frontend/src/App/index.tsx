@@ -10,7 +10,7 @@ import Spinner from '@/Spinner';
 import StyleGuide from '@/StyleGuide';
 import classes from '@/services/classes';
 import useAccounts from '@/services/useAccounts';
-import usePages from '@/services/usePages';
+import { usePages } from '@/services/usePages';
 import usePrefs from '@/services/usePrefs';
 import { AccountsProvider } from '@/services/useAccounts';
 import { HistProvider } from '@/services/useHistory';

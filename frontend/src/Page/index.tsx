@@ -7,7 +7,7 @@ import { HeaderProps, SetHeader } from '@/Header';
 import Dashboard from '@/Dashboard';
 import { PanelBaseProps } from '@/Dashboard/Panel';
 import RoundButton from '@/RoundButton';
-import usePages from '@/services/usePages';
+import { usePages } from '@/services/usePages';
 
 interface PageButtonProps {
    name: HeaderProps;
