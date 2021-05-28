@@ -4,7 +4,6 @@ import Header, { HeaderProps } from '@/Header';
 import LedgerPage from '@/LedgerPage';
 import LeftSideBar from '@/LeftSideBar';
 import OnlineUpdate from '@/Header/OnlineUpdate';
-import RightSideBar from '@/RightSideBar';
 import Settings from '@/Settings';
 import Spinner from '@/Spinner';
 import StyleGuide from '@/StyleGuide';
@@ -78,7 +77,6 @@ const Main: React.FC<{}> = () => {
                         </Switch>
                      )
                   }
-                  <RightSideBar />
                </div>
             </div>
          </Route>

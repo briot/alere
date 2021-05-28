@@ -14,6 +14,7 @@ import { NetworthHistoryPanelProps } from '@/NWHistory/Panel';
 import { NetworthPanelProps } from '@/NetWorth/Panel';
 import { PanelBaseProps } from '@/Dashboard/Panel';
 import { PerformancePanelProps } from '@/Performance/Panel';
+import { RecentPanelProps } from '@/Recent/Panel';
 import { SplitMode, NotesMode } from '@/Ledger/View';
 import { TreeMode } from '@/services/useAccountTree';
 import { WelcomePanelProps } from '@/Welcome/Panel';
@@ -23,7 +24,13 @@ import useSettings from '@/services/useSettings';
 export type Disabled = undefined | boolean | (() => boolean) | 'need_accounts';
 
 interface PageDescr {
-   panels: PanelBaseProps[];
+   panels: PanelBaseProps[];  // in the central area
+
+   right?: PanelBaseProps[] | null;
+   // in the right area. If null then no right area is displayed.
+   // If undefined, it uses the panels from the right side of the first page
+   // that defines right panels (in general the Overview).
+
    fa?: string; // font-awesome icon
    url: string;
    disabled?: Disabled;
@@ -33,25 +40,17 @@ interface PageDescr {
    //  If true, the page will be deleted when the user moves away from it
 }
 
-interface PagesContext {
-   pages: Record<string, PageDescr>;
-
-   // Create a new page, and return its id
-   addPage: (
-      header: HeaderProps, panels: PanelBaseProps[], tmp?: boolean
-      ) => Promise<string>;
-
-   // Delete the page
-   deletePage: (name: string) => void;
-
-   // Update an existing page
-   updatePage: (name: string, panels: PanelBaseProps[]) => void;
-}
-
 const defaultPages: Record<string, PageDescr> = {
    'Overview': {
       url: '/',
       fa: 'fa-tachometer',
+      right: [
+         {
+            type: 'recent',
+            colspan: 1,
+            rowspan: 1,
+         } as RecentPanelProps,
+      ],
       panels: [
          {
             type: 'networth',
@@ -223,8 +222,30 @@ const defaultPages: Record<string, PageDescr> = {
 
 };
 
+interface PagesContext {
+   pages: Record<string, PageDescr>;
+
+   // Return the panels to display in either the central area or the right
+   // area, for the given page
+   getPanels: (
+      name: string, area: "central" | "right"
+      ) => PanelBaseProps[];
+
+   // Create a new page, and return its id
+   addPage: (
+      header: HeaderProps, panels: PanelBaseProps[], tmp?: boolean
+      ) => Promise<string>;
+
+   // Delete the page
+   deletePage: (name: string) => void;
+
+   // Update an existing page
+   updatePage: (name: string, panels: PanelBaseProps[]) => void;
+}
+
 const noContext: PagesContext = {
    pages: {},
+   getPanels: () => [],
    addPage: () => Promise.resolve(''),
    deletePage: () => null,
    updatePage: () => null,
@@ -287,9 +308,29 @@ export const PagesProvider: React.FC<{}> = p => {
       [setVal]
    );
 
-   const data = React.useMemo(
-      () => ({ pages: val, addPage, deletePage, updatePage }),
-      [val, addPage, deletePage, updatePage]
+   const getPanels = React.useCallback(
+      (name: string, area: "central" | "right") => {
+         const page = val[name];
+         if (!page) {
+            return [];
+         }
+         if (area === "central") {
+            return page.panels;
+         } else {
+            return (
+               page.right === null      ? undefined
+               : page.right === undefined
+               ? Object.values(val).filter(p => p.right)[0]?.right
+               : page.right
+            ) || [];  // could have been null or undefined
+         }
+      },
+      [val]
+   );
+
+   const data = React.useMemo<PagesContext>(
+      () => ({pages: val, getPanels, addPage, deletePage, updatePage }),
+      [val, getPanels, addPage, deletePage, updatePage]
    );
 
    return (
