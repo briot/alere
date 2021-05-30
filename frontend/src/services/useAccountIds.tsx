@@ -11,6 +11,7 @@ import useAccounts, { Account, AccountId } from '@/services/useAccounts';
 
 export type AccountIdSet =
    AccountId[]    // explicit list of ids
+   | number
    | string       // from a URL, comma-separated list of ids
    | 'all'
    | 'assets'
@@ -25,11 +26,18 @@ export interface AccountList {
    title: string;   //  Describes the list of accounts, for humans
 }
 
-const useAccountIds = (ids: AccountIdSet): AccountList => {
+const useAccountIds = (ids: AccountIdSet|undefined): AccountList => {
    const { accounts } = useAccounts();
 
    return React.useMemo(
       () => {
+         if (ids === undefined) {
+            return {
+               accounts: [],
+               title: '',
+            };
+         }
+
          if (ids === 'all') {
             return {
                 accounts: accounts.allAccounts(),
@@ -81,6 +89,8 @@ const useAccountIds = (ids: AccountIdSet): AccountList => {
 
          const numids = typeof(ids) === 'string'
             ? ids.split(',').map(c => parseInt(c))
+            : typeof(ids) === 'number'
+            ? [ids]
             : ids;
 
          const acc = numids.map(a => accounts.getAccount(a))

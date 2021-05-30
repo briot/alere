@@ -3,17 +3,15 @@
  */
 import * as React from 'react';
 import { useHistory, Redirect } from 'react-router-dom';
-import { HeaderProps, SetHeader } from '@/Header';
-import Dashboard from '@/Dashboard';
+import { SetHeader } from '@/Header';
+import { DashboardFromPanels } from '@/Dashboard';
 import { PanelBaseProps } from '@/Dashboard/Panel';
 import RoundButton from '@/RoundButton';
 import { usePages } from '@/services/usePages';
 import './RightSideBar.scss';
 
-const doNothing = () => {};
-
 interface PageButtonProps {
-   name: HeaderProps;
+   name: string;
    panel: PanelBaseProps;
 }
 
@@ -42,11 +40,13 @@ interface PageProps {
    name: string;
 }
 export const Page: React.FC<PageProps & SetHeader> = React.memo(p => {
+   const { setHeader } = p;
    const { pages, getPanels, deletePage, updatePage } = usePages();
    const page = pages[p.name];
    const initialPanels = getPanels(p.name, 'central');
    const rightPanels = getPanels(p.name, 'right');
    const [ panels, setPanels ] = React.useState(initialPanels);
+   const { headerNode } = page;
 
    // Save to local storage
    React.useEffect(
@@ -63,27 +63,28 @@ export const Page: React.FC<PageProps & SetHeader> = React.memo(p => {
       [page?.tmp, p.name, deletePage]
    );
 
+   React.useEffect(
+      () => setHeader(headerNode
+         ? {node: headerNode()}
+         : {name: p.name}),
+      [setHeader, p.name, headerNode]
+   );
+
    if (!page) {
       return <Redirect to="/" />;
    }
-
    return (
       <>
-          <Dashboard
-             name={p.name}
+          <DashboardFromPanels
              className="main"
              panels={panels}
-             savePanels={setPanels}
-             setHeader={p.setHeader}
+             setPanels={setPanels}
           />
-          <div id='rsidebar'>
-             <Dashboard
-                 name="rightside"
-                 panels={rightPanels}
-                 savePanels={setPanels}
-                 setHeader={doNothing}
-             />
-          </div>
+          <DashboardFromPanels
+              className="rsidebar"
+              panels={rightPanels}
+              setPanels={setPanels}
+          />
       </>
    );
 });

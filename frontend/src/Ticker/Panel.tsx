@@ -1,6 +1,6 @@
 import * as React from 'react';
 import AccountName from '@/Account';
-import { DateRange } from '@/Dates';
+import { DateRange, toDates } from '@/Dates';
 import Panel, { PanelProps, PanelBaseProps } from '@/Dashboard/Panel';
 import TickerView, { TickerViewProps } from './View';
 import { AccountForTicker, Ticker } from '@/Ticker/types';
@@ -8,6 +8,7 @@ import { CommodityId } from '@/services/useAccounts';
 import { AccountIdSet } from '@/services/useAccountIds';
 import useTickers from '@/services/useTickers';
 import usePrefs from '@/services/usePrefs';
+import useQuery from '@/services/useQuery';
 import { isNumeric } from '@/services/utils';
 
 export interface TickerPanelProps extends PanelBaseProps, TickerViewProps {
@@ -30,20 +31,27 @@ export interface TickerPanelProps extends PanelBaseProps, TickerViewProps {
 
 const TickerPanel: React.FC<PanelProps<TickerPanelProps>> = p => {
    const { prefs } = usePrefs();
+   const query = useQuery({
+      range: p.props.range ?? 'all', // default
+   });
+   const accountIds = query.accounts.accounts.map(a => a.id);
 
-   // Download the ticker info, unless ticker is specified and is a Ticker
-   const data = useTickers(
-      prefs.currencyId /* currencyId */,
-      p.props.accountIds  /* accountIds */,
-      p.props.range    /* range */,
-      false            /* hideIfNoShare */,
-      isNumeric(p.props.ticker) ? p.props.ticker as number : undefined,
-      p.props.ticker === undefined || !isNumeric(p.props.ticker), /* skip */
+   // Query is shared with the PriceHistory panel, so performed only once
+   const tickers = useTickers(
+      prefs.currencyId        /* currencyId */,
+      accountIds              /* accountIds */,
+      query.range             /* range */,
+      false                   /* hideIfNoShare */,
+      undefined               /* commodity */,
+          // ??? isNumeric(ticker) ? ticker as number : undefined,
+      query.accounts.accounts.length !== 1   /* skip */,
    );
 
+   const ticker = tickers && tickers.length === 1 ? tickers[0] : undefined;
+
    const tk =
-      p.props.ticker === undefined ? undefined
-      : isNumeric(p.props.ticker)  ? data : [p.props.ticker as Ticker];
+      ticker === undefined ? undefined
+      : isNumeric(ticker) ? tickers : [ticker as Ticker];
 
    if (!tk || !tk.length) {
       return null;
@@ -68,6 +76,7 @@ const TickerPanel: React.FC<PanelProps<TickerPanelProps>> = p => {
          <TickerView
             {...p.props}
             acc={acc}
+            dateRange={toDates(query.range!)}
             ticker={tk[0]}
          />
       </Panel>

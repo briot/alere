@@ -172,7 +172,7 @@ const AccountName: React.FC<AccountProps> = p => {
                p.noLinkIf === undefined
                || p.account === undefined
                || !p.noLinkIf.includes(p.account)
-               ? (<Link to={`/ledger/${p.id}`}>{name}</Link>)
+               ? (<Link to={`/ledger?accounts=${p.id}`}>{name}</Link>)
                : name
             }
          </span>

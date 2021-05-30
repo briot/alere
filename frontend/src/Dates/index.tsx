@@ -206,6 +206,9 @@ export const toDates = (name: DateRange): [Date, Date] => {
    return [dateToDate(r[0]), dateToDate(r[1])];
 }
 
+export const parseRange = (s: string | undefined): DateRange|undefined =>
+  s !== undefined && dateRanges[s as DateRange] ? s as DateRange : undefined;
+
 export const rangeToHttp = (name: DateRange|undefined): string => {
    if (!name) {
       return '';

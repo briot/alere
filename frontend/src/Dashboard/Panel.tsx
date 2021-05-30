@@ -48,7 +48,7 @@ function Panel<T extends PanelBaseProps>(
            <div className="header">
               <Header {...p.header}>
                  <PageButton
-                     name={p.header}
+                     name={p.header.name || '???'}
                      panel={p.props}
                  />
                  {

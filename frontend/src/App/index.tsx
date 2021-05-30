@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
 import Header, { HeaderProps } from '@/Header';
-import LedgerPage from '@/LedgerPage';
 import LeftSideBar from '@/LeftSideBar';
 import OnlineUpdate from '@/Header/OnlineUpdate';
 import Settings from '@/Settings';
@@ -60,9 +59,6 @@ const Main: React.FC<{}> = () => {
                      ? <Redirect to="/welcome" />
                      : (
                         <Switch>
-                            <Route path="/ledger/:accountIds" >
-                               <LedgerPage setHeader={setHeader} />
-                            </Route>
                             {
                                Object.entries(pages).map(([name, page]) =>
                                   <Route

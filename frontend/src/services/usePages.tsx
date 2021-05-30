@@ -5,26 +5,31 @@
 import * as React from 'react';
 import { AccountsPanelProps } from '@/Accounts/Panel';
 import { CashflowPanelProps } from '@/Cashflow/Panel';
-import { HeaderProps } from '@/Header';
 import { IncomeExpensePanelProps } from '@/IncomeExpense/Panel';
 import { InvestmentsPanelProps } from '@/Investments/Panel';
 import { LedgerPanelProps } from '@/Ledger/Panel';
+import { LedgerPageTitle } from '@/LedgerPage';
 import { MeanPanelProps }  from '@/Mean/Panel';
 import { NetworthHistoryPanelProps } from '@/NWHistory/Panel';
 import { NetworthPanelProps } from '@/NetWorth/Panel';
 import { PanelBaseProps } from '@/Dashboard/Panel';
 import { PerformancePanelProps } from '@/Performance/Panel';
+import { PriceHistoryPanelProps } from '@/PriceHistory/Panel';
 import { RecentPanelProps } from '@/Recent/Panel';
 import { SplitMode, NotesMode } from '@/Ledger/View';
+import { TickerPanelProps } from '@/Ticker/Panel';
 import { TreeMode } from '@/services/useAccountTree';
 import { WelcomePanelProps } from '@/Welcome/Panel';
 import { capitalize } from '@/services/utils';
+import { toDates } from '@/Dates';
 import useSettings from '@/services/useSettings';
 
 export type Disabled = undefined | boolean | (() => boolean) | 'need_accounts';
+// type Overrides = { [panel: string]: Partial<PanelBaseProps>};
 
 interface PageDescr {
    panels: PanelBaseProps[];  // in the central area
+   headerNode?: () => React.ReactNode;
 
    right?: PanelBaseProps[] | null;
    // in the right area. If null then no right area is displayed.
@@ -33,6 +38,7 @@ interface PageDescr {
 
    fa?: string; // font-awesome icon
    url: string;
+
    disabled?: Disabled;
    invisible?: boolean;
 
@@ -123,6 +129,51 @@ const defaultPages: Record<string, PageDescr> = {
             rowspan: 1,
             colspan: 2,
          } as NetworthHistoryPanelProps,
+      ]
+   },
+
+   'Ledger': {
+      url: '/ledger',
+      fa: 'fa-book',
+      disabled: 'need_accounts',
+      panels: [
+         {
+            type: 'pricehistory',
+            commodity_id: -1,
+            prices: [],
+            dateRange: [new Date(), new Date()],
+            showAverageCost: true,
+            showROI: true,
+            showPrice: true,
+            rowspan: 1,
+            colspan: 3,
+            hidePanelHeader: false,
+         } as PriceHistoryPanelProps,
+         {
+            type: 'ticker',
+            rowspan: 1,
+            colspan: 1,
+            hidePanelHeader: true,
+            showWALine: true,
+            showACLine: true,
+            hideHistory: true,
+            ticker: undefined,
+            acc: undefined,     // computed in Ticker/Panel
+            range: "all",
+            dateRange: toDates("all"),
+         } as TickerPanelProps,
+         {
+            type: 'ledger',
+            notes_mode: NotesMode.ONE_LINE,
+            split_mode: SplitMode.COLLAPSED,
+            borders: false,
+            defaultExpand: true,
+            valueColumn: false,
+            hideBalance: false,
+            hideReconcile: false,
+            rowspan: 4,
+            colspan: 4,
+         } as LedgerPanelProps,
       ]
    },
 
@@ -233,7 +284,7 @@ interface PagesContext {
 
    // Create a new page, and return its id
    addPage: (
-      header: HeaderProps, panels: PanelBaseProps[], tmp?: boolean
+      name: string, panels: PanelBaseProps[], tmp?: boolean
       ) => Promise<string>;
 
    // Delete the page
@@ -256,15 +307,15 @@ export const PagesProvider: React.FC<{}> = p => {
    const { val, setVal } = useSettings('Pages', defaultPages);
 
    const addPage = React.useCallback(
-      (header: HeaderProps, panels: PanelBaseProps[], tmp?: boolean) => {
+      (name: string, panels: PanelBaseProps[], tmp?: boolean) => {
          return new Promise<string>(
             (resolve, reject) => {
                setVal(old => {
-                  const name = capitalize(header.name ?? '');
-                  let id = name;
+                  const n = capitalize(name ?? '');
+                  let id = n;
                   if (old[id] !== undefined) {
                      for (let index = 0; old[id] !== undefined; index++) {
-                        id = `${name}_${index}`;
+                        id = `${n}_${index}`;
                      }
                   }
 
@@ -329,7 +380,16 @@ export const PagesProvider: React.FC<{}> = p => {
    );
 
    const data = React.useMemo<PagesContext>(
-      () => ({pages: val, getPanels, addPage, deletePage, updatePage }),
+      () => ({
+         pages: {
+            ...val,
+            "Ledger": {
+               ...val.Ledger,
+               headerNode: () => <LedgerPageTitle />,
+            }
+         },
+         getPanels, addPage, deletePage, updatePage,
+      }),
       [val, getPanels, addPage, deletePage, updatePage]
    );
 

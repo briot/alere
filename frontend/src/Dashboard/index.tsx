@@ -1,16 +1,12 @@
 import * as React from 'react';
 import { PanelBaseProps } from '@/Dashboard/Panel';
 import PANELS from '@/Dashboard/Register';
-import { SetHeader } from '@/Header';
 import classes from '@/services/classes';
 import './Dashboard.scss';
-
-type Overrides = { [panel: string]: Partial<PanelBaseProps>};
 
 interface PanelWrapperProps {
    panel: PanelBaseProps;
    index: number;
-   excludeFields: string[]; // Do not allow configuring those fields
 
    setPanels: React.Dispatch<React.SetStateAction<PanelBaseProps[]>>;
    // settings are disabled when this is null, since there would be no way to
@@ -44,7 +40,6 @@ const PanelWrapper: React.FC<PanelWrapperProps> = p => {
       <M
          props={p.panel}
          save={localChange}
-         excludeFields={p.excludeFields}
       />
    );
 }
@@ -53,8 +48,6 @@ interface DashboardFromPanelsProps {
    panels: PanelBaseProps[];
    setPanels: React.Dispatch<React.SetStateAction<PanelBaseProps[]>>;
    className?: string;
-   overrides?: Overrides;
-      //  Overrides settings for the panels
 }
 export const DashboardFromPanels: React.FC<DashboardFromPanelsProps> = p => {
    const c = classes(
@@ -67,9 +60,8 @@ export const DashboardFromPanels: React.FC<DashboardFromPanelsProps> = p => {
             p.panels.map((p2, idx) =>
                <PanelWrapper
                   key={idx}
-                  panel={{...p2, ...p.overrides?.[p2.type]}}
+                  panel={p2}
                   setPanels={p.setPanels}
-                  excludeFields={Object.keys(p.overrides?.[p2.type] ?? {})}
                   index={idx}
                />
             )
@@ -77,43 +69,3 @@ export const DashboardFromPanels: React.FC<DashboardFromPanelsProps> = p => {
       </div>
    );
 }
-
-
-
-interface DashboardProps {
-   name: string;     // dashboard name
-   overrides?: Overrides;    //  Overrides settings for the panels
-   className?: string;
-   panels: PanelBaseProps[],
-   savePanels: React.Dispatch<React.SetStateAction<PanelBaseProps[]>>;
-}
-const Dashboard: React.FC<DashboardProps & SetHeader> = p => {
-   const { setHeader } = p;
-
-   React.useEffect(
-      () => setHeader({name: p.name}),
-      [setHeader, p.name]
-   );
-
-   const c = classes(
-      'dashboard',
-      p.className,
-   )
-
-   return (
-      <div className={c} >
-         {
-            p.panels.map((p2, idx) =>
-               <PanelWrapper
-                  key={idx}
-                  panel={{...p2, ...p.overrides?.[p2.type]}}
-                  setPanels={p.savePanels}
-                  excludeFields={Object.keys(p.overrides?.[p2.type] ?? {})}
-                  index={idx}
-               />
-            )
-         }
-      </div>
-   );
-}
-export default Dashboard;

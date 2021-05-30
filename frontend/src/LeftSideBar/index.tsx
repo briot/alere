@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useLocation } from "react-router-dom";
 import useAccounts from '@/services/useAccounts';
-import useHistory from '@/services/useHistory';
 import usePrefs from '@/services/usePrefs';
 import { usePages, Disabled } from '@/services/usePages';
 import RoundButton from '@/RoundButton';
@@ -12,7 +11,6 @@ interface LeftSideBarProps {
 
 const LeftSideBar: React.FC<LeftSideBarProps> = p => {
    const location = useLocation();
-   const { mostRecent } = useHistory();
    const { accounts } = useAccounts();
    const { prefs } = usePrefs();
    const { pages } = usePages();
@@ -40,15 +38,6 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
                />
             ))
          }
-         <RoundButton
-            fa="fa-book"
-            selected={location.pathname.startsWith('/ledger/')}
-            disabled={!accounts.has_accounts() || mostRecent === undefined}
-            text="Ledger"
-            showText={prefs.text_on_left}
-            size='large'
-            url={`/ledger/${mostRecent}`}
-          />
       </div>
    );
 }
