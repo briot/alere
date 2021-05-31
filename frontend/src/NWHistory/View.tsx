@@ -16,21 +16,17 @@ interface Point {
 
 const useNetworthHistory = (
    range: DateRange,
-   prior: number,
-   after: number,
    currencyId: CommodityId,
 ) => {
    const { data } = useFetch<Point[], any>({
       url: `/api/networth_history?${rangeToHttp(range)}`
-         + `&prior=${prior}&after=${after}&currency=${currencyId}`,
+         + `&currency=${currencyId}`,
    });
    return data;
 }
 
 export interface NetworthHistoryProps {
    range: DateRange;
-   prior: number;
-   after: number;
 }
 
 const formatVal = (p: number|string|React.ReactText[]) =>
@@ -59,8 +55,7 @@ const CustomTooltip = (
 
 const NetworthHistory: React.FC<NetworthHistoryProps> = p => {
    const { prefs } = usePrefs();
-   const points = useNetworthHistory(
-      p.range, p.prior, p.after, prefs.currencyId);
+   const points = useNetworthHistory(p.range, prefs.currencyId);
 
    return (
       <div className='networthHistory'>

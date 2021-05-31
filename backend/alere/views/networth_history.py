@@ -8,8 +8,6 @@ class NetworthHistoryView(JSONView):
         m = Mean(
             start=self.as_time(params, 'mindate'),
             end=self.as_time(params, 'maxdate'),
-            prior=int(params.get('prior', 6)),
-            after=int(params.get('after', 6)),
             currency_id=self.as_commodity_id(params, 'currency'),
         )
 
