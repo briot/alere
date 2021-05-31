@@ -4,6 +4,7 @@
 
 import { PanelProps } from '@/Dashboard/Props';
 import { registerAccounts } from '@/Accounts/Panel';
+import { registerAssets } from '@/Assets/Panel';
 import { registerCashflow } from '@/Cashflow/Panel';
 import { registerIE } from '@/IncomeExpense/Panel';
 import { registerInvestments } from '@/Investments/Panel';
@@ -23,6 +24,7 @@ import { registerWelcome } from '@/Welcome/Panel';
  */
 const PANELS: {[name: string]: React.FC<PanelProps<any>>} = {
    ...registerAccounts,
+   ...registerAssets,
    ...registerCashflow,
    ...registerIE,
    ...registerInvestments,

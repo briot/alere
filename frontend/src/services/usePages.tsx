@@ -12,6 +12,7 @@ import { LedgerPageTitle } from '@/LedgerPage';
 import { MeanPanelProps }  from '@/Mean/Panel';
 import { NetworthHistoryPanelProps } from '@/NWHistory/Panel';
 import { NetworthPanelProps } from '@/NetWorth/Panel';
+import { AssetsPanelProps } from '@/Assets/Panel';
 import { PanelBaseProps } from '@/Dashboard/Panel';
 import { PerformancePanelProps } from '@/Performance/Panel';
 import { PriceHistoryPanelProps } from '@/PriceHistory/Panel';
@@ -56,6 +57,13 @@ const defaultPages: Record<string, PageDescr> = {
             colspan: 1,
             rowspan: 1,
          } as RecentPanelProps,
+         {
+            type: 'assets',
+            range: "1 year",
+            roundValues: true,
+            rowspan: 1,
+            colspan: 1,
+         } as AssetsPanelProps,
       ],
       panels: [
          {
@@ -91,7 +99,7 @@ const defaultPages: Record<string, PageDescr> = {
             type: 'metrics',
             range: "1 year",
             roundValues: true,
-            rowspan: 4,
+            rowspan: 3,
             colspan: 2,
          } as CashflowPanelProps,
          {

@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { DateRange, monthCount, rangeToHttp } from '@/Dates';
+import { DateRange, monthCount } from '@/Dates';
 import { Commodity, CommodityId } from '@/services/useAccounts';
 import { Link } from 'react-router-dom';
 import Numeric from '@/Numeric';
 import Table from '@/List';
 import Tooltip, { TooltipProps } from '@/Tooltip';
 import usePrefs from '@/services/usePrefs';
-import useFetch from '@/services/useFetch';
+import usePL from '@/services/usePL';
 import './Cashflow.scss';
 
 const commMonths: Commodity = {
@@ -16,39 +16,6 @@ const commMonths: Commodity = {
    symbol_after: 'months',
    price_scale: 1,
    is_currency: false,
-}
-
-interface Metric {
-   income: number;
-   passive_income: number;
-   work_income: number;
-   expenses: number;
-   income_taxes: number;
-   other_taxes: number;
-   networth: number;
-   networth_start: number;
-   liquid_assets: number;
-   liquid_assets_at_start: number;
-}
-
-const NULL_METRIC: Metric = {
-   income: NaN,
-   passive_income: NaN,
-   expenses: NaN,
-   work_income: NaN,
-   networth: NaN,
-   networth_start: NaN,
-   liquid_assets: NaN,
-   liquid_assets_at_start: NaN,
-   income_taxes: NaN,
-   other_taxes: NaN,
-};
-
-const useFetchPL = (range: DateRange, currencyId: CommodityId) => {
-   const { data } = useFetch<Metric, any>({
-      url: `/api/metrics?${rangeToHttp(range)}&currency=${currencyId}`,
-   });
-   return data ?? NULL_METRIC;
 }
 
 interface MetricsProps extends TooltipProps<undefined> {
@@ -120,7 +87,7 @@ export interface CashflowProps {
 const Cashflow: React.FC<CashflowProps> = p => {
    const { prefs } = usePrefs();
    const currency = prefs.currencyId;
-   const pl = useFetchPL(p.range, currency);
+   const pl = usePL(p.range, currency);
    const months = monthCount(p.range);
    const monthly_expenses = pl.expenses / months;
    const networth_delta = pl.networth - pl.networth_start;
@@ -186,48 +153,6 @@ const Cashflow: React.FC<CashflowProps> = p => {
                  />
               </Table.TD>
            </>
-         )}
-      </Table.TR>
-   );
-
-   const assetrow = (r: {
-      head: string,
-      amount: number,
-      tooltip?: string,
-      bold?: boolean,
-      padding?: number
-   }) => (
-      <Table.TR
-         tooltip={r.tooltip}
-      >
-         {r.bold ? (
-            <>
-               <Table.TH>
-                  {r.head}
-               </Table.TH>
-               <Table.TH className="amount">
-                  <Numeric
-                     amount={r.amount}
-                     commodity={currency}
-                     scale={p.roundValues ? 0 : undefined}
-                  />
-               </Table.TH>
-            </>
-         ): (
-            <>
-               <Table.TD
-                  style={{paddingLeft: (r.padding ?? 0) * 20}}
-               >
-                  {r.head}
-               </Table.TD>
-               <Table.TD className="amount">
-                  <Numeric
-                     amount={r.amount}
-                     commodity={currency}
-                     scale={p.roundValues ? 0 : undefined}
-                  />
-               </Table.TD>
-            </>
          )}
       </Table.TR>
    );
@@ -498,41 +423,6 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   })
                }
             </div>
-         </div>
-
-         <h4>Assets</h4>
-
-         <div className='table' style={{height: 'auto'}}>
-            <div className="thead">
-               <Table.TR>
-                 <Table.TH />
-                 <Table.TH className="amount">Total</Table.TH>
-               </Table.TR>
-            </div>
-            {
-               assetrow({
-                  head: 'Networth',
-                  amount: pl.networth,
-                  tooltip: 'How much you own minus how much you how at the end of the period',
-                  bold: true
-               })
-            }
-            {
-               assetrow({
-                  head: 'Liquid assets',
-                  amount: pl.liquid_assets,
-                  tooltip: "The part of your assets in savings, checkings, investments and stocks",
-                  padding: 1,
-               })
-            }
-            {
-               assetrow({
-                  head: 'Other assets',
-                  amount: pl.networth - pl.liquid_assets,
-                  tooltip: "The part of your assets that cannot be sold quickly, like real-estate, jewels,..",
-                  padding: 1,
-               })
-            }
          </div>
       </div>
    );

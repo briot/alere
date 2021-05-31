@@ -9,7 +9,7 @@ const Settings: React.FC<PanelProps<CashflowPanelProps>> = p => {
    const changeRound = (roundValues: boolean) => p.save({ roundValues });
    return (
       <fieldset>
-         <legend>Income and Expenses</legend>
+         <legend>Metrics</legend>
          <DateRangePicker
             text="Time period"
             value={p.props.range}
