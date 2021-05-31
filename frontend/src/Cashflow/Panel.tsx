@@ -4,14 +4,14 @@ import Settings from '@/Cashflow/Settings';
 import Panel, { PanelProps, PanelBaseProps } from '@/Dashboard/Panel';
 
 export interface CashflowPanelProps extends PanelBaseProps, CashflowProps {
-   type: 'metrics';
+   type: 'cashflow';
 }
 
 const CashflowPanel: React.FC<PanelProps<CashflowPanelProps>> = p => {
    return (
       <Panel
          {...p}
-         header={{ name: 'metrics', range: p.props.range }}
+         header={{ name: 'cashflow', range: p.props.range }}
          Settings={
             <Settings
                props={p.props}
@@ -25,4 +25,4 @@ const CashflowPanel: React.FC<PanelProps<CashflowPanelProps>> = p => {
    );
 }
 
-export const registerCashflow = {'metrics': CashflowPanel};
+export const registerCashflow = {'cashflow': CashflowPanel};

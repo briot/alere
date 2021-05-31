@@ -10,6 +10,7 @@ import { InvestmentsPanelProps } from '@/Investments/Panel';
 import { LedgerPanelProps } from '@/Ledger/Panel';
 import { LedgerPageTitle } from '@/LedgerPage';
 import { MeanPanelProps }  from '@/Mean/Panel';
+import { MetricsPanelProps } from '@/Metrics/Panel';
 import { NetworthHistoryPanelProps } from '@/NWHistory/Panel';
 import { NetworthPanelProps } from '@/NetWorth/Panel';
 import { AssetsPanelProps } from '@/Assets/Panel';
@@ -99,9 +100,9 @@ const defaultPages: Record<string, PageDescr> = {
             type: 'metrics',
             range: "1 year",
             roundValues: true,
-            rowspan: 3,
+            rowspan: 2,
             colspan: 2,
-         } as CashflowPanelProps,
+         } as MetricsPanelProps,
          {
             type: 'ledger',
             accountIds: 'assets',
@@ -129,6 +130,13 @@ const defaultPages: Record<string, PageDescr> = {
             rowspan: 2,
             colspan: 2,
          } as MeanPanelProps,
+         {
+            type: 'cashflow',
+            range: "1 year",
+            roundValues: true,
+            rowspan: 2,
+            colspan: 2,
+         } as CashflowPanelProps,
          {
             type: 'nwhist',
             range: 'all',
