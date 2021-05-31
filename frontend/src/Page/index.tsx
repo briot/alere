@@ -43,17 +43,22 @@ export const Page: React.FC<PageProps & SetHeader> = React.memo(p => {
    const { setHeader } = p;
    const { pages, getPanels, deletePage, updatePage } = usePages();
    const page = pages[p.name];
-   const initialPanels = getPanels(p.name, 'central');
-   const rightPanels = getPanels(p.name, 'right');
-   const [ panels, setPanels ] = React.useState(initialPanels);
    const { headerNode } = page;
+   const centralPanels = getPanels(p.name, "central");
+   const rightPanels = getPanels(p.name, "right");
 
-   // Save to local storage
-   React.useEffect(
-      () => updatePage(p.name, panels),
-      [p.name, panels, updatePage]
+   const updateRight = React.useCallback(
+      (func: ((prev: PanelBaseProps[]) => PanelBaseProps[])) =>
+         updatePage(p.name, func(rightPanels), "right"),
+      [updatePage, p.name, rightPanels]
+   );
+   const updateCentral = React.useCallback(
+      (func: ((prev: PanelBaseProps[]) => PanelBaseProps[])) =>
+         updatePage(p.name, func(centralPanels), "central"),
+      [updatePage, p.name, centralPanels]
    );
 
+   // Delete temporary pages when we move away from them
    React.useEffect(
       () => () => {
          if (page?.tmp) {
@@ -77,13 +82,13 @@ export const Page: React.FC<PageProps & SetHeader> = React.memo(p => {
       <>
           <DashboardFromPanels
              className="main"
-             panels={panels}
-             setPanels={setPanels}
+             panels={getPanels(p.name, 'central')}
+             setPanels={updateCentral}
           />
           <DashboardFromPanels
               className="rsidebar"
               panels={rightPanels}
-              setPanels={setPanels}
+              setPanels={updateRight}
           />
       </>
    );

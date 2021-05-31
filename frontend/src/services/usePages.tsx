@@ -270,17 +270,31 @@ const defaultPages: Record<string, PageDescr> = {
          } as WelcomePanelProps,
       ],
    },
-
 };
+
+/**
+ * Return the name of the page that contains the right panels list, that are
+ * used by the page `name`
+ */
+const pageForRight = (
+   pages: Record<string, PageDescr>, name: string
+): string|undefined => {
+   const page = pages[name];
+   return page?.right === undefined  // either no page, or inherit right
+      ? Object.entries(pages).filter(([pname, p]) => p.right)[0][0]
+      : page.right === null      // No right panels
+      ? undefined
+      : name;
+};
+
+type Area = "central" | "right";
 
 interface PagesContext {
    pages: Record<string, PageDescr>;
 
    // Return the panels to display in either the central area or the right
    // area, for the given page
-   getPanels: (
-      name: string, area: "central" | "right"
-      ) => PanelBaseProps[];
+   getPanels: (name: string, area: Area) => PanelBaseProps[];
 
    // Create a new page, and return its id
    addPage: (
@@ -291,7 +305,7 @@ interface PagesContext {
    deletePage: (name: string) => void;
 
    // Update an existing page
-   updatePage: (name: string, panels: PanelBaseProps[]) => void;
+   updatePage: (name: string, panels: PanelBaseProps[], area?: Area) => void;
 }
 
 const noContext: PagesContext = {
@@ -348,33 +362,26 @@ export const PagesProvider: React.FC<{}> = p => {
    );
 
    const updatePage = React.useCallback(
-      (name: string, panels: PanelBaseProps[]) => {
-          setVal(old => {
-             return {
-                ...old,
-                [name]: {...old[name], panels},
-             };
-          });
-      },
+      (name: string, panels: PanelBaseProps[], area: Area="central") =>
+         setVal(old => {
+            const n = area === "central" ? name : pageForRight(old, name);
+            const obj = area === "central" ? {panels} : {right: panels};
+            return n ? {
+               ...old,
+               [n]: {...old[n], ...obj},
+            } : old;
+         }),
       [setVal]
    );
 
    const getPanels = React.useCallback(
-      (name: string, area: "central" | "right") => {
-         const page = val[name];
-         if (!page) {
-            return [];
-         }
-         if (area === "central") {
-            return page.panels;
-         } else {
-            return (
-               page.right === null      ? undefined
-               : page.right === undefined
-               ? Object.values(val).filter(p => p.right)[0]?.right
-               : page.right
-            ) || [];  // could have been null or undefined
-         }
+      (name: string, area: Area) => {
+         const n = area === "central" ? name : pageForRight(val, name);
+         return n === undefined
+            ? []
+            : area === "central"
+            ? (val[n]?.panels || [])
+            : (val[n]?.right || []);
       },
       [val]
    );

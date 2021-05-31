@@ -2,7 +2,7 @@
    grid-area: rsidebar;
    margin-right: var(--side-margin);
 
-   .dashboard {
+   &.dashboard {
       grid-template-columns: 100%;
       grid-template-rows: repeat(auto-fit, minmax(var(--panel-height), 1fr));
       height: 100%;

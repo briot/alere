@@ -8,7 +8,7 @@ interface PanelWrapperProps {
    panel: PanelBaseProps;
    index: number;
 
-   setPanels: React.Dispatch<React.SetStateAction<PanelBaseProps[]>>;
+   setPanels: (value: (prevState: PanelBaseProps[]) => PanelBaseProps[]) => void;
    // settings are disabled when this is null, since there would be no way to
    // save the changes.
 }
@@ -46,7 +46,7 @@ const PanelWrapper: React.FC<PanelWrapperProps> = p => {
 
 interface DashboardFromPanelsProps {
    panels: PanelBaseProps[];
-   setPanels: React.Dispatch<React.SetStateAction<PanelBaseProps[]>>;
+   setPanels: (value: (prevState: PanelBaseProps[]) => PanelBaseProps[]) => void;
    className?: string;
 }
 export const DashboardFromPanels: React.FC<DashboardFromPanelsProps> = p => {
