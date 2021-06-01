@@ -8,7 +8,7 @@ import { DashboardFromPanels } from '@/Dashboard';
 import { PanelBaseProps } from '@/Dashboard/Panel';
 import RoundButton from '@/RoundButton';
 import { usePages } from '@/services/usePages';
-import './RightSideBar.scss';
+import './Page.scss';
 
 interface PageButtonProps {
    name: string;
