@@ -1,7 +1,6 @@
 import React from 'react';
 import { DateRange, rangeDisplay } from '@/Dates';
 import Tooltip from '@/Tooltip';
-import { capitalize } from '@/services/utils';
 import './Header.scss';
 
 export interface HeaderProps {
@@ -27,7 +26,7 @@ const Header: React.FC<HeaderProps> = p => {
          <Tooltip tooltip={ p.tooltip ?? r?.as_dates }>
             <h5>
                 {p.node}
-                {capitalize(p.name ?? '')}
+                {p.name}
                 {
                    r?.text
                    ? <span> &mdash; {r.text}</span>

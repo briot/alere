@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { DateRange, monthCount } from '@/Dates';
+import { DateRange, monthCount, rangeDisplay } from '@/Dates';
 import { Link } from 'react-router-dom';
 import Numeric from '@/Numeric';
 import Table from '@/List';
@@ -88,7 +88,9 @@ const Cashflow: React.FC<CashflowProps> = p => {
             <div className="thead">
                <Table.TR>
                  <Table.TH />
-                 <Table.TH className="amount">Period</Table.TH>
+                 <Table.TH className="amount">
+                    {rangeDisplay(p.range).text}
+                 </Table.TH>
                  <Table.TH className="amount">/ month</Table.TH>
                </Table.TR>
             </div>
@@ -181,6 +183,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                      head: 'Unrealized gains',
                      amount: unrealized,
                      tooltip: "Variation in the price of your investments",
+                     bold: true,
                      padding: 1,
                   })
                }
