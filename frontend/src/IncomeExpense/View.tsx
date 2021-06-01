@@ -56,7 +56,9 @@ const renderCustomizedLabel = (p: PieLabelRenderProps) => {
   );
 };
 
-const CustomTooltip = (p: TooltipProps<number, string> & {data: DataType} ) => {
+const CustomTooltip = (
+   p: TooltipProps<number, string> & {data: DataType, range: DateRange}
+) => {
    const pay = p.payload?.[0];
    if (!pay) {
       return null;
@@ -69,6 +71,7 @@ const CustomTooltip = (p: TooltipProps<number, string> & {data: DataType} ) => {
            <AccountName
               id={pay.payload.accountId}
               account={pay.payload.account}
+              range={p.range}
            />
            <div>
               <Numeric
@@ -125,6 +128,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
               <AccountName
                   id={data.items[index].accountId}
                   account={data.items[index].account}
+                  range={p.range}
               />
 
               <Numeric
@@ -186,7 +190,9 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
                         />
                         <YAxis dataKey={NAME_KEY} type="category" hide={true} />
                         <CartesianGrid strokeDasharray="5 5" />
-                        <Tooltip content={<CustomTooltip data={data} />} />
+                        <Tooltip
+                           content={<CustomTooltip data={data} range={p.range} />}
+                        />
                         <Bar
                             dataKey="value"
                             fill={color1}
@@ -218,7 +224,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
                      />
                   }
                   <Tooltip
-                     content={<CustomTooltip data={data} />}
+                     content={<CustomTooltip data={data} range={p.range} />}
                   />
                   <Pie
                      data={data.items}

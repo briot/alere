@@ -183,7 +183,7 @@ const defaultPages: Record<string, PageDescr> = {
             notes_mode: NotesMode.ONE_LINE,
             split_mode: SplitMode.COLLAPSED,
             borders: false,
-            defaultExpand: true,
+            defaultExpand: false,
             valueColumn: false,
             hideBalance: false,
             hideReconcile: false,

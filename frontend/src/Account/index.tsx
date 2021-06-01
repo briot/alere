@@ -6,6 +6,7 @@ import useAccountTree, { TreeMode, TreeNode } from '@/services/useAccountTree';
 import { Checkbox, Select, Option } from '@/Form';
 import ListWithColumns, { AlternateRows, Column } from '@/List/ListWithColumns';
 import accounts_to_rows from '@/List/ListAccounts';
+import { DateRange } from '@/Dates';
 import List from '@/List';
 import Tooltip from '@/Tooltip';
 import "./Account.scss";
@@ -159,6 +160,7 @@ interface AccountProps {
    account: Account|undefined;
    fullName?: boolean;
    noLinkIf?: Account[]|undefined;
+   range?: DateRange; // included in link to ledger
 }
 const AccountName: React.FC<AccountProps> = p => {
    const fname = p.account?.fullName() ?? `account ${p.id}`;
@@ -172,7 +174,7 @@ const AccountName: React.FC<AccountProps> = p => {
                p.noLinkIf === undefined
                || p.account === undefined
                || !p.noLinkIf.includes(p.account)
-               ? (<Link to={`/ledger?accounts=${p.id}`}>{name}</Link>)
+               ? (<Link to={`/ledger?accounts=${p.id}&range=${p.range}`}>{name}</Link>)
                : name
             }
          </span>
