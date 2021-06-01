@@ -56,7 +56,7 @@ const defaultPages: Record<string, PageDescr> = {
          {
             type: 'recent',
             colspan: 1,
-            rowspan: 1,
+            rowspan: 3,
          } as RecentPanelProps,
          {
             type: 'assets',
