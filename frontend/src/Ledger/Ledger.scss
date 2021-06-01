@@ -10,17 +10,9 @@
       //@include set-colors(table-row-details);
       //font-style: italic;
 
-      .numeric {
-         font-size: 0.8rem;
-      }
-
       &.nesting-0 {
          color: inherit;
          font-style: inherit;
-
-         .numeric {
-            font-size: inherit;
-         }
       }
 
       /* Editing */
