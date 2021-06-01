@@ -5,7 +5,7 @@ import AccountName from '@/Account';
 import Table from '@/List';
 import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
          incomeExpenseSplits, sharesForAccounts, priceForAccounts,
-         Split, Transaction } from '@/Transaction';
+         Split, Transaction, reconcileToString } from '@/Transaction';
 import Numeric from '@/Numeric';
 import ListWithColumns, {
    AlternateRows, Column, LogicalRow } from '@/List/ListWithColumns';
@@ -184,7 +184,8 @@ const columnReconcile: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "R",
    className: "reconcile",
    cell: (d: TableRowData) =>
-      d.split === MAIN ? d.firstRowSplit.reconcile : d.split.reconcile,
+      reconcileToString(
+         d.split === MAIN ? d.firstRowSplit.reconcile : d.split.reconcile),
 }
 
 const columnAmount: Column<TableRowData, ComputedBaseLedgerProps> = {

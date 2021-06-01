@@ -1,10 +1,11 @@
 import { Account, AccountId, CommodityId } from '@/services/useAccounts';
 
 export type TransactionId = string;
+type ReconcileId = string;
 
 export interface Split {
    accountId: AccountId;
-   reconcile?: string;
+   reconcile?: ReconcileId;
    date: string;     // date the split was completed
    amount: number;
    currency: CommodityId | undefined, // amount is given in that currency
@@ -26,6 +27,9 @@ export interface Transaction {
    memo?: string;
    checknum?: string;
 }
+
+export const reconcileToString = (r: ReconcileId | undefined) =>
+   r === 'n' ? '' : r;
 
 /**
  * All splits involving an income or expense account

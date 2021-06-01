@@ -4,7 +4,7 @@ import useTransactions from '@/services/useTransactions';
 import Panel, { PanelProps, PanelBaseProps } from '@/Dashboard/Panel';
 import Settings from '@/Ledger/Settings';
 import usePrefs from '@/services/usePrefs';
-import useQuery from '@/services/useQuery';
+import useSearch from '@/services/useSearch';
 
 export interface LedgerPanelProps extends PanelBaseProps, BaseLedgerProps {
    type: 'ledger';
@@ -13,17 +13,15 @@ export interface LedgerPanelProps extends PanelBaseProps, BaseLedgerProps {
 const LedgerPanel: React.FC<
    PanelProps<LedgerPanelProps>
 > = p => {
-   const query = useQuery({
+   const query = useSearch({
       accountIds: p.props.accountIds,  // default
       range: p.props.range,
    });
-
    const { prefs } = usePrefs();
    const transactions = useTransactions(query.accounts.accounts, query.range);
-
    const setSortOn = (sortOn: string) => p.save({ sortOn });
 
-   if (query.accounts.accounts.length === 0) {
+   if (!query.accountIds || query.accounts.accounts.length === 0) {
       return null;
    }
 
@@ -33,7 +31,9 @@ const LedgerPanel: React.FC<
          header={{name: query.accounts.title, range: query.range}}
          Settings={
             <Settings
-               props={p.props}
+               props={{...p.props,
+                       accountIds: query.accountIds,
+                       range: query.range}}
                excludeFields={p.excludeFields}
                save={p.save}
             />
@@ -41,6 +41,8 @@ const LedgerPanel: React.FC<
       >
          <Ledger
             {...p.props}
+            accountIds={query.accountIds}
+            range={query.range}
             transactions={transactions}
             prefs={prefs}
             setSortOn={setSortOn}

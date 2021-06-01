@@ -8,7 +8,7 @@ import { CommodityId } from '@/services/useAccounts';
 import { AccountIdSet } from '@/services/useAccountIds';
 import useTickers from '@/services/useTickers';
 import usePrefs from '@/services/usePrefs';
-import useQuery from '@/services/useQuery';
+import useSearch from '@/services/useSearch';
 import { isNumeric } from '@/services/utils';
 
 export interface TickerPanelProps extends PanelBaseProps, TickerViewProps {
@@ -31,7 +31,7 @@ export interface TickerPanelProps extends PanelBaseProps, TickerViewProps {
 
 const TickerPanel: React.FC<PanelProps<TickerPanelProps>> = p => {
    const { prefs } = usePrefs();
-   const query = useQuery({
+   const query = useSearch({
       range: p.props.range ?? 'all', // default
    });
    const accountIds = query.accounts.accounts.map(a => a.id);
@@ -43,7 +43,6 @@ const TickerPanel: React.FC<PanelProps<TickerPanelProps>> = p => {
       query.range             /* range */,
       false                   /* hideIfNoShare */,
       undefined               /* commodity */,
-          // ??? isNumeric(ticker) ? ticker as number : undefined,
       query.accounts.accounts.length !== 1   /* skip */,
    );
 

@@ -9,6 +9,7 @@ export interface Selection {
    accounts: AccountList;
    range: DateRange | undefined;
    raw: Record<string, string>;
+   accountIds: AccountIdSet | undefined;
 }
 
 interface QueryDefaults {
@@ -18,11 +19,11 @@ interface QueryDefaults {
 
 // A custom hook that builds on useLocation to parse
 // the query string for you.
-const useQuery = (defaults?: QueryDefaults): Selection => {
+const useSearch = (defaults?: QueryDefaults): Selection => {
    const r = Object.fromEntries(new URLSearchParams(useLocation().search));
    const { mostRecent, pushAccount } = useHistory();
-   const accounts = useAccountIds(
-      r.accounts ?? defaults?.accountIds ?? mostRecent);
+   const accountIds = r.accounts ?? defaults?.accountIds ?? mostRecent;
+   const accounts = useAccountIds(accountIds);
 
    // Save chosen accounts to "most Recent" history
    React.useEffect(
@@ -37,8 +38,9 @@ const useQuery = (defaults?: QueryDefaults): Selection => {
    return {
       raw: r,
       accounts,
+      accountIds,
       range: parseRange(r.range) ?? defaults?.range,
    };
 };
 
-export default useQuery;
+export default useSearch;

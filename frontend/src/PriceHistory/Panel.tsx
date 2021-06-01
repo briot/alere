@@ -3,7 +3,7 @@ import Settings from '@/PriceHistory/Settings';
 import Panel, { PanelProps, PanelBaseProps } from '@/Dashboard/Panel';
 import PriceGraph, { PriceGraphProps } from '@/PriceGraph';
 import usePrefs from '@/services/usePrefs';
-import useQuery from '@/services/useQuery';
+import useSearch from '@/services/useSearch';
 import useTickers from '@/services/useTickers';
 import { toDates } from '@/Dates';
 
@@ -13,7 +13,7 @@ export interface PriceHistoryPanelProps extends PanelBaseProps, PriceGraphProps 
 
 const PriceHistoryPanel: React.FC<PanelProps<PriceHistoryPanelProps>> = p => {
    const { prefs } = usePrefs();
-   const query = useQuery({
+   const query = useSearch({
       range: 'all',  // default
    });
    const commodity_id =
@@ -21,7 +21,7 @@ const PriceHistoryPanel: React.FC<PanelProps<PriceHistoryPanelProps>> = p => {
       ? query.accounts.accounts[0].id : -1;
    const tickers = useTickers(
       prefs.currencyId        /* currencyId */,
-      query.accounts.accounts.map(a => a.id) /* accountIds */,
+      query.accountIds        /* accountIds */,
       query.range             /* range */,
       false                   /* hideIfNoShare */,
       undefined               /* commodity */,

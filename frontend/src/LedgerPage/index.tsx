@@ -2,10 +2,10 @@ import * as React from 'react';
 import { useHistory as useRouterHistory } from 'react-router-dom';
 import { Account } from '@/services/useAccounts';
 import { SelectAccount } from '@/Account';
-import useQuery from '@/services/useQuery';
+import useSearch from '@/services/useSearch';
 
 export const LedgerPageTitle: React.FC<{}> = () => {
-   const query = useQuery();
+   const query = useSearch();
    const history = useRouterHistory();
    const onAccountChange = React.useCallback(
       (a: Account) => history.push(`/ledger?accounts=${a.id}`),
