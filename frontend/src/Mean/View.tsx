@@ -1,9 +1,11 @@
 import * as React from 'react';
-import { DateRange, rangeToHttp } from '@/Dates';
+import { useHistory } from 'react-router-dom';
+import { DateRange, endOfMonth, rangeToHttp } from '@/Dates';
 import { ComposedChart, XAxis, YAxis, CartesianGrid, Bar, ReferenceLine,
          Line, Tooltip, TooltipProps } from 'recharts';
 import { CommodityId } from '@/services/useAccounts';
 import Numeric from '@/Numeric';
+import { AccountIdSet } from '@/services/useAccountIds';
 import usePrefs from '@/services/usePrefs';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import useFetch from '@/services/useFetch';
@@ -184,17 +186,6 @@ const CustomTooltip = (
       : null;
 }
 
-const getArea = (key: string, color: string, stackId: string,
-) => (
-   <Bar
-      dataKey={key}
-      fill={color}
-      stroke={color}
-      stackId={stackId}
-      isAnimationActive={false}
-   />
-)
-
 const getLine = (key: string, color: string) => (
    <Line
       type="linear"
@@ -210,6 +201,48 @@ const Mean: React.FC<MeanProps> = p => {
    const points = useMeanHistory(
       p.range, p.prior, p.after,
       p.showUnrealized, p.negateExpenses, prefs.currencyId);
+   const history = useHistory();
+
+   const clickOnBar = React.useCallback(
+      (data: Point, accounts: AccountIdSet) => {
+         const d = endOfMonth(0, new Date(data.date));
+         history.push(
+            `/ledger?accounts=${accounts}`
+            + `&date=${d.toISOString()}`
+            + `&range=current month`);
+      },
+      [history]
+   );
+
+   const clickOnExpenses = React.useCallback(
+      (data: Point) => clickOnBar(data, 'expenses'),
+      [clickOnBar]
+   )
+   const clickOnRealizedIncome = React.useCallback(
+      (data: Point) => clickOnBar(data, 'realized_income'),
+      [clickOnBar]
+   )
+   const clickOnUnrealizedIncome = React.useCallback(
+      (data: Point) => clickOnBar(data, 'unrealized_income'),
+      [clickOnBar]
+   )
+
+   const getBar = (
+      key: string, color: string, stackId: string, accounts: AccountIdSet,
+   ) => (
+      <Bar
+         dataKey={key}
+         fill={color}
+         stroke={color}
+         stackId={stackId}
+         isAnimationActive={false}
+         onClick={
+            accounts === 'realized_income' ? clickOnRealizedIncome
+            : accounts === 'unrealized_income' ? clickOnUnrealizedIncome
+            : clickOnExpenses
+         }
+      />
+   )
 
    return (
       <div className='meanHistory'>
@@ -251,16 +284,19 @@ const Mean: React.FC<MeanProps> = p => {
                      }
                   />
                   { p.showIncome &&
-                    getArea('value_realized',
+                    getBar('value_realized',
                             'var(--graph-mean-realized)',
-                            'income') }
+                            'income',
+                            'realized_income') }
                   { p.showUnrealized &&
-                    getArea('value_unrealized',
+                    getBar('value_unrealized',
                             'var(--graph-mean-unrealized)',
-                            'income') }
+                            'income',
+                            'unrealized_income') }
                   { p.showExpenses &&
-                    getArea('value_exp',
+                    getBar('value_exp',
                             'var(--graph-mean-expenses)',
+                            'expenses',
                             'expenses') }
                   { p.showIncome && p.showMean &&
                     getLine('average_income', 'var(--graph-mean-realized)') }

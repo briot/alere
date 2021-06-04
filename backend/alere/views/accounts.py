@@ -66,6 +66,10 @@ class AccountList(JSONView):
                 "is_expense": a.flag in alere.models.AccountFlags.expenses(),
                 "is_income_tax": a.flag in alere.models.AccountFlags.income_tax(),
                 "is_other_tax": a.flag in alere.models.AccountFlags.misc_tax(),
+                "is_realized_income":
+                   a.flag in alere.models.AccountFlags.realized_income(),
+                "is_unrealized_income":
+                   a.flag in alere.models.AccountFlags.unrealized_income(),
             }
             for a in alere.models.AccountKinds.objects.all()
         ]

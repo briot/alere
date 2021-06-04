@@ -28,7 +28,7 @@ class MetricsView(JSONView):
         income = -(
             over_period \
             .filter(
-                account__kind__in=alere.models.AccountFlags.actual_income()) \
+                account__kind__in=alere.models.AccountFlags.realized_income()) \
             .aggregate(value=Sum('value'))['value']
             or 0)
 

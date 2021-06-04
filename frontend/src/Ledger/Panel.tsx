@@ -18,7 +18,8 @@ const LedgerPanel: React.FC<
       range: p.props.range,
    });
    const { prefs } = usePrefs();
-   const transactions = useTransactions(query.accounts.accounts, query.range);
+   const transactions = useTransactions(
+      query.accounts.accounts, query.range, query.date);
    const setSortOn = (sortOn: string) => p.save({ sortOn });
 
    if (!query.accountIds || query.accounts.accounts.length === 0) {

@@ -44,6 +44,8 @@ interface AccountKindJSON {
    is_expense?: boolean;
    is_income_tax?: boolean;
    is_other_tax?: boolean;
+   is_realized_income?: boolean;
+   is_unrealized_income?: boolean;
 }
 const nullAccountKind: AccountKindJSON = {
    id: "",

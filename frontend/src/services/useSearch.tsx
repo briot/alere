@@ -10,6 +10,7 @@ export interface Selection {
    range: DateRange | undefined;
    raw: Record<string, string>;
    accountIds: AccountIdSet | undefined;
+   date: Date;  //  a reference date (in general: today)
 }
 
 interface QueryDefaults {
@@ -39,6 +40,7 @@ const useSearch = (defaults?: QueryDefaults): Selection => {
       raw: r,
       accounts,
       accountIds,
+      date: r.date ? new Date(r.date) : new Date(),
       range: parseRange(r.range) ?? defaults?.range,
    };
 };

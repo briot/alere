@@ -17,6 +17,8 @@ export type AccountIdSet =
    | 'assets'
    | 'expenses'
    | 'income_tax'
+   | 'realized_income'
+   | 'unrealized_income'
    | 'other_taxes'
    | 'passive_income'
    | 'work_income';
@@ -50,6 +52,22 @@ const useAccountIds = (ids: AccountIdSet|undefined): AccountList => {
                accounts: accounts.allAccounts().filter(a => a.kind.is_asset),
                title: 'all assets',
             };
+         }
+
+         if (ids == 'realized_income') {
+            return {
+               accounts: accounts.allAccounts().filter(
+                  a => a.kind.is_realized_income),
+               title: 'all realized income',
+            }
+         }
+
+         if (ids == 'unrealized_income') {
+            return {
+               accounts: accounts.allAccounts().filter(
+                  a => a.kind.is_unrealized_income),
+               title: 'all unrealized income',
+            }
          }
 
          if (ids === 'work_income') {

@@ -60,7 +60,7 @@ const useBalance = (p: {
    const { data } = useFetch<BalanceList, JSONBalance[]>({
       url: `/api/plots/networth`
          + `?currency=${p.currencyId}`
-         + `&dates=${p.dates.map(dateToString).join(',')}`,
+         + `&dates=${p.dates.map(d => dateToString(d)).join(',')}`,
       parse: (json: JSONBalance[]) => ({
          dates: p.dates,
          currencyId: p.currencyId,

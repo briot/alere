@@ -4,11 +4,13 @@ import RoundButton from '@/RoundButton';
 import { mod } from '@/services/utils';
 import './Dates.scss';
 
+type Ref = Date|undefined;  //  a reference date
+
 /**
  * Modifies d in place to set the last day n months ago
  */
-const endOfMonth = (months: number) => {
-   const d = new Date();
+export const endOfMonth = (months: number, refdate?: Ref) => {
+   const d = refdate ? new Date(refdate) : new Date();
    d.setDate(1);
    d.setMonth(d.getMonth() + months + 1);
    d.setHours(0);
@@ -18,8 +20,8 @@ const endOfMonth = (months: number) => {
    return d;
 }
 
-const startOfMonth = (months: number) => {
-   const d = new Date();
+const startOfMonth = (months: number, refdate?: Ref) => {
+   const d = refdate ? new Date(refdate) : new Date();
    d.setDate(1);
    d.setMonth(d.getMonth() + months);
    d.setHours(0);
@@ -33,8 +35,8 @@ const startOfMonth = (months: number) => {
  * same day, last month. When the day doesn't exist, move to the last valid
  * day in that month.
  */
-export const addMonth = (months: number, d?: Date) => {
-   d = d ?? new Date();
+export const addMonth = (months: number, refdate?: Ref) => {
+   const d = refdate ? new Date(refdate) : new Date();
    const m = d.getMonth() + months;
    d.setMonth(m);
    if (d.getMonth() !== mod(m, 12)) {
@@ -43,8 +45,8 @@ export const addMonth = (months: number, d?: Date) => {
    return d;
 }
 
-const addDay = (days: number) => {
-   const d = new Date();
+const addDay = (days: number, refdate?: Ref) => {
+   const d = refdate ? new Date(refdate) : new Date();
    d.setDate(d.getDate() + days);
    return d;
 }
@@ -52,8 +54,8 @@ const addDay = (days: number) => {
 /**
  * Modifies d in place to set the last day of the year, n years ago
  */
-const endOfYear = (years: number) => {
-   const d = new Date();
+const endOfYear = (years: number, refdate?: Ref) => {
+   const d = refdate ? new Date(refdate) : new Date();
    d.setMonth(11);
    d.setDate(31);
    d.setHours(23);
@@ -64,8 +66,8 @@ const endOfYear = (years: number) => {
    return d;
 }
 
-const startOfYear = (years: number) => {
-   const d = new Date();
+const startOfYear = (years: number, refdate?: Ref) => {
+   const d = refdate ? new Date(refdate) : new Date();
    d.setFullYear(d.getFullYear() + years);
    d.setDate(1);
    d.setMonth(0);
@@ -78,7 +80,7 @@ const startOfYear = (years: number) => {
 
 interface RelativeDateType {
    group: number;
-   toDate: () => Date;
+   toDate: (relativeTo: Ref) => Date;
    text?: string;
 }
 
@@ -95,49 +97,49 @@ export type RelativeDate = 'today' | 'yesterday' | 'tomorrow'
    | 'end of 3 years ago' | 'epoch' | 'armageddon';
 
 const relativeDates: Record<RelativeDate, RelativeDateType> = {
-   "today":                 {group: 0, toDate: () => addDay(0)},
-   "yesterday":             {group: 0, toDate: () => addDay(-1)},
-   "tomorrow":              {group: 0, toDate: () => addDay(1)},
+   "today":                 {group: 0, toDate: (r: Ref) => addDay(0, r)},
+   "yesterday":             {group: 0, toDate: (r: Ref) => addDay(-1, r)},
+   "tomorrow":              {group: 0, toDate: (r: Ref) => addDay(1, r)},
 
-   "start of month":        {group: 1, toDate: () => startOfMonth(0)},
-   "start of last month":   {group: 1, toDate: () => startOfMonth(-1)},
-   "start of 2 months ago": {group: 1, toDate: () => startOfMonth(-2)},
-   "start of 3 months ago": {group: 1, toDate: () => startOfMonth(-3)},
-   "start of 4 months ago": {group: 1, toDate: () => startOfMonth(-4)},
+   "start of month":        {group: 1, toDate: (r: Ref) => startOfMonth(0, r)},
+   "start of last month":   {group: 1, toDate: (r: Ref) => startOfMonth(-1, r)},
+   "start of 2 months ago": {group: 1, toDate: (r: Ref) => startOfMonth(-2, r)},
+   "start of 3 months ago": {group: 1, toDate: (r: Ref) => startOfMonth(-3, r)},
+   "start of 4 months ago": {group: 1, toDate: (r: Ref) => startOfMonth(-4, r)},
 
-   "end of month":          {group: 2, toDate: () => endOfMonth(0)},
-   "end of last month":     {group: 2, toDate: () => endOfMonth(-1)},
-   "end of 2 months ago":   {group: 2, toDate: () => endOfMonth(-2)},
-   "end of 3 months ago":   {group: 2, toDate: () => endOfMonth(-3)},
-   "end of 4 months ago":   {group: 2, toDate: () => endOfMonth(-4)},
+   "end of month":          {group: 2, toDate: (r: Ref) => endOfMonth(0, r)},
+   "end of last month":     {group: 2, toDate: (r: Ref) => endOfMonth(-1, r)},
+   "end of 2 months ago":   {group: 2, toDate: (r: Ref) => endOfMonth(-2, r)},
+   "end of 3 months ago":   {group: 2, toDate: (r: Ref) => endOfMonth(-3, r)},
+   "end of 4 months ago":   {group: 2, toDate: (r: Ref) => endOfMonth(-4, r)},
 
-   "1 month ago":           {group: 3, toDate: () => addMonth(-1)},
-   "2 months ago":          {group: 3, toDate: () => addMonth(-2)},
-   "3 months ago":          {group: 3, toDate: () => addMonth(-3)},
+   "1 month ago":           {group: 3, toDate: (r: Ref) => addMonth(-1, r)},
+   "2 months ago":          {group: 3, toDate: (r: Ref) => addMonth(-2, r)},
+   "3 months ago":          {group: 3, toDate: (r: Ref) => addMonth(-3, r)},
 
-   "1 year ago":            {group: 4, toDate: () => addMonth(-12)},
-   "2 years ago":           {group: 4, toDate: () => addMonth(-24)},
-   "3 years ago":           {group: 4, toDate: () => addMonth(-36)},
-   "4 years ago":           {group: 4, toDate: () => addMonth(-48)},
-   "5 years ago":           {group: 4, toDate: () => addMonth(-60)},
+   "1 year ago":            {group: 4, toDate: (r: Ref) => addMonth(-12, r)},
+   "2 years ago":           {group: 4, toDate: (r: Ref) => addMonth(-24, r)},
+   "3 years ago":           {group: 4, toDate: (r: Ref) => addMonth(-36, r)},
+   "4 years ago":           {group: 4, toDate: (r: Ref) => addMonth(-48, r)},
+   "5 years ago":           {group: 4, toDate: (r: Ref) => addMonth(-60, r)},
 
-   "start of year":         {group: 5, toDate: () => startOfYear(0)},
-   "start of last year":    {group: 5, toDate: () => startOfYear(-1)},
+   "start of year":         {group: 5, toDate: (r: Ref) => startOfYear(0, r)},
+   "start of last year":    {group: 5, toDate: (r: Ref) => startOfYear(-1, r)},
    "start of 2 years ago":
       {group: 5, text: "start of year (2 years ago)",
-       toDate: () => startOfYear(-2)},
+       toDate: (r: Ref) => startOfYear(-2, r)},
    "start of 3 years ago":
       {group: 5, text: "start of year (3 years ago)",
-       toDate: () => startOfYear(-3)},
+         toDate: (r: Ref) => startOfYear(-3, r)},
 
-   "end of year":           {group: 6, toDate: () => endOfYear(0)},
-   "end of last year":      {group: 6, toDate: () => endOfYear(-1)},
+   "end of year":           {group: 6, toDate: (r: Ref) => endOfYear(0, r)},
+   "end of last year":      {group: 6, toDate: (r: Ref) => endOfYear(-1, r)},
    "end of 2 years ago":
       {group: 6, text: "end of year (2 years ago)",
-       toDate: () => endOfYear(-2)},
+       toDate: (r: Ref) => endOfYear(-2, r)},
    "end of 3 years ago":
       {group: 6, text: "end of year (3 years ago)",
-       toDate: () => endOfYear(-3)},
+       toDate: (r: Ref) => endOfYear(-3, r)},
 
    "epoch":
       {group: 7, text: "earliest date", toDate: () => new Date(1970, 0, 1)},
@@ -185,8 +187,10 @@ const dateRanges: Record<DateRange, DateRangeType> = {
    },
 }
 
-export const dateToDate = (when: RelativeDate): Date =>
-   relativeDates[when]?.toDate() ?? new Date();
+export const dateToDate = (
+   when: RelativeDate, relativeTo?: Date|undefined
+): Date =>
+   relativeDates[when]?.toDate(relativeTo) ?? relativeTo ?? new Date();
 
 export const formatDate = (d: Date): string => {
    const y = ('0' + d.getFullYear()).slice(-4);
@@ -195,8 +199,10 @@ export const formatDate = (d: Date): string => {
    return `${y}-${m}-${day}`;
 }
 
-export const dateToString = (when: RelativeDate): string =>
-   formatDate(dateToDate(when));
+export const dateToString = (
+   when: RelativeDate, relativeTo?: Date|undefined
+): string =>
+   formatDate(dateToDate(when, relativeTo));
 
 const rangeToDate = (name: DateRange): [RelativeDate, RelativeDate] =>
    dateRanges[name]?.range ?? ['today', 'today'];
@@ -209,13 +215,16 @@ export const toDates = (name: DateRange): [Date, Date] => {
 export const parseRange = (s: string | undefined): DateRange|undefined =>
   s !== undefined && dateRanges[s as DateRange] ? s as DateRange : undefined;
 
-export const rangeToHttp = (name: DateRange|undefined): string => {
+export const rangeToHttp = (
+   name: DateRange|undefined,
+   relativeTo?: Date|undefined,
+): string => {
    if (!name) {
       return '';
    }
    const r = rangeToDate(name);
-   const min = dateToString(r[0]);
-   const max = dateToString(r[1]);
+   const min = dateToString(r[0], relativeTo);
+   const max = dateToString(r[1], relativeTo);
    return `mindate=${min}&maxdate=${max}`;
 }
 

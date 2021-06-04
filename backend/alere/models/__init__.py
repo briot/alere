@@ -226,14 +226,6 @@ class AccountFlags(models.TextChoices):
 
     @classmethod
     def realized_income(klass):
-        return (
-            klass.PASSIVE_INCOME,
-            klass.WORK_INCOME,
-            klass.MISC_INCOME,
-        )
-
-    @classmethod
-    def actual_income(klass):
         """All but unrealized gains"""
         return (
             klass.PASSIVE_INCOME,

@@ -9,14 +9,14 @@ import useFetch from '@/services/useFetch';
 
 const useTransactions = (
    accountList: Account[],
-   range?: DateRange|undefined,   // undefined, to see forever
-   precomputed?: Transaction[],   // use this if set, instead of fetching
+   range: DateRange|undefined,   // undefined, to see forever
+   refDate: Date,                // starting point of the date range
 ): Transaction[] => {
    const { accounts } = useAccounts();
    const idsForQuery = accountList.map(a => a.id).sort().join(',');
    const queryKeepIE = accountList.length > 1;
    const { data } = useFetch({
-      url: `/api/ledger/${idsForQuery}?${rangeToHttp(range)}`,
+      url: `/api/ledger/${idsForQuery}?${rangeToHttp(range, refDate)}`,
       placeholder: [],
       enabled: !!idsForQuery,
       parse: (json: Transaction[]) => {
