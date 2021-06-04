@@ -10,10 +10,10 @@
       margin-left: 3px;
    }
 
-   .positive {
+   &.positive {
       color: var(--positive-fg);
    }
-   .negative {
+   &.negative {
       color: var(--negative-fg);
    }
 }
