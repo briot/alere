@@ -37,7 +37,7 @@ export const HistProvider: React.FC<{}> = p => {
    const pushAccount = React.useCallback(
       (id: AccountId | undefined) => {
          setHist(old => {
-            if (id === undefined) {
+            if (id === undefined || old[0]?.accountId === id) {
                return old;
             }
             const v = [{accountId: id },

@@ -42,15 +42,15 @@ const TickerPanel: React.FC<PanelProps<TickerPanelProps>> = p => {
       accountIds              /* accountIds */,
       query.range             /* range */,
       false                   /* hideIfNoShare */,
-      undefined               /* commodity */,
-      query.accounts.accounts.length !== 1   /* skip */,
+      isNumeric(p.props.ticker)
+         ? p.props.ticker as number : undefined /* commodity */,
+      p.props.ticker === undefined || !isNumeric(p.props.ticker) /* skip */,
    );
 
-   const ticker = tickers && tickers.length === 1 ? tickers[0] : undefined;
-
    const tk =
-      ticker === undefined ? undefined
-      : isNumeric(ticker) ? tickers : [ticker as Ticker];
+      p.props.ticker === undefined ? undefined
+      : isNumeric(p.props.ticker)  ? tickers
+      : [p.props.ticker as Ticker];
 
    if (!tk || !tk.length) {
       return null;

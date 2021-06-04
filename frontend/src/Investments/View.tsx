@@ -6,6 +6,8 @@ import { DashboardFromPanels } from '@/Dashboard';
 import useTickers from '@/services/useTickers';
 import './Investments.scss';
 
+const doNothing = () => {};
+
 /**
  * Show all the user's investments
  */
@@ -23,7 +25,6 @@ const Investments: React.FC<InvestmentsProps> = p => {
    const { prefs } = usePrefs();
    const data = useTickers(
       prefs.currencyId, 'all' /* accountIds */, p.range, p.hideIfNoShare);
-   const doNothing = React.useCallback(() => {}, []);
 
    // We compute the date range once for all tickers, so that they all have
    // exactly the same range (otherwise resolving "now" might result in
@@ -49,6 +50,7 @@ const Investments: React.FC<InvestmentsProps> = p => {
          )
       )
    ).filter(a => a !== undefined) ?? [];
+
    panels.sort((a, b) =>
       a.acc!.account.name.localeCompare(b.acc!.account.name));
 
