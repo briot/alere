@@ -19,6 +19,7 @@ export type AccountIdSet =
    | 'income_tax'
    | 'realized_income'
    | 'unrealized_income'
+   | 'other_income'  // all income - work income - passive income
    | 'other_taxes'
    | 'passive_income'
    | 'work_income';
@@ -54,7 +55,7 @@ const useAccountIds = (ids: AccountIdSet|undefined): AccountList => {
             };
          }
 
-         if (ids == 'realized_income') {
+         if (ids === 'realized_income') {
             return {
                accounts: accounts.allAccounts().filter(
                   a => a.kind.is_realized_income),
@@ -62,10 +63,20 @@ const useAccountIds = (ids: AccountIdSet|undefined): AccountList => {
             }
          }
 
-         if (ids == 'unrealized_income') {
+         if (ids === 'unrealized_income') {
             return {
                accounts: accounts.allAccounts().filter(
                   a => a.kind.is_unrealized_income),
+               title: 'all unrealized income',
+            }
+         }
+
+         if (ids === 'other_income') {
+            return {
+               accounts: accounts.allAccounts().filter(
+                  a => a.kind.is_realized_income
+                       && !a.kind.is_work_income
+                       && !a.kind.is_passive_income),
                title: 'all unrealized income',
             }
          }

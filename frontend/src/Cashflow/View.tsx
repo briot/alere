@@ -131,6 +131,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                      amount: pl.income - pl.work_income - pl.passive_income,
                      tooltip: "Unclassified income",
                      padding: 1,
+                     url: `/ledger?accounts=other_income&range=${p.range}`,
                   })
                }
                {
