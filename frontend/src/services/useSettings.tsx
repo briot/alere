@@ -7,16 +7,22 @@ import * as React from 'react';
 const useSettings = <T extends {}> (
    key: string,
    defaultValue: T,
+
+   loader: (val: T) => T = val => val,
+   saver: (val: T) => T = val => val,
+   // Called on load or save, might be used to cleanup values
+
 ) => {
    const KEY = `alere-${key}`;
    const [val, setVal] = React.useState<T>(
-      () => JSON.parse(localStorage.getItem(KEY) || 'null') || defaultValue,
+      () => loader(
+         JSON.parse(localStorage.getItem(KEY) || 'null') || defaultValue),
    );
 
    // Save dashboards when they change
    React.useEffect(
-      () => localStorage.setItem(KEY, JSON.stringify(val)),
-      [val, KEY]
+      () => localStorage.setItem(KEY, JSON.stringify(saver(val))),
+      [val, KEY, saver]
    );
 
    const setPartial = React.useCallback(

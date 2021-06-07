@@ -324,6 +324,11 @@ interface PagesContext {
    updatePage: (name: string, panels: PanelBaseProps[], area?: Area) => void;
 }
 
+const hideTmp = (pages: Record<string, PageDescr>) =>
+    Object.fromEntries(
+       Object.entries(pages)
+       .filter(([key, val]) => !val.tmp));
+
 const noContext: PagesContext = {
    pages: {},
    getPanels: () => [],
@@ -334,7 +339,8 @@ const noContext: PagesContext = {
 const ReactPagesContext = React.createContext(noContext);
 
 export const PagesProvider: React.FC<{}> = p => {
-   const { val, setVal } = useSettings('Pages', defaultPages);
+   const { val, setVal } = useSettings(
+      'Pages', defaultPages, hideTmp /* loader */ );
 
    const addPage = React.useCallback(
       (name: string, panels: PanelBaseProps[], tmp?: boolean) => {
