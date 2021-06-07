@@ -1,9 +1,7 @@
 import * as React from 'react';
 import Ledger, { BaseLedgerProps } from '@/Ledger/View';
-import useTransactions from '@/services/useTransactions';
 import Panel, { PanelProps, PanelBaseProps } from '@/Dashboard/Panel';
 import Settings from '@/Ledger/Settings';
-import usePrefs from '@/services/usePrefs';
 import useSearch from '@/services/useSearch';
 
 export interface LedgerPanelProps extends PanelBaseProps, BaseLedgerProps {
@@ -17,9 +15,6 @@ const LedgerPanel: React.FC<
       accountIds: p.props.accountIds,  // default
       range: p.props.range,
    });
-   const { prefs } = usePrefs();
-   const transactions = useTransactions(
-      query.accounts.accounts, query.range, query.date);
    const setSortOn = (sortOn: string) => p.save({ sortOn });
 
    if (!query.accountIds || query.accounts.accounts.length === 0) {
@@ -43,9 +38,8 @@ const LedgerPanel: React.FC<
          <Ledger
             {...p.props}
             accountIds={query.accountIds}
+            date={query.date}
             range={query.range}
-            transactions={transactions}
-            prefs={prefs}
             setSortOn={setSortOn}
          />
       </Panel>

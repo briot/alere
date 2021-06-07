@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { DateRange, dateToString } from '@/Dates';
+import { DateRange } from '@/Dates';
 import AccountName from '@/Account';
 import Table from '@/List';
 import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
@@ -9,10 +9,13 @@ import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
 import Numeric from '@/Numeric';
 import ListWithColumns, {
    AlternateRows, Column, LogicalRow } from '@/List/ListWithColumns';
-import { Account, AccountId, CommodityId } from '@/services/useAccounts';
+import { Account, AccountId } from '@/services/useAccounts';
 import useAccountIds, {
    AccountIdSet, AccountList } from '@/services/useAccountIds';
 import { Preferences } from '@/services/usePrefs';
+import useTransactions from '@/services/useTransactions';
+import usePrefs from '@/services/usePrefs';
+
 import './Ledger.scss';
 
 const SPLIT = '--split--';
@@ -35,7 +38,8 @@ export enum NotesMode {
 
 export interface BaseLedgerProps {
    accountIds: AccountIdSet;    // which subset of the accounts to show
-   range?: DateRange|undefined; // undefined, to see forever
+   range?: DateRange|undefined; // use undefined to see forever
+   date?: Date;                 // a reference date (by default: today)
    notes_mode: NotesMode;
    split_mode: SplitMode;
    borders: boolean;
@@ -48,9 +52,26 @@ export interface BaseLedgerProps {
    sortOn?: string;  // +colid  or -colid
 }
 
+interface Totals {
+//   commodity: CommodityId|undefined;   singleAccount?.commodity.id
+   future: number|undefined;  // future value, looking at all transactions
+   present: number|undefined; // current value, ignoring transactions in future
+   reconciled: number;        // only look at reconciled transactions
+   cleared: number;           // only look at reconciled and cleared transactions
+   selected: number;          // total of selected transactions
+}
+const nullTotal: Totals = {
+//   commodity: undefined,
+   future: undefined, present: undefined, reconciled: 0,
+   cleared: 0, selected: 0,
+};
+
 export interface ComputedBaseLedgerProps extends BaseLedgerProps {
    transactions: Transaction[]; // use it instead of fetching
    prefs : Preferences;
+   singleAccount: Account | undefined; // if a single account was selected
+   accounts: AccountList;
+   total: Totals;
 }
 
 interface TableRowData {
@@ -213,6 +234,7 @@ const columnWidthdraw: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "Payment",
    className: "amount",
    compare: (a, b) => a.firstRowSplit.amount - b.firstRowSplit.amount,
+   head: s => s.singleAccount?.kind.negative ?? 'Payment',
    cell: (d: TableRowData, _, settings) =>
       d.split === MAIN
       ? (d.firstRowSplit.amount < 0 &&
@@ -323,70 +345,70 @@ const columnBalance: Column<TableRowData, ComputedBaseLedgerProps> = {
       />
 }
 
-const columnTotal = (v: Totals): Column<TableRowData, ComputedBaseLedgerProps> => ({
+const columnTotal: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "Total",
-   foot: () => (
+   foot: (_all_rows, _agg, v: ComputedBaseLedgerProps) => (
       <>
          {
-            v.selected
+            v.total.selected
             ? (
                <Table.TD>
                   selected:
                   <Numeric
-                     amount={v.selected}
-                     commodity={v.commodity}
+                     amount={v.total.selected}
+                     commodity={v.singleAccount?.commodity.id}
                      hideCommodity={true}
                   />
                </Table.TD>
             ) : null
          }
          {
-            v.reconciled
+            v.total.reconciled
             ? (
                <Table.TD>
                   reconciled:
                   <Numeric
-                     amount={v.reconciled}
-                     commodity={v.commodity}
+                     amount={v.total.reconciled}
+                     commodity={v.singleAccount?.commodity.id}
                      hideCommodity={true}
                   />
                </Table.TD>
             ) : null
          }
          {
-            v.cleared
+            v.total.cleared
             ? (
                <Table.TD>
                   cleared:
                   <Numeric
-                     amount={v.cleared}
-                     commodity={v.commodity}
+                     amount={v.total.cleared}
+                     commodity={v.singleAccount?.commodity.id}
                      hideCommodity={true}
                   />
                </Table.TD>
             ) : null
          }
          {
-            v.present
+            v.total.present
             ? (
                <Table.TD>
                   present:
                   <Numeric
-                     amount={v.present}
-                     commodity={v.commodity}
+                     amount={v.total.present}
+                     commodity={v.singleAccount?.commodity.id}
                      hideCommodity={true}
                   />
                </Table.TD>
             ) : null
          }
          {
-            v.future && v.future !== v.present
+            v.total.future && v.total.future !== v.total.present
             ? (
                <Table.TD>
                   future:
                   <Numeric
-                     amount={v.future}
-                     commodity={v.commodity}
+                     amount={v.total.future}
+                     commodity={v.singleAccount?.commodity.id}
                      hideCommodity={true}
                   />
                </Table.TD>
@@ -394,75 +416,6 @@ const columnTotal = (v: Totals): Column<TableRowData, ComputedBaseLedgerProps> =
          }
       </>
    )
-})
-
-/**
- * Compute totals
- */
-interface Totals {
-   commodity: CommodityId|undefined;
-   future: number|undefined;
-   present: number|undefined;
-   reconciled: number;
-   cleared: number;
-   selected: number;
-}
-const nullTotal: Totals = {
-   commodity: undefined,
-   future: undefined, present: undefined, reconciled: 0,
-   cleared: 0, selected: 0,
-};
-
-const useTotal = (
-   transactions: Transaction[],
-   accounts: Account[],
-) => {
-   const [total, setTotal] = React.useState(nullTotal);
-
-   React.useEffect(
-      () => setTotal(() => {
-         const v = {...nullTotal};
-
-         // If the accounts do not all have the same commodity, we cannot
-         // compute the total.
-
-         v.commodity = accounts[0]?.commodity.id;
-         for (const a of accounts) {
-            if (a.commodity.id !== v.commodity) {
-               return v;
-            }
-         }
-
-         v.future = transactions?.[transactions.length - 1]?.balanceShares;
-
-         const formatted = dateToString("today");
-         if (transactions) {
-            const addSplit = (s: Split) => {
-               switch (s.reconcile) {
-                  case 'R': v.reconciled += s.shares ?? s.amount; break;
-                  case 'C': v.cleared += s.shares ?? s.amount; break;
-                  default: break;
-               }
-            }
-
-            for (let j = transactions.length - 1; j >= 0; j--) {
-               const t = transactions[j];
-               if (v.present === undefined && t.date <= formatted) {
-                  v.present = t.balanceShares;
-               }
-               if (accounts === undefined) {
-                  t.splits.forEach(addSplit);
-               } else {
-                  splitsForAccounts(t, accounts).forEach(addSplit);
-               }
-            }
-         }
-
-         return v;
-      }),
-      [transactions, accounts]
-   );
-   return total;
 }
 
 /**
@@ -470,7 +423,7 @@ const useTotal = (
  */
 
 const computeFirstSplit = (
-   p: ComputedBaseLedgerProps,
+   p: BaseLedgerProps,
    t: Transaction,
    accounts: AccountList,
 ) => {
@@ -731,12 +684,53 @@ const getChildren = (d: TableRowData, settings: ComputedBaseLedgerProps) => {
 interface ExtraProps {
    setSortOn?: (on: string) => void; //  called when user wants to sort
 }
-const Ledger: React.FC<ComputedBaseLedgerProps & ExtraProps> = p => {
+const Ledger: React.FC<BaseLedgerProps & ExtraProps> = p => {
    const accounts = useAccountIds(p.accountIds);
-   const total = useTotal(p.transactions, accounts.accounts);
+   const date = React.useMemo(
+      () => p.date ?? new Date(),
+      [p.date]
+   );
+   const transactions = useTransactions(accounts.accounts, p.range, date);
    const singleAccount =
-      (accounts.accounts.length === 1 ? accounts.accounts[0] : undefined);
+      accounts.accounts.length === 1 ? accounts.accounts[0] : undefined;
+   const total = React.useMemo(
+      () => {
+         const v = {...nullTotal};
+         if (singleAccount) {
+            v.future = transactions?.[transactions.length - 1]?.balanceShares;
+            if (transactions) {
+               const addSplit = (s: Split) => {
+                  switch (s.reconcile) {
+                     case 'R': v.reconciled += s.shares ?? s.amount; break;
+                     case 'C': v.cleared += s.shares ?? s.amount; break;
+                     default: break;
+                  }
+               }
+
+               for (let j = transactions.length - 1; j >= 0; j--) {
+                  const t = transactions[j];
+                  if (v.present === undefined && new Date(t.date) <= date) {
+                     v.present = t.balanceShares;
+                  }
+                  splitsForAccounts(t, accounts.accounts).forEach(addSplit);
+               }
+            }
+         }
+         return v;
+      },
+      [transactions, accounts, date, singleAccount]
+   );
+
+   const computed: ComputedBaseLedgerProps = {
+      ...p,
+      prefs: usePrefs().prefs,
+      accounts,
+      transactions,
+      total,
+      singleAccount,
+   }
    const isStock = singleAccount?.kind.is_stock;
+   const isAsset = singleAccount?.kind.is_asset;
 
    const columns = [
       columnDate,
@@ -751,17 +745,16 @@ const Ledger: React.FC<ComputedBaseLedgerProps & ExtraProps> = p => {
       isStock                           ? columnShares        : undefined,
       isStock                           ? columnPrice         : undefined,
       isStock && singleAccount          ? columnSharesBalance : undefined,
-      p.hideBalance || !singleAccount   ? undefined           : columnBalance,
+      p.hideBalance || !isAsset         ? undefined           : columnBalance,
    ];
 
-   const footColumns = singleAccount
-      ? [
-         columnTotal(total),
-      ]
-      : [];
+   const footColumns = [
+      columnTotal,
+   ];
 
-   const rows: LogicalRow<TableRowData, ComputedBaseLedgerProps, unknown>[] = React.useMemo(
-      () => p.transactions?.flatMap(t => [
+   const rows: LogicalRow<TableRowData, ComputedBaseLedgerProps, unknown>[] =
+      React.useMemo(
+      () => transactions?.flatMap(t => [
             {
                data: {
                   accounts,
@@ -774,7 +767,7 @@ const Ledger: React.FC<ComputedBaseLedgerProps & ExtraProps> = p => {
                getChildren,
             }
          ]) ?? [],
-      [singleAccount, p, accounts]
+      [singleAccount, p, transactions, accounts]
    );
 
    return (
@@ -788,7 +781,7 @@ const Ledger: React.FC<ComputedBaseLedgerProps & ExtraProps> = p => {
          scrollToBottom={true}
          sortOn={p.sortOn}
          setSortOn={p.setSortOn}
-         settings={p}
+         settings={computed}
          alternate={
             p.alternateColors ? AlternateRows.PARENT : AlternateRows.NO_COLOR
          }
