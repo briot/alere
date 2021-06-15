@@ -255,6 +255,7 @@ const columnDeposit: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "Deposit",
    className: "amount",
    compare: (a, b) => a.firstRowSplit.amount - b.firstRowSplit.amount,
+   head: s => s.singleAccount?.kind.positive ?? 'Deposit',
    cell: (d: TableRowData, _, settings) =>
       d.split === MAIN
       ? (d.firstRowSplit.amount >= 0 &&

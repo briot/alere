@@ -28,36 +28,36 @@ def create_views(apps, schema_editor):
             models.AccountKinds.objects.create(
                 name="Passive income",
                 flag=f,
-                name_when_positive='Income',
-                name_when_negative='Expense',
+                name_when_positive='Expense',
+                name_when_negative='Income',
             )
         elif f == models.AccountFlags.WORK_INCOME:
             models.AccountKinds.objects.create(
                 name="Work income",
                 flag=f,
-                name_when_positive='Income',
-                name_when_negative='Expense',
+                name_when_positive='Expense',
+                name_when_negative='Income',
             )
         elif f == models.AccountFlags.MISC_INCOME:
             models.AccountKinds.objects.create(
                 name="Misc income",
                 flag=f,
-                name_when_positive='Income',
-                name_when_negative='Expense',
+                name_when_positive='Expense',
+                name_when_negative='Income',
             )
         elif f == models.AccountFlags.UNREALIZED_GAINS:
             models.AccountKinds.objects.create(
                 name="Unrealized gains",
                 flag=f,
-                name_when_positive='Increase',
-                name_when_negative='Decrease',
+                name_when_positive='Decrease',
+                name_when_negative='Increase',
             )
         elif f == models.AccountFlags.EXPENSE:
             models.AccountKinds.objects.create(
                 name="Expenses",
                 flag=f,
-                name_when_positive='Income',
-                name_when_negative='Expense',
+                name_when_positive='Expense',
+                name_when_negative='Income',
             )
         elif f == models.AccountFlags.INCOME_TAX:
             models.AccountKinds.objects.create(
@@ -77,8 +77,8 @@ def create_views(apps, schema_editor):
             models.AccountKinds.objects.create(
                 name="Liability",
                 flag=f,
-                name_when_positive='Increase',
-                name_when_negative='Decrease',
+                name_when_positive='Deposit',
+                name_when_negative='Paiement',
             )
         elif f == models.AccountFlags.STOCK:
             models.AccountKinds.objects.create(
