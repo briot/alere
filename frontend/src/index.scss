@@ -158,7 +158,14 @@ $themes: (
 }
 
 body {
-   margin: 0;
+   /* margins on the sides of the main page */
+   --side-margin: 5px;
+
+   margin:
+      env(safe-area-inset-top, 0px)
+      env(safe-area-inset-right, 0px)
+      env(safe-area-inset-bottom, 0px)
+      env(safe-area-inset-left, 0px);
    -webkit-font-smoothing: antialiased;
    -moz-osx-font-smoothing: grayscale;
 
