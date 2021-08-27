@@ -45,7 +45,7 @@
     "recharts": "^2.0.8",
     "sass": "^1.32.12",
     "ts-jest": "^26.5.6",
-    "typescript": "~4.1.3",
+    "typescript": "~4.4.2",
     "vite": "^2.3.4",
     "weak-napi": "^2.0.2"
   },
@@ -61,7 +61,7 @@
     "build": "tsc && vite build",
     "serve": "vite preview",
     "manage": "./env/bin/python3 ./backend/manage.py",
-    "tests:backend": "$npm_execpath run manage test --parallel --verbosity=2 alere",
+    "tests:backend": "$npm_execpath run manage test --parallel --verbosity=0 --buffer alere",
 
     "watch-back": "$npm_execpath run manage migrate; $npm_execpath run manage runserver 8000",
     "watch-vite": "VITE_API_URL=127.0.0.1:8000 vite --clearScreen false",
