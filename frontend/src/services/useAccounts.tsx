@@ -16,7 +16,7 @@ export interface Commodity {
    price_scale: number;
    is_currency: boolean;
 }
-const nullCommodity: Commodity = {
+export const nullCommodity: Commodity = {
    id: -1,
    symbol_before: "???",
    symbol_after: "???",

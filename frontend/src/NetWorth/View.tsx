@@ -36,12 +36,9 @@ interface LocalTreeNode {
    balance: Balance|undefined;
 }
 
-interface Aggregated {
-}
-
-type ColumnType = Column<LocalTreeNode, NetworthProps, Aggregated>;
-type Row = LogicalRow<LocalTreeNode, NetworthProps, Aggregated>;
-type RowWithDetails = RowDetails<LocalTreeNode, NetworthProps, Aggregated>;
+type ColumnType = Column<LocalTreeNode, NetworthProps>;
+type Row = LogicalRow<LocalTreeNode, NetworthProps>;
+type RowWithDetails = RowDetails<LocalTreeNode, NetworthProps>;
 
 const columnAccountName: ColumnType = {
    id: 'Account',
@@ -124,7 +121,7 @@ const columnValue = (
          commodity={base.currencyId}
          scale={settings.roundValues ? 0 : undefined}
       />,
-   foot: (d: Row[], agg: Aggregated|undefined, settings: NetworthProps) =>
+   foot: (settings: NetworthProps) =>
       <Numeric
          amount={base.totalValue[date_idx]}
          commodity={base.currencyId}
@@ -174,7 +171,7 @@ const columnDelta = (
               ) * 100;
          return <Numeric amount={delta} suffix="%" />;
       },
-      foot: (d: Row[], agg: Aggregated|undefined, settings: NetworthProps) =>
+      foot: (settings: NetworthProps) =>
          <Numeric
             amount={
                (base.totalValue[ref] / base.totalValue[date_idx] - 1) * 100

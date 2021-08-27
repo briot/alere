@@ -3,7 +3,8 @@ import { RowData } from '@/Ticker/types';
 import { pastValue } from '@/Ticker/Past';
 import { dateForm } from '@/services/utils';
 import { DateDisplay } from '@/Dates';
-import { LogicalRow } from '@/List/ListWithColumns';
+import { Column, LogicalRow } from '@/List/ListWithColumns';
+import { CommodityId, nullCommodity } from '@/services/useAccounts';
 import Numeric from '@/Numeric';
 
 /**
@@ -13,6 +14,7 @@ import Numeric from '@/Numeric';
  * requires the aggregation of multiple other columns.
  */
 export interface Aggregated {
+   currencyId: CommodityId;
    equity: number;
    gains: number;
    invested: number;
@@ -22,9 +24,7 @@ export interface Aggregated {
    roi: number;
 }
 
-type Row = LogicalRow<RowData, any, Aggregated>;
-
-export const aggregate = (rows: Row[]) => {
+export const aggregate = <T extends Aggregated> (rows: LogicalRow<RowData, T>[]) => {
    const equity = rows.reduce((t, d) => t + d.data.acc.end.equity, 0);
    const start_equity = rows.reduce((t, d) => t + d.data.acc.start.equity, 0);
    const pl = rows.reduce((t, d) => t + d.data.acc.end.pl, 0);
@@ -43,6 +43,7 @@ export const aggregate = (rows: Row[]) => {
       roi: (equity + gains) / invested,
       periodROI:
         (equity + gains - start_gains) / (start_equity + invested - start_inv),
+      currencyId: rows[0]?.data.currencyId ?? nullCommodity,
    }
 };
 
@@ -51,15 +52,15 @@ export const aggregate = (rows: Row[]) => {
  * but also can be used in other contexts that supports more extensive
  * tooltips.
  */
-export interface ColumnType {
+export interface ColumnType extends Column<RowData, Aggregated> {
    id: string;
    head?: string;   // header, possibly using abbreviations
    title?: string;  // full header
    className?: string;
-   tooltip?: (data: RowData) => React.ReactNode;
+   cellTitle?: (data: RowData) => React.ReactNode;
    cell: (data: RowData) => React.ReactNode;
    compare?: (left: RowData, right: RowData) => number;
-   foot?: (data: Row[], aggregated: Aggregated|undefined) => React.ReactNode;
+   foot?: (aggregated: Aggregated) => React.ReactNode;
 }
 
 const numComp = (n1: number, n2: number) =>
@@ -84,16 +85,17 @@ export const columnShares: ColumnType = {
 export const columnEquity: ColumnType = {
    id: 'Equity',
    className: 'amount',
-   tooltip: () => "Value of the stock (number of shares multiplied by price)",
+   cellTitle: () => "Value of the stock (number of shares multiplied by price)",
    cell: (r: RowData) =>
       <Numeric amount={r.acc.end.equity} commodity={r.currencyId} />,
    compare: (r1: RowData, r2: RowData) =>
       numComp(r1.acc.end.equity, r2.acc.end.equity),
-   foot: (data: Row[], agg: Aggregated|undefined) =>
+   foot: (agg: Aggregated|undefined) =>
       <Numeric
          amount={agg?.equity}
-         commodity={data[0]?.data.currencyId}
+         commodity={agg?.currencyId}
          forceSign={true}
+         scale={0}
       />,
 }
 
@@ -110,7 +112,7 @@ export const columnTotalReturn: ColumnType = {
       />,
    compare: (r1: RowData, r2: RowData) =>
       numComp(r1.acc.end.roi, r2.acc.end.roi),
-   foot: (data: Row[], agg: Aggregated|undefined) =>
+   foot: (agg: Aggregated|undefined) =>
       <Numeric
          amount={((agg?.roi ?? NaN) - 1) * 100}
          colored={true}
@@ -118,7 +120,7 @@ export const columnTotalReturn: ColumnType = {
          showArrow={true}
          suffix='%'
       />,
-   tooltip: (r: RowData) => (
+   cellTitle: (r: RowData) => (
       <>
          <p>
          Return on investment since you first invested in this
@@ -144,7 +146,7 @@ export const columnAnnualizedReturn: ColumnType = {
       />,
    compare: (r1: RowData, r2: RowData) =>
       numComp(r1.acc.annualized_roi, r2.acc.annualized_roi),
-   tooltip: (r: RowData) => (
+   cellTitle: (r: RowData) => (
       <>
          <p>
             From {dateForm(r.acc.oldest_transaction)} to {dateForm(r.acc.now_for_annualized)}
@@ -169,12 +171,13 @@ export const columnPL: ColumnType = {
       />,
    compare: (r1: RowData, r2: RowData) =>
       numComp(r1.acc.end.pl, r2.acc.end.pl),
-   tooltip: (r: RowData) => "Equity minus total amount invested",
-   foot: (data: Row[], agg: Aggregated|undefined) =>
+   cellTitle: (r: RowData) => "Equity minus total amount invested",
+   foot: (agg: Aggregated|undefined) =>
       <Numeric
          amount={agg?.pl}
-         commodity={data[0]?.data.currencyId}
+         commodity={agg?.currencyId}
          forceSign={true}
+         scale={0}
       />,
 }
 
@@ -185,11 +188,12 @@ export const columnInvested: ColumnType = {
       <Numeric amount={r.acc.end.invested} commodity={r.currencyId} />,
    compare: (r1: RowData, r2: RowData) =>
       numComp(r1.acc.end.invested, r2.acc.end.invested),
-   foot: (data: Row[], agg: Aggregated|undefined) =>
+   foot: (agg: Aggregated|undefined) =>
       <Numeric
          amount={agg?.invested}
-         commodity={data[0]?.data.currencyId}
+         commodity={agg?.currencyId}
          forceSign={true}
+         scale={0}
       />,
 }
 
@@ -201,11 +205,12 @@ export const columnGains: ColumnType = {
       <Numeric amount={r.acc.end.gains} commodity={r.currencyId} />,
    compare: (r1: RowData, r2: RowData) =>
       numComp(r1.acc.end.gains, r2.acc.end.gains),
-   foot: (data: Row[], agg: Aggregated|undefined) =>
+   foot: (agg: Aggregated|undefined) =>
       <Numeric
          amount={agg?.gains}
-         commodity={data[0]?.data.currencyId}
+         commodity={agg?.currencyId}
          forceSign={true}
+         scale={0}
       />,
 }
 
@@ -221,7 +226,7 @@ export const columnWeighedAverage: ColumnType = {
       />,
    compare: (r1: RowData, r2: RowData) =>
       numComp(r1.acc.end.weighted_avg, r2.acc.end.weighted_avg),
-   tooltip: () =>
+   cellTitle: () =>
      "Average price at which you sold or bought shares. It does not include shares added or subtracted with no paiement, nor dividends",
 }
 
@@ -237,7 +242,7 @@ export const columnAverageCost: ColumnType = {
       />,
    compare: (r1: RowData, r2: RowData) =>
       numComp(r1.acc.end.avg_cost, r2.acc.end.avg_cost),
-   tooltip: () =>
+   cellTitle: () =>
       "Equivalent price for the remaining shares you own, taking into account reinvested dividends, added and removed shares,...",
 }
 
@@ -254,13 +259,14 @@ export const columnPeriodPL: ColumnType = {
    compare: (r1: RowData, r2: RowData) =>
       numComp(r1.acc.end.pl - r1.acc.start.pl,
               r2.acc.end.pl - r2.acc.start.pl),
-   foot: (data: Row[], agg: Aggregated|undefined) =>
+   foot: (agg: Aggregated|undefined) =>
       <Numeric
          amount={agg?.periodPL}
-         commodity={data[0]?.data.currencyId}
+         commodity={agg?.currencyId}
          forceSign={true}
+         scale={0}
       />,
-   tooltip: (r: RowData) => "Equity minus total amount invested",
+   cellTitle: (r: RowData) => "Equity minus total amount invested",
 }
 
 export const columnLatest: ColumnType = {
@@ -281,7 +287,7 @@ export const columnPeriodReturn: ColumnType = {
    id: "Period Ret",
    title: "Return for the period",
    className: 'amount',
-   tooltip: (r: RowData) => (
+   cellTitle: (r: RowData) => (
       <>
          <p>
          How much we gain over the period, compared to how much
@@ -386,7 +392,7 @@ export const columnPeriodReturn: ColumnType = {
           suffix="%"
       />
    ),
-   foot: (data: Row[], agg: Aggregated|undefined) =>
+   foot: (agg: Aggregated|undefined) =>
       <Numeric
          amount={((agg?.periodROI ?? NaN) - 1) * 100}
          colored={true}

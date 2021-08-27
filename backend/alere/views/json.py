@@ -1,10 +1,10 @@
 import datetime
-from django.http import HttpResponse
-from django.views.generic import View
+from django.http import HttpResponse   # type: ignore
+from django.views.generic import View  # type: ignore
 import json
 import math
 
-def nan_enc(p):
+def nan_enc(p: float):
     """
     Convert a float to a value suitable for JSON, including support for NaN
     """

@@ -22,6 +22,12 @@ export interface PerformanceProps {
    range: DateRange;
 }
 
+interface ComputedPerformanceProps extends PerformanceProps, Aggregated {
+}
+
+type PerfColumnType = Column<RowData, ComputedPerformanceProps>;
+type PerfRowType = LogicalRow<RowData, ComputedPerformanceProps>;
+
 const columnAccountName: ColumnType = {
    id: 'Account',
    cell: (r: RowData) =>
@@ -45,8 +51,15 @@ const dataColumns: ColumnType[] = [
    columnWeighedAverage,
    columnLatest,
 ];
-const columns: Column<RowData, PerformanceProps, Aggregated>[] =
-   dataColumns.map(c => ({ ...c, cellTitle: c.tooltip }));
+
+// ??? special handling for `foot` because it is not compatible typewise
+const columns: PerfColumnType[] =
+   dataColumns.map(c => ({
+      ...c,
+      foot: c.foot
+         ? (settings: ComputedPerformanceProps) => c.foot?.(settings)
+         : undefined,
+   }));
 
 const Performance: React.FC<PerformanceProps> = p => {
    const { prefs } = usePrefs();
@@ -55,9 +68,9 @@ const Performance: React.FC<PerformanceProps> = p => {
    const [sorted, setSorted] = React.useState('');
    const sources = usePriceSources();
 
-   const cols = React.useMemo(
+   const cols: PerfColumnType[] = React.useMemo(
       () => {
-         const columnSource: Column<RowData, PerformanceProps, Aggregated> = {
+         const columnSource: Column<RowData, ComputedPerformanceProps> = {
             id: 'Source',
             cell: (r: RowData) => sources[r.ticker.source]?.name,
             compare: (r1: RowData, r2: RowData) =>
@@ -74,7 +87,7 @@ const Performance: React.FC<PerformanceProps> = p => {
    // different dates)
    const dateRange = toDates(p.range);
 
-   const rows: LogicalRow<RowData, PerformanceProps, Aggregated>[] = React.useMemo(
+   const rows: PerfRowType[] = React.useMemo(
       () => data?.flatMap(ticker => ticker.accounts.map(acc => ({
          key: `${ticker.id}--${acc.account.id}`,
          data: computeTicker(ticker, acc, prefs, dateRange),
@@ -82,13 +95,17 @@ const Performance: React.FC<PerformanceProps> = p => {
       [data, dateRange, prefs],
    );
 
+   const settings = React.useMemo(
+      () => ({ ...p, ...aggregate(rows) }),
+      [p, rows]
+   );
+
    return (
       <ListWithColumns
-         aggregate={aggregate}
          className="investmentsTable"
          columns={cols}
          rows={rows}
-         settings={p}
+         settings={settings}
          defaultExpand={true}
          indentNested={true}
          sortOn={sorted}

@@ -11,7 +11,7 @@ import Tooltip from '@/Tooltip';
 import './Ticker.scss';
 
 const rowTooltip = (c: ColumnType) => {
-   if (!c.tooltip && !c.title) {
+   if (!c.cellTitle && !c.title) {
       return undefined;
    }
 
@@ -19,7 +19,7 @@ const rowTooltip = (c: ColumnType) => {
       <div>
          <h4>{c.title ?? c.head ?? c.id}</h4>
          {
-            c.tooltip?.(r)
+            c.cellTitle?.(r)
          }
       </div>
 }

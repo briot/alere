@@ -53,7 +53,6 @@ export interface BaseLedgerProps {
 }
 
 interface Totals {
-//   commodity: CommodityId|undefined;   singleAccount?.commodity.id
    future: number|undefined;  // future value, looking at all transactions
    present: number|undefined; // current value, ignoring transactions in future
    reconciled: number;        // only look at reconciled transactions
@@ -348,7 +347,7 @@ const columnBalance: Column<TableRowData, ComputedBaseLedgerProps> = {
 
 const columnTotal: Column<TableRowData, ComputedBaseLedgerProps> = {
    id: "Total",
-   foot: (_all_rows, _agg, v: ComputedBaseLedgerProps) => (
+   foot: (v: ComputedBaseLedgerProps) => (
       <>
          {
             v.total.selected
@@ -516,7 +515,7 @@ const computeFirstSplit = (
  */
 
 const getChildren = (d: TableRowData, settings: ComputedBaseLedgerProps) => {
-   let result: LogicalRow<TableRowData, ComputedBaseLedgerProps, unknown>[] = [];
+   let result: LogicalRow<TableRowData, ComputedBaseLedgerProps>[] = [];
    const t = d.transaction;
 
    // Do we need a notes row ?
@@ -753,7 +752,7 @@ const Ledger: React.FC<BaseLedgerProps & ExtraProps> = p => {
       columnTotal,
    ];
 
-   const rows: LogicalRow<TableRowData, ComputedBaseLedgerProps, unknown>[] =
+   const rows: LogicalRow<TableRowData, ComputedBaseLedgerProps>[] =
       React.useMemo(
       () => transactions?.flatMap(t => [
             {

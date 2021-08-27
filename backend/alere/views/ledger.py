@@ -1,9 +1,9 @@
 from .json import JSONView
-from django.db.models import Q
+from django.db.models import Q   # type: ignore
 from typing import Union, List
 import alere
 import datetime
-import django.db
+import django.db  # type: ignore
 import math
 
 
@@ -11,7 +11,7 @@ def ledger(
         ids: List[int],
         mindate: datetime.datetime,
         maxdate: datetime.datetime,
-    ):
+    ) -> None:
     q = alere.models.Splits_With_Value.objects \
         .select_related('transaction', 'account', 'payee') \
         .order_by('transaction__timestamp', 'transaction_id')

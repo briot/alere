@@ -18,7 +18,7 @@ const accounts_to_rows = <T extends DataWithAccount, SETTINGS> (
    accountlist: Account[],
    createNode: (a: Account|undefined, fallbackName: string) => T,
    mode: TreeMode,
-): LogicalRow<T, SETTINGS, unknown>[] => {
+): LogicalRow<T, SETTINGS>[] => {
 
    const tree = computeTree(
       accounts,

@@ -5,6 +5,8 @@ import App from './App';
 //  import reportWebVitals from './reportWebVitals';
 //  import * as serviceWorker from './serviceWorker';
 
+React; //  for the sake of typescript
+
 ReactDOM.render(
   <App />,
   document.getElementById('root')
