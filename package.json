@@ -67,7 +67,7 @@
     "watch-vite": "VITE_API_URL=127.0.0.1:8000 vite --clearScreen false",
     "watch-tsc": "tsc -w --preserveWatchOutput",
     "watch-lint": "esw -w --changed --ext .ts,.tsx frontend/src",
-    "watch-test": "jest --coverage --detectLeaks --watch",
+    "watch-test": "jest --coverage --watch",
     "watch-test-backend": "npm-watch tests:backend"
   },
   "eslintConfig": {
