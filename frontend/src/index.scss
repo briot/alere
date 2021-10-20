@@ -1,6 +1,10 @@
 @use "sass:list";
 @use "sass:string";
 
+// Reset browser-specific styles except display.
+// https://elad2412.github.io/the-new-css-reset/
+@import "the-new-css-reset/css/reset.css";
+
 @import "shared";
 
 /**
