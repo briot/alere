@@ -200,6 +200,17 @@ body {
 
 }
 
+/**
+ * Rounded corners, but only when the element doesn't use the full width
+ * of the viewport (within a given margin).
+ * https://ishadeed.com/article/conditional-border-radius/
+ */
+.rounded-corners-if-small {
+   --rcl-margin: 4px;
+   --rcl-radius: 8px;
+   border-radius: max(0px, min(var(--rcl-radius), calc((100vw - var(--rcl-margin) - 100%) * 9999)));
+}
+
 /* settings from
  * https://www.smashingmagazine.com/2020/07/css-techniques-legibility/
  */
