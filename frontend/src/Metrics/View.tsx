@@ -5,6 +5,7 @@ import Numeric from '@/Numeric';
 import Tooltip, { TooltipProps } from '@/Tooltip';
 import usePrefs from '@/services/usePrefs';
 import usePL from '@/services/usePL';
+import "./Metrics.scss";
 
 const commMonths: Commodity = {
    id: -2,
