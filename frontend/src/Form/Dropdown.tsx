@@ -64,7 +64,11 @@ const Dropdown: React.FC<DropdownProps> = p => {
    );
 
    const onToggle = React.useCallback(
-      () => doVisible(),
+      (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+         doVisible();
+         e.stopPropagation();
+         e.preventDefault();
+      },
       [doVisible]
    );
    const onClose  = React.useCallback(
