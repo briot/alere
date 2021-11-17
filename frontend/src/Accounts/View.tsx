@@ -4,6 +4,7 @@ import useAccounts, { Account, AccountId } from '@/services/useAccounts';
 import accounts_to_rows from '@/List/ListAccounts';
 import { TreeMode } from '@/services/useAccountTree';
 import ListWithColumns, { Column, LogicalRow } from '@/List/ListWithColumns';
+import RoundButton from '@/RoundButton';
 
 
 /**
@@ -22,9 +23,33 @@ interface RowData {
    fallback: string;  // fallback name when account is undefined
 }
 
+const columnActions: Column<RowData, AccountsProps> = {
+   id: 'Actions',
+   className: 'accountsActions',
+   head: '',
+   cell: (d: RowData) => (
+      <span>
+         <RoundButton
+            fa="fa-book"
+            size='tiny'
+            flat={true}
+            tooltip='Show ledger'
+            url={`/ledger?accounts=${d.account?.id}`}
+         />
+         <RoundButton
+            fa="fa-pencil"
+            size='tiny'
+            flat={true}
+            tooltip='Edit account'
+            url={`/accountEdit?accounts=${d.account?.id}`}
+         />
+      </span>
+   ),
+}
 const columnName: Column<RowData, AccountsProps> = {
    id: 'Account',
-   cell: (d: RowData) => d.account
+   cell: (d: RowData) =>
+      d.account
       ? <AccountName id={d.accountId} account={d.account} />
       : d.fallback,
    compare: (d1: RowData, d2: RowData) =>
@@ -66,7 +91,7 @@ const columnOpeningDate: Column<RowData, AccountsProps> = {
 }
 const columnInstitution: Column<RowData, AccountsProps> = {
    id: 'Institution',
-   cell: (d: RowData) => d.account?.getInstitution()?.name,
+   cell: (d: RowData) => d.account?.getInstitution()?.name
 }
 
 
@@ -81,6 +106,7 @@ const createRow = (a: Account|undefined, fallbackName: string): RowData => ({
 });
 
 const columns: Column<RowData, AccountsProps>[] = [
+   columnActions,
    columnName,
    columnType,
    columnCommodity,
@@ -113,6 +139,7 @@ const Accounts: React.FC<AccountsProps> = p => {
          rows={rows}
          settings={p}
          defaultExpand={true}
+         expanderColumn={1}
          indentNested={true}
          sortOn={sorted}
          setSortOn={setSorted}
