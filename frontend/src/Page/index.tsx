@@ -28,7 +28,6 @@ export const PageButton: React.FC<PageButtonProps> = p => {
       <RoundButton
          fa="fa-expand"
          tooltip="Expand full screen"
-         showText={false}
          size="tiny"
          onClick={showPage}
       />

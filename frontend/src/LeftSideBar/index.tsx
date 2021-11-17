@@ -29,10 +29,10 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
                <RoundButton
                   key={name}
                   fa={p.fa ?? "fa-pie-chart"}
-                  text={name}
+                  text={prefs.text_on_left ? name : undefined}
+                  tooltip={name}
                   disabled={isDisabled(p.disabled)}
                   selected={location.pathname === p.url}
-                  showText={prefs.text_on_left}
                   size='large'
                   url={p.url}
                />

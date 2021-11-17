@@ -6,8 +6,8 @@ a.roundButton:hover {
 
 .roundButton {
    text-decoration: none;
+   cursor: pointer;
 
-   display: flex;
    flex-flow: row nowrap;      /* always use a single line */
    align-items: center;        /* align children vertically */
    justify-content: space-between;
@@ -17,14 +17,9 @@ a.roundButton:hover {
       @include set-colors(neumorph-selected);
    }
 
-   span:first-child {
-      border-radius: 50%;
-      width: var(--rb-width);
-      height: var(--rb-height);
-
-      display: flex;          /* center text inside */
-      align-items: center;
-      justify-content: center;
+   display: flex;   // Use as much horizontal space as possible
+   &.noexpand {
+      display: inline-block;
    }
 
    /* the text. This rule must come first, in case we show no text */
@@ -34,6 +29,21 @@ a.roundButton:hover {
       white-space: nowrap;
       text-overflow: ellipsis;
       overflow: hidden;
+   }
+
+   span:first-child {
+      flex: none;
+      border-radius: 50%;
+      width: var(--rb-width);
+      height: var(--rb-height);
+
+      display: flex;          /* center text inside */
+      align-items: center;
+      justify-content: center;
+
+      &.flat {
+         border: 1px solid var(--input-border);
+      }
    }
 
    &.large {
@@ -72,13 +82,10 @@ a.roundButton:hover {
    &.tiny {
       --rb-width: 1.0rem;
       --rb-height: 1.0rem;
-//      img {
-//         width: 0.9rem;
-//      }
       .fa {
          font-size: 0.7em;
       }
-      .morph {
+      span:first-child {
          margin: 2px;
       }
    }

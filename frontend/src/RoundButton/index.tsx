@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Link } from "react-router-dom";
 import Tooltip from '@/Tooltip';
+import classes from '@/services/classes';
 import './RoundButton.scss';
 
 export type ButtonSizes = 'tiny'|'small'|'normal'|'large';
@@ -10,28 +11,35 @@ interface RoundButtonProps {
    img?: string;    // or image url
 
    text?: string;   // shown besides the round button
-   showText?: boolean;
    tooltip?: string;
    selected?: boolean;
    disabled?: boolean;
    size?: ButtonSizes;
+
+   flat?: boolean;        // if false => skeumorphism aspect, else flat
 
    url?: string;          // the button should be a link
    onClick?: () => void;  // or a custom callback
 }
 
 const RoundButton: React.FC<RoundButtonProps> = p => {
+   const children_class = classes(
+      p.flat ? 'flat' : 'morph',
+      p.fa && 'fa',
+      p.fa,
+   )
+
    const children = (
       <>
       {
-         p.fa
-         ? <span className={`morph fa ${p.fa}`} />
-         : <span className={`morph`}>
+         p.img
+         ? <span className={children_class} >
               <img src={p.img} alt="" />
            </span>
+         : <span className={children_class} />
       }
       {
-         p.text && p.showText &&
+         p.text &&
          <span>{p.text}</span>
       }
       {
@@ -40,7 +48,13 @@ const RoundButton: React.FC<RoundButtonProps> = p => {
       </>
    );
 
-   const c = `roundButton ${p.selected ? 'selected' : ''} ${p.disabled ? 'disabled': ''} ${p.size || 'normal'}`;
+   const c = classes(
+      'roundButton',
+      p.selected && 'selected',
+      p.disabled && 'disabled',
+      p.size ?? 'normal',
+      !p.text && 'noexpand',
+   );
 
    return (
       <Tooltip tooltip={p.tooltip ?? p.text} >
