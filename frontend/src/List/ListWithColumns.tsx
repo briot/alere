@@ -207,6 +207,8 @@ interface ListWithColumnsProps<T, SHARED> {
    defaultExpand?: boolean;
    alternate?: AlternateRows;
 
+   expanderColumn?: number;
+
    sortOn?: string;                  //  "+colid" or "-colid"
    setSortOn?: (on: string) => void; //  called when user wants to sort
 
@@ -225,6 +227,7 @@ const ListWithColumns = <T extends unknown, SHARED=any> (
 ) => {
    const list = React.createRef<FixedSizeList>();
    const oldRowCount = React.useRef(p.rows.length);
+   const expandColumn: number = p.expanderColumn ?? 0;
 
    const cols = React.useMemo(
       () => p.columns.filter(
@@ -297,13 +300,14 @@ const ListWithColumns = <T extends unknown, SHARED=any> (
                      className={classes(
                         c.className,
                         c.rightBorder && 'rightBorder',
+                        idx === expandColumn && 'expander',
                      )}
                      tooltip={c.cellTitle}
                      tooltipData={logic.data}
                      style={{
                         // Indent first column to show nesting
                         paddingLeft:
-                           idx !== 0 || !p.indentNested
+                           idx !== expandColumn || !p.indentNested
                            ? undefined   // keep the CSS padding
                            : phys[q.index].level * INDENT_LEVEL
                      }}
@@ -323,7 +327,7 @@ const ListWithColumns = <T extends unknown, SHARED=any> (
          );
       },
       [phys, cols, isExpanded, toggleRow, p.indentNested,
-       p.alternate, p.settings]
+       p.alternate, p.settings, expandColumn]
    );
 
    const onSort = (col: Column<T, SHARED>) => {

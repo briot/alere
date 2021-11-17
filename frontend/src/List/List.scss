@@ -2,7 +2,7 @@
 
 .table {
    --row-height: 25px;       /* must match ROW_HEIGHT in javascript */
-   --th-padding-top: 3px;
+   --th-padding-top: 0px;
    --exp-padding-left: 0px;  /* space for expanders if needed */
 
    display: flex;
@@ -106,8 +106,8 @@
    &.expandableRows {
       --exp-padding-left: 16px;  // match JS INDENT_LEVEL
 
-      .tr.expandable :is(.td,.th):first-child::before,
-      .trgroup.expandable :is(.td,.th):first-child::before {
+      .tr.expandable :is(.td,.th).expander::before,
+      .trgroup.expandable :is(.td,.th).expander::before {
          @include set-colors(table-expand-arrow);
          content: "\f0da";
          font: normal normal normal 14px/1 FontAwesome;
@@ -126,21 +126,21 @@
       }
       .tr.collapsed,
       .trgroup.collapsed {
-         .tr:not(:first-child) :is(.th,.td) {
+         .tr:not(.expander) :is(.th,.td) {
             transition: height 0.2s, padding 0.2s;
             height: 0;
             padding: 0 0;
          }
-         & .td:first-child::before {
+         & .td.expander::before {
             transform: rotateZ(0) translate(0,0);
          }
       }
       .tr.expanded,
       .trgroup.expanded {
-         .tr:not(:first-child) :is(.th,.td) {
+         .tr:not(.expander) :is(.th,.td) {
             transition: height 0.2s, padding 0.2s;
          }
-         & .td:first-child::before {
+         & .td.expander::before {
             transform: rotateZ(90deg) translate(25%,20%);
          }
       }
@@ -206,6 +206,9 @@
    }
    td.class {
       @include numeric-font
+   }
+   .accountsActions {
+      flex: 0 1 80px;
    }
    .price {
       flex: 0 1 100px;
