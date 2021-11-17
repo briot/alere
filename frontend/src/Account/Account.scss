@@ -5,6 +5,7 @@
    text-overflow: ellipsis;
    white-space: nowrap;
    font-variant: none;
+   cursor: pointer;
 
    &.closed {
       text-decoration: line-through;
