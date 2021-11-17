@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
+import { useLocation, BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
 import Header, { HeaderProps } from '@/Header';
 import LeftSideBar from '@/LeftSideBar';
 import OnlineUpdate from '@/Header/OnlineUpdate';
@@ -8,7 +8,6 @@ import Spinner from '@/Spinner';
 import StyleGuide from '@/StyleGuide';
 import classes from '@/services/classes';
 import useAccounts from '@/services/useAccounts';
-import { usePages } from '@/services/usePages';
 import usePrefs from '@/services/usePrefs';
 import { AccountsProvider } from '@/services/useAccounts';
 import { HistProvider } from '@/services/useHistory';
@@ -30,10 +29,10 @@ const queryClient = new QueryClient({
 });
 
 const Main: React.FC<{}> = () => {
+   const location = useLocation();
    const { prefs } = usePrefs();
    const [ header, setHeader ] = React.useState<HeaderProps>({});
    const { accounts } = useAccounts();
-   const { pages } = usePages();
    const c = classes(
       'page',
       prefs.neumorph_mode ? 'neumorph_mode' : 'not_neumorph_mode',
@@ -57,21 +56,7 @@ const Main: React.FC<{}> = () => {
                      ? <div className="dashboard main"><Spinner /></div>
                      : !accounts.has_accounts()
                      ? <Redirect to="/welcome" />
-                     : (
-                        <Switch>
-                            {
-                               Object.entries(pages).map(([name, page]) =>
-                                  <Route
-                                     key={name}
-                                     path={page.url}
-                                     exact={true}
-                                  >
-                                     <Page setHeader={setHeader} name={name} />
-                                  </Route>
-                               )
-                            }
-                        </Switch>
-                     )
+                     : <Page setHeader={setHeader} url={location.pathname} />
                   }
                </div>
             </div>

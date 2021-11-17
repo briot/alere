@@ -13,7 +13,7 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
    const location = useLocation();
    const { accounts } = useAccounts();
    const { prefs } = usePrefs();
-   const { pages } = usePages();
+   const { allVisiblePages } = usePages();
 
    const isDisabled = (disabled: Disabled): boolean =>
       (disabled === undefined)           ? false
@@ -24,13 +24,12 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
    return (
       <div id='lsidebar'>
          {
-            Object.entries(pages).map(([name, p]) => (
-               !p.invisible &&
+            allVisiblePages().map(p => (
                <RoundButton
-                  key={name}
+                  key={p.url}
                   fa={p.fa ?? "fa-pie-chart"}
-                  text={prefs.text_on_left ? name : undefined}
-                  tooltip={name}
+                  text={prefs.text_on_left ? p.name : undefined}
+                  tooltip={p.tooltip}
                   disabled={isDisabled(p.disabled)}
                   selected={location.pathname === p.url}
                   size='large'

@@ -36,42 +36,42 @@ export const PageButton: React.FC<PageButtonProps> = p => {
 
 
 interface PageProps {
-   name: string;
+   url: string;
 }
 export const Page: React.FC<PageProps & SetHeader> = React.memo(p => {
    const { setHeader } = p;
-   const { pages, getPanels, deletePage, updatePage } = usePages();
-   const page = pages[p.name];
+   const { getPage, getPanels, deletePage, updatePage } = usePages();
+   const page = getPage(p.url);
    const { headerNode } = page;
-   const centralPanels = getPanels(p.name, "central");
-   const rightPanels = getPanels(p.name, "right");
+   const centralPanels = getPanels(page, "central");
+   const rightPanels = getPanels(page, "right");
 
    const updateRight = React.useCallback(
       (func: ((prev: PanelBaseProps[]) => PanelBaseProps[])) =>
-         updatePage(p.name, func(rightPanels), "right"),
-      [updatePage, p.name, rightPanels]
+         updatePage(page, func(rightPanels), "right"),
+      [updatePage, page, rightPanels]
    );
    const updateCentral = React.useCallback(
       (func: ((prev: PanelBaseProps[]) => PanelBaseProps[])) =>
-         updatePage(p.name, func(centralPanels), "central"),
-      [updatePage, p.name, centralPanels]
+         updatePage(page, func(centralPanels), "central"),
+      [updatePage, page, centralPanels]
    );
 
    // Delete temporary pages when we move away from them
    React.useEffect(
       () => () => {
          if (page?.tmp) {
-            deletePage(p.name);
+            deletePage(page);
          }
       },
-      [page?.tmp, p.name, deletePage]
+      [page?.tmp, page, deletePage]
    );
 
    React.useEffect(
       () => setHeader(headerNode
          ? {node: headerNode()}
-         : {name: p.name}),
-      [setHeader, p.name, headerNode]
+         : {name: page.name}),
+      [setHeader, page.name, headerNode]
    );
 
    if (!page) {
@@ -81,7 +81,7 @@ export const Page: React.FC<PageProps & SetHeader> = React.memo(p => {
       <>
           <DashboardFromPanels
              className="main"
-             panels={getPanels(p.name, 'central')}
+             panels={centralPanels}
              setPanels={updateCentral}
           />
           <DashboardFromPanels

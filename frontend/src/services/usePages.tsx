@@ -3,7 +3,8 @@
  * panel.
  */
 import * as React from 'react';
-import { AccountsPanelProps } from '@/Accounts/Panel';
+import type { AccountsPanelProps } from '@/Accounts/Panel';
+import { AccountEditPanelProps } from '@/AccountEdit/Panel';
 import { CashflowPanelProps } from '@/Cashflow/Panel';
 import { IncomeExpensePanelProps } from '@/IncomeExpense/Panel';
 import { InvestmentsPanelProps } from '@/Investments/Panel';
@@ -22,7 +23,6 @@ import { SplitMode, NotesMode } from '@/Ledger/View';
 import { TickerPanelProps } from '@/Ticker/Panel';
 import { TreeMode } from '@/services/useAccountTree';
 import { WelcomePanelProps } from '@/Welcome/Panel';
-import { capitalize } from '@/services/utils';
 import { toDates } from '@/Dates';
 import useSettings from '@/services/useSettings';
 
@@ -40,6 +40,8 @@ interface PageDescr {
 
    fa?: string; // font-awesome icon
    url: string;
+   name: string;      // displayed next to the button in left-side bar
+   tooltip?: string;  // defaults to name
 
    disabled?: Disabled;
    invisible?: boolean;
@@ -48,8 +50,15 @@ interface PageDescr {
    //  If true, the page will be deleted when the user moves away from it
 }
 
-const defaultPages: Record<string, PageDescr> = {
-   'Overview': {
+const noPage: PageDescr = {
+   panels: [],
+   name: '',
+   url: '',
+}
+
+const defaultPages: PageDescr[] = [
+   {
+      name: 'Overview',
       url: '/',
       fa: 'fa-tachometer',
       right: [
@@ -148,7 +157,8 @@ const defaultPages: Record<string, PageDescr> = {
       ]
    },
 
-   'Ledger': {
+   {
+      name: 'Ledger',
       url: '/ledger',
       fa: 'fa-book',
       disabled: 'need_accounts',
@@ -193,7 +203,8 @@ const defaultPages: Record<string, PageDescr> = {
       ]
    },
 
-   'Accounts': {
+   {
+      name: 'Accounts',
       url: '/accounts',
       fa: 'fa-money',
       disabled: 'need_accounts',
@@ -206,7 +217,8 @@ const defaultPages: Record<string, PageDescr> = {
       ],
    },
 
-   'Networth': {
+   {
+      name: 'Networth',
       url: '/networth',
       fa: 'fa-diamond',
       disabled: 'need_accounts',
@@ -228,7 +240,8 @@ const defaultPages: Record<string, PageDescr> = {
       ],
    },
 
-   'Investments': {
+   {
+      name: 'Investments',
       url: '/investments',
       fa: 'fa-bank',
       disabled: 'need_accounts',
@@ -246,7 +259,8 @@ const defaultPages: Record<string, PageDescr> = {
       ],
    },
 
-   'Performance': {
+   {
+      name: 'Performance',
       url: '/performance',
       fa: 'fa-line-chart',
       disabled: 'need_accounts',
@@ -261,21 +275,24 @@ const defaultPages: Record<string, PageDescr> = {
       ],
    },
 
-   'Budget': {
+   {
+      name: 'Budget',
       url: '/budget',
       fa: 'fa-balance-scale',
       disabled: true,
       panels: [],
    },
 
-   'Payees': {
+   {
+      name: 'Payees',
       url: '/payees',
       fa: 'fa-user',
       disabled: true,
       panels: [],
    },
 
-   'Welcome': {
+   {
+      name: 'Welcome',
       url: '/welcome',
       invisible: true,
       panels: [
@@ -286,85 +303,117 @@ const defaultPages: Record<string, PageDescr> = {
          } as WelcomePanelProps,
       ],
    },
-};
+
+   {
+      name: 'Edit Accounts',
+      url: '/accountEdit',
+      invisible: true,
+      panels: [
+         {
+            type: 'accountedit',
+            colspan: 4,
+            rowspan: 1,
+         } as AccountEditPanelProps,
+      ],
+   },
+];
 
 /**
  * Return the name of the page that contains the right panels list, that are
  * used by the page `name`
  */
 const pageForRight = (
-   pages: Record<string, PageDescr>, name: string
-): string|undefined => {
-   const page = pages[name];
-   return page?.right === undefined  // either no page, or inherit right
-      ? Object.entries(pages).filter(([pname, p]) => p.right)[0][0]
+   pages: Record<string, PageDescr>,
+   page: PageDescr,
+): PageDescr|undefined => {
+   return page.right === undefined  // either no page, or inherit right
+      ? Object.values(pages).filter(p => p.right)[0]
       : page.right === null      // No right panels
       ? undefined
-      : name;
+      : page;
 };
 
 type Area = "central" | "right";
 
 interface PagesContext {
-   pages: Record<string, PageDescr>;
+   // Return the url of all visible pages
+   allVisiblePages: () => PageDescr[],
 
    // Return the panels to display in either the central area or the right
    // area, for the given page
-   getPanels: (name: string, area: Area) => PanelBaseProps[];
+   getPanels: (page: PageDescr, area: Area) => PanelBaseProps[];
 
    // Create a new page, and return its id
    addPage: (
-      name: string, panels: PanelBaseProps[], tmp?: boolean
+      url: string, panels: PanelBaseProps[], tmp?: boolean
       ) => Promise<string>;
 
    // Delete the page
-   deletePage: (name: string) => void;
+   deletePage: (page: PageDescr) => void;
 
    // Update an existing page
-   updatePage: (name: string, panels: PanelBaseProps[], area?: Area) => void;
+   updatePage: (page: PageDescr, panels: PanelBaseProps[], area?: Area) => void;
+
+   // Find an existing page
+   getPage: (url: string) => PageDescr,
 }
 
-const hideTmp = (pages: Record<string, PageDescr>) =>
-    Object.fromEntries(
-       Object.entries(pages)
-       .filter(([key, val]) => !val.tmp));
+const hideTmp = (pages: PageDescr[]) => pages.filter(p => !p.tmp);
 
 const noContext: PagesContext = {
-   pages: {},
+   allVisiblePages: () => [],
    getPanels: () => [],
    addPage: () => Promise.resolve(''),
    deletePage: () => null,
    updatePage: () => null,
+   getPage: () => noPage,
 }
 const ReactPagesContext = React.createContext(noContext);
 
 export const PagesProvider: React.FC<{}> = p => {
-   const { val, setVal } = useSettings(
+   const { val, setVal } = useSettings<PageDescr[]>(
       'Pages', defaultPages, hideTmp /* loader */ );
+   const dict: Record<string, PageDescr> = React.useMemo(
+      () => {
+         const r: Record<string, PageDescr> = {}
+         defaultPages.forEach(p => r[p.url] = p);
+         val.forEach(p => r[p.url] = p);  // override if needed
+
+         // Special case for the header of some pages
+         // ??? Should be part of the description
+         r['/ledger'].headerNode = () => <LedgerPageTitle />;
+
+         return r;
+      },
+      [val]
+   );
 
    const addPage = React.useCallback(
-      (name: string, panels: PanelBaseProps[], tmp?: boolean) => {
+      (url: string, panels: PanelBaseProps[], tmp?: boolean) => {
          return new Promise<string>(
             (resolve, reject) => {
                setVal(old => {
-                  const n = capitalize(name ?? '');
-                  let id = n;
-                  if (old[id] !== undefined) {
-                     for (let index = 0; old[id] !== undefined; index++) {
-                        id = `${n}_${index}`;
+                  const doesNotExists = (id: string) =>
+                      old.find(p => p.url === id) === undefined;
+
+                  let id = url;
+                  if (!doesNotExists(id)) {
+                     for (let index = 0; ; index++) {
+                        id = `${url}_${index}`;
+                        if (doesNotExists(id)) {
+                           break;
+                        }
                      }
                   }
-
-                  const url = `/${id}`;
 
                   // To avoid a race condition (returning the url before we
                   // have registered the page), we resolve in a timeout.
                   setTimeout(() => resolve(url), 1);
 
-                  return {
+                  return [
                      ...old,
-                     [id]: {name: id, panels, url, tmp},
-                  };
+                     {panels, name: id, url: id, tmp},
+                  ];
                });
             }
          );
@@ -373,53 +422,54 @@ export const PagesProvider: React.FC<{}> = p => {
    );
 
    const deletePage = React.useCallback(
-      (name: string) => {
-         setVal(old => {
-            const cp = {...old};
-            delete cp[name];
-            return cp;
-         });
-      },
+      (page: PageDescr) => setVal(old => old.filter(p => p.url !== page.url)),
       [setVal]
    );
 
    const updatePage = React.useCallback(
-      (name: string, panels: PanelBaseProps[], area: Area="central") =>
+      (page: PageDescr, panels: PanelBaseProps[], area: Area="central") =>
          setVal(old => {
-            const n = area === "central" ? name : pageForRight(old, name);
             const obj = area === "central" ? {panels} : {right: panels};
-            return n ? {
-               ...old,
-               [n]: {...old[n], ...obj},
-            } : old;
+            const page_to_change: PageDescr =
+               area === "central"
+               ? page
+               : pageForRight(dict, page) ?? page;
+            return old.map(p =>
+               p === page_to_change
+               ? {...page_to_change, ...obj}
+               : p
+            );
          }),
-      [setVal]
+      [setVal, dict]
+   );
+
+   const getPage = React.useCallback(
+      (url: string) => dict[url] ?? noPage,
+      [dict]
    );
 
    const getPanels = React.useCallback(
-      (name: string, area: Area) => {
-         const n = area === "central" ? name : pageForRight(val, name);
+      (page: PageDescr, area: Area) => {
+         const n = area === "central" ? page : pageForRight(dict, page);
          return n === undefined
             ? []
             : area === "central"
-            ? (val[n]?.panels || [])
-            : (val[n]?.right || []);
+            ? (n.panels || [])
+            : (n.right || []);
       },
+      [dict]
+   );
+
+   const allVisiblePages = React.useCallback(
+      () => val.filter(p => !p.invisible),
       [val]
    );
 
    const data = React.useMemo<PagesContext>(
       () => ({
-         pages: {
-            ...val,
-            "Ledger": {
-               ...val.Ledger,
-               headerNode: () => <LedgerPageTitle />,
-            }
-         },
-         getPanels, addPage, deletePage, updatePage,
+         allVisiblePages, getPanels, addPage, deletePage, updatePage, getPage,
       }),
-      [val, getPanels, addPage, deletePage, updatePage]
+      [allVisiblePages, getPanels, addPage, deletePage, updatePage, getPage]
    );
 
    return (
