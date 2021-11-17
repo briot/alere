@@ -15,8 +15,9 @@ button,
 select {
    @include set-colors(input);
    border: 1px solid var(--input-border);
-   padding: 0.25em;
+   padding: 0 0.25em;
    font-size: 1rem;
+   appearance: auto;  // show the arrow (that was hidden by the global reset
 }
 .primary :is(input, .select),
 button.primary {

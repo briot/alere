@@ -167,7 +167,7 @@ export interface Option<T> {
 export const divider: Option<any> = {value: 'divider'};
 
 
-interface SelectProps<T> extends SharedInputProps {
+export interface SelectProps<T> extends SharedInputProps {
    onChange?: (val: T) => void;
    value: T;
    options: Option<T>[];
