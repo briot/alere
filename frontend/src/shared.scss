@@ -1,5 +1,6 @@
 @use "sass:list";
 @use "sass:map";
+@use "sass:math";
 
 // From bootstrap (https://v5.getbootstrap.com/docs/5.0/customize/color/)
 $blue:     #0d6efd !default;
@@ -52,7 +53,7 @@ $orange-mantine: #ff922b !default;
       --fg-#{"" + $key}-#{$variant * 100}: #{$fg};
 
       @for $alpha from 1 through 9 {
-         --#{"" + $key}-#{$variant * 100}-#{$alpha * 10}p: #{rgba($c, $alpha / 10)};
+         --#{"" + $key}-#{$variant * 100}-#{$alpha * 10}p: #{rgba($c, math.div($alpha, 10))};
       }
    }
 }
