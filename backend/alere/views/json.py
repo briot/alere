@@ -49,7 +49,7 @@ class JSONView(View, ParamDecoder):
     def get_json(self, params, *args, **kwargs):
         return {}
 
-    def post_json(self, params, files, *args, **kwargs):
+    def post_json(self, params, files, body, *args, **kwargs):
         return {}
 
     def to_json(self, obj):
@@ -57,11 +57,14 @@ class JSONView(View, ParamDecoder):
 
     def get(self, request, *args, **kwargs):
         resp = self.get_json(request.GET, *args, **kwargs)
-        return HttpResponse(self.to_json(resp), content_type="application/json")
+        return HttpResponse(
+            self.to_json(resp), content_type="application/json")
 
     def post(self, request, *args, **kwargs):
-        resp = self.post_json(request.POST, request.FILES, *args, **kwargs)
-        return HttpResponse(self.to_json(resp), content_type="application/json")
+        resp = self.post_json(
+            request.POST, request.FILES, request.body, *args, **kwargs)
+        return HttpResponse(
+            self.to_json(resp), content_type="application/json")
 
     def as_commodity_id(self, params, name):
         return int(params[name])
@@ -92,5 +95,3 @@ class JSONView(View, ParamDecoder):
 
     def as_int_list(self, params, name, default=None):
         return self.convert_to_int_list(params.get(name, default))
-
-

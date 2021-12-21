@@ -16,7 +16,7 @@ const AccountEditPanel: React.FC<PanelProps<AccountEditPanelProps>> = p => {
    return (
       <Panel
          {...p}
-         header={{ name: 'accounts' }}
+         header={{ name: 'edit account' }}
          Settings={
             null
             /*

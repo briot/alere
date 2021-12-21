@@ -21,7 +21,7 @@ const createRow = (account: Account|undefined, name: string): SelectTreeNode =>
 
 interface SelectAccountProps {
    text?: string;  // label
-   account: Account;
+   account: Account|undefined;
    onChange?: (account: Account) => void;
    hideArrow?: boolean;
    style?: React.CSSProperties;
@@ -70,7 +70,7 @@ export const SelectAccount: React.FC<SelectAccountProps> = p => {
       <Select
          onChange={localChange}
          text={p.text}
-         value={p.account.id}
+         value={p.account?.id ?? -1}
          hideArrow={p.hideArrow}
          style={p.style}
          options={items}

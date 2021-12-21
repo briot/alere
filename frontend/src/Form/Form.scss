@@ -2,6 +2,7 @@
 
 input,
 button,
+textarea,
 select {
    @include set-colors(input);
    border: 1px solid var(--input-border);
@@ -35,6 +36,7 @@ button:disabled {
    opacity: 0.75;
 }
 
+textarea,
 input[type=text] {
    flex: 1 1;
    min-width: 120px;

@@ -16,7 +16,7 @@ class AccountList(JSONView):
                 "iban": a.iban,
                 "parent": a.parent_id,
                 "description": a.description,
-                "number": a.number,
+                "account_num": a.number,
                 "opening_date": a.opening_date,
                 "lastReconciled": (
                     a.last_reconciled.date()

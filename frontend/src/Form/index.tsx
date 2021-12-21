@@ -166,6 +166,39 @@ export const Checkbox: React.FC<CheckboxProps> = p => {
    );
 }
 
+export interface TextAreaProps extends SharedInputProps {
+   value: string;
+   rows: number;
+   onChange: (val: string) => void;
+   placeholder?: string;
+   required?: boolean;
+   cols: number;
+}
+
+export const TextArea: React.FC<TextAreaProps> = p => {
+   const { onChange } = p;
+   const localChange = React.useCallback(
+      (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+         onChange?.(e.target.value);
+      },
+      [onChange]
+   );
+   return (
+      <SharedInput className="textarea" {...p}>
+         <textarea
+            disabled={p.disabled}
+            onChange={localChange}
+            placeholder={p.placeholder}
+            required={p.required}
+            defaultValue={p.value}
+            rows={p.rows}
+            cols={p.cols}
+         />
+      </SharedInput>
+   );
+
+}
+
 export interface Option<T> {
    value: T | 'divider';
    text?: string;

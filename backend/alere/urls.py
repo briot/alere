@@ -8,6 +8,7 @@ import django.views
 import os
 
 from .views.accounts import AccountList
+from .views.account_add import AccountAddOrEdit
 from .views.importers import ImportKmymoney
 from .views.ledger import LedgerView
 from .views.means import MeanView
@@ -49,6 +50,7 @@ def send_csrf(request):
 urlpatterns = [
     # path('admin/', admin.site.urls),
     path('api/account/list', AccountList.as_view()),
+    path('api/account/edit', AccountAddOrEdit.as_view()),
     path('api/import/kmymoney', ImportKmymoney.as_view()),
     path('api/ledger/<str:ids>', LedgerView.as_view()),
     re_path('api/ledger/(<str:id>)?', LedgerView.as_view()),

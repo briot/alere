@@ -77,7 +77,7 @@ const columnIBAN: Column<RowData, AccountsProps> = {
 }
 const columnNumber: Column<RowData, AccountsProps> = {
    id: 'Number',
-   cell: (d: RowData) => d.account?.number,
+   cell: (d: RowData) => d.account?.account_num,
 }
 const columnClosed: Column<RowData, AccountsProps> = {
    id: 'Closed',

@@ -1,5 +1,7 @@
 import * as React from 'react';
 import useFetch from '@/services/useFetch';
+import usePost from '@/services/usePost';
+import { useQueryClient } from 'react-query';
 
 export type AccountId = number;
 export type CommodityId = number;
@@ -58,7 +60,7 @@ interface AccountJSON {
    id: AccountId;
    name: string;
    description: string;
-   number: string;
+   account_num: string;
    favorite: boolean;
    commodityId: CommodityId;
    commodity_scu: number;
@@ -74,7 +76,7 @@ const nullAccountJSON: AccountJSON = {
    id: -1,
    name: "",
    description: "",
-   number: "",
+   account_num: "",
    favorite: false,
    commodityId: nullCommodity.id,
    commodity_scu: 1,
@@ -86,6 +88,10 @@ const nullAccountJSON: AccountJSON = {
    opening_date: "",
    institution: undefined,
 }
+
+type ServerJSON = [
+   AccountJSON[], Commodity[], AccountKindJSON[], InstitutionJSON[]
+];
 
 export class Account {
    readonly id: AccountId;
@@ -100,31 +106,29 @@ export class Account {
    readonly opening_date: string;
    readonly parentId: AccountId | undefined;
    readonly description: string;
-   readonly number: string;
+   readonly account_num: string;
    parentAccount: Account | undefined;
    private institution: InstitutionJSON | undefined;
 
    constructor(
       d: AccountJSON,
-      allCommodities: { [id: number /*CommodityId*/]: Commodity},
-      allAccountKinds: { [id: string /*AccountKindId*/]: AccountKindJSON },
-      allInstitutions: { [id: string /*InstitutionId*/]: InstitutionJSON },
+      list: AccountList,
    ) {
       this.id = Number(d.id);
       this.name = d.name;
       this.favorite = d.favorite;
-      this.commodity = allCommodities[d.commodityId] ?? nullCommodity;
+      this.commodity = list.allCommodities[d.commodityId] ?? nullCommodity;
       this.commodity_scu = d.commodity_scu
-      this.kind = allAccountKinds[d.kindId] ?? nullAccountKind;
+      this.kind = list.allAccountKinds[d.kindId] ?? nullAccountKind;
       this.closed = d.closed;
       this.iban = d.iban;
       this.lastReconciled = d.lastReconciled;
       this.opening_date = d.opening_date;
       this.parentId = d.parent;
       this.description = d.description;
-      this.number = d.number;
+      this.account_num = d.account_num;
       this.institution = d.institution === undefined
-         ? undefined : allInstitutions[d.institution];
+         ? undefined : list.allInstitutions[d.institution];
    }
 
    /**
@@ -145,23 +149,47 @@ export class Account {
    getInstitution(): InstitutionJSON|undefined {
       return (this.institution ?? this.parentAccount?.getInstitution());
    }
+
+   getJSON(): AccountJSON {
+      return {
+         id: this.id,
+         name: this.name,
+         description: this.description,
+         account_num: this.account_num,
+         favorite: this.favorite,
+         commodityId: this.commodity.id,
+         commodity_scu: this.commodity_scu,
+         kindId: this.kind.id,
+         closed: this.closed,
+         iban: this.iban,
+         parent: this.parentId,
+         opening_date: this.opening_date,
+         lastReconciled: this.lastReconciled,
+         institution: this.getInstitution()?.id,
+      };
+   }
 }
 
 
 export class AccountList {
    private accounts: Map<AccountId, Account>;
+   readonly allCommodities: {[id: number /*CommodityId*/]: Commodity};
+   readonly allAccountKinds: {[id: string /*AccountKindId*/]: AccountKindJSON};
+   readonly allInstitutions: {[id: string /*InstitutionId*/]: InstitutionJSON};
 
-   constructor(
-      acc: AccountJSON[],
-      public allCommodities: { [id: number /*CommodityId*/]: Commodity},
-      public allAccountKinds: { [id: string /*AccountKindId*/]: AccountKindJSON },
-      public allInstitutions: { [id: string /* InstitutionId */]: InstitutionJSON },
-      public loaded: boolean,
-   ) {
+   constructor(json: ServerJSON, public loaded: boolean) {
+      this.allCommodities = {};
+      json[1].forEach(c => this.allCommodities[c.id] = c);
+
+      this.allAccountKinds = {};
+      json[2].forEach(c => this.allAccountKinds[c.id] = c);
+
+      this.allInstitutions = {};
+      json[3].forEach(c => this.allInstitutions[c.id] = c);
+
       this.accounts = new Map();
-      acc.forEach(a => this.accounts.set(
-         Number(a.id),
-         new Account(a, allCommodities, allAccountKinds, allInstitutions)));
+      json[0].forEach(a =>
+         this.accounts.set(Number(a.id), this.buildAccount(a)));
       this.accounts.forEach(a =>
          a.parentAccount = a.parentId === undefined
             ? undefined
@@ -178,15 +206,22 @@ export class AccountList {
          || this.allAccounts().filter(a => a.kind.is_asset).length !== 0;
    }
 
+   /**
+    * Build a new Account
+    */
+   buildAccount(a: AccountJSON): Account {
+      return new Account(a, this);
+   }
+
    allAccounts(): Account[] {
       return Array.from(this.accounts.values());
    }
 
    getAccount(id: AccountId): Account {
-      return this.accounts.get(id) || new Account({
+      return this.accounts.get(id) || this.buildAccount({
          ...nullAccountJSON,
          name: id.toString(),
-      }, this.allCommodities, this.allAccountKinds, this.allInstitutions);
+      });
    }
 
    accountsFromCurrency(commodityId: CommodityId): Account[] {
@@ -215,35 +250,43 @@ export const cmpAccounts = (a : Account|undefined, b: Account|undefined) => {
 
 interface IAccountsContext {
    accounts: AccountList;
-   commodities: { [id: number /*CommodityId*/]: Commodity};
 }
 
 const noContext: IAccountsContext = {
-   accounts: new AccountList([], {}, {}, {}, false /* loaded */),
-   commodities: {},
+   accounts: new AccountList([[], [], [], []], false /* loaded */),
 }
 
+
 const AccountsContext = React.createContext(noContext);
-type ServerJSON = [
-   AccountJSON[], Commodity[], AccountKindJSON[], InstitutionJSON[]
-];
+
+const ACCOUNT_LIST_URL = '/api/account/list';
+
+/**
+ * Provide a addOrEdit function used to save accounts in the database.
+ * A new account is created if no id is set for the parameter, otherwise an
+ * existing account is modified.
+ * This hook provides both the mutator function, as well as booleans to
+ * indicate the current status of the transaction. On success, the list of
+ * accounts is automatically fully reloaded from the server.
+ */
+export const useAddOrEditAccount = () => {
+   const queries = useQueryClient();
+   const mutation = usePost<void, AccountJSON>({
+      url: '/api/account/edit',
+
+      // On success, invalidate all caches, since the kind of accounts might
+      // impact a lot of queries, for instance.
+      onSuccess: () => queries.invalidateQueries(),
+   });
+   return mutation;
+}
 
 export const AccountsProvider: React.FC<{}> = p => {
    const { data } = useFetch<IAccountsContext, ServerJSON>({
-      url: '/api/account/list',
+      url: ACCOUNT_LIST_URL,
       parse: (json: ServerJSON) => {
-         const comm: { [id: number /*CommodityId*/]: Commodity} = {};
-         json[1].forEach(c => comm[c.id] = c);
-
-         const kinds: { [id: string /*AccountKindId*/]: AccountKindJSON } = {};
-         json[2].forEach(c => kinds[c.id] = c);
-
-         const inst: { [id: string /*InstitutionId*/]: InstitutionJSON } = {};
-         json[3].forEach(c => inst[c.id] = c);
-
          return {
-            accounts: new AccountList(json[0], comm, kinds, inst, true),
-            commodities: comm,
+            accounts: new AccountList(json, true /* loaded */),
          };
       },
    });
