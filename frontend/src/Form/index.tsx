@@ -119,6 +119,13 @@ export const Button: React.FC<ButtonProps> = p => {
    );
 }
 
+export const ButtonBar: React.FC<{}> = p => {
+   return (
+      <div className='button-bar'>
+         {p.children}
+      </div>
+   );
+}
 
 interface CheckboxProps extends SharedInputProps {
    checked: boolean|undefined;

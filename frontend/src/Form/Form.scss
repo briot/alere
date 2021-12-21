@@ -46,12 +46,22 @@ button {
    min-width: 10ch;
    min-height: 1em;
    border-radius: 0.5em;
+   text-align: center;
    &:hover {
       filter: brightness(var(--input-brightness-hover));
    }
    &.danger {
       @include set-colors(input-invalid);
    }
+}
+
+.button-bar {
+   padding: 10px 0;
+   display: flex;
+   flex-wrap: nowrap;
+   justify-content: flex-end;
+
+   flex: 1 1 100%;  // as a child, should occupy the whole width
 }
 
 form {
@@ -62,6 +72,9 @@ form {
 //      border-top: 1px solid var(--gray-400);
       border: 1px solid var(--gray-400);
       padding: 10px;
+   }
+   fieldset + fieldset {
+      margin-top: 20px;
    }
    legend {
       font-weight: bold;
