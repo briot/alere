@@ -345,7 +345,7 @@ interface PagesContext {
 
    // Create a new page, and return its id
    addPage: (
-      url: string, panels: PanelBaseProps[], tmp?: boolean
+      name: string, url: string, panels: PanelBaseProps[], tmp?: boolean
       ) => Promise<string>;
 
    // Delete the page
@@ -389,7 +389,11 @@ export const PagesProvider: React.FC<{}> = p => {
    );
 
    const addPage = React.useCallback(
-      (url: string, panels: PanelBaseProps[], tmp?: boolean) => {
+      (name: string, url: string, panels: PanelBaseProps[], tmp?: boolean) => {
+         if (url[0] !== '/') {
+            window.console.error('Invalid url', url);
+         }
+
          return new Promise<string>(
             (resolve, reject) => {
                setVal(old => {
@@ -408,11 +412,11 @@ export const PagesProvider: React.FC<{}> = p => {
 
                   // To avoid a race condition (returning the url before we
                   // have registered the page), we resolve in a timeout.
-                  setTimeout(() => resolve(url), 1);
+                  setTimeout(() => resolve(url), 0);
 
                   return [
                      ...old,
-                     {panels, name: id, url: id, tmp},
+                     {panels, name, url: id, tmp},
                   ];
                });
             }

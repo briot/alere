@@ -19,8 +19,11 @@ export const PageButton: React.FC<PageButtonProps> = p => {
    const { addPage } = usePages();
    const history = useHistory();
    const showPage = React.useCallback(
-      () =>
-         addPage(p.name, [{...p.panel, rowspan: 1, colspan: 4}], true /* tmp */)
+      () => addPage(
+            p.name,
+            `/userPage/${p.name}` /* url */,
+            [{...p.panel, rowspan: 1, colspan: 4}],
+            true /* tmp */)
          .then(url => history.push(url)),
       [p.name, p.panel, addPage, history]
    );
