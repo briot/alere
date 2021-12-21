@@ -19,7 +19,7 @@ const Recent: React.FC<RecentProps> = p => {
                      <RoundButton
                         img={a.getInstitution()?.icon}
                         key={h.accountId}
-                        size="small"
+                        size="tiny"
                      >
                         <AccountName
                            id={h.accountId}

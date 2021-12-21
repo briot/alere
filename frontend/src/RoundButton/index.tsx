@@ -53,7 +53,7 @@ const RoundButton: React.FC<RoundButtonProps> = p => {
       p.selected && 'selected',
       p.disabled && 'disabled',
       p.size ?? 'normal',
-      !p.text && 'noexpand',
+      !p.text && !p.children && 'noexpand',
    );
 
    return (
