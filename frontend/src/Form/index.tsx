@@ -40,6 +40,7 @@ interface InputProps extends SharedInputProps {
    value: string;
    title?: string;
    onChange?: (val: string) => void;
+   type?: 'text' | 'date';
 }
 export const Input: React.FC<InputProps> = p => {
    const { onChange } = p;
@@ -57,7 +58,7 @@ export const Input: React.FC<InputProps> = p => {
             placeholder={p.placeholder}
             required={p.required}
             title={p.title}
-            type='text'
+            type={p.type ?? 'text'}
             value={p.value}
          />
       </SharedInput>

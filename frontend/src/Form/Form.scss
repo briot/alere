@@ -1,15 +1,5 @@
 @import "../shared";
 
-form {
-   --vert-spacing: .5em;
-}
-
-input:focus,
-button:focus,
-select:focus {
-   outline: 3px solid var(--input-focus-color);
-}
-
 input,
 button,
 select {
@@ -18,7 +8,12 @@ select {
    padding: 0 0.25em;
    font-size: 1rem;
    appearance: auto;  // show the arrow (that was hidden by the global reset
+
+   &:focus {
+      outline: 3px solid var(--input-focus-color);
+   }
 }
+
 .primary :is(input, .select),
 button.primary {
    @include set-colors(input-primary);
@@ -33,12 +28,6 @@ input:invalid,
 .disabled button:hover {
    filter: brightness(100%); /* restore normal lightness */
 }
-button:hover {
-   filter: brightness(var(--input-brightness-hover));
-}
-button.danger {
-   @include set-colors(input-invalid);
-}
 .disabled,
 .disabled :is(span, input, button, .selector),
 button:disabled {
@@ -51,117 +40,130 @@ input[type=text] {
    min-width: 120px;
 }
 
-form fieldset {
-   border: 0;
-   border-top: 1px solid var(--gray-400);
-   padding: 10px;
-}
-form legend {
-   font-weight: bold;
-   margin: 0 0 0 -10px;
-   padding: 0 10px 0 0;
-}
-
-form label {
-   display: block;   /* one field per line */
-   margin: var(--vert-spacing) 0;
-   white-space: nowrap;
-   text-align: left;
-   font-weight: normal;
-
-   /* center text with input field */
-   display: flex;
-   flex-flow: row nowrap;
-   align-items: center;
-}
-form label > span {
-   margin-right: 10px;   /* space between text and input field */
-   min-width: 100px;     /* basic alignment of labels and fields */
-}
-
-form .select option {
-   overflow: hidden;
-}
-
-.multiAccountSelect {
-   margin-bottom: 20px;  // leave space for the horizontal scrollbar
-}
-
-
-.select {
-   --row-height: 20px;  /* must match ROW_HEIGHT in javascript */
-   height: 100%;
-
-   .menu {
-      @include set-colors(input);
-      border: 1px solid var(--input-border);
-      max-height: calc(15 * var(--row-height));
-   }
-
-   .option {
-      cursor: pointer;
-      height: var(--row-height);
-      font-weight: normal;
-      display: flex;
-      align-items: center;  // center vertically
-
-      &:hover {
-         @include set-colors(table-hover);
-      }
-
-      &.selected {
-         font-weight: bold;
-      }
-
-      &.divider {
-         pointer-events: none;
-         border-top: 1px solid var(--input-border);
-         height: 0;
-         margin: 0.5em 0;
-
-         &:hover {
-            @include set-colors(input);
-         }
-      }
-   }
-}
-
-form .checkbox {
-   position: relative;   /* for positioning of span:before */
-}
-form .checkbox input {
-   margin: 0 5px 0 0;
-
-   /* replace default appearance, since we cannot control colors there */
-   -webkit-appearance: none;
-   -moz-appearance: none;
-   appearance: none;
-   height: 1.8em;
-   width: 1.8em;
-   border: 1px solid var(--input-primary-border);
-   border-radius: 0.5em;
-   cursor: pointer;
-}
-form .checkbox > input:checked {
-   border: 1px solid var(--input-primary-border);
-   @include set-colors(input-primary);
-   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
-   background-repeat: no-repeat;
-    
-}
-form .checkbox > input:indeterminate {
-   border: 1px solid var(--input-primary-border);
-   @include set-colors(input-primary);
-   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10h8'/%3e%3c/svg%3e");
-   background-repeat: no-repeat;
-}
-form .checkbox > input:active {
-    border: 2px solid var(--input-primary-border); 
-}
 
 button {
    font-size: 1rem;
    min-width: 10ch;
    min-height: 1em;
    border-radius: 0.5em;
+   &:hover {
+      filter: brightness(var(--input-brightness-hover));
+   }
+   &.danger {
+      @include set-colors(input-invalid);
+   }
+}
+
+form {
+   --vert-spacing: .5em;
+
+   fieldset {
+//      border: 0;
+//      border-top: 1px solid var(--gray-400);
+      border: 1px solid var(--gray-400);
+      padding: 10px;
+   }
+   legend {
+      font-weight: bold;
+      margin: 0;   // use 0 0 0 -10px  when showing no border
+      padding: 0 10px 0 0;
+   }
+   label {
+      display: block;   /* one field per line */
+      margin: var(--vert-spacing) 0;
+      white-space: nowrap;
+      text-align: left;
+      font-weight: normal;
+
+      /* center text with input field */
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: center;
+
+      > span {
+         margin-right: 10px;   /* space between text and input field */
+         min-width: 100px;     /* basic alignment of labels and fields */
+      }
+   }
+   .select {
+      --row-height: 20px;  /* must match ROW_HEIGHT in javascript */
+      height: 100%;
+
+      .menu {
+         @include set-colors(input);
+         border: 1px solid var(--input-border);
+         max-height: calc(15 * var(--row-height));
+      }
+
+      .option {
+         cursor: pointer;
+         height: var(--row-height);
+         font-weight: normal;
+         display: flex;
+         align-items: center;  // center vertically
+
+         &:hover {
+            @include set-colors(table-hover);
+         }
+
+         &.selected {
+            font-weight: bold;
+         }
+
+         &.divider {
+            pointer-events: none;
+            border-top: 1px solid var(--input-border);
+            height: 0;
+            margin: 0.5em 0;
+
+            &:hover {
+               @include set-colors(input);
+            }
+         }
+      }
+
+      option {
+         overflow: hidden;
+      }
+   }
+
+   .checkbox {
+      position: relative;   /* for positioning of span:before */
+      input {
+         margin: 0 5px 0 0;
+
+         /* replace default appearance, since we cannot control colors there */
+         -webkit-appearance: none;
+         -moz-appearance: none;
+         appearance: none;
+         height: 1.8em;
+         width: 1.8em;
+         border: 1px solid var(--input-primary-border);
+         border-radius: 0.5em;
+         cursor: pointer;
+      }
+
+      > input:checked {
+         border: 1px solid var(--input-primary-border);
+         @include set-colors(input-primary);
+         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
+         background-repeat: no-repeat;
+      }
+
+      > input:indeterminate {
+         border: 1px solid var(--input-primary-border);
+         @include set-colors(input-primary);
+         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10h8'/%3e%3c/svg%3e");
+         background-repeat: no-repeat;
+      }
+
+      > input:active {
+          border: 2px solid var(--input-primary-border); 
+      }
+
+   }
+}
+
+.multiAccountSelect {
+   margin-bottom: 20px;  // leave space for the horizontal scrollbar
 }
