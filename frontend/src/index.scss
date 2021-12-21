@@ -67,7 +67,7 @@ $themes: (
    page-bg:                    [ rgb(29,30,48),         #e0e5ec ],
    page-fg:                    [ --fg-for-dark-colors,  --fg-for-light-colors ],
    panel-border:               [ --gray-800,            --gray-400 ],
-   panel-bg:                   [ #1a1a1a,               #fbfbfb ],
+   panel-bg:                   [ #1a1a1a,               white ],
    panel-fg:                   [ --fg-for-dark-colors,  --fg-for-light-colors ],
    panel-faded-fg:             [ --gray-800,            --gray-600 ],
    panel-faded-bg:             none,
@@ -116,10 +116,10 @@ $themes: (
    graph-mean-expenses:        [ --red-500,        --red-600 ],
 
    // Colors used in forms
-   input-bg:                   [ --gray-900,       white ],
+   input-bg:                   [ --gray-900,       #f3f3f3 ],
    input-fg:                   [ --fg-gray-900,    --fg-for-light-colors],
 
-   input-border:               [ --gray-900,       --gray-100 ],
+   input-border:               [ --gray-900,       --gray-600 ],
    input-brightness-hover:     [ 115%,             85% ],
    input-error-bg:             [ --invalid-300,    --invalid-100 ],
    input-error-border:         [ --invalid-100,    --invalid-300 ],

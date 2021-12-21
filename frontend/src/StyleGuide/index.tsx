@@ -158,7 +158,7 @@ warmly elinor.
             <div className="panel">
                {form()}
             </div>
-            <div style={{marginTop: 20}} >
+            <div>
                {form()}
             </div>
          </div>
@@ -188,7 +188,7 @@ warmly elinor.
 
 const StyleGuide: React.FC<{}> = p => {
    return (
-      <div className="styleguide">
+      <div className="styleguide not_neumorph_mode">
          <div className="page darkpalette">
             <StyleContent />
          </div>

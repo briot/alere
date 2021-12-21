@@ -46,9 +46,10 @@ input[type=text] {
 button {
    font-size: 1rem;
    min-width: 10ch;
-   min-height: 1em;
+   min-height: 2em;
    border-radius: 0.5em;
    text-align: center;
+   cursor: pointer;
    &:hover {
       filter: brightness(var(--input-brightness-hover));
    }
@@ -75,9 +76,11 @@ form {
       border: 1px solid var(--gray-400);
       padding: 10px;
    }
+
    fieldset + fieldset {
       margin-top: 20px;
    }
+
    legend {
       font-weight: bold;
       margin: 0;   // use 0 0 0 -10px  when showing no border
@@ -173,7 +176,7 @@ form {
       }
 
       > input:active {
-          border: 2px solid var(--input-primary-border); 
+          border: 1px solid var(--input-primary-border); 
       }
 
    }
