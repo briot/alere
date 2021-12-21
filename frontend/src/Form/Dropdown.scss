@@ -41,6 +41,7 @@
    & > .menu {
       @include set-colors(panel);
       font-size: 0.8rem;
+      overflow: hidden;
 
       box-shadow: 3px 3px 4px 0 var(--shadow-color);
       border-radius: .28571429rem .28571429rem 0 0;

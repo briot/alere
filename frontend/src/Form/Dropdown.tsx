@@ -113,6 +113,7 @@ const Dropdown: React.FC<DropdownProps> = p => {
       'dropdown',
       p.className,
       pos.horiz ?? 'offscreen',
+      !visible && 'offscreen',
    );
    const menuc = classes(
       'menu',
