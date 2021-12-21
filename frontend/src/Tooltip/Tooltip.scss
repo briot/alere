@@ -12,11 +12,17 @@
       font-weight: bold;
    }
 
+   th {
+      font-weight: bold;
+      padding: 10px 0;
+   }
+
    tr td:first-child {
       text-align: left;
    }
    td {
       text-align: right;
+      padding-right: 10px;
    }
 }
 
