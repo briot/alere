@@ -127,7 +127,7 @@ $themes: (
    input-focus-color:          --color-500,
    input-invalid-fg:           --fg-invalid-500,
    input-invalid-bg:           --invalid-500,
-   input-primary-bg:           --color-500,
+   input-primary-bg:           [ --color-400,      --color-200],
    input-primary-border:       --color-600,
    input-primary-fg:           --fg-color-500,
 
