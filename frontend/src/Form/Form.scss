@@ -45,11 +45,9 @@ input[type=text] {
 
 button {
    font-size: 1rem;
-   min-width: 10ch;
-   min-height: 2em;
-   border-radius: 0.5em;
    text-align: center;
    cursor: pointer;
+   min-width: 4ch;
    &:hover {
       filter: brightness(var(--input-brightness-hover));
    }
@@ -65,10 +63,17 @@ button {
    justify-content: flex-end;
 
    flex: 1 1 100%;  // as a child, should occupy the whole width
+
+   button {
+      min-width: 10ch;
+      min-height: 2em;
+      border-radius: 0.5em;
+   }
 }
 
 form {
    --vert-spacing: .5em;
+   --input-height: 25px;
 
    fieldset {
 //      border: 0;
@@ -87,16 +92,15 @@ form {
       padding: 0 10px 0 0;
    }
    label {
-      display: block;   /* one field per line */
       margin: var(--vert-spacing) 0;
       white-space: nowrap;
       text-align: left;
       font-weight: normal;
 
-      /* center text with input field */
       display: flex;
       flex-flow: row nowrap;
-      align-items: center;
+      align-items: stretch;  // form elements should use full height
+      line-height: var(--input-height);
 
       > span {
          margin-right: 10px;   /* space between text and input field */
