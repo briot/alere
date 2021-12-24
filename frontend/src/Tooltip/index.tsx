@@ -4,7 +4,7 @@ import classes from '@/services/classes';
 import { clamp, isFunc } from '@/services/utils';
 import './Tooltip.scss';
 
-type TooltipFunc<T> = (d: T) => React.ReactNode;
+export type TooltipFunc<T> = (d: T) => React.ReactNode;
 
 const MARGIN = 4;
 const DELAY_BEFORE = 600;

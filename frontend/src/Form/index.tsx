@@ -1,43 +1,47 @@
 import * as React from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
+import Tooltip, { TooltipFunc } from '@/Tooltip';
 import Dropdown from '@/Form/Dropdown';
 import classes from '@/services/classes';
 import "./Form.scss";
 
-interface SharedInputProps {
+interface SharedInputProps<T> {
    disabled?: boolean;
    text?: string;
    style?: React.CSSProperties;
+   value?: T;
+   tooltip?: TooltipFunc<T>;
 }
 
 const SharedInput: React.FC<
-   SharedInputProps & {textAfter?: boolean, className?: string}
-> = p => {
+   SharedInputProps<any> & {textAfter?: boolean, className?: string}
+> = (p) => {
    const c = classes(
       p.className,
       p.disabled && 'disabled',
    );
    return (
-      <label
-         className={c}
-         style={p.style}
-      >
-         {
-            !p.textAfter && p.text && <span>{p.text}:</span>
-         }
-         {p.children}
-         {
-            p.textAfter && p.text && <span>{p.text}</span>
-         }
-      </label>
+      <Tooltip tooltip={p.tooltip} tooltipData={p.value} >
+         <label
+            className={c}
+            style={p.style}
+         >
+            {
+               !p.textAfter && p.text && <span>{p.text}:</span>
+            }
+            {p.children}
+            {
+               p.textAfter && p.text && <span>{p.text}</span>
+            }
+         </label>
+      </Tooltip>
    );
 }
 
-interface InputProps extends SharedInputProps {
+interface InputProps extends SharedInputProps<string> {
    placeholder?: string;
    required?: boolean;
-   value: string;
    title?: string;
    onChange?: (val: string) => void;
    type?: 'text' | 'date';
@@ -65,9 +69,8 @@ export const Input: React.FC<InputProps> = p => {
    );
 }
 
-interface NumberInputProps extends SharedInputProps {
+interface NumberInputProps extends SharedInputProps<number> {
    required?: boolean;
-   value: number;
    title?: string;
    onChange?: (val: number) => void;
 }
@@ -93,7 +96,7 @@ export const NumberInput: React.FC<NumberInputProps> = p => {
    );
 }
 
-interface ButtonProps extends SharedInputProps {
+interface ButtonProps extends SharedInputProps<void> {
    primary?: boolean;
    danger?: boolean;
    className?: string;
@@ -127,8 +130,8 @@ export const ButtonBar: React.FC<{}> = p => {
    );
 }
 
-interface CheckboxProps extends SharedInputProps {
-   checked: boolean|undefined;
+interface CheckboxProps extends SharedInputProps<boolean|undefined> {
+   value: boolean|undefined;
    onChange?: (val: boolean) => void;
    indeterminate?: boolean;
    required?: boolean;
@@ -155,7 +158,7 @@ export const Checkbox: React.FC<CheckboxProps> = p => {
    return (
       <SharedInput className="checkbox" textAfter={true} {...p}>
          <input
-            checked={p.checked ?? false}
+            checked={p.value ?? false}
             disabled={p.disabled}
             ref={indetSetter}
             required={p.required}
@@ -166,8 +169,7 @@ export const Checkbox: React.FC<CheckboxProps> = p => {
    );
 }
 
-export interface TextAreaProps extends SharedInputProps {
-   value: string;
+export interface TextAreaProps extends SharedInputProps<string> {
    rows: number;
    onChange: (val: string) => void;
    placeholder?: string;
@@ -207,10 +209,10 @@ export interface Option<T> {
 
 export const divider: Option<any> = {value: 'divider'};
 
-
-export interface SelectProps<T> extends SharedInputProps {
+export interface SelectProps<T>
+   extends React.PropsWithChildren<SharedInputProps<T>>
+{
    onChange?: (val: T) => void;
-   value: T;
    options: Option<T>[];
    required?: boolean;
    direction?: "left" | "right";
@@ -291,6 +293,7 @@ export const Select = <T extends { toString: () => string }> (p: SelectProps<T>)
                </div>
             }
          />
+         {p.children}
       </SharedInput>
    );
 }

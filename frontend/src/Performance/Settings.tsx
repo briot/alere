@@ -11,7 +11,7 @@ const Settings: React.FC<PanelProps<PerformancePanelProps>> = p => {
       <fieldset>
          <legend>Performance</legend>
          <Checkbox
-             checked={p.props.hideIfNoShare ?? false}
+             value={p.props.hideIfNoShare ?? false}
              onChange={changeHide}
              text="Hide no longer traded stocks"
          />

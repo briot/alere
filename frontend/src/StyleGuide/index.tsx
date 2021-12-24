@@ -11,13 +11,13 @@ const StyleContent: React.FC<{}> = p => {
                <legend>Fieldset</legend>
                <div className="twocolumn">
                   <div>
-                     <Checkbox checked={true} text='label' />
-                     <Checkbox checked={false} text='unchecked' />
+                     <Checkbox value={true} text='label' />
+                     <Checkbox value={false} text='unchecked' />
                   </div>
                   <div>
-                     <Checkbox checked={true} text='disabled' disabled={true} />
+                     <Checkbox value={true} text='disabled' disabled={true} />
                      <Checkbox
-                        checked={true}
+                        value={true}
                         text='indeterminate'
                         indeterminate={true}
                      />

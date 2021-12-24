@@ -27,27 +27,27 @@ const Settings: React.FC<PanelProps<LedgerPanelProps>> = p => {
       <fieldset>
          <legend>Ledger</legend>
          <Checkbox
-             checked={p.props.borders}
+             value={p.props.borders}
              onChange={changeBorders}
              text="Show borders"
          />
          <Checkbox
-             checked={p.props.alternateColors}
+             value={p.props.alternateColors}
              onChange={changeAlt}
              text="Alternate background color"
          />
          <Checkbox
-             checked={p.props.valueColumn}
+             value={p.props.valueColumn}
              onChange={changeValueColumn}
              text="Deposit and paiements in same column"
          />
          <Checkbox
-             checked={p.props.defaultExpand}
+             value={p.props.defaultExpand}
              onChange={changeExpand}
              text="Expand rows by default"
          />
          <Checkbox
-             checked={p.props.restrictExpandArrow}
+             value={p.props.restrictExpandArrow}
              onChange={changeRestrict}
              text="Hide arrow if only 2 splits"
          />

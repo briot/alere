@@ -18,27 +18,27 @@ const Settings: React.FC<PanelProps<MeanPanelProps>> = p => {
       <fieldset>
          <legend>Expenses History</legend>
          <Checkbox
-            checked={p.props.showExpenses}
+            value={p.props.showExpenses}
             onChange={changeExp}
             text="Show expenses"
          />
          <Checkbox
-            checked={p.props.showIncome}
+            value={p.props.showIncome}
             onChange={changeInc}
             text="Show income (not including unrealized gains)"
          />
          <Checkbox
-            checked={p.props.showUnrealized}
+            value={p.props.showUnrealized}
             onChange={changeUnr}
             text="Add unrealized gains (stocks, real-estate,...) to income"
          />
          <Checkbox
-            checked={p.props.showMean}
+            value={p.props.showMean}
             onChange={changeMean}
             text="Show means"
          />
          <Checkbox
-            checked={p.props.negateExpenses}
+            value={p.props.negateExpenses}
             onChange={changeNeg}
             text="Show expenses as positive numbers"
          />

@@ -124,7 +124,7 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
          return n.account ? (
             <Checkbox
                text={n.account.name}
-               checked={!p.value || p.value.includes(n.account)}
+               value={!p.value || p.value.includes(n.account)}
                onChange={(checked: boolean) => localChange(n, checked)
                }
             />

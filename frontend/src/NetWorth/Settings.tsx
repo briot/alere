@@ -22,47 +22,47 @@ const Settings: React.FC<PanelProps<NetworthPanelProps>> = p => {
       <fieldset>
          <legend>Networth</legend>
          <Checkbox
-             checked={p.props.borders}
+             value={p.props.borders}
              onChange={changeBorders}
              text="Show borders"
          />
          <Checkbox
-             checked={p.props.alternateColors}
+             value={p.props.alternateColors}
              onChange={changeAlt}
              text="Alternate background color"
          />
          <Checkbox
-            checked={p.props.showValue}
+            value={p.props.showValue}
             onChange={changeValue}
             text="Show values"
          />
          <Checkbox
-            checked={p.props.showPrice}
+            value={p.props.showPrice}
             onChange={changePrice}
             text="Show prices"
          />
          <Checkbox
-            checked={p.props.showShares}
+            value={p.props.showShares}
             onChange={changeShares}
             text="Show shares"
          />
          <Checkbox
-            checked={p.props.showPercent}
+            value={p.props.showPercent}
             onChange={changePercent}
             text="Show percent of total"
          />
          <Checkbox
-            checked={p.props.showDeltaNext}
+            value={p.props.showDeltaNext}
             onChange={changeDeltaN}
             text="Show delta with next column"
          />
          <Checkbox
-            checked={p.props.showDeltaLast}
+            value={p.props.showDeltaLast}
             onChange={changeDeltaL}
             text="Show delta with last column"
          />
          <Checkbox
-            checked={p.props.roundValues}
+            value={p.props.roundValues}
             onChange={changeRound}
             text="Round values"
          />

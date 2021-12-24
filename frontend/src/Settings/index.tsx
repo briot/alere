@@ -36,17 +36,17 @@ const Settings: React.FC<SettingsProps> = p => {
                   <legend>General</legend>
 
                   <Checkbox
-                      checked={prefs.dark_mode}
+                      value={prefs.dark_mode}
                       onChange={changeDark}
                       text="Dark mode"
                   />
                   <Checkbox
-                      checked={prefs.neumorph_mode}
+                      value={prefs.neumorph_mode}
                       onChange={changeNeumorph}
                       text="Neumorphism mode"
                   />
                   <Checkbox
-                      checked={prefs.text_on_left}
+                      value={prefs.text_on_left}
                       onChange={changeTL}
                       text="Show text on left side"
                   />

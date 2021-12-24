@@ -16,7 +16,7 @@ const Settings: React.FC<PanelProps<MetricsPanelProps>> = p => {
             onChange={changeRange}
          />
          <Checkbox
-            checked={p.props.roundValues}
+            value={p.props.roundValues}
             onChange={changeRound}
             text="Round values"
          />

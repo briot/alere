@@ -15,27 +15,27 @@ const Settings: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
       <fieldset>
          <legend>Investments</legend>
          <Checkbox
-             checked={p.props.hideIfNoShare ?? false}
+             value={p.props.hideIfNoShare ?? false}
              onChange={changeHide}
              text="Hide no longer traded stocks"
          />
          <Checkbox
-             checked={!p.props.hidePriceGraph}
+             value={!p.props.hidePriceGraph}
              onChange={changePriceGraph}
              text="Show Price graph"
          />
          <Checkbox
-             checked={!p.props.hideROIGraph}
+             value={!p.props.hideROIGraph}
              onChange={changeROIGraph}
              text="Show ROI graph"
          />
          <Checkbox
-             checked={p.props.showWALine ?? false}
+             value={p.props.showWALine ?? false}
              onChange={changeWA}
              text="Show Weighted Average lines in graphs"
          />
          <Checkbox
-             checked={p.props.showACLine ?? false}
+             value={p.props.showACLine ?? false}
              onChange={changeAC}
              text="Show Average Cost lines in graphs"
          />

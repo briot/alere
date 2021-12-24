@@ -13,17 +13,17 @@ const Settings: React.FC<PanelProps<IncomeExpensePanelProps>> = p => {
       <fieldset>
          <legend>Income and Expenses</legend>
          <Checkbox
-            checked={p.props.expenses}
+            value={p.props.expenses}
             onChange={changeExp}
             text="Show expenses"
          />
          <Checkbox
-            checked={p.props.roundValues}
+            value={p.props.roundValues}
             onChange={changeRound}
             text="Round values"
          />
          <Checkbox
-            checked={p.props.showBars}
+            value={p.props.showBars}
             onChange={changeBars}
             text="Bar chart"
          />

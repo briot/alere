@@ -9,7 +9,7 @@ const Settings: React.FC<PanelProps<AssetsPanelProps>> = p => {
       <fieldset>
          <legend>Assets</legend>
          <Checkbox
-            checked={p.props.roundValues}
+            value={p.props.roundValues}
             onChange={changeRound}
             text="Round values"
          />

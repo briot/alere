@@ -15,32 +15,32 @@ const Settings: React.FC<PanelProps<PriceHistoryPanelProps>> = p => {
       <fieldset>
          <legend>Price History</legend>
          <Checkbox
-            checked={!!p.props.showShares}
+            value={!!p.props.showShares}
             onChange={changeShares}
             text="Show positions"
          />
          <Checkbox
-            checked={!!p.props.showPrice}
+            value={!!p.props.showPrice}
             onChange={changePrice}
             text="Show prices"
          />
          <Checkbox
-            checked={!!p.props.showHolding}
+            value={!!p.props.showHolding}
             onChange={changeHold}
             text="Show holdings"
          />
          <Checkbox
-            checked={!!p.props.showROI}
+            value={!!p.props.showROI}
             onChange={changeROI}
             text="Show return-on-investment"
          />
          <Checkbox
-             checked={!!p.props.showWeightedAverage}
+             value={!!p.props.showWeightedAverage}
              onChange={changeWA}
              text="Show Weighted Average lines in graphs"
          />
          <Checkbox
-             checked={!!p.props.showAverageCost}
+             value={!!p.props.showAverageCost}
              onChange={changeAC}
              text="Show Average Cost lines in graphs"
          />
