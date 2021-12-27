@@ -730,7 +730,7 @@ const Ledger: React.FC<BaseLedgerProps & ExtraProps> = p => {
       singleAccount,
    }
    const isStock = singleAccount?.kind.is_stock;
-   const isAsset = singleAccount?.kind.is_asset;
+   const isLiquid = singleAccount?.kind.is_liquid;
 
    const columns = [
       columnDate,
@@ -745,7 +745,7 @@ const Ledger: React.FC<BaseLedgerProps & ExtraProps> = p => {
       isStock                           ? columnShares        : undefined,
       isStock                           ? columnPrice         : undefined,
       isStock && singleAccount          ? columnSharesBalance : undefined,
-      p.hideBalance || !isAsset         ? undefined           : columnBalance,
+      p.hideBalance || !isLiquid        ? undefined           : columnBalance,
    ];
 
    const footColumns = [

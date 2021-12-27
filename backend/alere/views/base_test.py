@@ -45,56 +45,48 @@ class BaseTest(TestCase, ParamDecoder):
 
         # accounts
         kls.checking = alere.models.Accounts.objects.create(
-            kind=alere.models.AccountKinds.objects.get(
-                flag=alere.models.AccountFlags.BANK),
+            kind=alere.models.AccountKinds.objects.get(name='Bank account'),
             name='Checking Account',
             commodity=kls.eur,
             commodity_scu=100)
 
         kls.checking_usd = alere.models.Accounts.objects.create(
-            kind=alere.models.AccountKinds.objects.get(
-                flag=alere.models.AccountFlags.BANK),
+            kind=alere.models.AccountKinds.objects.get(name='Bank account'),
             name='Checking Account in USD',
             commodity=kls.usd,
             commodity_scu=100)
 
         kls.salary = alere.models.Accounts.objects.create(
-            kind=alere.models.AccountKinds.objects.get(
-                flag=alere.models.AccountFlags.WORK_INCOME),
+            kind=alere.models.AccountKinds.objects.get(name='Work income'),
             name='Income',
             commodity=kls.eur,
             commodity_scu=100)
 
         kls.groceries = alere.models.Accounts.objects.create(
-            kind=alere.models.AccountKinds.objects.get(
-                flag=alere.models.AccountFlags.EXPENSE),
+            kind=alere.models.AccountKinds.objects.get(name='Expense'),
             name='groceries',
             commodity=kls.eur,
             commodity_scu=100)
 
         kls.taxes = alere.models.Accounts.objects.create(
-            kind=alere.models.AccountKinds.objects.get(
-                flag=alere.models.AccountFlags.EXPENSE),
+            kind=alere.models.AccountKinds.objects.get(name='Expense'),
             name='taxes',
             commodity=kls.eur,
             commodity_scu=100)
         kls.dividends = alere.models.Accounts.objects.create(
-            kind=alere.models.AccountKinds.objects.get(
-                flag=alere.models.AccountFlags.EXPENSE),
+            kind=alere.models.AccountKinds.objects.get(name='Expense'),
             name='dividends',
             commodity=kls.eur,
             commodity_scu=100)
 
         kls.investment_eur = alere.models.Accounts.objects.create(
-            kind=alere.models.AccountKinds.objects.get(
-                flag=alere.models.AccountFlags.INVESTMENT),
+            kind=alere.models.AccountKinds.objects.get(name='Investment'),
             name='investment_eur',
             commodity=kls.eur,
             commodity_scu=100)
 
         kls.invest_stock_usd = alere.models.Accounts.objects.create(
-            kind=alere.models.AccountKinds.objects.get(
-                flag=alere.models.AccountFlags.STOCK),
+            kind=alere.models.AccountKinds.objects.get(name='Stock'),
             parent=kls.investment_eur,
             name='invest_stock_usd',
             commodity=kls.stock_usd,

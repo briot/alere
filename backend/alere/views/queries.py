@@ -61,8 +61,6 @@ class Mean:
 
         This query also accepts one parameter, the currency_id for the result.
         """
-        nw_kinds = ",".join(
-            "'%s'" % f for f in alere.models.AccountFlags.networth())
         return f"""
            SELECT
               months.date,
@@ -70,6 +68,7 @@ class Mean:
            FROM months,
               alr_balances_currency,
               alr_accounts
+              JOIN alr_account_kinds k ON (alr_accounts.kind_id=k.id)
            WHERE
               --  sqlite compares date as strings, so we need to add
               --  the time. Otherwise, 2020-11-30 is less than
@@ -81,7 +80,7 @@ class Mean:
                  < strftime("%%Y-%%m-%%d", alr_balances_currency.maxdate)
               AND alr_balances_currency.currency_id=%s
               AND alr_balances_currency.account_id = alr_accounts.id
-              AND alr_accounts.kind_id IN ({nw_kinds})
+              AND k.is_networth
            GROUP BY months.date
         """
 
@@ -120,10 +119,6 @@ class Mean:
         Computes the total realized income and expenses for all months.
         The result includes the rolling mean.
         """
-        inc_kinds = ",".join(
-            "'%s'" % f for f in alere.models.AccountFlags.realized_income())
-        exp_kinds = ",".join(
-            "'%s'" % f for f in alere.models.AccountFlags.expenses())
         query = (
             f"""
             WITH RECURSIVE {self._cte_list_of_dates()}
@@ -145,16 +140,16 @@ class Mean:
                   --  category
                   SELECT
                      strftime("%%Y-%%m", months.date) as month,
-                     SUM(value) FILTER (WHERE kind_id in ({inc_kinds}))
-                         as inc_total,
-                     SUM(value) FILTER (WHERE kind_id in ({exp_kinds}))
-                         as exp_total
+                     SUM(value) FILTER (WHERE k.is_income) as inc_total,
+                     SUM(value) FILTER (WHERE k.is_expense) as exp_total
                   FROM months
                      JOIN alr_splits_with_value
                         ON (strftime("%%Y-%%m", post_date) =
                             strftime("%%Y-%%m", months.date))
                      JOIN alr_accounts
                         ON (alr_splits_with_value.account_id=alr_accounts.id)
+                     JOIN alr_account_kinds k
+                        ON (alr_accounts.kind_id=k.id)
                   WHERE alr_splits_with_value.value_commodity_id=%s
                   GROUP BY months.date
                ) tmp

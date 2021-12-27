@@ -28,61 +28,64 @@ class MetricsView(JSONView):
         income = -(
             over_period \
             .filter(
-                account__kind__in=alere.models.AccountFlags.realized_income()) \
-            .aggregate(value=Sum('value'))['value']
+                account__kind__is_income=True,
+                account__kind__is_unrealized=False,
+            ).aggregate(value=Sum('value'))['value']
             or 0)
 
         passive_income = -(
             over_period \
-            .filter(account__kind=alere.models.AccountFlags.PASSIVE_INCOME) \
+            .filter(account__kind__is_passive_income=True) \
             .aggregate(value=Sum('value'))['value']
             or 0)
 
         work_income = -(
             over_period \
-            .filter(account__kind=alere.models.AccountFlags.WORK_INCOME) \
+            .filter(account__kind__is_work_income=True) \
             .aggregate(value=Sum('value'))['value']
             or 0)
 
         expense = (
             over_period \
-            .filter(account__kind__in=alere.models.AccountFlags.expenses()) \
+            .filter(account__kind__is_expense=True) \
             .aggregate(value=Sum('value'))['value']
             or 0)
 
         other_taxes = (
             over_period \
-            .filter(account__kind=alere.models.AccountFlags.MISC_TAX) \
+            .filter(account__kind__is_misc_tax=True) \
             .aggregate(value=Sum('value'))['value']
             or 0)
 
         income_taxes = (
             over_period \
-            .filter(account__kind=alere.models.AccountFlags.INCOME_TAX) \
+            .filter(account__kind__is_income_tax=True) \
             .aggregate(value=Sum('value'))['value']
             or 0)
 
         networth = (
             at_end \
-            .filter(account__kind__in=alere.models.AccountFlags.networth()) \
+            .filter(account__kind__is_networth=True) \
             .aggregate(value=Sum('balance'))['value']
             or 0)
 
         networth_start = (
             at_start \
-            .filter(account__kind__in=alere.models.AccountFlags.networth()) \
+            .filter(account__kind__is_networth=True) \
             .aggregate(value=Sum('balance'))['value']
             or 0)
 
         liquid_assets = (
             at_end \
-            .filter(account__kind__in=alere.models.AccountFlags.liquid()) \
+            .filter(account__kind__is_liquid=True,
+                    account__kind__is_networth=True) \
             .aggregate(value=Sum('balance'))['value']
             or 0)
 
         liquid_assets_at_start = (
             at_start \
-            .filter(account__kind__in=alere.models.AccountFlags.liquid()) \
+            .filter(account__kind__is_liquid=True,
+                    account__kind__is_networth=True) \
             .aggregate(value=Sum('balance'))['value']
             or 0)
 

@@ -106,172 +106,6 @@ class Prices(AlereModel):
                 self.origin_id, self.target_id, self.date, self.scaled_price)
 
 
-#######################
-# WARNING: changing these flags require recreating the alr_accounts_security
-# view
-#######################
-
-class AccountFlags(models.TextChoices):
-    PASSIVE_INCOME = 'IP'
-    WORK_INCOME = 'IW'
-    MISC_INCOME = 'IM'
-    UNREALIZED_GAINS = 'IU'
-    # These flags are used for accounts that represent income (i.e. not actual
-    # bank accounts but categories).
-    # * Passive income includes dividends, rents, ...)
-    # * Unrealized gains is the result of your assets' value changing other
-    #   time, like stock prices, real-estate,...
-    # * Work income includes result of work (salary, unemployment,...)
-    #   that would disappear if you stopped working.
-
-    EXPENSE = 'EX'
-    # It is possible for the amount of a transaction to be either positive or
-    # negative. For instance, buying food is an expense, but if you get
-    # reimbursed for one of your purchases, you would still store that
-    # reimbursement as an EXPENSE, although with a positive value.
-
-    INCOME_TAX = 'TI'
-    MISC_TAX = 'TM'
-    # Used for accounts that represent taxes
-
-    LIABILITY = 'L'
-    # Anything owed by the user (credit card, loan,...)
-
-    STOCK = 'S'
-    # An account used to trade one security
-
-    ASSET = 'A'
-    # A non-monetary asset (car,...) that you want to track.
-    # You could also use INVESTMENT if you want to see them in the Investment
-    # page.
-    # Real-estate can either be tracked as an ASSET (if you do not intend to
-    # change its value, or do not need to track performance), or as a
-    # NON_LIQUID_INVESTMENT.
-
-    BANK = 'B'
-    # A bank account (saving, checking,...)
-
-    INVESTMENT = 'I'
-    # An investment account. These will in general be used to trade stocks,
-    # though occasionally it can be used for other accounts that you want to
-    # see in the investments page.
-
-    NON_LIQUID_INVESTMENT = 'NL'
-    # Similar to investments (and visible in the Investments view), counted
-    # differently in the Metrics view.
-    # Typically used for real-estate
-
-    EQUITY = 'EQ'
-    # Money used to initialized the database. This will typically contain
-    # opening balances for accounts opened before you started using this
-    # software. Should also be used for reconciliation, when you do not know
-    # where the money came from.
-
-    @classmethod
-    def expenses(klass):
-        return (
-            klass.EXPENSE,
-            klass.INCOME_TAX,
-            klass.MISC_TAX,
-        )
-
-    @classmethod
-    def income_tax(klass):
-        return (
-            klass.INCOME_TAX,
-        )
-
-    @classmethod
-    def trading(klass):
-        """
-        Which accounts should be displayed in the Investment and Performance
-        views
-        """
-        return (
-            klass.INVESTMENT,
-            klass.STOCK,
-            klass.NON_LIQUID_INVESTMENT,
-        )
-
-    @classmethod
-    def misc_tax(klass):
-        return (
-            klass.MISC_TAX,
-        )
-
-    @classmethod
-    def work_income(klass):
-        return (klass.WORK_INCOME, )
-
-    @classmethod
-    def passive_income(klass):
-        return (
-            klass.PASSIVE_INCOME,
-        )
-
-    @classmethod
-    def all_income(klass):
-        return (
-            klass.PASSIVE_INCOME,
-            klass.WORK_INCOME,
-            klass.MISC_INCOME,
-            klass.UNREALIZED_GAINS,
-        )
-
-    @classmethod
-    def unrealized_income(klass):
-        return (
-            klass.UNREALIZED_GAINS,
-        )
-
-    @classmethod
-    def realized_income(klass):
-        """All but unrealized gains"""
-        return (
-            klass.PASSIVE_INCOME,
-            klass.WORK_INCOME,
-            klass.MISC_INCOME,
-        )
-
-    @classmethod
-    def networth(klass):
-        """All accounts used to compute networth"""
-        return (
-            klass.BANK,
-            klass.ASSET,
-            klass.STOCK,
-            klass.INVESTMENT,
-            klass.LIABILITY,
-            klass.NON_LIQUID_INVESTMENT,
-        )
-
-    @classmethod
-    def invested(klass):
-        """
-        All accounts used to compute invested amount (for stocks and
-        investment accounts). This is money that already belongs to the user
-        and is moved between accounts.
-        """
-        return (
-            klass.BANK,
-            klass.ASSET,
-            klass.STOCK,
-            klass.NON_LIQUID_INVESTMENT,
-            klass.INVESTMENT,
-            klass.LIABILITY,
-            klass.EQUITY,
-        )
-
-    @classmethod
-    def liquid(klass):
-        """All accounts that can easily be converted to currency"""
-        return (
-            klass.BANK,
-            klass.STOCK,
-            klass.INVESTMENT,
-            klass.LIABILITY,
-        )
-
 class AccountKinds(AlereModel):
     """
     The high-level types of accounts.
@@ -284,20 +118,140 @@ class AccountKinds(AlereModel):
        - deltaExpenses
     """
 
-    flag = models.TextField(
-        primary_key=True,
-        max_length=2,
-        choices=AccountFlags.choices,
-    )
-
     name = models.TextField()
     # The name used for display purposes only
 
     name_when_positive = models.TextField()   # credit / increase / ...
     name_when_negative = models.TextField()   # debit  / decrease / ...
 
+    ##########
+    # Expenses and income
+    ##########
+
+    is_expense = models.BooleanField(default=False)
+    is_income = models.BooleanField(default=False)
+    is_equity = models.BooleanField(default=False)
+    is_liability = models.BooleanField(default=False) # ?? expense+unrealized ?
+    # Whether this category should count as expense, income, or just recording
+    # some existing equity. One, and only one of these flags is True.
+    # It is possible for the amount of a transaction to be either positive or
+    # negative. For instance, buying food is an expense, but if you get
+    # reimbursed for one of your purchases, you would still store that
+    # reimbursement as an EXPENSE, although with a positive value.
+    #
+    # is_equity indicates money used to initialize the database. This will
+    # typically contain opening balances for accounts opened before you
+    # started using this software. Should also be used for reconciliation,
+    # when you do not know where the money came from.
+
+    is_work_income = models.BooleanField(default=False)
+    # Whether this is an income category resulting from work activities, which
+    # would disappear if you stopped working. This includes salary,
+    # unemployment,...
+
+    is_passive_income = models.BooleanField(default=False)
+    # Whether this is an income category not resulting from work activities,
+    # like dividends, rents,...
+
+    is_unrealized = models.BooleanField(default=False)
+    # Whether this is a potential income or expense, i.e. the amount might
+    # change later. This includes stock price changes, real-estate until you
+    # actually sell, and so on. This is the result of your assets' value
+    # changing over time.
+    # When this is False, some money was actually transferred from/to one of
+    # your accounts.
+
+    ##########
+    # Networth
+    ##########
+
+    is_networth = models.BooleanField(default=False)
+    # True for all accounts used to compute the networth.
+    # It should be False for categories in general.
+
+    is_liquid = models.BooleanField(default=False)
+    # True for accounts that can be easily converted to hard cash.
+    # This should be false for accounts that are blocked until a certain date,
+    # or for real-estate and other goods that take a long time to sell
+    # like a car, that you want to track.
+
+    ##########
+    # Investments
+    ##########
+
+    is_invested = models.BooleanField(default=False)
+    # True for all accounts used to compute the invested amount for stocks
+    # and investment accounts. This is money that already belongs to the user
+    # and is moved between accounts.
+
+    is_trading = models.BooleanField(default=False)
+    # Whether the account should be displayed in the Investment and Performance
+    # views.
+
+    is_stock = models.BooleanField(default=False)
+    # An account used to trade one security
+
+    ##########
+    # Taxes
+    ##########
+
+    is_income_tax = models.BooleanField(default=False)
+    # Whether this category is part of your income taxes. This is used in the
+    # metrics view to compute the actual tax rate.
+    # INCOME_TAX
+
+    is_misc_tax = models.BooleanField(default=False)
+    # Whether this should count as taxes, other than income taxes
+    # MISC_TAX
+
     class Meta:
         db_table = prefix + "account_kinds"
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(
+                    (models.Q(is_income=True)
+                        & models.Q(is_expense=False)
+                        & models.Q(is_equity=False))
+                    |
+                    (models.Q(is_income=False)
+                        & models.Q(is_expense=True)
+                        & models.Q(is_equity=False))
+                    |
+                    (models.Q(is_income=False)
+                        & models.Q(is_expense=False)
+                        & models.Q(is_equity=True))
+                ),
+                name='either_income_expense_or_equity'
+            ),
+            models.CheckConstraint(
+                check=models.Q(is_passive_income=False)
+                | models.Q(is_income=True),
+                name='passive_income_is_also_income',
+            ),
+            models.CheckConstraint(
+                check=models.Q(is_work_income=False)
+                | models.Q(is_income=True),
+                name='work_income_is_also_income',
+            ),
+            models.CheckConstraint(
+                check=models.Q(is_liquid=False)
+                | models.Q(is_equity=True),
+                name='is_liquid_is_only_for_equity',
+            ),
+            models.CheckConstraint(
+                check=models.Q(
+                    (models.Q(is_work_income=True)   # e.g. for salary
+                        & models.Q(is_passive_income=False))
+                    |
+                    (models.Q(is_work_income=False)  # e.g. for dividends
+                        & models.Q(is_passive_income=True))
+                    |
+                    (models.Q(is_work_income=False)  # e.g. for gifts
+                        & models.Q(is_passive_income=False))
+                ),
+                name='work_income_is_not_passive_income',
+            ),
+        ]
 
 
 class Institutions(AlereModel):

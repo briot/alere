@@ -50,26 +50,20 @@ class AccountList(JSONView):
 
         account_kinds = [
             {
-                "id": a.flag,
+                "id": a.id,
                 "name": a.name,
                 "positive": a.name_when_positive,
                 "negative": a.name_when_negative,
-                "is_stock": a.flag == alere.models.AccountFlags.STOCK,
-                "is_asset": a.flag in alere.models.AccountFlags.networth(),
-                "is_income_expense":
-                   a.flag in alere.models.AccountFlags.expenses()
-                   or a.flag in alere.models.AccountFlags.all_income(),
-                "is_work_income":
-                   a.flag in alere.models.AccountFlags.work_income(),
-                "is_passive_income":
-                   a.flag in alere.models.AccountFlags.passive_income(),
-                "is_expense": a.flag in alere.models.AccountFlags.expenses(),
-                "is_income_tax": a.flag in alere.models.AccountFlags.income_tax(),
-                "is_other_tax": a.flag in alere.models.AccountFlags.misc_tax(),
-                "is_realized_income":
-                   a.flag in alere.models.AccountFlags.realized_income(),
-                "is_unrealized_income":
-                   a.flag in alere.models.AccountFlags.unrealized_income(),
+                "is_expense": a.is_expense,
+                "is_income": a.is_income,
+                "is_work_income": a.is_work_income,
+                "is_passive_income": a.is_passive_income,
+                "is_unrealized": a.is_unrealized,
+                "is_networth": a.is_networth,
+                "is_stock": a.is_stock,
+                "is_liquid": a.is_liquid,
+                "is_income_tax": a.is_income_tax,
+                "is_misc_tax": a.is_misc_tax,
             }
             for a in alere.models.AccountKinds.objects.all()
         ]

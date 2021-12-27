@@ -38,16 +38,16 @@ interface AccountKindJSON {
    name: string;
    positive: string;
    negative: string;
-   is_stock?: boolean;
-   is_asset?: boolean;
-   is_income_expense?: boolean;
+   is_expense?: boolean;
+   is_income?: boolean;
    is_work_income?: boolean;
    is_passive_income?: boolean;
-   is_expense?: boolean;
+   is_liquid?: boolean;
+   is_unrealized?: boolean;
+   is_networth?: boolean;
+   is_stock?: boolean;
    is_income_tax?: boolean;
-   is_other_tax?: boolean;
-   is_realized_income?: boolean;
-   is_unrealized_income?: boolean;
+   is_misc_tax?: boolean;
 }
 const nullAccountKind: AccountKindJSON = {
    id: "",
@@ -203,7 +203,7 @@ export class AccountList {
     */
    has_accounts() {
       return !this.loaded
-         || this.allAccounts().filter(a => a.kind.is_asset).length !== 0;
+         || this.allAccounts().filter(a => a.kind.is_networth).length !== 0;
    }
 
    /**

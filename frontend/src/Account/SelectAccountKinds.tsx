@@ -22,11 +22,11 @@ const SelectAccountKind: React.FC<SelectAccountKindProps> = p => {
                     </tr>
                     <tr>
                        <th>Non-monetary asset (car,...)</th>
-                       <td>{k.is_asset ? 'Y' : 'N'}</td>
+                       <td>{k.is_liquid ? 'N' : 'Y'}</td>
                     </tr>
                     <tr>
                        <th>Show in Income/Expense</th>
-                       <td>{k.is_income_expense ? 'Y' : 'N'}</td>
+                       <td>{k.is_income || k.is_expense ? 'Y' : 'N'}</td>
                     </tr>
                     <tr>
                        <th>Work income (salary,...)</th>
@@ -38,11 +38,11 @@ const SelectAccountKind: React.FC<SelectAccountKindProps> = p => {
                     </tr>
                     <tr>
                        <th>Realized income</th>
-                       <td>{k.is_realized_income ? 'Y' : 'N'}</td>
+                       <td>{k.is_income && !k.is_unrealized ? 'Y' : 'N'}</td>
                     </tr>
                     <tr>
                        <th>Unrealized income</th>
-                       <td>{k.is_unrealized_income ? 'Y' : 'N'}</td>
+                       <td>{k.is_income && k.is_unrealized ? 'Y' : 'N'}</td>
                     </tr>
                     <tr>
                        <th>Expense</th>
@@ -54,7 +54,7 @@ const SelectAccountKind: React.FC<SelectAccountKindProps> = p => {
                     </tr>
                     <tr>
                        <th>Other taxes</th>
-                       <td>{k.is_other_tax ? 'Y' : 'N'}</td>
+                       <td>{k.is_misc_tax ? 'Y' : 'N'}</td>
                     </tr>
                  </tbody>
                </table>

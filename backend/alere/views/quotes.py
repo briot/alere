@@ -158,7 +158,7 @@ class QuotesView(JSONView):
         accs = {}
 
         query = alere.models.Accounts.objects \
-            .filter(kind__in=alere.models.AccountFlags.trading()) \
+            .filter(kind__is_trading=True) \
             .select_related('commodity')
         if accounts is not None:
             query = query.filter(id__in=accounts)

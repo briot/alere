@@ -6,7 +6,6 @@ from alere import models
 import sys
 
 
-invested_flags = ",".join("'%s'" % f for f in models.AccountFlags.invested())
 armageddon = "'2999-12-31 00:00:00'"
 
 def create_views(apps, schema_editor):
@@ -23,109 +22,132 @@ def create_views(apps, schema_editor):
         name="Transaction",
     )
 
-    for f in models.AccountFlags:
-        if f == models.AccountFlags.PASSIVE_INCOME:
-            models.AccountKinds.objects.create(
-                name="Passive income",
-                flag=f,
-                name_when_positive='Expense',
-                name_when_negative='Income',
-            )
-        elif f == models.AccountFlags.WORK_INCOME:
-            models.AccountKinds.objects.create(
-                name="Work income",
-                flag=f,
-                name_when_positive='Expense',
-                name_when_negative='Income',
-            )
-        elif f == models.AccountFlags.MISC_INCOME:
-            models.AccountKinds.objects.create(
-                name="Misc income",
-                flag=f,
-                name_when_positive='Expense',
-                name_when_negative='Income',
-            )
-        elif f == models.AccountFlags.UNREALIZED_GAINS:
-            models.AccountKinds.objects.create(
-                name="Unrealized gains",
-                flag=f,
-                name_when_positive='Decrease',
-                name_when_negative='Increase',
-            )
-        elif f == models.AccountFlags.EXPENSE:
-            models.AccountKinds.objects.create(
-                name="Expenses",
-                flag=f,
-                name_when_positive='Expense',
-                name_when_negative='Income',
-            )
-        elif f == models.AccountFlags.INCOME_TAX:
-            models.AccountKinds.objects.create(
-                name="Income tax",
-                flag=f,
-                name_when_positive='Increase',
-                name_when_negative='Decrease',
-            )
-        elif f == models.AccountFlags.MISC_TAX:
-            models.AccountKinds.objects.create(
-                name="Other taxes",
-                flag=f,
-                name_when_positive='Increase',
-                name_when_negative='Decrease',
-            )
-        elif f == models.AccountFlags.LIABILITY:
-            models.AccountKinds.objects.create(
-                name="Liability",
-                flag=f,
-                name_when_positive='Deposit',
-                name_when_negative='Paiement',
-            )
-        elif f == models.AccountFlags.STOCK:
-            models.AccountKinds.objects.create(
-                name="Stocks",
-                flag=f,
-                name_when_positive='Add',
-                name_when_negative='Remove',
-            )
-        elif f == models.AccountFlags.ASSET:
-            models.AccountKinds.objects.create(
-                name="Assets",
-                flag=f,
-                name_when_positive='Increase',
-                name_when_negative='Decrease',
-            )
-        elif f == models.AccountFlags.BANK:
-            models.AccountKinds.objects.create(
-                name="Bank accounts",
-                flag=f,
-                name_when_positive='Deposit',
-                name_when_negative='Paiement',
-            )
-        elif f == models.AccountFlags.EQUITY:
-            models.AccountKinds.objects.create(
-                name="Equity",
-                flag=f,
-                name_when_positive='Increase',
-                name_when_negative='Decrease',
-            )
-        elif f == models.AccountFlags.INVESTMENT:
-            models.AccountKinds.objects.create(
-                name="Investment",
-                flag=f,
-                name_when_positive='Deposit',
-                name_when_negative='Paiement',
-            )
-        elif f == models.AccountFlags.NON_LIQUID_INVESTMENT:
-            models.AccountKinds.objects.create(
-                name="Non-liquid investment",
-                flag=f,
-                name_when_positive='Deposit',
-                name_when_negative='Paiement',
-            )
-        else:
-            print('\n\nNo AccountKind for flag %s\n\n' % f)
-            sys.exit(1)
+    PASSIVE_INCOME = models.AccountKinds.objects.create(
+        name="Passive income",
+        name_when_positive='Expense',
+        name_when_negative='Income',
+        is_income=True,
+        is_passive_income=True,
+    )
 
+    WORK_INCOME = models.AccountKinds.objects.create(
+        name="Work income",
+        name_when_positive='Expense',
+        name_when_negative='Income',
+        is_income=True,
+        is_work_income=True,
+    )
+
+    MISC_INCOME = models.AccountKinds.objects.create(
+        name="Misc income",
+        name_when_positive='Expense',
+        name_when_negative='Income',
+        is_income=True,
+        is_work_income=False,
+    )
+
+    UNREALIZED_GAINS = models.AccountKinds.objects.create(
+        name="Unrealized gain",
+        name_when_positive='Decrease',
+        name_when_negative='Increase',
+        is_income=True,
+        is_unrealized=True,
+    )
+
+    EXPENSE = models.AccountKinds.objects.create(
+        name="Expense",
+        name_when_positive='Expense',
+        name_when_negative='Income',
+        is_expense=True,
+    )
+
+    INCOME_TAX = models.AccountKinds.objects.create(
+        name="Income tax",
+        name_when_positive='Increase',
+        name_when_negative='Decrease',
+        is_expense=True,
+        is_income_tax=True,
+    )
+
+    MISC_TAX = models.AccountKinds.objects.create(
+        name="Other tax",
+        name_when_positive='Increase',
+        name_when_negative='Decrease',
+        is_expense=True,
+        is_misc_tax=True,
+    )
+
+    LIABILITY = models.AccountKinds.objects.create(
+        name="Liability",
+        name_when_positive='Deposit',
+        name_when_negative='Paiement',
+        is_equity=True,
+        is_invested=True,
+        is_networth=True,
+        is_liability=True,
+    )
+
+    STOCK = models.AccountKinds.objects.create(
+        name="Stock",
+        name_when_positive='Add',
+        name_when_negative='Remove',
+        is_equity=True,
+        is_invested=True,
+        is_trading=True,
+        is_stock=True,
+        is_networth=True,
+        is_liquid=True,
+    )
+
+    ASSET = models.AccountKinds.objects.create(
+        name="Asset",
+        name_when_positive='Increase',
+        name_when_negative='Decrease',
+        is_equity=True,
+        is_networth=True,
+        is_invested=True,
+        is_liquid=False,
+    )
+
+    BANK = models.AccountKinds.objects.create(
+        name="Bank account",
+        name_when_positive='Deposit',
+        name_when_negative='Paiement',
+        is_equity=True,
+        is_networth=True,
+        is_invested=True,
+        is_liquid=True,
+    )
+
+    EQUITY = models.AccountKinds.objects.create(
+        name="Equity",
+        name_when_positive='Increase',
+        name_when_negative='Decrease',
+        is_equity=True,
+        is_invested=True,
+    )
+
+    INVESTMENT = models.AccountKinds.objects.create(
+        name="Investment",
+        name_when_positive='Deposit',
+        name_when_negative='Paiement',
+        is_equity=True,
+        is_networth=True,
+        is_invested=True,
+        is_trading=True,
+        is_liquid=True,
+    )
+
+    NON_LIQUID_INVESTMENT = models.AccountKinds.objects.create(
+        name="Non-liquid Investment",
+        name_when_positive='Deposit',
+        name_when_negative='Paiement',
+        is_equity=True,
+        is_networth=True,
+        is_invested=True,
+        is_trading=True,
+        is_liquid=False,
+    )
 
 
 class Migration(migrations.Migration):
@@ -410,9 +432,9 @@ class Migration(migrations.Migration):
 
                  --  All the splits that transfer money between two accounts
                  --  (they do not modify overall networth).
-                 JOIN alr_accounts s2a
-                    ON (s2.account_id=s2a.id
-                        AND s2a.kind_id IN ({invested_flags}))
+                 JOIN alr_accounts s2a ON (s2.account_id=s2a.id)
+                 JOIN alr_account_kinds s2ak
+                     ON (s2a.kind_id=s2ak.id AND s2ak.is_invested)
                  JOIN alr_commodities c2 ON (s2.value_commodity_id = c2.id)
 
                  --  To handle multi-currencies, we convert the prices to a

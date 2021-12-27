@@ -5,6 +5,7 @@ import sys
 from alere import models
 from decimal import Decimal, ROUND_DOWN, ROUND_UP
 from django.db import connection, transaction
+from typing import Tuple
 
 
 def print_to_stderr(msg):
@@ -230,23 +231,78 @@ def __import_securities(
 
 
 def __import_account_types(cur):
-    flag = {}
-    for f in models.AccountFlags:
-        try:
-            flag[f] = models.AccountKinds.objects.get(flag=f)
-        except models.AccountKinds.DoesNotExist:
-            flag[f] = None
+    def get_or_create(
+            name: str,
+            is_income=False,
+            is_expense=False,
+            is_equity=False,
+            is_liability=False,
+            is_liquid=False,
+            is_networth=False,
+            is_invested=False,
+            is_trading=False,
+            is_income_tax=False,
+            is_work_income=False,
+            is_passive_income=False,
+            is_misc_tax=False,
+            is_unrealized=False,
+            is_stock=False,
+            ) -> models.AccountKinds:
+        kinds = list(models.AccountKinds.objects.filter(
+            is_income=is_income, is_expense=is_expense, is_equity=is_equity,
+            is_liability=is_liability, is_liquid=is_liquid,
+            is_networth=is_networth, is_invested=is_invested,
+            is_trading=is_trading, is_income_tax=is_income_tax,
+            is_misc_tax=is_misc_tax, is_passive_income=is_passive_income,
+            is_work_income=is_work_income, is_unrealized=is_unrealized,
+            is_stock=is_stock,
+        ))
+        if len(kinds) > 1:
+            raise Exception(
+                f'MANU Error too many matches for {name}:'
+                + ", ".join(k.name for k in kinds)
+            )
+        elif len(kinds) == 1:
+            return kinds[0]
+        else:
+            print(f'Create new account kind: {name}')
+            k = models.AccountKinds.objects.create(
+                name=name, is_income=is_income, is_expense=is_expense,
+                is_equity=is_equity, is_liability=is_liability,
+                is_liquid=is_liquid, is_networth=is_networth,
+                is_invested=is_invested,
+                is_trading=is_trading, is_income_tax=is_income_tax,
+                is_misc_tax=is_misc_tax, is_passive_income=is_passive_income,
+                is_work_income=is_work_income, is_unrealized=is_unrealized,
+                is_stock=is_stock,
+            )
+            k.save()
+            return k
 
     mapped = {
-        "Asset": flag[models.AccountFlags.ASSET],
-        "Liability": flag[models.AccountFlags.LIABILITY],
-        "Expense": flag[models.AccountFlags.EXPENSE],
-        "Income": flag[models.AccountFlags.MISC_INCOME],
-        "Equity": flag[models.AccountFlags.EQUITY],
-        "Investment": flag[models.AccountFlags.BANK],
-        "Stock": flag[models.AccountFlags.STOCK],
-        "Checking": flag[models.AccountFlags.BANK],
-        "Savings": flag[models.AccountFlags.BANK],
+        'Asset': get_or_create(
+            'Asset', is_liquid=False, is_equity=True, is_trading=False,
+            is_networth=True, is_invested=True, is_liability=False),
+        'Liability': get_or_create(
+            'Liability', is_liquid=False, is_equity=True, is_trading=False,
+            is_networth=True, is_invested=True, is_liability=True),
+        'Expense': get_or_create(
+            'Expense', is_expense=True, is_income_tax=False),
+        'Income': get_or_create('Income', is_income=True, is_unrealized=False),
+        'Equity': get_or_create(
+            'Equity', is_equity=True, is_networth=False, is_invested=True),
+        'Investment': get_or_create(
+            'Investment', is_equity=True, is_networth=True,
+            is_invested=True, is_trading=True, is_liquid=True),
+        'Stock': get_or_create(
+            'Stock', is_equity=True, is_networth=True,
+            is_invested=True, is_trading=True, is_liquid=True, is_stock=True),
+        'Checking': get_or_create(
+            'Bank', is_equity=True, is_networth=True,
+            is_invested=True, is_liquid=True),
+        'Savings': get_or_create(   # same as Checking
+            'Bank', is_equity=True, is_networth=True,
+            is_invested=True, is_liquid=True),
     }
 
     cur.execute(
@@ -511,7 +567,8 @@ def __import_transactions(cur, accounts, commodities, payees):
         s = models.Splits.objects.create(
             transaction=trans,
             payee=(
-               None if acc.kind.flag in models.AccountFlags.networth()
+               None
+               if acc.kind.is_networth
                else payees[row['payeeId']] if row['payeeId']
                else None
             ),

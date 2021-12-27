@@ -15,17 +15,16 @@ class CategoryPlotView(JSONView):
         mindate = self.as_time(params, 'mindate')
 
         if is_expenses:
-            flags = alere.models.AccountFlags.expenses()
             order_by = '-value__sum'
         else:
-            flags = alere.models.AccountFlags.realized_income()
             order_by = 'value__sum'
 
         query = alere.models.Splits_With_Value.objects \
             .filter(post_date__gte=mindate,
                     post_date__lte=maxdate,
                     value_commodity_id=currency,
-                    account__kind__in=flags) \
+                    account__kind__is_expense=is_expenses,
+                    account__kind__is_income=not is_expenses) \
             .values('account_id') \
             .annotate(Sum('value')) \
             .order_by(order_by)

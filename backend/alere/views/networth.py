@@ -15,8 +15,7 @@ def networth(
                    .filter(currency_id=currency_id,
                            mindate__lte=dt,
                            maxdate__gt=dt,
-                           account__kind__in=
-                               alere.models.AccountFlags.networth()):
+                           account__kind__is_networth=True):
 
                 s = shares.setdefault(acc.account_id, [0] * len(dates))
                 s[d_idx] = acc.shares

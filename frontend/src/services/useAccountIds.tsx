@@ -50,7 +50,7 @@ const useAccountIds = (ids: AccountIdSet|undefined): AccountList => {
 
          if (ids === 'assets') {
             return {
-               accounts: accounts.allAccounts().filter(a => a.kind.is_asset),
+               accounts: accounts.allAccounts().filter(a => !a.kind.is_liquid),
                title: 'all assets',
             };
          }
@@ -58,7 +58,7 @@ const useAccountIds = (ids: AccountIdSet|undefined): AccountList => {
          if (ids === 'realized_income') {
             return {
                accounts: accounts.allAccounts().filter(
-                  a => a.kind.is_realized_income),
+                  a => a.kind.is_income && !a.kind.is_unrealized),
                title: 'all realized income',
             }
          }
@@ -66,7 +66,7 @@ const useAccountIds = (ids: AccountIdSet|undefined): AccountList => {
          if (ids === 'unrealized_income') {
             return {
                accounts: accounts.allAccounts().filter(
-                  a => a.kind.is_unrealized_income),
+                  a => a.kind.is_income && a.kind.is_unrealized),
                title: 'all unrealized income',
             }
          }
@@ -74,7 +74,8 @@ const useAccountIds = (ids: AccountIdSet|undefined): AccountList => {
          if (ids === 'other_income') {
             return {
                accounts: accounts.allAccounts().filter(
-                  a => a.kind.is_realized_income
+                  a => a.kind.is_income
+                       && !a.kind.is_unrealized
                        && !a.kind.is_work_income
                        && !a.kind.is_passive_income),
                title: 'all unrealized income',
@@ -111,7 +112,8 @@ const useAccountIds = (ids: AccountIdSet|undefined): AccountList => {
 
          if (ids === 'other_taxes') {
             return {
-               accounts: accounts.allAccounts().filter(a => a.kind.is_other_tax),
+               accounts: accounts.allAccounts().filter(
+                  a => a.kind.is_misc_tax),
                title: 'all other taxes',
             }
          }
