@@ -16,15 +16,17 @@ class CategoryPlotView(JSONView):
 
         if is_expenses:
             order_by = '-value__sum'
+            category = alere.models.AccountKindCategory.EXPENSE
         else:
             order_by = 'value__sum'
+            category = alere.models.AccountKindCategory.INCOME
 
         query = alere.models.Splits_With_Value.objects \
             .filter(post_date__gte=mindate,
                     post_date__lte=maxdate,
                     value_commodity_id=currency,
-                    account__kind__is_expense=is_expenses,
-                    account__kind__is_income=not is_expenses) \
+                    account__kind__category=category,
+                    account__kind__is_unrealized=False) \
             .values('account_id') \
             .annotate(Sum('value')) \
             .order_by(order_by)

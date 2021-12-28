@@ -9,7 +9,7 @@ import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
 import Numeric from '@/Numeric';
 import ListWithColumns, {
    AlternateRows, Column, LogicalRow } from '@/List/ListWithColumns';
-import { Account, AccountId } from '@/services/useAccounts';
+import { Account, AccountId, is_liquid } from '@/services/useAccounts';
 import useAccountIds, {
    AccountIdSet, AccountList } from '@/services/useAccountIds';
 import { Preferences } from '@/services/usePrefs';
@@ -730,7 +730,7 @@ const Ledger: React.FC<BaseLedgerProps & ExtraProps> = p => {
       singleAccount,
    }
    const isStock = singleAccount?.kind.is_stock;
-   const isLiquid = singleAccount?.kind.is_liquid;
+   const isLiquid = is_liquid(singleAccount?.kind);
 
    const columns = [
       columnDate,

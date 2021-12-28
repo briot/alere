@@ -106,6 +106,25 @@ class Prices(AlereModel):
                 self.origin_id, self.target_id, self.date, self.scaled_price)
 
 
+class AccountKindCategory(models.IntegerChoices):
+    EXPENSE = 0, "expense"
+    INCOME = 1, "income"
+    # Used for categories
+    # It is possible for the amount of a transaction to be either positive or
+    # negative. For instance, buying food is an expense, but if you get
+    # reimbursed for one of your purchases, you would still store that
+    # reimbursement as an EXPENSE, although with a positive value.
+
+    EQUITY = 2, "equity (liquid)"
+    LIABILITY = 4, "liability"
+    # Used for user account. Indicates money owned or money due.
+
+    ASSET = 3, "equity (illiquid)"
+    # For accounts that are blocked until a certain date, or for real-estate
+    # and other goods that take a long time to sell like a car, that you want
+    # to track.
+
+
 class AccountKinds(AlereModel):
     """
     The high-level types of accounts.
@@ -128,21 +147,7 @@ class AccountKinds(AlereModel):
     # Expenses and income
     ##########
 
-    is_expense = models.BooleanField(default=False)
-    is_income = models.BooleanField(default=False)
-    is_equity = models.BooleanField(default=False)
-    is_liability = models.BooleanField(default=False) # ?? expense+unrealized ?
-    # Whether this category should count as expense, income, or just recording
-    # some existing equity. One, and only one of these flags is True.
-    # It is possible for the amount of a transaction to be either positive or
-    # negative. For instance, buying food is an expense, but if you get
-    # reimbursed for one of your purchases, you would still store that
-    # reimbursement as an EXPENSE, although with a positive value.
-    #
-    # is_equity indicates money used to initialize the database. This will
-    # typically contain opening balances for accounts opened before you
-    # started using this software. Should also be used for reconciliation,
-    # when you do not know where the money came from.
+    category = models.IntegerField(choices=AccountKindCategory.choices)
 
     is_work_income = models.BooleanField(default=False)
     # Whether this is an income category resulting from work activities, which
@@ -169,20 +174,9 @@ class AccountKinds(AlereModel):
     # True for all accounts used to compute the networth.
     # It should be False for categories in general.
 
-    is_liquid = models.BooleanField(default=False)
-    # True for accounts that can be easily converted to hard cash.
-    # This should be false for accounts that are blocked until a certain date,
-    # or for real-estate and other goods that take a long time to sell
-    # like a car, that you want to track.
-
     ##########
     # Investments
     ##########
-
-    is_invested = models.BooleanField(default=False)
-    # True for all accounts used to compute the invested amount for stocks
-    # and investment accounts. This is money that already belongs to the user
-    # and is moved between accounts.
 
     is_trading = models.BooleanField(default=False)
     # Whether the account should be displayed in the Investment and Performance
@@ -208,36 +202,21 @@ class AccountKinds(AlereModel):
         db_table = prefix + "account_kinds"
         constraints = [
             models.CheckConstraint(
-                check=models.Q(
-                    (models.Q(is_income=True)
-                        & models.Q(is_expense=False)
-                        & models.Q(is_equity=False))
-                    |
-                    (models.Q(is_income=False)
-                        & models.Q(is_expense=True)
-                        & models.Q(is_equity=False))
-                    |
-                    (models.Q(is_income=False)
-                        & models.Q(is_expense=False)
-                        & models.Q(is_equity=True))
-                ),
-                name='either_income_expense_or_equity'
-            ),
-            models.CheckConstraint(
                 check=models.Q(is_passive_income=False)
-                | models.Q(is_income=True),
+                | models.Q(category=AccountKindCategory.INCOME),
                 name='passive_income_is_also_income',
             ),
             models.CheckConstraint(
                 check=models.Q(is_work_income=False)
-                | models.Q(is_income=True),
+                | models.Q(category=AccountKindCategory.INCOME),
                 name='work_income_is_also_income',
             ),
             models.CheckConstraint(
-                check=models.Q(is_liquid=False)
-                | models.Q(is_equity=True),
-                name='is_liquid_is_only_for_equity',
-            ),
+                check=~models.Q(category__in=(
+                    AccountKindCategory.INCOME,
+                    AccountKindCategory.EXPENSE))
+                | models.Q(is_networth=False),
+                name="income/expense is not networth"),
             models.CheckConstraint(
                 check=models.Q(
                     (models.Q(is_work_income=True)   # e.g. for salary

@@ -1,5 +1,8 @@
 import * as React from 'react';
-import useAccounts, { Account, AccountId } from '@/services/useAccounts';
+import useAccounts, {
+   Account, AccountId, AccountKindCategory,
+   is_realized_income, is_unrealized_income, is_misc_income, is_expense,
+} from '@/services/useAccounts';
 
 /**
  * A user selects accounts for a panel either from an explicit list of
@@ -50,7 +53,8 @@ const useAccountIds = (ids: AccountIdSet|undefined): AccountList => {
 
          if (ids === 'assets') {
             return {
-               accounts: accounts.allAccounts().filter(a => !a.kind.is_liquid),
+               accounts: accounts.allAccounts().filter(
+                  a => a.kind.category === AccountKindCategory.ASSET),
                title: 'all assets',
             };
          }
@@ -58,7 +62,7 @@ const useAccountIds = (ids: AccountIdSet|undefined): AccountList => {
          if (ids === 'realized_income') {
             return {
                accounts: accounts.allAccounts().filter(
-                  a => a.kind.is_income && !a.kind.is_unrealized),
+                  a => is_realized_income(a.kind)),
                title: 'all realized income',
             }
          }
@@ -66,7 +70,7 @@ const useAccountIds = (ids: AccountIdSet|undefined): AccountList => {
          if (ids === 'unrealized_income') {
             return {
                accounts: accounts.allAccounts().filter(
-                  a => a.kind.is_income && a.kind.is_unrealized),
+                  a => is_unrealized_income(a.kind)),
                title: 'all unrealized income',
             }
          }
@@ -74,38 +78,39 @@ const useAccountIds = (ids: AccountIdSet|undefined): AccountList => {
          if (ids === 'other_income') {
             return {
                accounts: accounts.allAccounts().filter(
-                  a => a.kind.is_income
-                       && !a.kind.is_unrealized
-                       && !a.kind.is_work_income
-                       && !a.kind.is_passive_income),
+                  a => is_misc_income(a.kind)),
                title: 'all unrealized income',
             }
          }
 
          if (ids === 'work_income') {
             return {
-               accounts: accounts.allAccounts().filter(a => a.kind.is_work_income),
+               accounts: accounts.allAccounts().filter(
+                  a => a.kind.is_work_income),
                title: 'all work income',
             }
          }
 
          if (ids === 'passive_income') {
             return {
-               accounts: accounts.allAccounts().filter(a => a.kind.is_passive_income),
+               accounts: accounts.allAccounts().filter(
+                  a => a.kind.is_passive_income),
                title: 'all passive income',
             }
          }
 
          if (ids === 'expenses') {
             return {
-               accounts: accounts.allAccounts().filter(a => a.kind.is_expense),
+               accounts: accounts.allAccounts().filter(
+                  a => is_expense(a.kind)),
                title: 'all expenses',
             }
          }
 
          if (ids === 'income_taxes') {
             return {
-               accounts: accounts.allAccounts().filter(a => a.kind.is_income_tax),
+               accounts: accounts.allAccounts().filter(
+                  a => a.kind.is_income_tax),
                title: 'all income taxes',
             }
          }

@@ -28,7 +28,7 @@ class MetricsView(JSONView):
         income = -(
             over_period \
             .filter(
-                account__kind__is_income=True,
+                account__kind__category=alere.models.AccountKindCategory.INCOME,
                 account__kind__is_unrealized=False,
             ).aggregate(value=Sum('value'))['value']
             or 0)
@@ -47,7 +47,9 @@ class MetricsView(JSONView):
 
         expense = (
             over_period \
-            .filter(account__kind__is_expense=True) \
+            .filter(
+                account__kind__category=alere.models.AccountKindCategory.EXPENSE
+            ) \
             .aggregate(value=Sum('value'))['value']
             or 0)
 
@@ -77,15 +79,19 @@ class MetricsView(JSONView):
 
         liquid_assets = (
             at_end \
-            .filter(account__kind__is_liquid=True,
-                    account__kind__is_networth=True) \
+            .filter(
+                account__kind__category=alere.models.AccountKindCategory.EQUITY,
+                account__kind__is_networth=True,
+            ) \
             .aggregate(value=Sum('balance'))['value']
             or 0)
 
         liquid_assets_at_start = (
             at_start \
-            .filter(account__kind__is_liquid=True,
-                    account__kind__is_networth=True) \
+            .filter(
+                account__kind__category=alere.models.AccountKindCategory.EQUITY,
+                account__kind__is_networth=True,
+            ) \
             .aggregate(value=Sum('balance'))['value']
             or 0)
 

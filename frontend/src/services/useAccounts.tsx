@@ -33,28 +33,63 @@ interface InstitutionJSON {
    icon: string;
 }
 
+export enum AccountKindCategory {
+   EXPENSE = 0,
+   INCOME = 1,
+   EQUITY = 2,
+   LIABILITY = 4,
+   ASSET = 3,
+}
+
 interface AccountKindJSON {
    id: AccountKindId;
    name: string;
    positive: string;
    negative: string;
-   is_expense?: boolean;
-   is_income?: boolean;
-   is_work_income?: boolean;
-   is_passive_income?: boolean;
-   is_liquid?: boolean;
-   is_unrealized?: boolean;
-   is_networth?: boolean;
-   is_stock?: boolean;
-   is_income_tax?: boolean;
-   is_misc_tax?: boolean;
+   category: AccountKindCategory;
+   is_work_income: boolean;
+   is_passive_income: boolean;
+   is_unrealized: boolean;
+   is_networth: boolean;
+   is_stock: boolean;
+   is_income_tax: boolean;
+   is_misc_tax: boolean;
 }
 const nullAccountKind: AccountKindJSON = {
    id: "",
    name: "",
    positive: "",
    negative: "",
+   category: AccountKindCategory.EXPENSE,
+   is_work_income: false,
+   is_passive_income: false,
+   is_unrealized: false,
+   is_networth: false,
+   is_stock: false,
+   is_income_tax: false,
+   is_misc_tax: false,
 }
+
+export const is_liquid = (k: AccountKindJSON|undefined) =>
+   k?.category !== AccountKindCategory.ASSET;
+export const is_expense_income = (k: AccountKindJSON|undefined) =>
+   k?.category === AccountKindCategory.EXPENSE
+   || k?.category === AccountKindCategory.INCOME;
+export const is_expense = (k: AccountKindJSON|undefined) =>
+   k?.category === AccountKindCategory.EXPENSE;
+export const is_income = (k: AccountKindJSON|undefined) =>
+   k?.category === AccountKindCategory.INCOME;
+export const is_realized_income = (k: AccountKindJSON|undefined) =>
+   k?.category === AccountKindCategory.INCOME
+   && !k?.is_unrealized;
+export const is_unrealized_income = (k: AccountKindJSON|undefined) =>
+   k?.category === AccountKindCategory.INCOME
+   && k?.is_unrealized;
+export const is_misc_income = (k: AccountKindJSON|undefined) =>
+   k?.category === AccountKindCategory.INCOME
+   && !k.is_unrealized
+   && !k.is_work_income
+   && !k.is_passive_income;
 
 interface AccountJSON {
    id: AccountId;

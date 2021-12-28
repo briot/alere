@@ -1,4 +1,5 @@
-import { Account, AccountId, CommodityId } from '@/services/useAccounts';
+import { Account, AccountId, CommodityId, is_expense_income
+   } from '@/services/useAccounts';
 
 export type TransactionId = string;
 type ReconcileId = string;
@@ -35,8 +36,7 @@ export const reconcileToString = (r: ReconcileId | undefined) =>
  * All splits involving an income or expense account
  */
 export const incomeExpenseSplits = (t: Transaction) =>
-   t.splits.filter(
-      s => s.account?.kind.is_income || s.account?.kind.is_expense);
+   t.splits.filter(s => is_expense_income(s.account?.kind));
 
 export const amountIncomeExpense = (t: Transaction) =>
    incomeExpenseSplits(t).reduce((a, s) => a - s.amount, 0);

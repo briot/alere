@@ -140,8 +140,12 @@ class Mean:
                   --  category
                   SELECT
                      strftime("%%Y-%%m", months.date) as month,
-                     SUM(value) FILTER (WHERE k.is_income) as inc_total,
-                     SUM(value) FILTER (WHERE k.is_expense) as exp_total
+                     SUM(value) FILTER (WHERE
+                        k.category = {alere.models.AccountKindCategory.INCOME}
+                     ) as inc_total,
+                     SUM(value) FILTER (WHERE
+                        k.category = {alere.models.AccountKindCategory.EXPENSE}
+                     ) as exp_total
                   FROM months
                      JOIN alr_splits_with_value
                         ON (strftime("%%Y-%%m", post_date) =

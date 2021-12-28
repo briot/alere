@@ -233,13 +233,7 @@ def __import_securities(
 def __import_account_types(cur):
     def get_or_create(
             name: str,
-            is_income=False,
-            is_expense=False,
-            is_equity=False,
-            is_liability=False,
-            is_liquid=False,
-            is_networth=False,
-            is_invested=False,
+            category: models.AccountKindCategory,
             is_trading=False,
             is_income_tax=False,
             is_work_income=False,
@@ -247,11 +241,12 @@ def __import_account_types(cur):
             is_misc_tax=False,
             is_unrealized=False,
             is_stock=False,
+            is_networth=False,
             ) -> models.AccountKinds:
+
         kinds = list(models.AccountKinds.objects.filter(
-            is_income=is_income, is_expense=is_expense, is_equity=is_equity,
-            is_liability=is_liability, is_liquid=is_liquid,
-            is_networth=is_networth, is_invested=is_invested,
+            category=category,
+            is_networth=is_networth,
             is_trading=is_trading, is_income_tax=is_income_tax,
             is_misc_tax=is_misc_tax, is_passive_income=is_passive_income,
             is_work_income=is_work_income, is_unrealized=is_unrealized,
@@ -259,7 +254,7 @@ def __import_account_types(cur):
         ))
         if len(kinds) > 1:
             raise Exception(
-                f'MANU Error too many matches for {name}:'
+                f'Error too many matches for {name}:'
                 + ", ".join(k.name for k in kinds)
             )
         elif len(kinds) == 1:
@@ -267,10 +262,8 @@ def __import_account_types(cur):
         else:
             print(f'Create new account kind: {name}')
             k = models.AccountKinds.objects.create(
-                name=name, is_income=is_income, is_expense=is_expense,
-                is_equity=is_equity, is_liability=is_liability,
-                is_liquid=is_liquid, is_networth=is_networth,
-                is_invested=is_invested,
+                name=name, category=category,
+                is_networth=is_networth,
                 is_trading=is_trading, is_income_tax=is_income_tax,
                 is_misc_tax=is_misc_tax, is_passive_income=is_passive_income,
                 is_work_income=is_work_income, is_unrealized=is_unrealized,
@@ -281,28 +274,32 @@ def __import_account_types(cur):
 
     mapped = {
         'Asset': get_or_create(
-            'Asset', is_liquid=False, is_equity=True, is_trading=False,
-            is_networth=True, is_invested=True, is_liability=False),
+            'Asset', models.AccountKindCategory.ASSET,
+            is_trading=False, is_networth=True),
         'Liability': get_or_create(
-            'Liability', is_liquid=False, is_equity=True, is_trading=False,
-            is_networth=True, is_invested=True, is_liability=True),
+            'Liability', models.AccountKindCategory.LIABILITY,
+            is_trading=False, is_networth=True),
         'Expense': get_or_create(
-            'Expense', is_expense=True, is_income_tax=False),
-        'Income': get_or_create('Income', is_income=True, is_unrealized=False),
+            'Expense', models.AccountKindCategory.EXPENSE,
+            is_income_tax=False, is_misc_tax=False),
+        'Income': get_or_create(
+            'Income', models.AccountKindCategory.INCOME,
+            is_unrealized=False),
         'Equity': get_or_create(
-            'Equity', is_equity=True, is_networth=False, is_invested=True),
+            'Equity', models.AccountKindCategory.EQUITY, is_networth=False),
         'Investment': get_or_create(
-            'Investment', is_equity=True, is_networth=True,
-            is_invested=True, is_trading=True, is_liquid=True),
+            'Investment', models.AccountKindCategory.EQUITY,
+            is_trading=True, is_networth=True),
         'Stock': get_or_create(
-            'Stock', is_equity=True, is_networth=True,
-            is_invested=True, is_trading=True, is_liquid=True, is_stock=True),
+            'Stock', models.AccountKindCategory.EQUITY,
+            is_trading=True, is_stock=True,
+            is_networth=True),
         'Checking': get_or_create(
-            'Bank', is_equity=True, is_networth=True,
-            is_invested=True, is_liquid=True),
+            'Bank', models.AccountKindCategory.EQUITY,
+            is_networth=True),
         'Savings': get_or_create(   # same as Checking
-            'Bank', is_equity=True, is_networth=True,
-            is_invested=True, is_liquid=True),
+            'Bank', models.AccountKindCategory.EQUITY,
+            is_networth=True),
     }
 
     cur.execute(
