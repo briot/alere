@@ -236,15 +236,17 @@ export const Select = <T extends { toString: () => string }> (p: SelectProps<T>)
       return o.value === 'divider' ? (
          <div className="option divider" style={q.style} />
       ) : (
-         <div
-            className={
-               `option${o.value === p.value ? ' selected' : ''}`
-            }
-            style={q.style}
-            onClick={() => selectItem(o.value as T)}
-         >
-            <span style={o.style}>{o.text ?? o.value.toString()}</span>
-         </div>
+         <Tooltip tooltip={p.tooltip} tooltipData={o.value} >
+            <div
+               className={
+                  `option${o.value === p.value ? ' selected' : ''}`
+               }
+               style={q.style}
+               onClick={() => selectItem(o.value as T)}
+            >
+               <span style={o.style}>{o.text ?? o.value.toString()}</span>
+            </div>
+         </Tooltip>
       );
    }
 
