@@ -2,6 +2,7 @@ import * as React from 'react';
 import useAccounts, {
    Account, AccountId, AccountKindCategory,
    is_realized_income, is_unrealized_income, is_misc_income, is_expense,
+   is_expense_income,
 } from '@/services/useAccounts';
 
 /**
@@ -96,6 +97,14 @@ const useAccountIds = (ids: AccountIdSet|undefined): AccountList => {
                accounts: accounts.allAccounts().filter(
                   a => a.kind.is_passive_income),
                title: 'all passive income',
+            }
+         }
+
+         if (ids === 'expense_income') {
+            return {
+               accounts: accounts.allAccounts().filter(
+                  a => is_expense_income(a.kind)),
+               title: 'all expenses and income',
             }
          }
 
