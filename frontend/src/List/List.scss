@@ -50,6 +50,7 @@
    }
    .thead .tr {
       border-bottom: 1px solid var(--table-border);
+      margin-right: var(--scrollbar-width);
    }
    .tfoot .tr {
       border-top: 1px solid var(--table-border);
