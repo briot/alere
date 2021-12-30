@@ -11,7 +11,7 @@ const CashflowPanel: React.FC<PanelProps<CashflowPanelProps>> = p => {
    return (
       <Panel
          {...p}
-         header={{ name: 'cashflow', range: p.props.range }}
+         header={{ name: 'cashflow' }}
          Settings={
             <Settings
                props={p.props}

@@ -1,21 +1,5 @@
 @import "../shared";
 
-.multidate {
-   margin: var(--vert-spacing) 0;
-
-   .row {
-      display: flex;
-      flex-flow: row nowrap;
-      align-items: center;
-      margin: 0 0 0 10px;
-      justify-content: flex-start;
-
-      .select {
-         flex: 1 1;
-      }
-   }
-}
-
 .datevalue {
    @include numeric-font;
 }

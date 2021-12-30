@@ -1,8 +1,8 @@
 import { DateRange, rangeToHttp } from '@/Dates';
 import { CommodityId } from '@/services/useAccounts';
-import useFetch from '@/services/useFetch';
+import useFetch, { useFetchMultiple } from '@/services/useFetch';
 
-interface Metric {
+export interface Metric {
    income: number;
    passive_income: number;
    work_income: number;
@@ -33,6 +33,18 @@ const usePL = (range: DateRange, currencyId: CommodityId) => {
       url: `/api/metrics?${rangeToHttp(range)}&currency=${currencyId}`,
    });
    return data ?? NULL_METRIC;
+}
+
+export const usePLMultiple = (
+   ranges: DateRange[],
+   currencyId: CommodityId,
+): Metric[]  => {
+   const result = useFetchMultiple<Metric, any>(
+      ranges.map(r => ({
+         url: `/api/metrics?${rangeToHttp(r)}&currency=${currencyId}`,
+      }))
+   );
+   return result.map(r => r.data ?? NULL_METRIC);
 }
 
 export default usePL;

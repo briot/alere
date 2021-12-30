@@ -6,7 +6,7 @@ import Dropdown from '@/Form/Dropdown';
 import classes from '@/services/classes';
 import "./Form.scss";
 
-interface SharedInputProps<T> {
+export interface SharedInputProps<T> {
    disabled?: boolean;
    text?: string;
    style?: React.CSSProperties;
@@ -14,7 +14,7 @@ interface SharedInputProps<T> {
    tooltip?: TooltipFunc<T>;
 }
 
-const SharedInput: React.FC<
+export const SharedInput: React.FC<
    SharedInputProps<any> & {textAfter?: boolean, className?: string}
 > = (p) => {
    const c = classes(

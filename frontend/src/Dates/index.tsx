@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { divider, Option, Select } from '@/Form';
-import RoundButton from '@/RoundButton';
+import { divider, Option, Select, SharedInputProps } from '@/Form';
 import { mod } from '@/services/utils';
+import MultipleSelect from '@/Form/MultipleSelect';
 import './Dates.scss';
 
 type Ref = Date|undefined;  //  a reference date
@@ -336,61 +336,37 @@ export const RelativeDatePicker: React.FC<RelativeDatePickerProps> = p => {
    );
 }
 
-interface MultiDatePickerProps {
-   onChange: (val: RelativeDate[]) => void;
-   text: string;
-   value: RelativeDate[];
+const editOneRange = (v: DateRange, onChange: (v: DateRange) => void) =>
+   <DateRangePicker text="" onChange={onChange} value={v} />;
+interface MultiRangePickerProps extends SharedInputProps<DateRange[]> {
+   onChange: (val: DateRange[]) => void;
 }
-export const MultiDatePicker: React.FC<MultiDatePickerProps> = p => {
-   const { onChange } = p;
-
-   const appendDate = () => {
-      onChange([...p.value, "today"]);
-   };
-
-   const EditItem = (p2: {idx: number}) => {
-      const changeDate = (d: RelativeDate) => {
-         onChange([...p.value.slice(0, p2.idx),
-                   d,
-                   ...p.value.slice(p2.idx + 1)]);
-      };
-      const removeDate = () => {
-         onChange([...p.value.slice(0, p2.idx),
-                   ...p.value.slice(p2.idx + 1)]);
-      };
-
-      return (
-         <div className="row">
-            <RelativeDatePicker
-               onChange={changeDate}
-               text=""
-               value={p.value[p2.idx]}
-            />
-            <RoundButton
-               fa="fa-remove"
-               size="tiny"
-               onClick={removeDate}
-            />
-         </div>
-      );
-   }
-
+export const MultiRangePicker: React.FC<MultiRangePickerProps> = p => {
    return (
-      <div className="field multidate">
-         <label>{p.text}: </label>
-         {
-            p.value.map((d, i) => <EditItem idx={i} key={i} />)
-         }
-         <div className="row">
-            <RoundButton
-                fa="fa-plus"
-                size="small"
-                onClick={appendDate}
-            />
-         </div>
-      </div>
+      <MultipleSelect
+         {...p}
+         newValue="1 year"
+         editOne={editOneRange}
+      />
    );
 }
+
+const editOneDate = (v: RelativeDate, onChange: (v: RelativeDate) => void) =>
+   <RelativeDatePicker text="" onChange={onChange} value={v} />;
+
+interface MultiDatePickerProps extends SharedInputProps<RelativeDate[]> {
+   onChange: (val: RelativeDate[]) => void;
+}
+export const MultiDatePicker: React.FC<MultiDatePickerProps> = p => {
+   return (
+      <MultipleSelect
+         {...p}
+         newValue="today"
+         editOne={editOneDate}
+      />
+   );
+}
+
 
 interface DateProps {
    when: Date | undefined;

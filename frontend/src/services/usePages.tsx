@@ -98,7 +98,7 @@ const defaultPages: PageDescr[] = [
          } as MetricsPanelProps,
          {
             type: 'cashflow',
-            range: "1 year",
+            ranges: ["2 years ago", "last year", "1 year"],
             roundValues: true,
             rowspan: 2,
             colspan: 2,
