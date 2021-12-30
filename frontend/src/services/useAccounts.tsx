@@ -54,6 +54,7 @@ interface AccountKindJSON {
    is_stock: boolean;
    is_income_tax: boolean;
    is_misc_tax: boolean;
+   is_trading: boolean;
 }
 const nullAccountKind: AccountKindJSON = {
    id: "",
@@ -68,6 +69,7 @@ const nullAccountKind: AccountKindJSON = {
    is_stock: false,
    is_income_tax: false,
    is_misc_tax: false,
+   is_trading: false,
 }
 
 export const is_liquid = (k: AccountKindJSON|undefined) =>

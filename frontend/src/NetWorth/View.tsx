@@ -25,6 +25,10 @@ export interface NetworthProps {
    alternateColors?: boolean;
    treeMode: TreeMode;
 
+   expandTradingAccounts?: boolean;
+   // If true, investment accounts are expanded by default to show their
+   // stocks.
+
    threshold: number;
    // Only show account if at least one of the value columns is above this
    // threshold (absolute value).
@@ -93,9 +97,10 @@ const cumulatedValue = (
 ): number => {
    const d = logic.data;
 
-   const val = d.balance === undefined ? NaN
+   const val = d.balance === undefined
+      ? NaN
       : d.balance.atDate[date_idx]?.price
-      * d.balance.atDate[date_idx]?.shares;
+         * d.balance.atDate[date_idx]?.shares;
    return logic.getChildren === undefined || isExpanded === true
       ? val
       : logic.getChildren(d, settings).reduce(
@@ -257,13 +262,18 @@ const Networth: React.FC<NetworthProps> = p => {
       [p.dates, colsForDate]
    );
 
+   const defaultExpand = React.useCallback(
+      (r: Row) => p.expandTradingAccounts || !r.data.account?.kind.is_trading,
+      [p.expandTradingAccounts]
+   );
+
    return (
       <ListWithColumns
          className="networth"
          columns={columns}
          rows={rows}
          indentNested={true}
-         defaultExpand={true}
+         defaultExpand={defaultExpand}
          borders={p.borders}
          settings={p}
          alternate={

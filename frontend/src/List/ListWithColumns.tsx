@@ -65,6 +65,19 @@ export interface LogicalRow<T, SHARED> {
 }
 
 /**
+ * Whether a row should be expanded by default
+ */
+const computeDefaultExpand = <T extends unknown, SHARED> (
+   r: LogicalRow<T, SHARED>,
+   defaultExpand: undefined|boolean|((row: LogicalRow<T, SHARED>) => boolean),
+) =>
+   defaultExpand === undefined
+      ? false
+      : typeof(defaultExpand) === "boolean"
+      ? defaultExpand
+      : defaultExpand(r);
+
+/**
  * An actual row in the table visible on the screen. Due to the way react-window
  * works we need to create different rows to avoid having to create all the DOM
  * nodes upfront
@@ -81,11 +94,12 @@ const computePhysicalRows = <T extends unknown, SHARED> (
    settings: SHARED,
    expanded: Map<number|string, boolean>,
    level: number,
-   defaultExpand: boolean,
+   defaultExpand: undefined|boolean|((row: LogicalRow<T, SHARED>) => boolean),
    topRowIndex: number,
 ): PhysicalRow<T, SHARED>[] => {
    const children = r.getChildren?.(r.data, settings);
-   const isExpanded = expanded.get(r.key) ?? defaultExpand;
+   const isExpanded =
+      expanded.get(r.key) ?? computeDefaultExpand(r, defaultExpand);
    const result = [{
       logicalRow: r,
       topRowIndex,
@@ -119,7 +133,7 @@ interface PhysicalRows<T, SHARED> {
 const usePhysicalRows = <T extends unknown, SHARED> (
    rows: LogicalRow<T, SHARED>[],
    settings: SHARED,
-   defaultExpand: boolean,
+   defaultExpand: undefined|boolean|((row: LogicalRow<T, SHARED>) => boolean),
 ) => {
    //  Compute the initial set of rows
    const [phys, setPhys] = React.useState<
@@ -150,9 +164,10 @@ const usePhysicalRows = <T extends unknown, SHARED> (
          if (!phys) {
             return undefined;
          }
-         const e = phys.expanded.get(phys.rows[index].logicalRow.key);
+         const r = phys.rows[index].logicalRow;
+         const e = phys.expanded.get(r.key);
          return phys.rows[index].expandable
-            ? (e ?? defaultExpand)
+            ? (e ?? computeDefaultExpand(r, defaultExpand))
             : undefined;
       },
       [phys, defaultExpand]
@@ -170,7 +185,8 @@ const usePhysicalRows = <T extends unknown, SHARED> (
             const expanded = new Map(old.expanded);
             expanded.set(
                r.logicalRow.key,
-               !(old.expanded.get(r.logicalRow.key) ?? defaultExpand));
+               !(old.expanded.get(r.logicalRow.key)
+                  ?? computeDefaultExpand(r.logicalRow, defaultExpand)));
 
             return {
                ...old,
@@ -204,7 +220,7 @@ interface ListWithColumnsProps<T, SHARED> {
    className?: string;
    indentNested?: boolean;
    borders?: boolean;
-   defaultExpand?: boolean;
+   defaultExpand?: boolean | ((row: LogicalRow<T, SHARED>) => boolean);
    alternate?: AlternateRows;
 
    expanderColumn?: number;
@@ -251,7 +267,7 @@ const ListWithColumns = <T extends unknown, SHARED=any> (
    );
 
    const {phys, expandableRows, isExpanded, toggleRow} =
-      usePhysicalRows(sortedRows, p.settings, p.defaultExpand ?? false);
+      usePhysicalRows(sortedRows, p.settings, p.defaultExpand);
    const getKey = (idx: number) => phys[idx]!.logicalRow.key;
 
    // Scroll to bottom initially (when we had zero rows before and now have some)

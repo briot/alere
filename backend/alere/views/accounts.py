@@ -62,6 +62,7 @@ class AccountList(JSONView):
                 "is_stock": a.is_stock,
                 "is_income_tax": a.is_income_tax,
                 "is_misc_tax": a.is_misc_tax,
+                "is_trading": a.is_trading,
             }
             for a in alere.models.AccountKinds.objects.all()
         ]

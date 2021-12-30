@@ -18,6 +18,8 @@ const Settings: React.FC<PanelProps<NetworthPanelProps>> = p => {
    const changeAlt = (alternateColors: boolean) => p.save({ alternateColors });
    const changeTreeMode = (treeMode: TreeMode) => p.save({ treeMode });
    const changeRound = (roundValues: boolean) => p.save({ roundValues });
+   const changeExpandTrading = (expandTradingAccounts: boolean) =>
+      p.save({ expandTradingAccounts });
    return (
       <fieldset>
          <legend>Networth</legend>
@@ -60,6 +62,11 @@ const Settings: React.FC<PanelProps<NetworthPanelProps>> = p => {
             value={p.props.showDeltaLast}
             onChange={changeDeltaL}
             text="Show delta with last column"
+         />
+         <Checkbox
+            value={p.props.expandTradingAccounts}
+            onChange={changeExpandTrading}
+            text="Expand Investment accounts"
          />
          <Checkbox
             value={p.props.roundValues}
