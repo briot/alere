@@ -59,7 +59,7 @@ const Assets: React.FC<AssetsProps> = p => {
       <div className='table' style={{height: 'auto'}}>
          {
             assetrow({
-               head: 'Networth',
+               head: 'Net worth',
                amount: pl.networth,
                tooltip: 'How much you own minus how much you how at the end of the period',
                bold: true

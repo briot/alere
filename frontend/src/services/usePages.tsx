@@ -58,7 +58,7 @@ const noPage: PageDescr = {
 
 const defaultPages: PageDescr[] = [
    {
-      name: 'Networth',
+      name: 'Net Worth',
       url: '/',
       fa: 'fa-diamond',
       right: [

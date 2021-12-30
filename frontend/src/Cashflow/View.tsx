@@ -190,7 +190,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                }
                {
                   flowrow({
-                     head: 'Networth change',
+                     head: 'Net worth change',
                      amount: networth_delta,
                      tooltip: "How much your total networth change during that period",
                      bold: true,
