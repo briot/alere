@@ -58,9 +58,9 @@ const noPage: PageDescr = {
 
 const defaultPages: PageDescr[] = [
    {
-      name: 'Overview',
+      name: 'Networth',
       url: '/',
-      fa: 'fa-tachometer',
+      fa: 'fa-diamond',
       right: [
          {
             type: 'recent',
@@ -78,7 +78,7 @@ const defaultPages: PageDescr[] = [
       panels: [
          {
             type: 'networth',
-            rowspan: 2,
+            rowspan: 4,
             colspan: 2,
             showValue: true,
             showShares: false,
@@ -89,6 +89,64 @@ const defaultPages: PageDescr[] = [
             dates: ["1 year ago", "1 month ago", "today"],
             treeMode: TreeMode.USER_DEFINED,
          } as NetworthPanelProps,
+         {
+            type: 'metrics',
+            range: "1 year",
+            roundValues: true,
+            rowspan: 2,
+            colspan: 2,
+         } as MetricsPanelProps,
+         {
+            type: 'cashflow',
+            range: "1 year",
+            roundValues: true,
+            rowspan: 2,
+            colspan: 2,
+         } as CashflowPanelProps,
+         {
+            type: 'ledger',
+            accountIds: 'expense_income',
+            range: 'upcoming',
+            notes_mode: NotesMode.ONE_LINE,
+            split_mode: SplitMode.COLLAPSED,
+            borders: false,
+            defaultExpand: false,
+            valueColumn: true,
+            hideBalance: true,
+            hideReconcile: true,
+            rowspan: 1,
+            colspan: 2,
+         } as LedgerPanelProps,
+         {
+            type: 'nwhist',
+            range: 'all',
+            prior: 2,
+            after: 2,
+            rowspan: 1,
+            colspan: 2,
+         } as NetworthHistoryPanelProps,
+      ]
+   },
+
+   {
+      name: 'Income & Expenses',
+      url: '/ie',
+      fa: 'fa-tachometer',
+      right: [
+         {
+            type: 'recent',
+            colspan: 1,
+            rowspan: 3,
+         } as RecentPanelProps,
+         {
+            type: 'assets',
+            range: "1 year",
+            roundValues: true,
+            rowspan: 1,
+            colspan: 1,
+         } as AssetsPanelProps,
+      ],
+      panels: [
          {
             type: 'incomeexpenses',
             rowspan: 1,
@@ -106,27 +164,6 @@ const defaultPages: PageDescr[] = [
             range: '1 year',
          } as IncomeExpensePanelProps,
          {
-            type: 'metrics',
-            range: "1 year",
-            roundValues: true,
-            rowspan: 2,
-            colspan: 2,
-         } as MetricsPanelProps,
-         {
-            type: 'ledger',
-            accountIds: 'assets',
-            range: 'upcoming',
-            notes_mode: NotesMode.ONE_LINE,
-            split_mode: SplitMode.COLLAPSED,
-            borders: false,
-            defaultExpand: false,
-            valueColumn: true,
-            hideBalance: true,
-            hideReconcile: true,
-            rowspan: 1,
-            colspan: 2,
-         } as LedgerPanelProps,
-         {
             type: 'mean',
             range: '1 year',
             prior: 2,
@@ -136,24 +173,9 @@ const defaultPages: PageDescr[] = [
             showUnrealized: true,
             negateExpenses: true,
             showMean: true,
-            rowspan: 2,
-            colspan: 2,
-         } as MeanPanelProps,
-         {
-            type: 'cashflow',
-            range: "1 year",
-            roundValues: true,
-            rowspan: 2,
-            colspan: 2,
-         } as CashflowPanelProps,
-         {
-            type: 'nwhist',
-            range: 'all',
-            prior: 2,
-            after: 2,
             rowspan: 1,
             colspan: 2,
-         } as NetworthHistoryPanelProps,
+         } as MeanPanelProps,
       ]
    },
 
@@ -214,29 +236,6 @@ const defaultPages: PageDescr[] = [
             colspan: 4,
             rowspan: 1,
          } as AccountsPanelProps,
-      ],
-   },
-
-   {
-      name: 'Networth',
-      url: '/networth',
-      fa: 'fa-diamond',
-      disabled: 'need_accounts',
-      panels: [
-         {
-            type: 'networth',
-            colspan: 4,
-            rowspan: 1,
-            hidePanelHeader: false,
-            showValue: true,
-            showShares: false,
-            showPrice: false,
-            roundValues: false,
-            showDeltaLast: true,
-            threshold: 1e-6,
-            dates: ["1 year ago", "1 month ago", "today"],
-            treeMode: TreeMode.USER_DEFINED,
-         } as NetworthPanelProps,
       ],
    },
 
