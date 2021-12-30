@@ -28,11 +28,15 @@ const Cashflow: React.FC<CashflowProps> = p => {
       bold?: boolean,
       border?: boolean,
       padding?: number,
+      marginTop?: number,
       url?: string,
    }) => (
       <Table.TR
          tooltip={r.tooltip}
-         style={{borderTop: r.border ? "1px solid var(--table-border)" : ""}}
+         style={{
+            borderTop: r.border ? "1px solid var(--table-border)" : "",
+            marginTop: (r.marginTop ?? 0) + 'px',
+         }}
       >
         {r.bold ? (
            <>
@@ -186,6 +190,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                      tooltip: "Variation in the price of your investments",
                      bold: true,
                      padding: 1,
+                     marginTop: 10,
                   })
                }
                {
