@@ -25,4 +25,5 @@ const CashflowPanel: React.FC<PanelProps<CashflowPanelProps>> = p => {
    );
 }
 
-export const registerCashflow = {'cashflow': CashflowPanel};
+const registerCashflow = {'cashflow': CashflowPanel};
+export default registerCashflow;

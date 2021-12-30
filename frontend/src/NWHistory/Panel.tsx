@@ -32,4 +32,5 @@ const NetworthHistoryPanel: React.FC<PanelProps<NetworthHistoryPanelProps>> = p 
    );
 }
 
-export const registerNetworthHistory = {'nwhist': NetworthHistoryPanel};
+const registerNetworthHistory = {'nwhist': NetworthHistoryPanel};
+export default registerNetworthHistory;

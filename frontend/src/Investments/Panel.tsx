@@ -26,4 +26,5 @@ const InvestmentsPanel: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
    );
 }
 
-export const registerInvestments = {'investments': InvestmentsPanel};
+const registerInvestments = {'investments': InvestmentsPanel};
+export default registerInvestments;

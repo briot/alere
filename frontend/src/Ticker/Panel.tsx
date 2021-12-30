@@ -81,4 +81,5 @@ const TickerPanel: React.FC<PanelProps<TickerPanelProps>> = p => {
       </Panel>
    );
 }
-export const registerTicker = {'ticker': TickerPanel}
+const registerTicker = {'ticker': TickerPanel}
+export default registerTicker;

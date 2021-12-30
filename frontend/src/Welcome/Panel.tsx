@@ -17,4 +17,5 @@ const WelcomePanel: React.FC<PanelProps<WelcomePanelProps>> = p => {
    );
 }
 
-export const registerWelcome = {'welcome': WelcomePanel};
+const registerWelcome = {'welcome': WelcomePanel};
+export default registerWelcome;

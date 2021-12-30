@@ -31,4 +31,5 @@ const NetworthPanel: React.FC<PanelProps<NetworthPanelProps>> = p => {
    );
 }
 
-export const registerNetworth = {'networth': NetworthPanel};
+const registerNetworth = {'networth': NetworthPanel};
+export default registerNetworth;

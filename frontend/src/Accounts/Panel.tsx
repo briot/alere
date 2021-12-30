@@ -26,4 +26,5 @@ const AccountsPanel: React.FC<PanelProps<AccountsPanelProps>> = p => {
       </Panel>
    );
 }
-export const registerAccounts = {'accounts': AccountsPanel};
+const registerAccounts = {'accounts': AccountsPanel};
+export default registerAccounts;

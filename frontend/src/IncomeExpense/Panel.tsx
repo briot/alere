@@ -33,5 +33,5 @@ const IEPanel: React.FC<PanelProps<IncomeExpensePanelProps>> = p => {
    );
 }
 
-export const registerIE = {'incomeexpenses': IEPanel};
-
+const registerIE = {'incomeexpenses': IEPanel};
+export default registerIE;

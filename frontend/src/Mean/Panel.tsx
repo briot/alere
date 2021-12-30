@@ -37,4 +37,5 @@ const MeanPanel: React.FC<PanelProps<MeanPanelProps>> = p => {
    );
 }
 
-export const registerMean = {'mean': MeanPanel};
+const registerMean = {'mean': MeanPanel};
+export default registerMean;

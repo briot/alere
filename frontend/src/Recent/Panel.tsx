@@ -15,4 +15,5 @@ const RecentPanel: React.FC<PanelProps<RecentPanelProps>> = p => {
       </Panel>
    );
 }
-export const registerRecent = {'recent': RecentPanel};
+const registerRecent = {'recent': RecentPanel};
+export default registerRecent;

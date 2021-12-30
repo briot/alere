@@ -25,4 +25,5 @@ const MetricsPanel: React.FC<PanelProps<MetricsPanelProps>> = p => {
    );
 }
 
-export const registerMetrics = {'metrics': MetricsPanel};
+const registerMetrics = {'metrics': MetricsPanel};
+export default registerMetrics;

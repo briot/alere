@@ -35,5 +35,5 @@ const AccountEditPanel: React.FC<PanelProps<AccountEditPanelProps>> = p => {
       </Panel>
    );
 }
-export const registerAccountEdit = {'accountedit': AccountEditPanel};
-
+const registerAccountEdit = {'accountedit': AccountEditPanel};
+export default registerAccountEdit;

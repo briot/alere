@@ -26,4 +26,5 @@ const PerformancePanel: React.FC<PanelProps<PerformancePanelProps>> = p => {
    );
 }
 
-export const registerPerformance = {'performance': PerformancePanel};
+const registerPerformance = {'performance': PerformancePanel};
+export default registerPerformance;

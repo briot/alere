@@ -65,4 +65,5 @@ const PriceHistoryPanel: React.FC<PanelProps<PriceHistoryPanelProps>> = p => {
    );
 }
 
-export const registerPriceHistory = {'pricehistory': PriceHistoryPanel};
+const registerPriceHistory = {'pricehistory': PriceHistoryPanel};
+export default registerPriceHistory;

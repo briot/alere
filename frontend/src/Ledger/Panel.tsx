@@ -45,4 +45,5 @@ const LedgerPanel: React.FC<
       </Panel>
    );
 }
-export const registerLedger = {'ledger': LedgerPanel};
+const registerLedger = {'ledger': LedgerPanel};
+export default registerLedger;

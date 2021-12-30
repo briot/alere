@@ -94,4 +94,5 @@ const AssetsPanel: React.FC<PanelProps<AssetsPanelProps>> = p => {
    );
 }
 
-export const registerAssets = {'assets': AssetsPanel};
+const registerAssets = {'assets': AssetsPanel};
+export default registerAssets;
