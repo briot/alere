@@ -20,8 +20,6 @@ interface MetricsLineProps extends TooltipProps<undefined> {
    name: string;
    descr: string;
    value: number | React.ReactNode;
-   ideal?: number;
-   compare?: string;
    commodity?: CommodityId|Commodity;
    suffix?: string;
 }
@@ -36,24 +34,10 @@ const MetricsLine: React.FC<MetricsLineProps> = p => {
    return (
       <div className="metrics">
          <div>
-            <h5>{p.name}</h5>
+            <p>{p.name}</p>
             <p className="descr">{p.descr}</p>
          </div>
          <div className="values" >
-            {
-               /*
-               p.ideal !== undefined && !isNaN(p.ideal)  &&
-               <span className="recommended">
-                  (recommended {p.compare}
-                     <Numeric
-                        amount={p.ideal}
-                        commodity={p.commodity}
-                        suffix={p.suffix}
-                     />
-                  )
-               </span>
-               */
-            }
             {
                <Tooltip {...p} >
                   <span className="value">
@@ -103,11 +87,11 @@ const Metrics: React.FC<MetricsProps> = p => {
                   cashflow <Numeric amount={cashflow} />
                   <br/>
                   / income <Numeric amount={pl.income} />
+                  <br/>
+                  Goal: more than 20%
                </p>
             }
-            ideal={24}
-            compare=">"
-            suffix="%"
+            suffix=" %"
          />
 
          <MetricsLine
@@ -121,11 +105,11 @@ const Metrics: React.FC<MetricsProps> = p => {
                   <br />
                   / Liquid assets at
                   start <Numeric amount={pl.liquid_assets_at_start} />
+                  <br/>
+                  Goal: more than 4%
                </p>
             }
-            ideal={4}
-            compare=">"
-            suffix="%"
+            suffix=" %"
          />
 
          {/* www.doughroller.net/personal-finance/3-step-financial-checkup/ */}
@@ -138,22 +122,22 @@ const Metrics: React.FC<MetricsProps> = p => {
                   liquid assets <Numeric amount={pl.liquid_assets} />
                   <br/>
                   / monthly expenses <Numeric amount={monthly_expenses} />
+                  <br/>
+                  Goal: more than 4 months
                </p>
             }
-            ideal={4}
-            compare=">"
             commodity={commMonths}
          />
 
-
+      {/*
          <MetricsLine
             name="Housing expenses"
             descr="How much you spend on housing, including rent, electricity, gaz, home improvements,..."
             value={NaN}
             ideal={33}
-            compare="<"
-            suffix="%"
+            suffix=" %"
          />
+         */}
 
          <MetricsLine
             name="Financial independence"
@@ -165,11 +149,11 @@ const Metrics: React.FC<MetricsProps> = p => {
                   gains <Numeric amount={non_work_income} />
                   <br />
                   / Expenses <Numeric amount={pl.expenses} />
+                  <br/>
+                  Goal: more than 100%
                </p>
             }
-            ideal={100}
-            compare=">"
-            suffix="%"
+            suffix=" %"
          />
          <MetricsLine
             name="Passive income"
@@ -181,11 +165,11 @@ const Metrics: React.FC<MetricsProps> = p => {
                   gains <Numeric amount={non_work_income} />
                   <br/>
                   / Total Income <Numeric amount={pl.income} />
+                  <br/>
+                  Goal: more than 50%
                </p>
             }
-            ideal={50}
-            compare=">"
-            suffix="%"
+            suffix=" %"
          />
 
          <MetricsLine
@@ -198,21 +182,22 @@ const Metrics: React.FC<MetricsProps> = p => {
                   gains <Numeric amount={non_work_income} />
                   <br/>
                   / Networth at start <Numeric amount={pl.networth_start} />
+                  <br/>
+                  Goal: more than 4%
                </p>
             }
-            ideal={4}
-            compare=">"
-            suffix="%"
+            suffix=" %"
          />
 
+      {/*
          <MetricsLine
             name="Metrics minus savings"
             descr="What part of the cashflow you invest (vs let it sleep in savings and checkings accounts)"
             value={NaN}
             ideal={0}
-            compare="="
             commodity={currency}
          />
+         */}
 
          <MetricsLine
             name="Wealth"
@@ -223,10 +208,10 @@ const Metrics: React.FC<MetricsProps> = p => {
                   Networth <Numeric amount={pl.networth} />
                   <br/>
                   / Monthly expenses <Numeric amount={monthly_expenses} />
+                  <br/>
+                  Goal: more than 6 months
                </p>
             }
-            ideal={6}
-            compare=">"
             commodity={commMonths}
          />
 
@@ -239,11 +224,11 @@ const Metrics: React.FC<MetricsProps> = p => {
                   Income taxes <Numeric amount={pl.income_taxes} />
                   <br/>
                   / Total income <Numeric amount={pl.income} />
+                  <br/>
+                  Goal: less than 10%
                </p>
             }
-            ideal={10}
-            compare="<"
-            suffix="%"
+            suffix=" %"
          />
       </div>
    );
