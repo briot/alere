@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { DateRange, monthCount, rangeDisplay } from '@/Dates';
 import { Link } from 'react-router-dom';
+import Tooltip from '@/Tooltip';
 import Numeric from '@/Numeric';
 import Table from '@/List';
 import usePrefs from '@/services/usePrefs';
@@ -93,7 +94,9 @@ const Cashflow: React.FC<CashflowProps> = p => {
                <Table.TR>
                  <Table.TH />
                  <Table.TH className="amount">
-                    {rangeDisplay(p.range).text}
+                    <Tooltip tooltip={rangeDisplay(p.range).as_dates} >
+                       <span>{rangeDisplay(p.range).text}</span>
+                    </Tooltip>
                  </Table.TH>
                  <Table.TH className="amount">/ month</Table.TH>
                </Table.TR>
