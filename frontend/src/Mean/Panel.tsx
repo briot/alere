@@ -9,10 +9,11 @@ export interface MeanPanelProps extends PanelBaseProps, MeanProps {
 }
 
 const MeanPanel: React.FC<PanelProps<MeanPanelProps>> = p => {
-   const title = [
-      p.props.showExpenses ? 'expenses' : undefined,
-      p.props.showIncome ? 'income' : undefined,
-   ].filter(v => v !== undefined).join(' and ');
+   const title = (
+      p.props.showExpenses
+      ? (p.props.showIncome ? 'cashflow' : 'expenses')
+      : (p.props.showIncome ? 'income' : '')
+   );
 
    const { accounts } = useAccounts();
    if (!accounts.has_accounts()) {

@@ -69,7 +69,7 @@ class JSONView(View, ParamDecoder):
     def as_commodity_id(self, params, name):
         return int(params[name])
 
-    def as_bool(self, params, name, default=False):
+    def as_bool(self, params, name, default=False) -> bool:
         """
         Return the given parameter as a boolean
         """

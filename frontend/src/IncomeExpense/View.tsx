@@ -4,33 +4,16 @@ import { Legend, PieChart, PieLabelRenderProps,
          Pie, Cell, Tooltip, TooltipProps } from 'recharts';
 import { XAxis, YAxis, BarChart, Bar, CartesianGrid,
          LabelList } from "recharts";
-import { DateRange, rangeToHttp } from '@/Dates';
+import { DateRange } from '@/Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from '@/Numeric';
 import AccountName from '@/Account';
-import useAccounts, { AccountId, Account } from '@/services/useAccounts';
 import usePrefs from '@/services/usePrefs';
-import useFetch from '@/services/useFetch';
+import useFetchIE, {
+   IncomeExpenseInPeriod, OneIE } from '@/services/useFetchIE';
 import './IncomeExpense.scss';
 
-const NAME_KEY = "nam";
 const MIN_BAR_HEIGHT = 10;
-
-interface DataItemType {
-   account: Account | undefined;
-   accountId: AccountId;
-   value: number;
-   [NAME_KEY]?: string;   // computed automatically
-}
-interface DataType {
-   items:   DataItemType[];
-   mindate: string;
-   maxdate: string;
-   total: number;
-}
-const noData: DataType = {
-   items: [], mindate: 'today', maxdate: 'today', total: 0};
-
 const RADIAN = Math.PI / 180;
 
 const renderCustomizedLabel = (p: PieLabelRenderProps) => {
@@ -57,14 +40,15 @@ const renderCustomizedLabel = (p: PieLabelRenderProps) => {
 };
 
 const CustomTooltip = (
-   p: TooltipProps<number, string> & {data: DataType, range: DateRange}
+   p: TooltipProps<number, string>
+      & {data: IncomeExpenseInPeriod, range: DateRange}
 ) => {
    const pay = p.payload?.[0];
    if (!pay) {
       return null;
    }
    const value = pay.value as number;
-   const total = p.data.items.reduce((t: number, d: DataItemType) => t + d.value, 0);
+   const total = p.data.items.reduce((t: number, d: OneIE) => t + d.value, 0);
    return p.active
      ? (
        <div className="tooltip-base" >
@@ -95,49 +79,56 @@ export interface IncomeExpenseProps {
 }
 
 const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
-   const { accounts } = useAccounts();
    const { prefs } = usePrefs();
-   const { data }  = useFetch({
-      url: `/api/plots/category/${p.expenses ? 'expenses' : 'income'}`
-        + `?${rangeToHttp(p.range)}&currency=${prefs.currencyId}`,
-      parse: (json: DataType) => {
-         const d = {
-            items: json.items,
-            mindate: json.mindate,
-            maxdate: json.maxdate,
-            total: json.items.reduce((tot, v) => tot + v.value, 0),
-         };
-         d.items.forEach(a => {
-            a.account = accounts.getAccount(a.accountId);
-            a[NAME_KEY] = a.account?.name;
-         });
-         return d;
-      },
-      placeholder: noData,
+   const data = useFetchIE({
+      ...p,
+      include_expenses: p.expenses,
+      include_income: !p.expenses,
    });
 
-   if (!data) {
+   const normalized = React.useMemo(
+      () => {
+         if (!data) {
+            return null;
+         }
+         const items = data.items.map(it => ({
+            ...it,
+            value: p.expenses ? -it.value : it.value,
+         }));
+         items.sort((a, b) => b.value - a.value);
+         return {...data,
+                 total: p.expenses ? -data.total : data.total,
+                 items};
+      },
+      [data, p.expenses]
+   );
+
+   if (!normalized) {
       return null; // only when fetch was disabled
    }
 
-   const legendItem = (value: React.ReactNode, entry: unknown, index?: number) =>
+   const legendItem = (
+      value: React.ReactNode,
+      entry: unknown,
+      index?: number
+   ) =>
       index === undefined
          ? <span>{value}</span>
          : (
            <span>
               <AccountName
-                  id={data.items[index].accountId}
-                  account={data.items[index].account}
+                  id={normalized.items[index].accountId}
+                  account={normalized.items[index].account}
                   range={p.range}
               />
 
               <Numeric
-                 amount={data.items[index].value}
+                 amount={normalized.items[index].value}
                  commodity={prefs.currencyId}
                  scale={p.roundValues ? 0 : undefined}
               />
               <Numeric
-                 amount={data.items[index].value / data.total * 100}
+                 amount={normalized.items[index].value / normalized.total * 100}
                  suffix='%'
               />
            </span>
@@ -152,7 +143,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
 
    const modulo = 10;
    const colorScale = d3Scale.scaleLinear<string>()
-      .domain([0, Math.min(modulo, data.items.length - 1)])
+      .domain([0, Math.min(modulo, normalized.items.length - 1)])
       .range([color1, color2]);
    const color = (index: number) => colorScale(index % modulo);
 
@@ -161,7 +152,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
          <div className="total">
             <h5>Total</h5>
             <Numeric
-               amount={data.total}
+               amount={normalized.total}
                commodity={prefs.currencyId}
                scale={p.roundValues ? 0 : undefined}
             />
@@ -171,27 +162,38 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
             {
                p.showBars ?
                   ({width, height}) => (
-                  <div style={{width: width, height: height, overflow:'scroll'}} >
+                  <div
+                     style={{width: width,
+                             height: height,
+                             overflow:'scroll'}}
+                  >
                      <BarChart
                         width={width}
                         height={
                            /* lines should have minimal height to keep label
                             * readable */
-                           Math.max(data.items.length * MIN_BAR_HEIGHT, height)
+                           Math.max(
+                              normalized.items.length * MIN_BAR_HEIGHT,
+                              height
+                           )
                         }
                         className="incomeexpense"
                         layout="vertical"
-                        data={data.items}
+                        data={normalized.items}
                      >
                         <XAxis
                            dataKey="value"
                            domain={['auto', 'auto']}
                            type="number"
                         />
-                        <YAxis dataKey={NAME_KEY} type="category" hide={true} />
+                        <YAxis dataKey="name" type="category" hide={true} />
                         <CartesianGrid strokeDasharray="5 5" />
                         <Tooltip
-                           content={<CustomTooltip data={data} range={p.range} />}
+                           content={
+                              <CustomTooltip
+                                 data={normalized}
+                                 range={p.range}
+                              />}
                         />
                         <Bar
                             dataKey="value"
@@ -199,7 +201,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
                             isAnimationActive={false}
                         >
                            <LabelList
-                              dataKey={NAME_KEY}
+                              dataKey="name"
                               position="left"
                               width={undefined /* do not break lines */}
                            />
@@ -224,10 +226,12 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
                      />
                   }
                   <Tooltip
-                     content={<CustomTooltip data={data} range={p.range} />}
+                     content={
+                        <CustomTooltip data={normalized} range={p.range} />
+                     }
                   />
                   <Pie
-                     data={data.items}
+                     data={normalized.items}
                      cx="50%"
                      cy="50%"
                      isAnimationActive={false}
@@ -237,10 +241,10 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
                      innerRadius="60%"
                      fill="#8884d8"
                      dataKey="value"
-                     nameKey={NAME_KEY}
+                     nameKey="name"
                   >
                      {
-                        data.items.map((entry, index) =>
+                        normalized.items.map((entry, index) =>
                            <Cell
                               key={`cell-${index}`}
                               fill={color(index)}

@@ -7,6 +7,7 @@ import type { AccountsPanelProps } from '@/Accounts/Panel';
 import { AccountEditPanelProps } from '@/AccountEdit/Panel';
 import { CashflowPanelProps } from '@/Cashflow/Panel';
 import { IncomeExpensePanelProps } from '@/IncomeExpense/Panel';
+import { IEHistoryPanelProps } from '@/IEHistory/Panel';
 import { InvestmentsPanelProps } from '@/Investments/Panel';
 import { LedgerPanelProps } from '@/Ledger/Panel';
 import { LedgerPageTitle } from '@/LedgerPage';
@@ -176,6 +177,14 @@ const defaultPages: PageDescr[] = [
             rowspan: 1,
             colspan: 2,
          } as MeanPanelProps,
+         {
+            type: 'iehistory',
+            ranges: ["2 years ago", "last year", "1 year"],
+            expenses: true,
+            roundValues: true,
+            rowspan: 1,
+            colspan: 2,
+         } as IEHistoryPanelProps,
       ]
    },
 

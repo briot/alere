@@ -244,7 +244,6 @@ const ListWithColumns = <T extends unknown, SHARED=any> (
    const list = React.createRef<FixedSizeList>();
    const oldRowCount = React.useRef(p.rows.length);
    const expandColumn: number = p.expanderColumn ?? 0;
-
    const cols = React.useMemo(
       () => p.columns.filter(
          c => c !== undefined) as Column<T, SHARED> [],

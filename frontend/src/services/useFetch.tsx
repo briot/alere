@@ -1,7 +1,7 @@
 import { useQuery, QueryKey, UseQueryOptions, useQueries,
    UseQueryResult } from 'react-query';
 
-interface FetchProps<T, RAW_T> {
+export interface FetchProps<T, RAW_T> {
    url: string;
    init?: RequestInit;  // To override the method, for instance
    parse?: (json: RAW_T) => T;  // parse the server's response

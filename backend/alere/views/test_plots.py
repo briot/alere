@@ -22,11 +22,13 @@ class PlotTestCase(BaseTest):
 
     def test_income(self):
         req = RequestFactory().get(
-            '/api/plots/category/income',
+            '/api/incomeexpense',
             {
                 "mindate": '2020-01-01',
                 "maxdate": '2020-12-01',
                 "currency": self.eur.id,
+                "expense": False,
+                "income": True,
             })
         view = CategoryPlotView()
         self.assertDictEqual(
@@ -41,23 +43,26 @@ class PlotTestCase(BaseTest):
                 'mindate': datetime.datetime(
                     2020, 1, 1, 0, 0, tzinfo=datetime.timezone.utc),
             },
-            view.get_json(req.GET, 'income'),
+            view.get_json(req.GET),
         )
 
     def test_expenses(self):
         req = RequestFactory().get(
-            '/api/plots/category/expenses',
+            '/api/incomeexpense',
             {
                 "mindate": '2020-01-01',
                 "maxdate": '2020-12-01',
                 "currency": self.eur.id,
+                "expense": True,
+                "income": False,
             })
         view = CategoryPlotView()
         self.assertDictEqual(
             {
                 'items': [
-                    {'accountId': self.groceries.id,
-                     'value': 10.0,   # groceries
+                    {
+                        'accountId': self.groceries.id,
+                        'value': -10.0,   # groceries
                     }
                 ],
                 'maxdate': datetime.datetime(
@@ -65,6 +70,6 @@ class PlotTestCase(BaseTest):
                 'mindate': datetime.datetime(
                     2020, 1, 1, 0, 0, tzinfo=datetime.timezone.utc),
             },
-            view.get_json(req.GET, 'expenses'),
+            view.get_json(req.GET),
         )
 

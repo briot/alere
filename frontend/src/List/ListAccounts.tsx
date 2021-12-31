@@ -1,39 +1,44 @@
-import { LogicalRow } from './ListWithColumns';
-import { computeTree, DataWithAccount,
-   TreeNode, TreeMode } from '@/services/useAccountTree';
-import { Account, AccountList } from '@/services/useAccounts';
-
-
 /**
  * Create rows for a ListWithColumns, when those rows represent accounts.
  * Typical use is:
- *    const rows = accountsToRows(useAccountTree(
- *       accounts.allAccounts(),
- *       createNode,
- *       TreeMode.USER_DEFINED));
+ *    const rows = accountsToRows(createNode);
  */
 
-const accounts_to_rows = <T extends DataWithAccount, SETTINGS> (
-   accounts: AccountList,
-   accountlist: Account[],
+import * as React from 'react';
+import { LogicalRow } from './ListWithColumns';
+import { computeTree, DataWithAccount,
+   TreeNode, TreeMode } from '@/services/useAccountTree';
+import useAccounts, { Account } from '@/services/useAccounts';
+
+const toLogicalRows = <T extends DataWithAccount> (list: TreeNode<T>[]) =>
+   list
+   .map((n, idx) => ({
+      key: n.data.account?.id || -idx,
+      data: n.data,
+      getChildren: () => toLogicalRows(n.children),
+   }));
+
+const useBuildRowsFromAccounts = <T extends DataWithAccount, SETTINGS> (
    createNode: (a: Account|undefined, fallbackName: string) => T,
-   mode: TreeMode,
+   filterAccount?: (a: Account) => boolean,  // whether to include the account
+   mode?: TreeMode,
 ): LogicalRow<T, SETTINGS>[] => {
-
-   const tree = computeTree(
-      accounts,
-      accountlist.map(a => createNode(a, '')),
-      createNode,
-      mode);
-
-   const toLogicalRows = (list: TreeNode<T>[]) =>
-      list
-      .map((n, idx) => ({
-         key: n.data.account?.id || -idx,
-         data: n.data,
-         getChildren: () => toLogicalRows(n.children),
-      }));
-   return toLogicalRows(tree);
+   const { accounts } = useAccounts();
+   const tree = React.useMemo(
+      () => computeTree(
+         accounts,
+         accounts.allAccounts()
+            .filter(a => !filterAccount || filterAccount(a))
+            .map(a => createNode(a, '')),
+         createNode,
+         mode ?? TreeMode.USER_DEFINED),
+      [accounts, filterAccount, createNode, mode]
+   );
+   const rows = React.useMemo(
+      () => toLogicalRows(tree),
+      [tree]
+   );
+   return rows;
 }
 
-export default accounts_to_rows;
+export default useBuildRowsFromAccounts;

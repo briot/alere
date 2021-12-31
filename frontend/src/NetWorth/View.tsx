@@ -4,9 +4,9 @@ import Numeric from '@/Numeric';
 import AccountName from '@/Account';
 import { BalanceList } from '@/services/useBalance';
 import usePrefs from '@/services/usePrefs';
-import useAccounts, { Account, AccountId } from '@/services/useAccounts';
+import { Account, AccountId } from '@/services/useAccounts';
 import { TreeMode } from '@/services/useAccountTree';
-import accountsToRows from '@/List/ListAccounts';
+import useBuildRowsFromAccounts from '@/List/ListAccounts';
 import useBalance, { Balance } from '@/services/useBalance';
 import ListWithColumns, {
    AlternateRows, Column, LogicalRow, RowDetails } from '@/List/ListWithColumns';
@@ -187,7 +187,6 @@ const columnDelta = (
 
 const Networth: React.FC<NetworthProps> = p => {
    const { prefs } = usePrefs();
-   const { accounts } = useAccounts();
    const balances = useBalance({...p, currencyId: prefs.currencyId});
 
    const thresh = p.threshold ?? 1e-10;
@@ -215,14 +214,10 @@ const Networth: React.FC<NetworthProps> = p => {
       [accountToBalance]
    );
 
-   const rows: Row[] = React.useMemo(
-      () => accountsToRows(
-         accounts,
-         Array.from(accountToBalance.keys()).map(a => accounts.getAccount(a)),
-         createRow,
-         p.treeMode),
-      [accounts, accountToBalance, p.treeMode, createRow]
-   );
+   const rows = useBuildRowsFromAccounts(
+      createRow,
+      a => accountToBalance.has(a.id),  // filter
+      p.treeMode);
 
    const colsForDate = React.useCallback(
       (date_idx: number) => {

@@ -8,6 +8,7 @@ import registerAccounts from '@/Accounts/Panel';
 import registerAssets from '@/Assets/Panel';
 import registerCashflow from '@/Cashflow/Panel';
 import registerIE from '@/IncomeExpense/Panel';
+import registerIEHistory from '@/IEHistory/Panel';
 import registerInvestments from '@/Investments/Panel';
 import registerLedger from '@/Ledger/Panel';
 import registerMean from '@/Mean/Panel';
@@ -30,6 +31,7 @@ const PANELS: {[name: string]: React.FC<PanelProps<any>>} = {
    ...registerAssets,
    ...registerCashflow,
    ...registerIE,
+   ...registerIEHistory,
    ...registerInvestments,
    ...registerLedger,
    ...registerMean,

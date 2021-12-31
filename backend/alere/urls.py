@@ -58,7 +58,7 @@ urlpatterns = [
     path('api/metrics', MetricsView.as_view()),
     path('api/networth_history', NetworthHistoryView.as_view()),
     path('api/online', OnlineView.as_view()),
-    path('api/plots/category/<str:expenses>', CategoryPlotView.as_view()),
+    path('api/incomeexpense', CategoryPlotView.as_view()),
     path('api/plots/networth', NetworthView.as_view()),
     path('api/price_source/list', PriceSourceList.as_view()),
     path('api/prices/<str:accountId>', PriceHistory.as_view()),

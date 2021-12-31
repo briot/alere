@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { RowData } from '@/Ticker/types';
 import { pastValue } from '@/Ticker/Past';
-import { dateForm } from '@/services/utils';
+import { dateForm, numComp } from '@/services/utils';
 import { DateDisplay } from '@/Dates';
 import { Column, LogicalRow } from '@/List/ListWithColumns';
 import { CommodityId, nullCommodity } from '@/services/useAccounts';
@@ -62,11 +62,6 @@ export interface ColumnType extends Column<RowData, Aggregated> {
    compare?: (left: RowData, right: RowData) => number;
    foot?: (aggregated: Aggregated) => React.ReactNode;
 }
-
-const numComp = (n1: number, n2: number) =>
-   isNaN(n1) ? -1
-   : isNaN(n2) ? 1
-   : n1 - n2;
 
 export const columnShares: ColumnType = {
    id: 'Shares',

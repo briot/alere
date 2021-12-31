@@ -93,3 +93,12 @@ export const groupBy = <
    },
    {} as Record<T[K], T[]>
 )
+
+/**
+ * Compare two numbers, including NaN, for use when sorting tables
+ */
+export const numComp = (n1: number, n2: number) =>
+   isNaN(n1) ? -1
+   : isNaN(n2) ? 1
+   : n1 - n2;
+

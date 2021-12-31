@@ -1,9 +1,8 @@
 import * as React from 'react';
 import AccountName from '@/Account';
-import useAccounts, { Account, AccountId } from '@/services/useAccounts';
-import accounts_to_rows from '@/List/ListAccounts';
-import { TreeMode } from '@/services/useAccountTree';
-import ListWithColumns, { Column, LogicalRow } from '@/List/ListWithColumns';
+import { Account, AccountId } from '@/services/useAccounts';
+import useBuildRowsFromAccounts from '@/List/ListAccounts';
+import ListWithColumns, { Column } from '@/List/ListWithColumns';
 import RoundButton from '@/RoundButton';
 
 
@@ -102,7 +101,7 @@ const columnInstitution: Column<RowData, AccountsProps> = {
 const createRow = (a: Account|undefined, fallbackName: string): RowData => ({
    accountId: a?.id || -1,
    account: a,
-   fallback: fallbackName,
+   fallback: a?.name ?? fallbackName,
 });
 
 const columns: Column<RowData, AccountsProps>[] = [
@@ -118,20 +117,9 @@ const columns: Column<RowData, AccountsProps>[] = [
    columnReconciled,
 ];
 
-
-
 const Accounts: React.FC<AccountsProps> = p => {
    const [sorted, setSorted] = React.useState('');
-   const { accounts } = useAccounts();
-   const rows: LogicalRow<RowData, AccountsProps>[] = React.useMemo(
-      () => accounts_to_rows(
-         accounts,
-         accounts.allAccounts(),
-         createRow,
-         TreeMode.USER_DEFINED),
-      [accounts]
-   );
-
+   const rows = useBuildRowsFromAccounts(createRow);
    return (
       <ListWithColumns
          className="accounts"

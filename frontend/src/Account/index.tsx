@@ -2,10 +2,10 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import useAccounts, { Account, AccountId } from '@/services/useAccounts';
 import { AccountIdSet } from '@/services/useAccountIds';
-import useAccountTree, { TreeMode, TreeNode } from '@/services/useAccountTree';
+import useAccountTree, { TreeNode } from '@/services/useAccountTree';
 import { Checkbox, Select, Option } from '@/Form';
 import ListWithColumns, { AlternateRows, Column } from '@/List/ListWithColumns';
-import accounts_to_rows from '@/List/ListAccounts';
+import useBuildRowsFromAccounts from '@/List/ListAccounts';
 import { DateRange } from '@/Dates';
 import List from '@/List';
 import Tooltip from '@/Tooltip';
@@ -88,15 +88,9 @@ interface MultiAccountSelectProps {
    showStock?: boolean;
 }
 export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
-   const { accounts } = useAccounts();
-
-   const rows = React.useMemo(
-      () => accounts_to_rows(
-         accounts,
-         accounts.allAccounts().filter(a => p.showStock || !a.kind.is_stock),
-         createRow,
-         TreeMode.USER_DEFINED),
-      [accounts, p.showStock]
+   const rows = useBuildRowsFromAccounts(
+      createRow,
+      a => p.showStock || !a.kind.is_stock,  // filter account
    );
 
    const localChange = (node: SelectTreeNode, checked: boolean) => {
