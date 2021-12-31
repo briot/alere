@@ -1,16 +1,11 @@
 import * as React from 'react';
 import { FixedSizeList } from 'react-window';
 import { ListChildComponentProps } from 'react-window';
+import { AlternateRows, TablePrefs } from '@/List/ListPrefs';
 import classes from '@/services/classes';
 import Table from '@/List';
 
 const INDENT_LEVEL = 16;  // should match CSS --exp-padding-level
-
-export enum AlternateRows {
-   NO_COLOR,   // do not alternate background colors
-   ROW,        // each row (and child rows) alternates colors
-   PARENT,     // color of a row depends on the top-level parent
-}
 
 export interface RowDetails<T, SHARED> {
    isExpanded: boolean|undefined,  // undefined if not expandable
@@ -214,14 +209,12 @@ const usePhysicalRows = <T extends unknown, SHARED> (
  *  - nesting of rows (to show a tree)
  */
 
-interface ListWithColumnsProps<T, SHARED> {
+interface ListWithColumnsProps<T, SHARED> extends TablePrefs {
    columns: (undefined | Column<T, SHARED>) [];
    rows: LogicalRow<T, SHARED> [];
    className?: string;
    indentNested?: boolean;
-   borders?: boolean;
    defaultExpand?: boolean | ((row: LogicalRow<T, SHARED>) => boolean);
-   alternate?: AlternateRows;
 
    expanderColumn?: number;
 
@@ -301,9 +294,9 @@ const ListWithColumns = <T extends unknown, SHARED=any> (
                onClick={onExpand}
                nestingLevel={phys[q.index].level}
                isOdd={
-                  p.alternate === AlternateRows.ROW
+                  p.rowColors === AlternateRows.ROW
                   ? q.index % 2 === 0
-                  : p.alternate === AlternateRows.PARENT
+                  : p.rowColors === AlternateRows.PARENT
                   ? phys[q.index].topRowIndex % 2 === 0
                   : undefined
                }
@@ -342,7 +335,7 @@ const ListWithColumns = <T extends unknown, SHARED=any> (
          );
       },
       [phys, cols, isExpanded, toggleRow, p.indentNested,
-       p.alternate, p.settings, expandColumn]
+       p.rowColors, p.settings, expandColumn]
    );
 
    const onSort = (col: Column<T, SHARED>) => {

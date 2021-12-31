@@ -87,6 +87,7 @@ const defaultPages: PageDescr[] = [
             roundValues: true,
             showDeltaLast: true,
             threshold: 1e-6,
+            tablePrefs: {},
             dates: ["1 year ago", "1 month ago", "today"],
             treeMode: TreeMode.USER_DEFINED,
          } as NetworthPanelProps,
@@ -180,8 +181,8 @@ const defaultPages: PageDescr[] = [
          {
             type: 'iehistory',
             ranges: ["2 years ago", "last year", "1 year"],
-            expenses: true,
             roundValues: true,
+            tablePrefs: {},
             rowspan: 1,
             colspan: 2,
          } as IEHistoryPanelProps,

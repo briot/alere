@@ -9,7 +9,8 @@ import { TreeMode } from '@/services/useAccountTree';
 import useBuildRowsFromAccounts from '@/List/ListAccounts';
 import useBalance, { Balance } from '@/services/useBalance';
 import ListWithColumns, {
-   AlternateRows, Column, LogicalRow, RowDetails } from '@/List/ListWithColumns';
+   Column, LogicalRow, RowDetails } from '@/List/ListWithColumns';
+import { TablePrefs } from '@/List/ListPrefs';
 import "./NetWorth.scss";
 
 export interface NetworthProps {
@@ -21,9 +22,9 @@ export interface NetworthProps {
    showDeltaNext: boolean;
    showDeltaLast: boolean;
    roundValues?: boolean;  // whether to show cents or not
-   borders?: boolean;
-   alternateColors?: boolean;
    treeMode: TreeMode;
+
+   tablePrefs: TablePrefs;
 
    expandTradingAccounts?: boolean;
    // If true, investment accounts are expanded by default to show their
@@ -269,12 +270,8 @@ const Networth: React.FC<NetworthProps> = p => {
          rows={rows}
          indentNested={true}
          defaultExpand={defaultExpand}
-         borders={p.borders}
          settings={p}
-         alternate={
-            p.alternateColors
-            ? AlternateRows.ROW : AlternateRows.NO_COLOR
-         }
+         {...p.tablePrefs}
       />
    );
 }

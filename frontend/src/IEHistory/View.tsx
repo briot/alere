@@ -1,8 +1,8 @@
 import * as React from 'react';
 import AccountName from '@/Account';
-import ListWithColumns, {
-   Column, AlternateRows } from '@/List/ListWithColumns';
+import ListWithColumns, { Column } from '@/List/ListWithColumns';
 import { useFetchIEMulti } from '@/services/useFetchIE';
+import { TablePrefs } from '@/List/ListPrefs';
 import { DateRange, rangeDisplay } from '@/Dates';
 import { Account, AccountId, CommodityId } from '@/services/useAccounts';
 import { numComp } from '@/services/utils';
@@ -18,8 +18,7 @@ export interface IEHistoryProps {
    ranges: DateRange[];
    roundValues?: boolean;
    treeMode?: TreeMode;
-   borders?: boolean;
-   alternateColors?: boolean;
+   tablePrefs: TablePrefs;
 }
 
 
@@ -132,14 +131,10 @@ const IEHistory: React.FC<IEHistoryProps> = p => {
          rows={rows}
          settings={p}
          defaultExpand={true}
-         borders={p.borders}
-         alternate={
-            p.alternateColors
-            ? AlternateRows.ROW : AlternateRows.NO_COLOR
-         }
          indentNested={true}
          sortOn={sorted}
          setSortOn={setSorted}
+         {...p.tablePrefs}
       />
    );
 }

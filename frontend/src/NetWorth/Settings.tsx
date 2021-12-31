@@ -4,6 +4,7 @@ import { Checkbox, NumberInput, Select } from '@/Form';
 import { RelativeDate, MultiDatePicker } from '@/Dates';
 import { TreeMode } from '@/services/useAccountTree';
 import { PanelProps } from '@/Dashboard/Panel';
+import { TablePrefs, TableSettings } from '@/List/ListPrefs';
 
 const Settings: React.FC<PanelProps<NetworthPanelProps>> = p => {
    const changeValue = (showValue: boolean) => p.save({ showValue });
@@ -13,26 +14,16 @@ const Settings: React.FC<PanelProps<NetworthPanelProps>> = p => {
    const changeDeltaL = (showDeltaLast: boolean) => p.save({ showDeltaLast });
    const changeDeltaN = (showDeltaNext: boolean) => p.save({ showDeltaNext });
    const changedates = (dates: RelativeDate[]) => p.save({ dates });
-   const changeBorders = (borders: boolean) => p.save({ borders });
    const changeThreshold = (threshold: number) => p.save({ threshold });
-   const changeAlt = (alternateColors: boolean) => p.save({ alternateColors });
    const changeTreeMode = (treeMode: TreeMode) => p.save({ treeMode });
    const changeRound = (roundValues: boolean) => p.save({ roundValues });
+   const changeTablePrefs = (tablePrefs: TablePrefs) => p.save({ tablePrefs });
    const changeExpandTrading = (expandTradingAccounts: boolean) =>
       p.save({ expandTradingAccounts });
    return (
+   <>
       <fieldset>
          <legend>Networth</legend>
-         <Checkbox
-             value={p.props.borders}
-             onChange={changeBorders}
-             text="Show borders"
-         />
-         <Checkbox
-             value={p.props.alternateColors}
-             onChange={changeAlt}
-             text="Alternate background color"
-         />
          <Checkbox
             value={p.props.showValue}
             onChange={changeValue}
@@ -98,6 +89,8 @@ const Settings: React.FC<PanelProps<NetworthPanelProps>> = p => {
             onChange={changedates}
          />
       </fieldset>
+      <TableSettings {...p.props.tablePrefs} save={changeTablePrefs} />
+   </>
    );
 }
 export default Settings;

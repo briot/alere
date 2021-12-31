@@ -119,7 +119,7 @@ const columns: Column<RowData, AccountsProps>[] = [
 
 const Accounts: React.FC<AccountsProps> = p => {
    const [sorted, setSorted] = React.useState('');
-   const rows = useBuildRowsFromAccounts(createRow);
+   const rows = useBuildRowsFromAccounts<RowData, AccountsProps>(createRow);
    return (
       <ListWithColumns
          className="accounts"

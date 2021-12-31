@@ -4,7 +4,8 @@ import useAccounts, { Account, AccountId } from '@/services/useAccounts';
 import { AccountIdSet } from '@/services/useAccountIds';
 import useAccountTree, { TreeNode } from '@/services/useAccountTree';
 import { Checkbox, Select, Option } from '@/Form';
-import ListWithColumns, { AlternateRows, Column } from '@/List/ListWithColumns';
+import ListWithColumns, { Column } from '@/List/ListWithColumns';
+import { AlternateRows } from '@/List/ListPrefs';
 import useBuildRowsFromAccounts from '@/List/ListAccounts';
 import { DateRange } from '@/Dates';
 import List from '@/List';
@@ -143,7 +144,7 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
             indentNested={true}
             defaultExpand={true}
             settings={{}}
-            alternate={AlternateRows.ROW}
+            rowColors={AlternateRows.ROW}
          />
       </div>
    );

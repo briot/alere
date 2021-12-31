@@ -8,6 +8,7 @@ import { AccountIdSet } from '@/services/useAccountIds';
 import { SelectMultiAccount } from '@/Account';
 import useAccountIds from '@/services/useAccountIds';
 import { PanelProps } from '@/Dashboard/Panel';
+import { TableSettings } from '@/List/ListPrefs';
 
 const Settings: React.FC<PanelProps<LedgerPanelProps>> = p => {
    const { accounts: allAccounts } = useAccountIds(p.props.accountIds);
@@ -16,26 +17,15 @@ const Settings: React.FC<PanelProps<LedgerPanelProps>> = p => {
    const changeAccount = (accountIds: AccountIdSet) => p.save({ accountIds });
    const changeTrans = (notes_mode: NotesMode) => p.save({notes_mode});
    const changeSplit = (split_mode: SplitMode) => p.save({ split_mode });
-   const changeBorders = (borders: boolean) => p.save({ borders });
-   const changeAlt = (alternateColors: boolean) => p.save({ alternateColors });
    const changeExpand = (defaultExpand: boolean) => p.save({ defaultExpand });
    const changeValueColumn = (valueColumn: boolean) => p.save({ valueColumn });
    const changeRestrict = (restrictExpandArrow: boolean) =>
       p.save({ restrictExpandArrow });
 
    return (
+   <>
       <fieldset>
          <legend>Ledger</legend>
-         <Checkbox
-             value={p.props.borders}
-             onChange={changeBorders}
-             text="Show borders"
-         />
-         <Checkbox
-             value={p.props.alternateColors}
-             onChange={changeAlt}
-             text="Alternate background color"
-         />
          <Checkbox
              value={p.props.valueColumn}
              onChange={changeValueColumn}
@@ -116,6 +106,8 @@ const Settings: React.FC<PanelProps<LedgerPanelProps>> = p => {
             />
          }
       </fieldset>
+      <TableSettings {...p} />
+   </>
    );
 }
 export default Settings;

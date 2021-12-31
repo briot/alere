@@ -7,9 +7,9 @@ import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
          incomeExpenseSplits, sharesForAccounts, priceForAccounts,
          Split, Transaction, reconcileToString } from '@/Transaction';
 import Numeric from '@/Numeric';
-import ListWithColumns, {
-   AlternateRows, Column, LogicalRow } from '@/List/ListWithColumns';
+import ListWithColumns, { Column, LogicalRow } from '@/List/ListWithColumns';
 import { Account, AccountId, is_liquid } from '@/services/useAccounts';
+import { TablePrefs } from '@/List/ListPrefs';
 import useAccountIds, {
    AccountIdSet, AccountList } from '@/services/useAccountIds';
 import { Preferences } from '@/services/usePrefs';
@@ -36,18 +36,16 @@ export enum NotesMode {
    COLUMN,     // in a separate column
 }
 
-export interface BaseLedgerProps {
+export interface BaseLedgerProps extends TablePrefs {
    accountIds: AccountIdSet;    // which subset of the accounts to show
    range?: DateRange|undefined; // use undefined to see forever
    date?: Date;                 // a reference date (by default: today)
    notes_mode: NotesMode;
    split_mode: SplitMode;
-   borders: boolean;
    defaultExpand: boolean;
    valueColumn: boolean;
    hideBalance?: boolean;
    hideReconcile?: boolean;
-   alternateColors?: boolean;
    restrictExpandArrow?: boolean; // if true, only show arrow if more than 2 splits
    sortOn?: string;  // +colid  or -colid
 }
@@ -775,16 +773,14 @@ const Ledger: React.FC<BaseLedgerProps & ExtraProps> = p => {
          className="ledgerTable"
          columns={columns}
          rows={rows}
-         borders={p.borders}
          defaultExpand={p.defaultExpand}
          footColumnsOverride={footColumns}
          scrollToBottom={true}
          sortOn={p.sortOn}
          setSortOn={p.setSortOn}
          settings={computed}
-         alternate={
-            p.alternateColors ? AlternateRows.PARENT : AlternateRows.NO_COLOR
-         }
+         borders={p.borders}
+         rowColors={p.rowColors}
       />
    );
 }
