@@ -2,6 +2,7 @@
  * Fetch Income and Expenses for a specified period of time
  */
 
+import * as React from 'react';
 import { DateRange, rangeToHttp } from '@/Dates';
 import useFetch, { useFetchMultiple, FetchProps } from '@/services/useFetch';
 import usePrefs from '@/services/usePrefs';
@@ -65,7 +66,11 @@ const useFetchIE = (p: QueryProps): IncomeExpenseInPeriod|undefined => {
    const { data }  = useFetch(toFetchProps(p, accounts, prefs.currencyId));
    return data;
 }
+export default useFetchIE;
 
+/**
+ * Perform one or more queries to retrieve Income/Expense
+ */
 export const useFetchIEMulti = (
    p: QueryProps[]
 ): (IncomeExpenseInPeriod|undefined)[] => {
@@ -76,5 +81,52 @@ export const useFetchIEMulti = (
    return result.map(d => d.data);
 }
 
-export default useFetchIE;
+/**
+ * Retrieve Income/Expense for multiple periods of times. For each account,
+ * include the amount for each of the time periods.
+ */
 
+export interface IERanges {
+   account: Account | undefined;
+   accountId: AccountId;
+   values: number[];  // on per range in the request
+   name: string;
+   currency: CommodityId;
+}
+
+export const useFetchIERanges = (
+   ranges: DateRange[],
+): Record<AccountId, IERanges> => {
+   const data = useFetchIEMulti(
+      ranges.map(r => ({
+         include_income: true,
+         include_expenses: true,
+         range: r,
+      }))
+   );
+   const account_to_data = React.useMemo(
+      () => {
+         const perAccount: Record<AccountId, IERanges> = {};
+         data.forEach((d, idx) => {
+            if (d) {
+               d.items.forEach(it => {
+                  let a = perAccount[it.accountId];
+                  if (!a) {
+                     a = perAccount[it.accountId] = {
+                        account: it.account,
+                        accountId: it.accountId,
+                        values: new Array(ranges.length).fill(NaN),
+                        name: it.name,
+                        currency: d.currency,
+                     };
+                  }
+                  a.values[idx] = it.value;
+               });
+            }
+         });
+         return perAccount;
+      },
+      [data, ranges]
+   );
+   return account_to_data;
+}

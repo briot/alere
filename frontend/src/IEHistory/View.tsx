@@ -1,10 +1,10 @@
 import * as React from 'react';
 import AccountName from '@/Account';
 import ListWithColumns, { Column } from '@/List/ListWithColumns';
-import { useFetchIEMulti } from '@/services/useFetchIE';
+import { IERanges, useFetchIERanges } from '@/services/useFetchIE';
 import { TablePrefs } from '@/List/ListPrefs';
 import { DateRange, rangeDisplay } from '@/Dates';
-import { Account, AccountId, CommodityId } from '@/services/useAccounts';
+import { Account } from '@/services/useAccounts';
 import { numComp } from '@/services/utils';
 import useBuildRowsFromAccounts from '@/List/ListAccounts';
 import Numeric from '@/Numeric';
@@ -21,36 +21,24 @@ export interface IEHistoryProps {
    tablePrefs: TablePrefs;
 }
 
-
-/**
- * Row data
- */
-interface RowData {
-   account: Account | undefined;
-   accountId: AccountId;
-   values: number[];  // on per range in the request
-   name: string;
-   currency: CommodityId;
-}
-
-const columnCategory: Column<RowData, IEHistoryProps> = {
+const columnCategory: Column<IERanges, IEHistoryProps> = {
    id: 'Category',
-   cell: (d: RowData) =>
+   cell: (d: IERanges) =>
       d.account
       ? <AccountName id={d.accountId} account={d.account} />
       : d.name,
-   compare: (d1: RowData, d2: RowData) =>
+   compare: (d1: IERanges, d2: IERanges) =>
       (d1.account?.name ?? d1.name).localeCompare(d2.account?.name ?? d2.name),
 }
 const columnValue = (
    index: number,
    range: DateRange,
-): Column<RowData, IEHistoryProps> => {
+): Column<IERanges, IEHistoryProps> => {
    const d = rangeDisplay(range);
    return {
       id: d.text,
       title: d.as_dates,
-      cell: (d: RowData, _, p: IEHistoryProps) =>
+      cell: (d: IERanges, _, p: IEHistoryProps) =>
          <Numeric
             amount={d.values[index]}
             commodity={d.currency}
@@ -61,46 +49,14 @@ const columnValue = (
 };
 
 const IEHistory: React.FC<IEHistoryProps> = p => {
-   const data = useFetchIEMulti(
-      p.ranges.map(r => ({
-         include_income: true,
-         include_expenses: true,
-         range: r,
-      }))
+   const account_to_data = useFetchIERanges(p.ranges);
+   const columns: Column<IERanges, IEHistoryProps>[] = [
+         columnCategory,
+      ].concat(
+         p.ranges.map((r, idx) => columnValue(idx, r))
    );
-   const account_to_data = React.useMemo(
-      () => {
-         const perAccount: Record<AccountId, RowData> = {};
-         data.forEach((d, idx) => {
-            if (d) {
-               d.items.forEach(it => {
-                  let a = perAccount[it.accountId];
-                  if (!a) {
-                     a = perAccount[it.accountId] = {
-                        account: it.account,
-                        accountId: it.accountId,
-                        values: new Array(p.ranges.length).fill(NaN),
-                        name: it.name,
-                        currency: d.currency,
-                     };
-                  }
-                  a.values[idx] = it.value;
-               });
-            }
-         });
-         return perAccount;
-      },
-      [data, p.ranges]
-   );
-
-   const columns: Column<RowData, IEHistoryProps>[] = [
-      columnCategory,
-   ].concat(
-      p.ranges.map((r, idx) => columnValue(idx, r))
-   );
-
    const createNode = React.useCallback(
-      (a: Account|undefined, fallbackName: string): RowData => {
+      (a: Account|undefined, fallbackName: string): IERanges => {
          const id = a?.id ?? -1;
          let acc = account_to_data[id];
          if (!acc) {
