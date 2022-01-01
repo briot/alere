@@ -1,6 +1,7 @@
 import * as React from 'react';
 import useAccounts, {
    Account, AccountId, AccountList, cmpAccounts } from '@/services/useAccounts';
+import { TreeMode } from '@/services/TreeMode';
 
 export interface DataWithAccount {
    account: Account|undefined;
@@ -10,13 +11,6 @@ export interface TreeNode <T extends DataWithAccount> {
    data: T; // undefined when we had to create a dummy parent
    children: TreeNode<T> [];
    parentNode: TreeNode<T> | undefined;
-}
-
-export enum TreeMode {
-   FLAT,          // Flat list of account, sorted alphabetically
-   USER_DEFINED,  // Use parent account set by the user
-   ACCOUNT_TYPE,  // Organize by account type
-   INSTITUTION,   // By institution
 }
 
 export const computeTree = <T extends DataWithAccount> (

@@ -8,7 +8,7 @@ import { Account, AccountId, CommodityId } from '@/services/useAccounts';
 import { numComp } from '@/services/utils';
 import useBuildRowsFromAccounts from '@/List/ListAccounts';
 import Numeric from '@/Numeric';
-import { TreeMode } from '@/services/useAccountTree';
+import { TreeMode } from '@/services/TreeMode';
 
 
 /**

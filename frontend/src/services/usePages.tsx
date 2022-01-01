@@ -22,7 +22,7 @@ import { PriceHistoryPanelProps } from '@/PriceHistory/Panel';
 import { RecentPanelProps } from '@/Recent/Panel';
 import { SplitMode, NotesMode } from '@/Ledger/View';
 import { TickerPanelProps } from '@/Ticker/Panel';
-import { TreeMode } from '@/services/useAccountTree';
+import { TreeMode } from '@/services/TreeMode';
 import { WelcomePanelProps } from '@/Welcome/Panel';
 import { toDates } from '@/Dates';
 import useSettings from '@/services/useSettings';

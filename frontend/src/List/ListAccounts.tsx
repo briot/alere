@@ -7,7 +7,8 @@
 import * as React from 'react';
 import { LogicalRow } from './ListWithColumns';
 import { computeTree, DataWithAccount,
-   TreeNode, TreeMode } from '@/services/useAccountTree';
+   TreeNode } from '@/services/useAccountTree';
+import { TreeMode } from '@/services/TreeMode';
 import useAccounts, { Account } from '@/services/useAccounts';
 
 const toLogicalRows = <T extends DataWithAccount> (list: TreeNode<T>[]) =>

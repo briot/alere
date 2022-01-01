@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { NetworthPanelProps } from '@/NetWorth/Panel';
-import { Checkbox, NumberInput, Select } from '@/Form';
+import { Checkbox, NumberInput } from '@/Form';
 import { RelativeDate, MultiDatePicker } from '@/Dates';
-import { TreeMode } from '@/services/useAccountTree';
 import { PanelProps } from '@/Dashboard/Panel';
 import { TablePrefs, TableSettings } from '@/List/ListPrefs';
+import { TreeMode, SelectTreeMode } from '@/services/TreeMode';
 
 const Settings: React.FC<PanelProps<NetworthPanelProps>> = p => {
    const changeValue = (showValue: boolean) => p.save({ showValue });
@@ -71,18 +71,10 @@ const Settings: React.FC<PanelProps<NetworthPanelProps>> = p => {
             text="Threshold"
             title="Hide accounts with a value below this threshold"
          />
-         <Select
-             text="Group by"
+         <SelectTreeMode
              onChange={changeTreeMode}
-             value={p.props.treeMode}
-             options={[
-                {text: "Flat list",      value: TreeMode.FLAT},
-                {text: "Parent account", value: TreeMode.USER_DEFINED},
-                {text: "Account type",   value: TreeMode.ACCOUNT_TYPE},
-                {text: "Institution",    value: TreeMode.INSTITUTION},
-            ]}
+             treeMode={p.props.treeMode}
          />
-
          <MultiDatePicker
             text="Columns"
             value={p.props.dates}

@@ -2,8 +2,8 @@ import * as React from 'react';
 import { DateRange, MultiRangePicker } from '@/Dates';
 import { IEHistoryPanelProps } from '@/IEHistory/Panel';
 import { PanelProps } from '@/Dashboard/Panel';
-import { Checkbox, Select } from '@/Form';
-import { TreeMode } from '@/services/useAccountTree';
+import { Checkbox } from '@/Form';
+import { TreeMode, SelectTreeMode } from '@/services/TreeMode';
 import { TablePrefs, TableSettings } from '@/List/ListPrefs';
 
 const Settings: React.FC<PanelProps<IEHistoryPanelProps>> = p => {
@@ -20,16 +20,9 @@ const Settings: React.FC<PanelProps<IEHistoryPanelProps>> = p => {
                onChange={changeRound}
                text="Round values"
             />
-            <Select
-                text="Group by"
-                onChange={changeTreeMode}
-                value={p.props.treeMode}
-                options={[
-                   {text: "Flat list",      value: TreeMode.FLAT},
-                   {text: "Parent account", value: TreeMode.USER_DEFINED},
-                   {text: "Account type",   value: TreeMode.ACCOUNT_TYPE},
-                   {text: "Institution",    value: TreeMode.INSTITUTION},
-               ]}
+            <SelectTreeMode
+               treeMode={p.props.treeMode}
+               onChange={changeTreeMode}
             />
             <MultiRangePicker
                text="Columns"

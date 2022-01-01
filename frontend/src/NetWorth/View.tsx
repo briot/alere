@@ -5,7 +5,7 @@ import AccountName from '@/Account';
 import { BalanceList } from '@/services/useBalance';
 import usePrefs from '@/services/usePrefs';
 import { Account, AccountId } from '@/services/useAccounts';
-import { TreeMode } from '@/services/useAccountTree';
+import { TreeMode } from '@/services/TreeMode';
 import useBuildRowsFromAccounts from '@/List/ListAccounts';
 import useBalance, { Balance } from '@/services/useBalance';
 import ListWithColumns, {
