@@ -3,7 +3,7 @@ import useAccounts, {
    AccountId, AccountKindId, Account, InstitutionId,
    useAddOrEditAccount } from '@/services/useAccounts';
 import { useHistory } from 'react-router-dom';
-import { SelectAccount } from '@/Account';
+import { SelectAccount } from '@/Account/SelectAccount';
 import SelectAccountKind from '@/Account/SelectAccountKinds';
 import SelectInstitution from '@/Account/SelectInstitution';
 import { Button, ButtonBar, Input, TextArea } from '@/Form';

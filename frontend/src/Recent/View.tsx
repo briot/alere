@@ -1,5 +1,5 @@
 import React from 'react';
-import AccountName from '@/Account';
+import AccountName from '@/Account/AccountName';
 import useHistory from '@/services/useHistory';
 import useAccounts from '@/services/useAccounts';
 import RoundButton from '@/RoundButton';

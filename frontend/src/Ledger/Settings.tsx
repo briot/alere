@@ -5,7 +5,7 @@ import { Checkbox, Select } from '@/Form';
 import { DateRange, DateRangePicker } from '@/Dates';
 import { Account } from '@/services/useAccounts';
 import { AccountIdSet } from '@/services/useAccountIds';
-import { SelectMultiAccount } from '@/Account';
+import { SelectMultiAccount } from '@/Account/SelectMultiAccount';
 import useAccountIds from '@/services/useAccountIds';
 import { PanelProps } from '@/Dashboard/Panel';
 import { TableSettings } from '@/List/ListPrefs';

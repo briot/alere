@@ -3,7 +3,7 @@ import { toDates, DateRange } from '@/Dates';
 import usePrefs from '@/services/usePrefs';
 import { computeTicker } from '@/Ticker/Compute';
 import { RowData } from '@/Ticker/types';
-import AccountName from '@/Account';
+import AccountName from '@/Account/AccountName';
 import ListWithColumns, { Column, LogicalRow } from '@/List/ListWithColumns';
 import { ColumnType, columnEquity, columnTotalReturn, columnAnnualizedReturn,
    columnPL, columnWeighedAverage, columnPeriodPL, columnGains,

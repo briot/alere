@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { RelativeDate, dateToString } from '@/Dates';
 import Numeric from '@/Numeric';
-import AccountName from '@/Account';
+import AccountName from '@/Account/AccountName';
 import { BalanceList } from '@/services/useBalance';
 import usePrefs from '@/services/usePrefs';
 import { Account, AccountId } from '@/services/useAccounts';

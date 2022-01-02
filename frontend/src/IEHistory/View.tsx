@@ -1,5 +1,5 @@
 import * as React from 'react';
-import AccountName from '@/Account';
+import AccountName from '@/Account/AccountName';
 import ListWithColumns, { Column } from '@/List/ListWithColumns';
 import { IERanges, useFetchIERanges } from '@/services/useFetchIE';
 import { TablePrefs } from '@/List/ListPrefs';

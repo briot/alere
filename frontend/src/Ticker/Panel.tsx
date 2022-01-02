@@ -1,5 +1,5 @@
 import * as React from 'react';
-import AccountName from '@/Account';
+import AccountName from '@/Account/AccountName';
 import { DateRange, toDates } from '@/Dates';
 import Panel, { PanelProps, PanelBaseProps } from '@/Dashboard/Panel';
 import TickerView, { TickerViewProps } from './View';

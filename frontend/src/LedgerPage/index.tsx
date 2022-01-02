@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useHistory as useRouterHistory } from 'react-router-dom';
 import { Account } from '@/services/useAccounts';
-import { SelectAccount } from '@/Account';
+import { SelectAccount } from '@/Account/SelectAccount';
 import useSearch from '@/services/useSearch';
 
 export const LedgerPageTitle: React.FC<{}> = () => {

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import AccountName from '@/Account';
+import AccountName from '@/Account/AccountName';
 import { Account, AccountId } from '@/services/useAccounts';
 import useBuildRowsFromAccounts from '@/List/ListAccounts';
 import ListWithColumns, { Column } from '@/List/ListWithColumns';

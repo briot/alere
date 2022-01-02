@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { DateRange } from '@/Dates';
-import AccountName from '@/Account';
+import AccountName from '@/Account/AccountName';
 import Table from '@/List';
 import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
          incomeExpenseSplits, sharesForAccounts, priceForAccounts,

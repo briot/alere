@@ -7,7 +7,7 @@ import { XAxis, YAxis, BarChart, Bar, CartesianGrid,
 import { DateRange } from '@/Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from '@/Numeric';
-import AccountName from '@/Account';
+import AccountName from '@/Account/AccountName';
 import usePrefs from '@/services/usePrefs';
 import useFetchIE, {
    IncomeExpenseInPeriod, OneIE } from '@/services/useFetchIE';
