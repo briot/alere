@@ -73,7 +73,7 @@ const IEHistory: React.FC<IEHistoryProps> = p => {
       [account_to_data]
    );
 
-   const rows = useBuildRowsFromAccounts(
+   const rows = useBuildRowsFromAccounts<IERanges, IEHistoryProps>(
       createNode,
       a => account_to_data.hasOwnProperty(a.id),  // filter
       p.treeMode,

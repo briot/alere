@@ -215,7 +215,7 @@ const Networth: React.FC<NetworthProps> = p => {
       [accountToBalance]
    );
 
-   const rows = useBuildRowsFromAccounts(
+   const rows = useBuildRowsFromAccounts<LocalTreeNode, NetworthProps>(
       createRow,
       a => accountToBalance.has(a.id),  // filter
       p.treeMode);
