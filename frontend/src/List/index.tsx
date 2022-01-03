@@ -72,7 +72,7 @@ interface TRProps<TOOLTIP_DATA> extends TooltipProps<TOOLTIP_DATA> {
    className?: string;
    isOdd?: boolean;  // to alternate row colors
 
-   onClick?: () => void;
+   onClick?: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
 
    expanded?: undefined|true|false;
    // undefined if not expandable. This only has an effect if the Table itself

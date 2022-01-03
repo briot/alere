@@ -7,7 +7,7 @@ import { Checkbox } from '@/Form';
 import ListWithColumns, { Column, LogicalRow } from '@/List/ListWithColumns';
 import { AlternateRows } from '@/List/ListPrefs';
 import useBuildRowsFromAccounts from '@/List/ListAccounts';
-import { Select, SharedInputProps, SharedInput } from '@/Form';
+import { Select, SharedInputProps, SharedInput, Option } from '@/Form';
 import {
    SelectTreeNode, createSelectAccountRow } from '@/Account/SelectAccount';
 import "./Account.scss";
@@ -22,9 +22,25 @@ interface MultiAccountSelectProps extends SharedInputProps<AccountIdSet> {
 
 type PredefinedSetsOrCustom = PredefinedSets | 'custom' | 'none';
 
+const OPTIONS: Option<PredefinedSetsOrCustom>[] = [
+   {value: "none"},
+   {value: "all"},
+   {value: "networth"},
+   {value: "expenses"},
+   {value: "income"},
+   {value: "expense_income", text: "expenses or income"},
+   {value: "custom"},
+];
+
+const UNKNOWN_SETTINGS = {}
+
 export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
    const { hide, onChange } = p;
    const { accounts } = useAccountIds(p.value);
+   const ids = React.useMemo(
+      () => new Set(accounts.map(a => a.id)),
+      [accounts]
+   );
    const [preselection, setPreselection] =
       React.useState<PredefinedSetsOrCustom>(
       () => isString(p.value)
@@ -46,9 +62,13 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
    )
 
    const { accounts: hidden } = useAccountIds(p.hidden);
+   const hidden_ids = React.useMemo(
+      () => new Set(hidden.map(a => a.id)),
+      [hidden]
+   );
    const shouldShowAccount = React.useCallback(
-      (a: Account) => !hidden.includes(a) && (hide === undefined || !hide(a)),
-      [hidden, hide]
+      (a: Account) => !hidden_ids.has(a.id) && (hide === undefined || !hide(a)),
+      [hidden_ids, hide]
    );
 
    const rows = useBuildRowsFromAccounts(
@@ -56,73 +76,62 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
       shouldShowAccount,  // filter account
    );
 
-   const localChange = (
+   const localChange = React.useCallback(
+      (
          details: LogicalRow<SelectTreeNode, unknown>,
          checked: boolean
-   ) => {
-      let cp = accounts.map(a => a.id);
+      ) => {
+         let cp = new Set(ids);
 
-      const enableRecursive = (d: LogicalRow<SelectTreeNode, unknown>) => {
-         const id = d.data.account?.id;
-         if (id === undefined) {
-            return;
-         }
+         setPreselection('custom');
 
-         if (!cp.includes(id)) {
-            cp = [...cp, id];
-         }
-
-         if (d.getChildren) {
-            const children = d.getChildren(d.data, undefined);
-            for (const c of children) {
-               enableRecursive(c);
+         const recurse = (d: LogicalRow<SelectTreeNode, unknown>) => {
+            const id = d.data.account?.id;
+            if (id === undefined) {
+               return;
             }
-         }
-      }
 
-      const disableRecursive = (d: LogicalRow<SelectTreeNode, unknown>) => {
-         const id = d.data.account?.id;
-         if (id === undefined) {
-            return;
-         }
-
-         cp.splice(cp.indexOf(id), 1);
-
-         if (d.getChildren) {
-            const children = d.getChildren(d.data, undefined);
-            for (const c of children) {
-               disableRecursive(c);
+            if (checked) {
+               cp.add(id);
+            } else {
+               cp.delete(id);
             }
-         }
-      }
 
-
-      if (checked) {
-         enableRecursive(details);
-      } else {
-         disableRecursive(details);
-      }
-
-      p.onChange(cp);
-   };
-
-   const columnAccountName: Column<SelectTreeNode, unknown > = {
-      id: 'Account',
-      cell: (n: SelectTreeNode, details) => {
-         return n.account ? (
-            <Checkbox
-               text={n.account.name}
-               value={!accounts || accounts.includes(n.account)}
-               onChange={
-                  (checked: boolean) => localChange(details.logic, checked)
+            if (d.getChildren) {
+               const children = d.getChildren(d.data, undefined);
+               for (const c of children) {
+                  recurse(c);
                }
-               disabled={preselection !== 'custom'}
-            />
-         ) : (
-            n.name
-         )
-      }
-   };
+            }
+         }
+
+         recurse(details);
+         onChange(Array.from(cp));
+      },
+      [ids, onChange]
+   );
+
+   const columns: Column<SelectTreeNode, unknown>[] = React.useMemo(
+      () => {
+         return [{
+            id: 'Account',
+            cell: (n: SelectTreeNode, details) => {
+               return n.account ? (
+                  <Checkbox
+                     text={n.account.name}
+                     value={ids.has(n.account.id)}
+                     onChange={
+                        (checked: boolean) => localChange(details.logic, checked)
+                     }
+                  />
+               ) : (
+                  n.name
+               )
+            }
+         }];
+      },
+      [ids, localChange]
+   );
 
    return (
       <SharedInput
@@ -133,24 +142,16 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
             <Select
                onChange={onChangePreselection}
                value={preselection}
-               options={[
-                  {value: "none"},
-                  {value: "all"},
-                  {value: "networth"},
-                  {value: "expenses"},
-                  {value: "income"},
-                  {value: "expense_income", text: "expenses or income"},
-                  {value: "custom"},
-               ]}
+               options={OPTIONS}
             />
 
             <ListWithColumns
                className="custom"
-               columns={[columnAccountName]}
+               columns={columns}
                rows={rows}
                indentNested={true}
                defaultExpand={true}
-               settings={{}}
+               settings={UNKNOWN_SETTINGS}
                hideHeader={true}
                hideFooter={true}
                rowColors={AlternateRows.ROW}

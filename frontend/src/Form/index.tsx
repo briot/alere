@@ -138,14 +138,13 @@ interface CheckboxProps extends SharedInputProps<boolean|undefined> {
 }
 export const Checkbox: React.FC<CheckboxProps> = p => {
    const { onChange } = p;
-   const localChange = React.useCallback(
+   const onChangeCb = React.useCallback(
       (event: React.ChangeEvent<HTMLInputElement>) => {
          const val = event.target.checked;  //  must capture synchronously
          onChange?.(val);
       },
       [onChange]
    );
-
    const indetSetter = React.useCallback(
       el => {
          if (el) {
@@ -154,7 +153,6 @@ export const Checkbox: React.FC<CheckboxProps> = p => {
       },
       [p.indeterminate]
    );
-
    return (
       <SharedInput className="checkbox" textAfter={true} {...p}>
          <input
@@ -162,7 +160,7 @@ export const Checkbox: React.FC<CheckboxProps> = p => {
             disabled={p.disabled}
             ref={indetSetter}
             required={p.required}
-            onChange={localChange}
+            onChange={onChangeCb}
             type="checkbox"
          />
       </SharedInput>

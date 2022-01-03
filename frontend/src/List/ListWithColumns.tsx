@@ -283,7 +283,23 @@ const ListWithColumns = <T extends unknown, SHARED=any> (
          const expanded = isExpanded(q.index);
          const onExpand = expanded === undefined
             ? undefined
-            : () => toggleRow(q.index);
+            : (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+               // Do nothing when the user clicked on a form element, for
+               // instance a checkbox in a tree list. Otherwise toggling the
+               // checkbox would also toggle the row.
+               // This cannot be resolved at the <Checkbox> level itself, since
+               // we would need to intercept the click event (in addition to
+               // listening to the change event), and that seems to break the
+               // refresh of the <input>.
+
+               if (e.target instanceof HTMLInputElement) {
+                  return;
+               }
+
+               e.preventDefault();
+               e.stopPropagation();
+               toggleRow(q.index);
+            };
          const theCols = logic.columnsOverride ?? cols;
 
          // Use width from CSS

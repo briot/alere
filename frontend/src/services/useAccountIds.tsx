@@ -1,3 +1,9 @@
+/**
+ * A user selects accounts for a panel either from an explicit list of
+ * account ids, or via a set of named collections of accounts. This package
+ * translate from these collections back to a list of ids.
+ */
+
 import * as React from 'react';
 import useAccounts, {
    Account, AccountId,
@@ -7,13 +13,9 @@ import useAccounts, {
 import { isString, isArray } from '@/services/utils';
 
 /**
- * A user selects accounts for a panel either from an explicit list of
- * account ids, or via a set of named collections of accounts. This package
- * translate from these collections back to a list of ids.
- * Although we could mostly let the backend take care of that internally, we
- * need the ids in the ledger to know what Splits to show.
+ * The data that the user provides: either a named predefined set, or an
+ * actual list of ids
  */
-
 export type PredefinedSets =
    'all'
    | 'expenses'
@@ -27,10 +29,13 @@ export type PredefinedSets =
    | 'other_taxes'
    | 'passive_income'
    | 'work_income';
-
 export type AccountIdSet = undefined | AccountId[] | PredefinedSets;
 
-export interface AccountList {
+/**
+ * Once resolved, we get a set of accounts
+ */
+
+export interface AccountSet {
    accounts: Account[];
    title: string;   //  Describes the list of accounts, for humans
 }
@@ -58,7 +63,7 @@ const filters: Record<
 };
 
 
-const useAccountIds = (ids: AccountIdSet): AccountList => {
+const useAccountIds = (ids: AccountIdSet): AccountSet => {
    const { accounts } = useAccounts();
    return React.useMemo(
       () => {

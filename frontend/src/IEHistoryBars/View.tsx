@@ -5,6 +5,7 @@ import { ComposedChart, XAxis, YAxis, CartesianGrid, Bar, Cell,
    Tooltip, TooltipProps } from 'recharts';
 import { useFetchIERanges } from '@/services/useFetchIE';
 import { CommodityId, is_expense } from '@/services/useAccounts';
+import useAccountIds, { AccountIdSet } from '@/services/useAccountIds';
 import { DateRange, rangeDisplay } from '@/Dates';
 import usePrefs from '@/services/usePrefs';
 import Numeric from '@/Numeric';
@@ -17,6 +18,7 @@ import "./IEHistoryBars.scss";
  */
 export interface IEHistoryBarsProps {
    ranges: DateRange[];
+   accountIds: AccountIdSet;  // which accounts to show
 }
 
 const formatVal = (p: number|string|React.ReactText[]) =>
@@ -47,7 +49,7 @@ const CustomTooltip = (
                p.props.ranges.map(r => {
                   const txt = rangeDisplay(r).text;
                   return (
-                     <tr>
+                     <tr key={txt}>
                         <th>{txt}</th>
                         <td>
                           <Numeric
@@ -81,27 +83,35 @@ const toColor = (expenses: boolean, maxIndex: number) => {
 
 const IEHistoryBars: React.FC<IEHistoryBarsProps> = p => {
    const { prefs } = usePrefs();
+   const included = useAccountIds(p.accountIds);
+   const included_ids = React.useMemo(
+      () => included.accounts.map(a => a.id),
+      [included]
+   );
    const account_to_data = useFetchIERanges(p.ranges);
    const points: Point[] = React.useMemo(
       () => {
-         const r = Object.values(account_to_data).map(
-            a => {
-               const res: Point = {
-                  category: a.name,
-                  total: 0,
-                  isExpense: is_expense(a.account?.kind),
-               };
-               p.ranges.forEach((r, idx) => {
-                  const v = isNaN(a.values[idx]) ? 0 : Math.abs(a.values[idx]);
-                  res[rangeDisplay(r).text] = v;
-                  res.total += v;
+         const r = Object.values(account_to_data)
+            .filter(a => included_ids.includes(a.accountId))
+            .map(
+               a => {
+                  const res: Point = {
+                     category: a.name,
+                     total: 0,
+                     isExpense: is_expense(a.account?.kind),
+                  };
+                  p.ranges.forEach((r, idx) => {
+                     const v = isNaN(a.values[idx])
+                        ? 0 : Math.abs(a.values[idx]);
+                     res[rangeDisplay(r).text] = v;
+                     res.total += v;
+                  });
+                  return res;
                });
-               return res;
-            });
          r.sort((a, b) => numComp(b.total, a.total));  // reverse sort
          return r;
       },
-      [account_to_data, p.ranges]
+      [account_to_data, p.ranges, included_ids]
    );
 
    const expColor = toColor(true, p.ranges.length);
@@ -126,7 +136,11 @@ const IEHistoryBars: React.FC<IEHistoryBarsProps> = p => {
                >
                   <XAxis
                      dataKey="category"
-                     hide={true}
+                     hide={false}
+                     angle={-45}
+                     interval={0}
+                     textAnchor="end"
+                     height={80}
                   />
                   <YAxis
                      domain={[-10, 'auto']}
@@ -155,6 +169,7 @@ const IEHistoryBars: React.FC<IEHistoryBarsProps> = p => {
                            {
                               points.map((pt, pidx) =>
                                  <Cell
+                                    key={pidx}
                                     fill={pt.isExpense ? expColor(idx) : incColor(idx)}
                                     stroke={pt.isExpense ?
                                        expColor(0) : incColor(0)}

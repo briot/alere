@@ -190,6 +190,7 @@ const defaultPages: PageDescr[] = [
          {
             type: 'iehistorybars',
             ranges: ["2 years ago", "last year", "1 year"],
+            accountIds: 'all',
             roundValues: true,
             tablePrefs: {},
             rowspan: 1,

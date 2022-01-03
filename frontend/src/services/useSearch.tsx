@@ -2,11 +2,11 @@ import * as React from 'react';
 import { useLocation } from 'react-router-dom';
 import { DateRange, parseRange } from '@/Dates';
 import useAccountIds, {
-   AccountIdSet, AccountList } from '@/services/useAccountIds';
+   AccountIdSet, AccountSet } from '@/services/useAccountIds';
 import useHistory from '@/services/useHistory';
 
 export interface Selection {
-   accounts: AccountList;
+   accounts: AccountSet;
    range: DateRange | undefined;
    raw: Record<string, string>;
    accountIds: AccountIdSet;

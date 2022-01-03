@@ -11,7 +11,7 @@ import ListWithColumns, { Column, LogicalRow } from '@/List/ListWithColumns';
 import { Account, AccountId, is_liquid } from '@/services/useAccounts';
 import { TablePrefs } from '@/List/ListPrefs';
 import useAccountIds, {
-   AccountIdSet, AccountList } from '@/services/useAccountIds';
+   AccountIdSet, AccountSet } from '@/services/useAccountIds';
 import { Preferences } from '@/services/usePrefs';
 import useTransactions from '@/services/useTransactions';
 import usePrefs from '@/services/usePrefs';
@@ -67,12 +67,12 @@ export interface ComputedBaseLedgerProps extends BaseLedgerProps {
    transactions: Transaction[]; // use it instead of fetching
    prefs : Preferences;
    singleAccount: Account | undefined; // if a single account was selected
-   accounts: AccountList;
+   accounts: AccountSet;
    total: Totals;
 }
 
 interface TableRowData {
-   accounts: AccountList;
+   accounts: AccountSet;
    transaction: Transaction;
    firstRowSplit: Split;         //  simulated split for the first row
    account: undefined|Account;   // destination account
@@ -423,7 +423,7 @@ const columnTotal: Column<TableRowData, ComputedBaseLedgerProps> = {
 const computeFirstSplit = (
    p: BaseLedgerProps,
    t: Transaction,
-   accounts: AccountList,
+   accounts: AccountSet,
 ) => {
    const sa = splitsForAccounts(t, accounts.accounts);
    let s: Split = {
