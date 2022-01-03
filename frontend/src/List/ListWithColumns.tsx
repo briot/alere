@@ -217,6 +217,8 @@ interface ListWithColumnsProps<T, SHARED> extends TablePrefs {
    defaultExpand?: boolean | ((row: LogicalRow<T, SHARED>) => boolean);
 
    expanderColumn?: number;
+   hideHeader?: boolean;
+   hideFooter?: boolean;
 
    sortOn?: string;                  //  "+colid" or "-colid"
    setSortOn?: (on: string) => void; //  called when user wants to sort
@@ -351,7 +353,7 @@ const ListWithColumns = <T extends unknown, SHARED=any> (
       p.setSortOn?.(sortOn);
    }
 
-   const header = (
+   const header = !p.hideHeader && (
       <Table.TR>
       {
          cols.map((c, idx) =>
@@ -384,7 +386,7 @@ const ListWithColumns = <T extends unknown, SHARED=any> (
    );
 
    const footerColumns = p.footColumnsOverride ?? cols;
-   const footer = footerColumns.length
+   const footer = !p.hideFooter && footerColumns.length
       ? (
          <Table.TR>
          {
