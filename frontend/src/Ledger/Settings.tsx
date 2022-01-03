@@ -3,16 +3,12 @@ import { SplitMode, NotesMode } from '@/Ledger/View';
 import { LedgerPanelProps } from '@/Ledger/Panel';
 import { Checkbox, Select } from '@/Form';
 import { DateRange, DateRangePicker } from '@/Dates';
-import { Account } from '@/services/useAccounts';
 import { AccountIdSet } from '@/services/useAccountIds';
 import { SelectMultiAccount } from '@/Account/SelectMultiAccount';
-import useAccountIds from '@/services/useAccountIds';
 import { PanelProps } from '@/Dashboard/Panel';
 import { TableSettings } from '@/List/ListPrefs';
 
 const Settings: React.FC<PanelProps<LedgerPanelProps>> = p => {
-   const { accounts: allAccounts } = useAccountIds(p.props.accountIds);
-
    const changeRange = (range: DateRange) => p.save({ range });
    const changeAccount = (accountIds: AccountIdSet) => p.save({ accountIds });
    const changeTrans = (notes_mode: NotesMode) => p.save({notes_mode});
@@ -101,7 +97,7 @@ const Settings: React.FC<PanelProps<LedgerPanelProps>> = p => {
             !p.excludeFields?.includes("accountIds") &&
             <SelectMultiAccount
                text="Accounts"
-               value={allAccounts as Account[]|undefined}
+               value={p.props.accountIds}
                onChange={changeAccount}
             />
          }

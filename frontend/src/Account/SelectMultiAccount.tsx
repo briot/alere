@@ -1,32 +1,56 @@
 import * as React from 'react';
+import useAccountIds, { AccountIdSet } from '@/services/useAccountIds';
 import { Account } from '@/services/useAccounts';
-import { AccountIdSet } from '@/services/useAccountIds';
+import { isArray, isString } from '@/services/utils';
 import { Checkbox } from '@/Form';
 import ListWithColumns, { Column } from '@/List/ListWithColumns';
 import { AlternateRows } from '@/List/ListPrefs';
 import useBuildRowsFromAccounts from '@/List/ListAccounts';
+import { Select, SharedInputProps, SharedInput } from '@/Form';
 import {
    SelectTreeNode, createSelectAccountRow } from '@/Account/SelectAccount';
-import List from '@/List';
 import "./Account.scss";
 
-interface MultiAccountSelectProps {
-   text: string;
-   value: Account[] | undefined;
-
-   //  ??? Can we return an AccountIdList, including "assets", "all",...
+interface MultiAccountSelectProps
+      extends SharedInputProps<AccountIdSet|undefined>
+{
    onChange: (ids: AccountIdSet) => void;
-   showStock?: boolean;
+
+   hide?: (a: Account) => boolean;
+   hidden?: AccountIdSet;
+   // Two ways to hide account and its children.
 }
+
 export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
+   const { accounts } = useAccountIds(p.value);
+   const [preselection, setPreselection] = React.useState<string>(
+      () => isString(p.value)
+            ? p.value
+            : isArray(p.value) && p.value.length === 0
+            ? 'none'
+            : 'custom');
+
+   const onChangePreselection = (a: string) => {
+      setPreselection(a);
+      if (a === 'none') {
+         p.onChange([]);
+      } else if (a !== 'custom') {
+         p.onChange(a);
+      }
+   }
+
+   const { accounts: hidden } = useAccountIds(p.hidden);
+   const shouldShowAccount = (a: Account) =>
+      !hidden.includes(a) && (p.hide === undefined || !p.hide(a));
+
    const rows = useBuildRowsFromAccounts(
       createSelectAccountRow,
-      a => p.showStock || !a.kind.is_stock,  // filter account
+      shouldShowAccount,  // filter account
    );
 
    const localChange = (node: SelectTreeNode, checked: boolean) => {
-      const cp = p.value
-         ? p.value.map(a => a.id)
+      const cp = accounts
+         ? accounts.map(a => a.id)
          : rows.map(a => a.data.account?.id || -1);
       if (!node.account) {
       } else if (checked) {
@@ -49,9 +73,9 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
          return n.account ? (
             <Checkbox
                text={n.account.name}
-               value={!p.value || p.value.includes(n.account)}
-               onChange={(checked: boolean) => localChange(n, checked)
-               }
+               value={!accounts || accounts.includes(n.account)}
+               onChange={(checked: boolean) => localChange(n, checked)}
+               disabled={preselection !== 'custom'}
             />
          ) : (
             n.name
@@ -60,22 +84,37 @@ export const SelectMultiAccount: React.FC<MultiAccountSelectProps> = p => {
    };
 
    return (
-      <div
+      <SharedInput
+         {...p}
          className="multiAccountSelect"
-         style={{height: 15 * List.ROW_HEIGHT}}
       >
-         {
-            p.text &&
-            <label htmlFor={p.text}>{p.text}: </label>
-         }
-         <ListWithColumns
-            columns={[columnAccountName]}
-            rows={rows}
-            indentNested={true}
-            defaultExpand={true}
-            settings={{}}
-            rowColors={AlternateRows.ROW}
-         />
-      </div>
+         <div>
+            <Select
+               onChange={onChangePreselection}
+               value={preselection}
+               options={[
+                  {value: "none"},
+                  {value: "all"},
+                  {value: "net worth"},
+                  {value: "expenses"},
+                  {value: "income"},
+                  {value: "expense_income", text: "expenses or income"},
+                  {value: "custom"},
+               ]}
+            />
+
+            <ListWithColumns
+               className="custom"
+               columns={[columnAccountName]}
+               rows={rows}
+               indentNested={true}
+               defaultExpand={true}
+               settings={{}}
+               hideHeader={true}
+               hideFooter={true}
+               rowColors={AlternateRows.ROW}
+            />
+         </div>
+      </SharedInput>
    );
 }
