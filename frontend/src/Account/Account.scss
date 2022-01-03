@@ -13,11 +13,11 @@
 }
 
 .multiAccountSelect {
-   div {
-      @include set-colors(input);
-      white-space: nowrap;
-   }
    label {
       margin: 0;
+   }
+   .custom {
+      height: calc(15 * var(--row-height));
+      min-width: 300px;
    }
 }

@@ -109,7 +109,6 @@ form {
    }
    .select {
       --row-height: 20px;  /* must match ROW_HEIGHT in javascript */
-      height: 100%;
 
       .menu {
          @include set-colors(input);
@@ -158,8 +157,9 @@ form {
          -webkit-appearance: none;
          -moz-appearance: none;
          appearance: none;
-         height: 1.8em;
-         width: 1.8em;
+         height: calc(var(--row-height) - 4px);
+         width: calc(var(--row-height) - 4px);
+         aspect-ratio: 1/1;
          border: 1px solid var(--input-primary-border);
          border-radius: 0.5em;
          cursor: pointer;
