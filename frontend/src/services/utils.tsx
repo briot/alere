@@ -15,13 +15,9 @@ export const isNumeric = (str: unknown): str is number =>  {
           && !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
 }
 
-export const isString = (s: any): s is string => {
-   return typeof(s) === "string";
-}
-
-export const isFunc = (s: any): s is Function => {
-   return typeof(s) === "function";
-}
+export const isString = (s: any): s is string => typeof(s) === "string";
+export const isFunc = (s: any): s is Function => typeof(s) === "function";
+export const isArray = <T, >(s: any): s is Array<T> => Array.isArray(s);
 
 export const clamp = (n: number, min: number, max: number) =>
   Math.min(max, Math.max(n, min));
