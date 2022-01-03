@@ -1,8 +1,8 @@
 import * as React from 'react';
 import useAccounts, {
-   Account, AccountId, AccountKindCategory,
+   Account, AccountId,
    is_realized_income, is_unrealized_income, is_misc_income, is_expense,
-   is_expense_income,
+   is_expense_income, is_income, is_networth,
 } from '@/services/useAccounts';
 
 /**
@@ -18,8 +18,10 @@ export type AccountIdSet =
    | number
    | string       // from a URL, comma-separated list of ids
    | 'all'
-   | 'assets'
    | 'expenses'
+   | 'income'
+   | 'expense_income'
+   | 'networth'   // owned by user
    | 'income_tax'
    | 'realized_income'
    | 'unrealized_income'
@@ -52,11 +54,11 @@ const useAccountIds = (ids: AccountIdSet|undefined): AccountList => {
                 };
          }
 
-         if (ids === 'assets') {
+         if (ids === 'networth') {
             return {
                accounts: accounts.allAccounts().filter(
-                  a => a.kind.category === AccountKindCategory.ASSET),
-               title: 'all assets',
+                  a => is_networth(a.kind)),
+               title: 'all net worth',
             };
          }
 
@@ -105,6 +107,14 @@ const useAccountIds = (ids: AccountIdSet|undefined): AccountList => {
                accounts: accounts.allAccounts().filter(
                   a => is_expense_income(a.kind)),
                title: 'all expenses and income',
+            }
+         }
+
+         if (ids === 'income') {
+            return {
+               accounts: accounts.allAccounts().filter(
+                  a => is_income(a.kind)),
+               title: 'all income',
             }
          }
 

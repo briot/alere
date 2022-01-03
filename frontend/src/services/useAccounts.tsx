@@ -74,6 +74,10 @@ const nullAccountKind: AccountKindJSON = {
 
 export const is_liquid = (k: AccountKindJSON|undefined) =>
    k?.category !== AccountKindCategory.ASSET;
+export const is_networth = (k: AccountKindJSON|undefined) =>
+   k?.category === AccountKindCategory.EQUITY
+   || k?.category === AccountKindCategory.LIABILITY
+   || k?.category === AccountKindCategory.ASSET;
 export const is_expense_income = (k: AccountKindJSON|undefined) =>
    k?.category === AccountKindCategory.EXPENSE
    || k?.category === AccountKindCategory.INCOME;
