@@ -4,6 +4,7 @@ import useAccounts, {
    is_realized_income, is_unrealized_income, is_misc_income, is_expense,
    is_expense_income, is_income, is_networth,
 } from '@/services/useAccounts';
+import { isString, isArray } from '@/services/utils';
 
 /**
  * A user selects accounts for a panel either from an explicit list of
@@ -13,11 +14,8 @@ import useAccounts, {
  * need the ids in the ledger to know what Splits to show.
  */
 
-export type AccountIdSet =
-   AccountId[]    // explicit list of ids
-   | number
-   | string       // from a URL, comma-separated list of ids
-   | 'all'
+export type PredefinedSets =
+   'all'
    | 'expenses'
    | 'income'
    | 'expense_income'
@@ -30,132 +28,59 @@ export type AccountIdSet =
    | 'passive_income'
    | 'work_income';
 
+export type AccountIdSet = undefined | AccountId[] | PredefinedSets;
+
 export interface AccountList {
    accounts: Account[];
    title: string;   //  Describes the list of accounts, for humans
 }
 
-const useAccountIds = (ids: AccountIdSet|undefined): AccountList => {
-   const { accounts } = useAccounts();
+const filters: Record<
+   PredefinedSets,
+   [
+      string,  // title
+      (a: Account) => boolean,
+   ]> =
+{
+   'all':             ['all accounts',        a => true],
+   'expenses':        ['expenses',            a => is_expense(a.kind)],
+   'income':          ['income',              a => is_income(a.kind)],
+   'expense_income':  ['expenses and income', a => is_expense_income(a.kind)],
+   'networth':        ['net worth',           a => is_networth(a.kind)],
+   'income_tax':      ['income taxes',        a => a.kind.is_income_tax],
+   'realized_income': ['realized income',     a => is_realized_income(a.kind)],
+   'unrealized_income': [
+      'unrealized income', a => is_unrealized_income(a.kind)],
+   'other_income':    ['other income',        a => is_misc_income(a.kind)],
+   'other_taxes':     ['taxes except income', a => a.kind.is_misc_tax],
+   'passive_income':  ['passive income',      a => a.kind.is_passive_income],
+   'work_income':     ['work income',         a => a.kind.is_work_income],
+};
 
+
+const useAccountIds = (ids: AccountIdSet): AccountList => {
+   const { accounts } = useAccounts();
    return React.useMemo(
       () => {
-         if (ids === undefined) {
+         if (isString(ids)) {
+            const v = filters[ids];
+            return {
+               accounts: accounts.allAccounts().filter(v[1]),
+               title: v[0],
+            };
+         } else if (isArray(ids)) {
+            const acc = ids
+               .map(a => accounts.getAccount(a))
+               .filter(a => a !== undefined);
+            return {
+               accounts: acc,
+               title: acc.length === 1 ? acc[0]?.name : 'multiple accounts',
+            };
+         } else {
             return {
                accounts: [],
                title: '',
             };
-         }
-
-         if (ids === 'all') {
-            return {
-                accounts: accounts.allAccounts(),
-                title: 'all accounts'
-                };
-         }
-
-         if (ids === 'networth') {
-            return {
-               accounts: accounts.allAccounts().filter(
-                  a => is_networth(a.kind)),
-               title: 'all net worth',
-            };
-         }
-
-         if (ids === 'realized_income') {
-            return {
-               accounts: accounts.allAccounts().filter(
-                  a => is_realized_income(a.kind)),
-               title: 'all realized income',
-            }
-         }
-
-         if (ids === 'unrealized_income') {
-            return {
-               accounts: accounts.allAccounts().filter(
-                  a => is_unrealized_income(a.kind)),
-               title: 'all unrealized income',
-            }
-         }
-
-         if (ids === 'other_income') {
-            return {
-               accounts: accounts.allAccounts().filter(
-                  a => is_misc_income(a.kind)),
-               title: 'all unrealized income',
-            }
-         }
-
-         if (ids === 'work_income') {
-            return {
-               accounts: accounts.allAccounts().filter(
-                  a => a.kind.is_work_income),
-               title: 'all work income',
-            }
-         }
-
-         if (ids === 'passive_income') {
-            return {
-               accounts: accounts.allAccounts().filter(
-                  a => a.kind.is_passive_income),
-               title: 'all passive income',
-            }
-         }
-
-         if (ids === 'expense_income') {
-            return {
-               accounts: accounts.allAccounts().filter(
-                  a => is_expense_income(a.kind)),
-               title: 'all expenses and income',
-            }
-         }
-
-         if (ids === 'income') {
-            return {
-               accounts: accounts.allAccounts().filter(
-                  a => is_income(a.kind)),
-               title: 'all income',
-            }
-         }
-
-         if (ids === 'expenses') {
-            return {
-               accounts: accounts.allAccounts().filter(
-                  a => is_expense(a.kind)),
-               title: 'all expenses',
-            }
-         }
-
-         if (ids === 'income_taxes') {
-            return {
-               accounts: accounts.allAccounts().filter(
-                  a => a.kind.is_income_tax),
-               title: 'all income taxes',
-            }
-         }
-
-         if (ids === 'other_taxes') {
-            return {
-               accounts: accounts.allAccounts().filter(
-                  a => a.kind.is_misc_tax),
-               title: 'all other taxes',
-            }
-         }
-
-         const numids = typeof(ids) === 'string'
-            ? ids.split(',').map(c => parseInt(c))
-            : typeof(ids) === 'number'
-            ? [ids]
-            : ids;
-
-         const acc = numids.map(a => accounts.getAccount(a))
-               .filter(a => a !== undefined);
-
-         return {
-            accounts: acc,
-            title: acc.length === 1
-               ? acc[0]?.name
-               : 'multiple accounts',
          }
       },
       [ids, accounts]

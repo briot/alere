@@ -9,7 +9,7 @@ export interface Selection {
    accounts: AccountList;
    range: DateRange | undefined;
    raw: Record<string, string>;
-   accountIds: AccountIdSet | undefined;
+   accountIds: AccountIdSet;
    date: Date;  //  a reference date (in general: today)
 }
 
@@ -23,7 +23,9 @@ interface QueryDefaults {
 const useSearch = (defaults?: QueryDefaults): Selection => {
    const r = Object.fromEntries(new URLSearchParams(useLocation().search));
    const { mostRecent, pushAccount } = useHistory();
-   const accountIds = r.accounts ?? defaults?.accountIds ?? mostRecent;
+   const accountIds = (
+      r.accounts ?? defaults?.accountIds ?? mostRecent
+   ) as AccountIdSet;  // what if the user provides an invalid string ?
    const accounts = useAccountIds(accountIds);
 
    // Save chosen accounts to "most Recent" history

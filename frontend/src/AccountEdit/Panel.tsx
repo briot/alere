@@ -10,7 +10,7 @@ export interface AccountEditPanelProps
 
 const AccountEditPanel: React.FC<PanelProps<AccountEditPanelProps>> = p => {
    const query = useSearch({
-      accountIds: p.props.accountId,  // default
+      accountIds: [p.props.accountId],  // default
    });
 
    return (
