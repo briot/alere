@@ -225,10 +225,6 @@ export const Select = <T extends { toString: () => string }> (p: SelectProps<T>)
    const ROW_HEIGHT = 20;
 
    const { onChange } = p;
-   const selectItem = React.useCallback(
-      (val: T) => onChange?.(val),
-      [onChange]
-   );
    const selected = p.options.filter(o => o.value === p.value)[0]
    const getKey = (index: number) => index;
    const getRow = (q: ListChildComponentProps) => {
@@ -242,7 +238,7 @@ export const Select = <T extends { toString: () => string }> (p: SelectProps<T>)
                   `option${o.value === p.value ? ' selected' : ''}`
                }
                style={q.style}
-               onClick={() => selectItem(o.value as T)}
+               onClick={() => onChange?.(o.value as T)}
             >
                <span style={o.style}>{o.text ?? o.value.toString()}</span>
             </div>

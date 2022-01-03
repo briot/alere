@@ -72,13 +72,19 @@ const Dropdown: React.FC<DropdownProps> = p => {
       [doVisible]
    );
    const onClose  = React.useCallback(
-      () => doVisible(true /* forceHide */),
+      (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+         doVisible(true /* forceHide */);
+         e.stopPropagation();
+         e.preventDefault();
+      },
       [doVisible]
    );
 
    const onMouse = React.useCallback(
       (e : MouseEvent) => {
          setVisible(old => {
+            e.stopPropagation();
+            e.preventDefault();
             if (old) {
                let t = e.target as HTMLElement|null;
                while (t) {
@@ -87,8 +93,6 @@ const Dropdown: React.FC<DropdownProps> = p => {
                   }
                   t = t.parentElement;
                }
-               e.stopPropagation();
-               e.preventDefault();
             }
             return false;
          });
