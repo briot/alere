@@ -95,13 +95,15 @@ const useTickers = (
 
    React.useEffect(
       () => {
+        window.console.log('MANU ', (tickers?.data ?? []).map(f => f.accounts.map(a => a.end.shares)));
+
          setFiltered((tickers?.data ?? []).map(
             f => ({
                ...f,
                accounts: f.accounts.filter(
                   a => !hideIfNoShare
-                     || f.is_currency
-                     || Math.abs(a.end.shares) > THRESHOLD),
+                     || (f.is_currency && Math.abs(a.end.equity) > THRESHOLD)
+                     || (!f.is_currency && Math.abs(a.end.shares) > THRESHOLD)),
             })).filter(t => !hideIfNoShare || t.accounts.length > 0));
       },
       [tickers.data, hideIfNoShare],
