@@ -8,12 +8,13 @@ export interface IEHistoryBarsPanelProps
    type: 'iehistorybars';
 }
 
-const IEHistoryBarsPanel: React.FC<PanelProps<IEHistoryBarsPanelProps>> = p => {
+const IEHistoryBarsPanel: React.FC<PanelProps<IEHistoryBarsPanelProps>> =
+   React.memo(p => {
    return (
       <Panel
          {...p}
          header={{ name: 'Income/Expense History' }}
-         Settings={
+         Settings={() =>
             <Settings
                props={p.props}
                excludeFields={p.excludeFields}
@@ -24,6 +25,6 @@ const IEHistoryBarsPanel: React.FC<PanelProps<IEHistoryBarsPanelProps>> = p => {
          <IEHistoryBars {...p.props} />
       </Panel>
    );
-}
+});
 const registerIEHistoryBars = {'iehistorybars': IEHistoryBarsPanel};
 export default registerIEHistoryBars;

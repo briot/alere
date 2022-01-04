@@ -25,7 +25,7 @@ const MeanPanel: React.FC<PanelProps<MeanPanelProps>> = p => {
          {...p}
          header={{name: `${title} history`,
                   range: p.props.range}}
-         Settings={
+         Settings={() =>
             <Settings
                props={p.props}
                excludeFields={p.excludeFields}

@@ -13,7 +13,7 @@ const InvestmentsPanel: React.FC<PanelProps<InvestmentsPanelProps>> = p => {
          {...p}
          className='asgrid'
          header={{name: 'investments', range: p.props.range}}
-         Settings={
+         Settings={() =>
             <Settings
                props={p.props}
                excludeFields={p.excludeFields}

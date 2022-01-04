@@ -20,7 +20,7 @@ export type { PanelBaseProps, PanelProps };
 interface Props <T extends PanelBaseProps> extends PanelProps<T> {
    header: HeaderProps;  // What header to show for the panel
 
-   Settings?: React.ReactElement|null;
+   Settings?: null | (() => React.ReactElement);
    // if null, no menu at all, not even the default one.
    // if undefined, default menu only.
 
@@ -58,10 +58,10 @@ function Panel<T extends PanelBaseProps>(
                        button={(visible: boolean) =>
                           <RoundButton fa='fa-bars' size='tiny' selected={visible} />
                        }
-                       menu={
+                       menu={() =>
                           <form>
                              {
-                                p.Settings
+                                p.Settings?.()
                              }
                              <fieldset>
                                 <legend>Layout</legend>

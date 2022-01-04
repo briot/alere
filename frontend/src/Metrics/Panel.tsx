@@ -12,7 +12,7 @@ const MetricsPanel: React.FC<PanelProps<MetricsPanelProps>> = p => {
       <Panel
          {...p}
          header={{ name: 'metrics', range: p.props.range }}
-         Settings={
+         Settings={() =>
             <Settings
                props={p.props}
                excludeFields={p.excludeFields}

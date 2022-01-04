@@ -4,7 +4,7 @@ import './Dropdown.scss';
 
 interface DropdownProps {
    button: (visible: boolean) => React.ReactNode;
-   menu: React.ReactNode;
+   menu: () => React.ReactNode;
    className?: string;
    animate?: boolean;
 
@@ -18,7 +18,7 @@ interface Pos {
    vert?: number | 'above' | 'below';
 }
 
-const Dropdown: React.FC<DropdownProps> = p => {
+const Dropdown: React.FC<DropdownProps> = React.memo(p => {
    const [visible, setVisible] = React.useState(false);
    const [pos, setPos] = React.useState<Pos>({});
    const widget = React.useRef<HTMLDivElement>(null);
@@ -133,24 +133,23 @@ const Dropdown: React.FC<DropdownProps> = p => {
          <div className="dropdownButton" onClick={onToggle}>
             {p.button(visible)}
          </div>
-         <div
-             className={menuc}
-             style={{top: pos.vert === 'above' ? 'auto'
-                          : pos.vert === 'below' ? '100%'
-                          : pos.vert,
-                     bottom: pos.vert === 'above' ? '100%' : 'auto',
-                   }}
-             onClick={p.closeOnInsideClick ? onClose : undefined}
-         >
-            {
-               // Always populate the menu, so that we can compute its size
-               // when the menu is open to decide which side to display on.
-               // Otherwise there is a flash of the dialog before it is moved
-               // to the left side.
-               p.menu
-            }
-         </div>
+         {
+            visible &&
+            <div
+                className={menuc}
+                style={{top: pos.vert === 'above' ? 'auto'
+                             : pos.vert === 'below' ? '100%'
+                             : pos.vert,
+                        bottom: pos.vert === 'above' ? '100%' : 'auto',
+                      }}
+                onClick={p.closeOnInsideClick ? onClose : undefined}
+            >
+               {
+                  p.menu()
+               }
+            </div>
+         }
       </div>
    );
-}
+});
 export default Dropdown;

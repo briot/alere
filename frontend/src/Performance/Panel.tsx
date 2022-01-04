@@ -13,7 +13,7 @@ const PerformancePanel: React.FC<PanelProps<PerformancePanelProps>> = p => {
          {...p}
          className='astable'
          header={{name: 'performance', range: p.props.range}}
-         Settings={
+         Settings={() =>
             <Settings
                props={p.props}
                excludeFields={p.excludeFields}

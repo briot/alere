@@ -81,7 +81,7 @@ const AssetsPanel: React.FC<PanelProps<AssetsPanelProps>> = p => {
       <Panel
          {...p}
          header={{ name: 'assets' }}
-         Settings={
+         Settings={() =>
             <Settings
                props={p.props}
                excludeFields={p.excludeFields}

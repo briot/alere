@@ -25,7 +25,7 @@ const LedgerPanel: React.FC<
       <Panel
          {...p}
          header={{name: query.accounts.title, range: query.range}}
-         Settings={
+         Settings={() =>
             <Settings
                props={{...p.props,
                        accountIds: query.accountIds,

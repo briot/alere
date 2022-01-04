@@ -39,7 +39,7 @@ const PriceHistoryPanel: React.FC<PanelProps<PriceHistoryPanelProps>> = p => {
       <Panel
          {...p}
          header={{ name: `Price History` }}
-         Settings={
+         Settings={() =>
             <Settings
                props={p.props}
                excludeFields={p.excludeFields}

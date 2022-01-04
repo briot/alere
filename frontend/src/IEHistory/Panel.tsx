@@ -7,12 +7,13 @@ export interface IEHistoryPanelProps extends PanelBaseProps, IEHistoryProps {
    type: 'iehistory';
 }
 
-const IEHistoryPanel: React.FC<PanelProps<IEHistoryPanelProps>> = p => {
+const IEHistoryPanel: React.FC<PanelProps<IEHistoryPanelProps>> =
+React.memo(p => {
    return (
       <Panel
          {...p}
          header={{ name: 'Income/Expense History' }}
-         Settings={
+         Settings={() =>
             <Settings
                props={p.props}
                excludeFields={p.excludeFields}
@@ -23,6 +24,6 @@ const IEHistoryPanel: React.FC<PanelProps<IEHistoryPanelProps>> = p => {
          <IEHistory {...p.props} />
       </Panel>
    );
-}
+})
 const registerIEHistory = {'iehistory': IEHistoryPanel};
 export default registerIEHistory;

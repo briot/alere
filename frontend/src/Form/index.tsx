@@ -267,7 +267,7 @@ export const Select = <T extends { toString: () => string }> (p: SelectProps<T>)
                   }
                </>
             }
-            menu={
+            menu={() =>
                <div
                    style={{height: ROW_HEIGHT * Math.min(p.options.length, 15) }}
                >

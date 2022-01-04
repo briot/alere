@@ -9,7 +9,7 @@ export interface IncomeExpensePanelProps
    type: 'incomeexpenses';
 }
 
-const IEPanel: React.FC<PanelProps<IncomeExpensePanelProps>> = p => {
+const IEPanel: React.FC<PanelProps<IncomeExpensePanelProps>> = React.memo(p => {
    const { accounts } = useAccounts();
    if (!accounts.has_accounts()) {
       return null;
@@ -20,7 +20,7 @@ const IEPanel: React.FC<PanelProps<IncomeExpensePanelProps>> = p => {
          {...p}
          header={{ name: p.props.expenses ? 'expenses': 'income',
                    range: p.props.range }}
-         Settings={
+         Settings={() =>
             <Settings
                props={p.props}
                excludeFields={p.excludeFields}
@@ -31,7 +31,7 @@ const IEPanel: React.FC<PanelProps<IncomeExpensePanelProps>> = p => {
          <IncomeExpense {...p.props} />
       </Panel>
    );
-}
+});
 
 const registerIE = {'incomeexpenses': IEPanel};
 export default registerIE;

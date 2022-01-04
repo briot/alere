@@ -30,7 +30,7 @@ const Settings: React.FC<SettingsProps> = p => {
                tooltip="Global Settings"
             />
          }
-         menu={
+         menu={() =>
             <form>
                <fieldset>
                   <legend>General</legend>

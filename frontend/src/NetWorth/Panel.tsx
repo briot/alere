@@ -18,7 +18,7 @@ const NetworthPanel: React.FC<PanelProps<NetworthPanelProps>> = p => {
       <Panel
          {...p}
          header={{ name: 'Net worth' }}
-         Settings={
+         Settings={() =>
             <Settings
                props={p.props}
                excludeFields={p.excludeFields}

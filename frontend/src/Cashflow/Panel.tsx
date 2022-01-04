@@ -7,12 +7,13 @@ export interface CashflowPanelProps extends PanelBaseProps, CashflowProps {
    type: 'cashflow';
 }
 
-const CashflowPanel: React.FC<PanelProps<CashflowPanelProps>> = p => {
+const CashflowPanel: React.FC<PanelProps<CashflowPanelProps>> =
+   React.memo(p => {
    return (
       <Panel
          {...p}
          header={{ name: 'cashflow' }}
-         Settings={
+         Settings={() =>
             <Settings
                props={p.props}
                excludeFields={p.excludeFields}
@@ -23,7 +24,7 @@ const CashflowPanel: React.FC<PanelProps<CashflowPanelProps>> = p => {
          <Cashflow {...p.props} />
       </Panel>
    );
-}
+});
 
 const registerCashflow = {'cashflow': CashflowPanel};
 export default registerCashflow;
