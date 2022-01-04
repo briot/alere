@@ -1,6 +1,7 @@
 import * as React from 'react';
 import AccountName from '@/Account/AccountName';
-import ListWithColumns, { Column } from '@/List/ListWithColumns';
+import ListWithColumns, {
+   Column, LogicalRow, RowDetails } from '@/List/ListWithColumns';
 import { IERanges, useFetchIERanges } from '@/services/useFetchIE';
 import { TablePrefs } from '@/List/ListPrefs';
 import { DateRange, rangeDisplay } from '@/Dates';
@@ -9,7 +10,6 @@ import { numComp } from '@/services/utils';
 import useBuildRowsFromAccounts from '@/List/ListAccounts';
 import Numeric from '@/Numeric';
 import { TreeMode } from '@/services/TreeMode';
-
 
 /**
  * Properties for the view
@@ -21,7 +21,29 @@ export interface IEHistoryProps {
    tablePrefs: TablePrefs;
 }
 
-const columnCategory: Column<IERanges, IEHistoryProps> = {
+type RowType = LogicalRow<IERanges, IEHistoryProps>;
+type DetailsType = RowDetails<IERanges, IEHistoryProps>;
+type ColumnType = Column<IERanges, IEHistoryProps>;
+
+
+const cumulatedValue = (
+   row: RowType,
+   settings: IEHistoryProps,
+   index: number,
+   isExpanded: boolean | undefined,
+): number => {
+   const val = row.data.values[index] ?? 0;
+   const v = isNaN(val) ? 0 : val;
+   return (isExpanded || row.getChildren === undefined)
+      ? v
+      : row.getChildren(row.data, settings).reduce(
+         (total, child) =>
+            total + cumulatedValue(child, settings, index, false),
+         v
+      );
+};
+
+const columnCategory: ColumnType = {
    id: 'Category',
    cell: (d: IERanges) =>
       d.account
@@ -33,14 +55,14 @@ const columnCategory: Column<IERanges, IEHistoryProps> = {
 const columnValue = (
    index: number,
    range: DateRange,
-): Column<IERanges, IEHistoryProps> => {
+): ColumnType => {
    const d = rangeDisplay(range);
    return {
       id: d.text,
       title: d.as_dates,
-      cell: (d: IERanges, _, p: IEHistoryProps) =>
+      cell: (d: IERanges, row: DetailsType, p: IEHistoryProps) =>
          <Numeric
-            amount={d.values[index]}
+            amount={cumulatedValue(row.logic, p, index, row.isExpanded) || NaN}
             commodity={d.currency}
             scale={p.roundValues ? 0 : undefined}
          />,
@@ -50,7 +72,7 @@ const columnValue = (
 
 const IEHistory: React.FC<IEHistoryProps> = p => {
    const account_to_data = useFetchIERanges(p.ranges);
-   const columns: Column<IERanges, IEHistoryProps>[] = [
+   const columns: ColumnType[] = [
          columnCategory,
       ].concat(
          p.ranges.map((r, idx) => columnValue(idx, r))
