@@ -95,8 +95,6 @@ const useTickers = (
 
    React.useEffect(
       () => {
-        window.console.log('MANU ', (tickers?.data ?? []).map(f => f.accounts.map(a => a.end.shares)));
-
          setFiltered((tickers?.data ?? []).map(
             f => ({
                ...f,

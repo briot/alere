@@ -69,11 +69,20 @@ const useAccountIds = (ids: AccountIdSet): AccountSet => {
       () => {
          if (isString(ids)) {
             const v = filters[ids];
-            return {
-               accounts: accounts.allAccounts().filter(v[1]),
-               title: v[0],
-            };
-         } else if (isArray(ids)) {
+            if (v !== undefined) {
+               return {
+                  accounts: accounts.allAccounts().filter(v[1]),
+                  title: v[0],
+               };
+            } else {
+               return {
+                  accounts: accounts.allAccounts().filter(v[1]),
+                  title: v[0],
+               };
+            }
+         }
+
+         if (isArray(ids)) {
             const acc = ids
                .map(a => accounts.getAccount(a))
                .filter(a => a !== undefined);

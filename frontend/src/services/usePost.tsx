@@ -42,7 +42,7 @@ const usePost = <RESULT, VARS extends FormData|{}|string|undefined> (
             }
          );
          if (!r.ok) {
-            window.console.log(r); // MANU
+            window.console.error(r);
             throw new Error(`Failed to post ${p.url}`);
          }
          return r.json() as Promise<RESULT>;

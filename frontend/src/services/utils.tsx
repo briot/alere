@@ -2,7 +2,7 @@ import * as d3TimeFormat from 'd3-time-format';
 
 export const DAY_MS = 86400000;
 
-export const isNumeric = (str: unknown): str is number =>  {
+export const isNumeric = (str: unknown): str is number|string =>  {
    if (typeof str === "number") {
       return true;
    }
@@ -17,6 +17,7 @@ export const isNumeric = (str: unknown): str is number =>  {
 
 export const isString = (s: any): s is string => typeof(s) === "string";
 export const isFunc = (s: any): s is Function => typeof(s) === "function";
+export const isNumber = (s: any): s is number => typeof(s) === "number";
 export const isArray = <T, >(s: any): s is Array<T> => Array.isArray(s);
 
 export const clamp = (n: number, min: number, max: number) =>
