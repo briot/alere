@@ -16,13 +16,20 @@ const OnlineUpdate: React.FC<{}> = () => {
       },
       onError: () => window.console.log('MANU updating failed'),
    });
+   const update = React.useCallback(
+      () => {
+         window.console.log('MANU update');
+         mutation.mutate('');
+      },
+      [mutation]
+   );
 
    return (
       <RoundButton
          fa='fa-refresh'
          size='small'
          tooltip='update prices from online sources. This includes closing prices from the previous day, not necessarily the current price.'
-         onClick={() => mutation.mutate('')}
+         onClick={update}
          disabled={mutation.isLoading}
       />
    );

@@ -62,17 +62,19 @@ class Commodities(AlereModel):
     quote_source = models.ForeignKey(
         PriceSources, on_delete=models.CASCADE, null=True)
     quote_symbol = models.TextField(null=True)  # ??? ticker
+    quote_currency = models.ForeignKey(
+        "Commodities", on_delete=models.CASCADE, null=True)
     # For online quotes. The source refers to one of the plugins available in
-    # ALERE, quote_symbol is the ticker
+    # ALERE, quote_symbol is the ticker, and quote_currency is the currency in
+    # which we retrieve the data (fetching this is slow in Yahoo)
 
     class Meta:
         db_table = prefix + "commodities"
 
     def __str__(self):
         return (
-            "Commodities(%s, iso_code=%s, kind=%s qty_scale=%s price_scale=%s)"
-            % (self.name, self.iso_code, self.kind, self.qty_scale,
-                self.price_scale)
+            "Commodities(%s, iso_code=%s, kind=%s price_scale=%s)"
+            % (self.name, self.iso_code, self.kind, self.price_scale)
         )
 
 
@@ -96,7 +98,7 @@ class Prices(AlereModel):
     # Price of 1 from_id in to_id currency.
     # This is scaled by origin's price_scale
 
-    source  = models.ForeignKey(PriceSources, on_delete=models.CASCADE)
+    source = models.ForeignKey(PriceSources, on_delete=models.CASCADE)
 
     class Meta:
         db_table = prefix + "prices"
