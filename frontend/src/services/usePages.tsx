@@ -156,6 +156,7 @@ const defaultPages: PageDescr[] = [
             colspan: 2,
             expenses: false,
             roundValues: true,
+            showBars: true,
             range: '1 year',
          } as IncomeExpensePanelProps,
          {

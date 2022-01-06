@@ -154,29 +154,39 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
                   <div
                      style={{width: width,
                              height: height,
-                             overflow:'scroll'}}
+                             overflow:'auto'}}
                   >
                      <BarChart
-                        width={width}
+                        width={width - 20 /* scrollbar width ??? */}
                         height={
                            /* lines should have minimal height to keep label
                             * readable */
                            Math.max(
                               normalized.items.length * MIN_BAR_HEIGHT,
                               height
-                           )
+                           ) - 4
                         }
                         className="incomeexpense"
                         layout="vertical"
                         data={normalized.items}
+                        barGap={0}
                      >
                         <XAxis
                            dataKey="value"
                            domain={['auto', 'auto']}
                            type="number"
+                           tickCount={10}
                         />
-                        <YAxis dataKey="name" type="category" hide={true} />
-                        <CartesianGrid strokeDasharray="5 5" />
+                        <YAxis
+                           dataKey="name"
+                           type="category"
+                           hide={true}
+                           interval={0}
+                        />
+                        <CartesianGrid
+                           horizontal={false}
+                           strokeDasharray="5 5"
+                        />
                         <Tooltip
                            content={
                               <CustomTooltip
