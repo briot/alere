@@ -31,14 +31,14 @@ const columnActions: Column<RowData, AccountsProps> = {
          <RoundButton
             fa="fa-book"
             size='tiny'
-            flat={true}
+            aspect="flat"
             tooltip='Show ledger'
             url={`/ledger?accounts=${d.account?.id}`}
          />
          <RoundButton
             fa="fa-pencil"
             size='tiny'
-            flat={true}
+            aspect="flat"
             tooltip='Edit account'
             url={`/accountEdit?accounts=${d.account?.id}`}
          />

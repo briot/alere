@@ -44,6 +44,9 @@ a.roundButton:hover {
       &.flat {
          border: 1px solid var(--input-border);
       }
+      &.noborder {
+         border-width: 0;
+      }
    }
 
    &.large {
@@ -86,7 +89,7 @@ a.roundButton:hover {
          font-size: 0.7em;
       }
       span:first-child {
-         margin: 2px;
+         margin: 5px 8px 5px 2px;
       }
    }
 

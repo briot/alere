@@ -5,6 +5,7 @@ import classes from '@/services/classes';
 import './RoundButton.scss';
 
 export type ButtonSizes = 'tiny'|'small'|'normal'|'large';
+export type ButtonAspect = 'morph' | 'flat' | 'noborder';
 
 interface RoundButtonProps {
    fa?: string;     // font-awesome icon name
@@ -16,7 +17,7 @@ interface RoundButtonProps {
    disabled?: boolean;
    size?: ButtonSizes;
 
-   flat?: boolean;        // if false => skeumorphism aspect, else flat
+   aspect?: ButtonAspect;
 
    url?: string;          // the button should be a link
    onClick?: () => void;  // or a custom callback
@@ -24,7 +25,7 @@ interface RoundButtonProps {
 
 const RoundButton: React.FC<RoundButtonProps> = p => {
    const children_class = classes(
-      p.flat ? 'flat' : 'morph',
+      p.aspect ?? "morph",
       p.fa && 'fa',
       p.fa,
    )

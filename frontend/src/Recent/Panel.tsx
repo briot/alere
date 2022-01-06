@@ -9,7 +9,7 @@ const RecentPanel: React.FC<PanelProps<RecentPanelProps>> = p => {
    return (
       <Panel
          {...p}
-         header={{name: "Recent accounts"}}
+         header={{name: "Recent"}}
       >
          <Recent {...p.props} />
       </Panel>

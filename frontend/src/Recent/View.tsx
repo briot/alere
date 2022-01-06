@@ -20,6 +20,7 @@ const Recent: React.FC<RecentProps> = p => {
                         img={a.getInstitution()?.icon}
                         key={h.accountId}
                         size="tiny"
+                        aspect="noborder"
                      >
                         <AccountName
                            id={h.accountId}
