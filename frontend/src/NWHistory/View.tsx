@@ -11,10 +11,11 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import { Option } from '@/Form';
 import './NetworthHistory.scss';
 
-export type GroupBy = 'months' | 'days';
+export type GroupBy = 'years' | 'months' | 'days';
 export const groupByOptions: Option<GroupBy>[] = [
    {value: 'days'},
    {value: 'months'},
+   {value: 'years'},
 ];
 
 

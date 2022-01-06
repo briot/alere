@@ -12,7 +12,7 @@ from typing import List, Union, Literal
 me = logging.getLogger(__name__)
 
 
-GroupBy = Literal['months', 'days']
+GroupBy = Literal['months', 'days', 'years']
 
 
 class Mean:
@@ -39,7 +39,30 @@ class Mean:
         """
         MAX_ROWS = 366
 
-        if self.groupby == 'days':
+        if self.groupby == 'years':
+            s = f"""RECURSIVE dates (date) AS (
+            SELECT
+                MIN(d1, d2)
+                FROM (
+                   SELECT
+                      date('{self.end}', '+1 YEAR', 'start of year', '-1 day',
+                         '+{self.after:d} YEARS') as d1,
+                      MAX(alr_balances_currency.mindate) as d2
+                   FROM alr_balances_currency
+                )
+            UNION
+               SELECT date(m.date, "-1 YEAR")
+               FROM dates m,
+                  (SELECT MIN(alr_balances_currency.mindate) as date
+                   FROM alr_balances_currency) range
+               WHERE m.date >= date('{self.start}', '-{self.prior:d} YEARS')
+                  AND m.date >= range.date
+               LIMIT {MAX_ROWS}
+            )"""
+            print(s)
+            return s
+
+        elif self.groupby == 'days':
             return f"""RECURSIVE dates (date) AS (
             SELECT date('{self.end}', '+{self.after:d} DAYS')
             UNION
