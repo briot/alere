@@ -1,6 +1,7 @@
 import React from 'react';
 import classes from '@/services/classes';
 import useAccounts, { Commodity, CommodityId } from '@/services/useAccounts';
+import Tooltip, { TooltipValue } from '@/Tooltip';
 import './Numeric.scss';
 
 const DECIMAL_SEP = ','
@@ -18,11 +19,12 @@ interface NumericProps {
    showArrow?: boolean;
    scale?: number;  // override the commodity's scale (for prices). Set to 0
                     // to round numbers
+   tooltip?: TooltipValue<unknown>;
 }
 
 const Numeric: React.FC<NumericProps> = ({
    amount, commodity, className, colored, scale, hideCommodity, suffix,
-   forceSign, showArrow,
+   forceSign, showArrow, tooltip
 }) => {
    const { accounts } = useAccounts();
 
@@ -62,24 +64,26 @@ const Numeric: React.FC<NumericProps> = ({
 //   }
 
    return (
-      <span className={cn}>
-         {!hideCommodity && comm?.symbol_before
-            ? <span className="prefix">{comm.symbol_before}</span>
-            : null
-         }
-         {sign}{str.join(DECIMAL_SEP)}
-         {!hideCommodity && comm?.symbol_after
-            ? <span className="suffix">{comm.symbol_after}</span>
-            : null
-         }
-         {suffix}
-         {
-            showArrow &&
-            (amount < 0
-             ? <span>&#9660;</span>
-             : <span>&#9650;</span>)
-         }
-      </span>
+      <Tooltip tooltip={tooltip}>
+         <span className={cn}>
+            {!hideCommodity && comm?.symbol_before
+               ? <span className="prefix">{comm.symbol_before}</span>
+               : null
+            }
+            {sign}{str.join(DECIMAL_SEP)}
+            {!hideCommodity && comm?.symbol_after
+               ? <span className="suffix">{comm.symbol_after}</span>
+               : null
+            }
+            {suffix}
+            {
+               showArrow &&
+               (amount < 0
+                ? <span>&#9660;</span>
+                : <span>&#9650;</span>)
+            }
+         </span>
+      </Tooltip>
    );
 }
 

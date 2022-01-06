@@ -5,13 +5,15 @@ import { clamp, isFunc } from '@/services/utils';
 import './Tooltip.scss';
 
 export type TooltipFunc<T> = (d: T) => React.ReactNode;
+export type TooltipValue<T> =
+   React.ReactNode | TooltipFunc<T> | string | undefined;
 
 const MARGIN = 4;
 const DELAY_BEFORE = 600;
 const DELAY_TO_CLOSE = 100;
 
 export interface TooltipProps<T> {
-   tooltip?: React.ReactNode | TooltipFunc<T> | undefined;
+   tooltip?: TooltipValue<T>;
    tooltipData?: T|undefined;
 }
 
@@ -271,6 +273,10 @@ const useTooltip = () => React.useContext(ReactTooltipContext);
 
 /**
  * Tooltip
+ * The single child must be a DOM element (that accepts refs). Otherwise, we
+ * would need it to be the result of calling React.forwardRef(), and the ref
+ * we pass should be createRef().
+ * In particular, we cannot wrap a <Numeric> inside a tooltip.
  */
 
 interface TooltipPropsWithChild<T> extends TooltipProps<T> {
@@ -306,7 +312,8 @@ const Tooltip: React.FC<TooltipPropsWithChild<any>> = p => {
    }
    return (
       React.cloneElement(
-         React.Children.only(p.children), {
+         React.Children.only(p.children),
+         {
             onMouseEnter: handleMouseEnter,
             onMouseLeave: tooltip.hide,
             ref,
