@@ -175,7 +175,7 @@ const defaultPages: PageDescr[] = [
             showIncome: true,
             showUnrealized: true,
             negateExpenses: true,
-            showMean: true,
+            showRollingMean: true,
             rowspan: 1,
             colspan: 2,
          } as MeanPanelProps,

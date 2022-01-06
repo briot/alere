@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useHistory } from 'react-router-dom';
 import { DateRange, endOfMonth, rangeToHttp } from '@/Dates';
 import { ComposedChart, XAxis, YAxis, CartesianGrid, Bar, ReferenceLine,
-         Line, Tooltip, TooltipProps } from 'recharts';
+         Line, Tooltip, TooltipProps, Label } from 'recharts';
 import { CommodityId } from '@/services/useAccounts';
 import Numeric from '@/Numeric';
 import { AccountIdSet } from '@/services/useAccountIds';
@@ -76,6 +76,7 @@ export interface MeanProps {
    showIncome?: boolean;
    showUnrealized?: boolean;
    negateExpenses?: boolean;
+   showRollingMean?: boolean;
    showMean?: boolean;
 }
 
@@ -140,9 +141,9 @@ const CustomTooltip = (
                      </tr>
                   }
                   {
-                     p.props.showMean &&
+                     p.props.showRollingMean &&
                      <tr>
-                        <td>Average total</td>
+                        <td>Mean total</td>
                         <td>
                            <Numeric
                               amount={d.average_income}
@@ -167,9 +168,9 @@ const CustomTooltip = (
                           </td>
                         </tr>
                         {
-                           p.props.showMean &&
+                           p.props.showRollingMean &&
                            <tr>
-                              <td>Average total</td>
+                              <td>Mean total</td>
                               <td>
                                  <Numeric
                                     amount={d.average_expenses}
@@ -215,6 +216,24 @@ const Mean: React.FC<MeanProps> = p => {
             + `&range=current month`);
       },
       [history]
+   );
+
+   const meanIncome = React.useMemo(
+      () => points === undefined || !p.showMean
+          ? undefined
+          : points.reduce(
+             (total, pt) => total + (pt?.value_realized ?? NaN), 0)
+            / points.length,
+      [points, p.showMean]
+   );
+
+   const meanExpense = React.useMemo(
+      () => points === undefined || !p.showMean
+          ? undefined
+          : -points.reduce(
+             (total, pt) => total + (pt?.value_expenses ?? NaN), 0)
+            / points.length,
+      [points, p.showMean]
    );
 
    const clickOnExpenses = React.useCallback(
@@ -273,11 +292,6 @@ const Mean: React.FC<MeanProps> = p => {
                   <CartesianGrid
                       strokeDasharray="5 5"
                   />
-                  <ReferenceLine
-                     ifOverflow="extendDomain"
-                     isFront={false}
-                     y={9}
-                  />
                   <Tooltip
                      content={
                         <CustomTooltip
@@ -301,10 +315,40 @@ const Mean: React.FC<MeanProps> = p => {
                            colorExpense(0),
                            'expenses',
                            'expenses') }
-                  { p.showIncome && p.showMean &&
+                  { p.showIncome && p.showRollingMean &&
                     getLine('average_income', colorIncome(0)) }
-                  { p.showExpenses && p.showMean &&
+                  { p.showExpenses && p.showRollingMean &&
                     getLine ('avg_exp', colorExpense(0)) }
+                  {
+                     p.showMean &&
+                     <ReferenceLine
+                        ifOverflow="extendDomain"
+                        isFront={true}
+                        stroke={colorIncome(0)}
+                        y={meanIncome}
+                     >
+                        <Label
+                            value={`mean income: ${meanIncome?.toFixed(0)}`}
+                            fill="black"
+                            position="insideBottomLeft"
+                        />
+                     </ReferenceLine>
+                  }
+                  {
+                     p.showMean &&
+                     <ReferenceLine
+                        ifOverflow="extendDomain"
+                        isFront={true}
+                        stroke={colorExpense(0)}
+                        y={meanExpense}
+                     >
+                        <Label
+                            value={`mean expense: ${meanExpense?.toFixed(0)}`}
+                            fill="black"
+                            position="insideTopLeft"
+                        />
+                     </ReferenceLine>
+                  }
                </ComposedChart>
             )
          }

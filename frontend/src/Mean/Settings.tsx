@@ -10,6 +10,8 @@ const Settings: React.FC<PanelProps<MeanPanelProps>> = p => {
    const changeAfter = (after: number) => p.save({ after });
    const changeExp   = (showExpenses: boolean) => p.save({ showExpenses });
    const changeInc   = (showIncome: boolean) => p.save({ showIncome });
+   const changeRMean =
+      (showRollingMean: boolean) => p.save({ showRollingMean });
    const changeMean  = (showMean: boolean) => p.save({ showMean });
    const changeUnr   = (showUnrealized: boolean) => p.save({ showUnrealized });
    const changeNeg   = (negateExpenses: boolean) => p.save({ negateExpenses });
@@ -33,9 +35,14 @@ const Settings: React.FC<PanelProps<MeanPanelProps>> = p => {
             text="Add unrealized gains (stocks, real-estate,...) to income"
          />
          <Checkbox
+            value={p.props.showRollingMean}
+            onChange={changeRMean}
+            text="Show rolling means"
+         />
+         <Checkbox
             value={p.props.showMean}
             onChange={changeMean}
-            text="Show means"
+            text="Show mean income"
          />
          <Checkbox
             value={p.props.negateExpenses}

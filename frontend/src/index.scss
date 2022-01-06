@@ -98,10 +98,10 @@ $themes: (
    negative-fg:                [ --red-400,        --red-700 ],
 
    // Colors for the Income-Expenses panel. These are used to create gradients
-   income-gradient-1:          [ --green-600,      --green-700 ],
-   income-gradient-2:          [ --green-100,      --green-400 ],
-   expense-gradient-1:         [ --red-600,        --red-700   ],
-   expense-gradient-2:         [ --red-100,        --red-400   ],
+   income-gradient-1:          [ --green-600,      --green-800 ],
+   income-gradient-2:          [ --green-100,      --green-300 ],
+   expense-gradient-1:         [ --red-600,        --red-800   ],
+   expense-gradient-2:         [ --red-100,        --red-300   ],
 
    // The background grid in graphs
    cartesian-grid:             [ --gray-700,       --gray-400  ],
@@ -269,9 +269,9 @@ a {
       fill: var(--cartesian-grid);
       font-size: 0.8em;
    }
+//   &-reference-line,
    &-cartesian-axis,
-   &-cartesian-grid,
-   &-reference-line {
+   &-cartesian-grid {
       line {
          stroke: var(--cartesian-grid);
       }
