@@ -2,11 +2,14 @@ import * as React from 'react';
 import { DateRange, DateRangePicker } from '@/Dates';
 import { PanelProps } from '@/Dashboard/Panel';
 import { NetworthHistoryPanelProps } from '@/NWHistory/Panel';
-import { Checkbox } from '@/Form';
+import { GroupBy, groupByOptions } from '@/NWHistory/View';
+import { Checkbox, Select } from '@/Form';
+
 
 const Settings: React.FC<PanelProps<NetworthHistoryPanelProps>> = p => {
    const changeRange = (range: DateRange) => p.save({ range });
    const changeLegend = (show: boolean) => p.save({ hideLegend: !show });
+   const changeGroup = (groupBy: GroupBy) => p.save({ groupBy });
 
    return (
       <fieldset>
@@ -24,6 +27,12 @@ const Settings: React.FC<PanelProps<NetworthHistoryPanelProps>> = p => {
                onChange={changeRange}
             />
          }
+         <Select
+            text="Group by"
+            value={p.props.groupBy || 'months'}
+            onChange={changeGroup}
+            options={groupByOptions}
+         />
       </fieldset>
    );
 }

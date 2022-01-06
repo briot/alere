@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as d3Array from 'd3-array';
-import { DateRange, rangeToHttp, dateToDate } from '@/Dates';
+import { DateRange, RelativeDate, rangeToHttp, dateToDate } from '@/Dates';
 import { ComposedChart, XAxis, YAxis, CartesianGrid, Bar,
          Tooltip, TooltipProps } from 'recharts';
 import { CommodityId } from '@/services/useAccounts';
@@ -8,7 +8,15 @@ import Numeric from '@/Numeric';
 import usePrefs from '@/services/usePrefs';
 import useFetch from '@/services/useFetch';
 import AutoSizer from 'react-virtualized-auto-sizer';
+import { Option } from '@/Form';
 import './NetworthHistory.scss';
+
+export type GroupBy = 'months' | 'days';
+export const groupByOptions: Option<GroupBy>[] = [
+   {value: 'days'},
+   {value: 'months'},
+];
+
 
 interface Point {
    date: string;
@@ -17,14 +25,16 @@ interface Point {
 }
 const noPoint: Point = {date: "", networth: NaN, parsedDate: new Date()};
 
-const bisectDate = d3Array.bisector((p: Point) => p.parsedDate).right;
+const bisectDate = d3Array.bisector((p: Point) => p.parsedDate).left;
 
 const useNetworthHistory = (
    range: DateRange,
+   groupBy: GroupBy,
    currencyId: CommodityId,
 ) => {
    const { data } = useFetch<Point[], any>({
       url: `/api/networth_history?${rangeToHttp(range)}`
+         + `&groupby=${groupBy}`
          + `&currency=${currencyId}`,
    });
    return React.useMemo(
@@ -38,6 +48,7 @@ const useNetworthHistory = (
 export interface NetworthHistoryProps {
    range: DateRange;
    hideLegend?: boolean;
+   groupBy?: GroupBy;
 }
 
 const formatVal = (p: number|string|React.ReactText[]) =>
@@ -66,15 +77,23 @@ const CustomTooltip = (
 
 const NetworthHistory: React.FC<NetworthHistoryProps> = p => {
    const { prefs } = usePrefs();
-   const points = useNetworthHistory(p.range, prefs.currencyId);
+   const points = useNetworthHistory(
+      p.range, p.groupBy ?? 'months', prefs.currencyId);
 
    const now = points.length ? points[points.length - 1] : noPoint;
-   const ago1year: Point|undefined = p.hideLegend
-      ? noPoint
-      : points[bisectDate(points, dateToDate("1 year ago"))];
-   const ago3months: Point|undefined = p.hideLegend
-      ? noPoint
-      : points[bisectDate(points, dateToDate("3 months ago"))];
+
+   // Return the point to use, assuming we have the information
+   const getOld = (when: RelativeDate) => {
+      const d = dateToDate(when);
+      const idx = p.hideLegend ? NaN : bisectDate(points, d);
+      const pt = isNaN (idx) ? undefined : points[idx];
+      if (idx > 0 || !pt) {
+         return pt;
+      }
+      return d >= pt.parsedDate ? pt : undefined;
+   }
+   const ago1year = getOld("1 year ago");
+   const ago3months = getOld("3 months ago");
 
    const tooltip = React.useCallback(
       (v: Point) => (
@@ -105,14 +124,13 @@ const NetworthHistory: React.FC<NetworthHistoryProps> = p => {
    );
 
    const ago1yearTooltip = React.useCallback(
-      () => tooltip(ago1year),
+      () => ago1year && tooltip(ago1year),
       [ago1year, tooltip]
    );
    const ago3monthsTooltip = React.useCallback(
-      () => tooltip(ago3months),
+      () => ago3months && tooltip(ago3months),
       [ago3months, tooltip]
    );
-
 
    return (
       <div className='networthHistory'>
@@ -159,26 +177,32 @@ const NetworthHistory: React.FC<NetworthHistoryProps> = p => {
          {
             !p.hideLegend &&
             <div className="pastNW">
-               <span>
-                  1 year:
-                  <Numeric
-                     amount={now?.networth - ago1year?.networth}
-                     commodity={prefs.currencyId}
-                     colored={true}
-                     forceSign={true}
-                     tooltip={ago1yearTooltip}
-                  />
-               </span>
-               <span>
-                  3 months:
-                  <Numeric
-                     amount={now?.networth - ago3months?.networth}
-                     commodity={prefs.currencyId}
-                     colored={true}
-                     forceSign={true}
-                     tooltip={ago3monthsTooltip}
-                  />
-               </span>
+               {
+                  ago1year &&
+                  <span>
+                     1 year:
+                     <Numeric
+                        amount={now.networth - ago1year.networth}
+                        commodity={prefs.currencyId}
+                        colored={true}
+                        forceSign={true}
+                        tooltip={ago1yearTooltip}
+                     />
+                  </span>
+               }
+               {
+                  ago3months &&
+                  <span>
+                     3 months:
+                     <Numeric
+                        amount={now.networth - ago3months.networth}
+                        commodity={prefs.currencyId}
+                        colored={true}
+                        forceSign={true}
+                        tooltip={ago3monthsTooltip}
+                     />
+                  </span>
+               }
             </div>
          }
       </div>

@@ -5,7 +5,14 @@ Some queries that cannot be created as SQL views
 import alere
 import datetime
 import django.db
-from typing import List, Union
+import logging
+from typing import List, Union, Literal
+
+
+me = logging.getLogger(__name__)
+
+
+GroupBy = Literal['months', 'days']
 
 
 class Mean:
@@ -14,6 +21,7 @@ class Mean:
             start: Union[datetime.date, datetime.datetime],
             end: Union[datetime.date, datetime.datetime],
             currency_id: int,
+            groupby: GroupBy = None,
             prior=0,
             after=0):
 
@@ -22,13 +30,27 @@ class Mean:
         self.currency_id = int(currency_id)
         self.prior = int(prior)
         self.after = int(after)
+        self.groupby = groupby or 'months'
 
     def _cte_list_of_dates(self):
         """
         A common table expression that returns the end of all months between
         the (start - prio months) to (after + prio months).
         """
-        return f"""months (date) AS (
+        MAX_ROWS = 366
+
+        if self.groupby == 'days':
+            return f"""RECURSIVE dates (date) AS (
+            SELECT date('{self.end}', '+{self.after:d} DAYS')
+            UNION
+               SELECT date(m.date, "-1 day")
+               FROM dates m
+               WHERE m.date >= date('{self.start}', '-{self.prior:d} DAYS')
+               LIMIT {MAX_ROWS}
+            )"""
+
+        else:
+            return f"""RECURSIVE dates (date) AS (
             SELECT
                --  end of first month (though no need to go past the oldest
                --  known date in the data
@@ -45,27 +67,28 @@ class Mean:
                --  end of next month, though no need to go past the last known
                --  date in the data
                SELECT date(m.date, "start of month", "+2 months", "-1 day")
-               FROM months m,
+               FROM dates m,
                   (SELECT MAX(alr_balances_currency.mindate) as date
                    FROM alr_balances_currency) range
                WHERE m.date < DATE('{self.end}', "+{self.after:d} MONTHS")
                   and m.date <= range.date
-         )"""
+               LIMIT {MAX_ROWS}
+            )"""
 
     @staticmethod
     def query_networth():
         """
         Create a query that returns the networth as computed for a set of
-        dates. These dates must be found in the "months(date)" table, which
+        dates. These dates must be found in the "dates(date)" table, which
         typically will be provided as a common table expression.
 
         This query also accepts one parameter, the currency_id for the result.
         """
         return f"""
            SELECT
-              months.date,
+              dates.date,
               SUM(alr_balances_currency.balance) AS value
-           FROM months,
+           FROM dates,
               alr_balances_currency,
               alr_accounts
               JOIN alr_account_kinds k ON (alr_accounts.kind_id=k.id)
@@ -75,24 +98,24 @@ class Mean:
               --  2020-11-30 00:00:00 and we do not get transactions
               --  on the last day of the month
               strftime("%%Y-%%m-%%d", alr_balances_currency.mindate)
-                 <= strftime("%%Y-%%m-%%d", months.date)
-              AND strftime("%%Y-%%m-%%d", months.date)
+                 <= strftime("%%Y-%%m-%%d", dates.date)
+              AND strftime("%%Y-%%m-%%d", dates.date)
                  < strftime("%%Y-%%m-%%d", alr_balances_currency.maxdate)
               AND alr_balances_currency.currency_id=%s
               AND alr_balances_currency.account_id = alr_accounts.id
               AND k.is_networth
-           GROUP BY months.date
+           GROUP BY dates.date
         """
 
     def networth_history(self):
         """
         Computes the networth at the end of each month.
-        The result also includes the mean of the networth computed on each date,
-        with a rolling window of `prior` months before and `after` months after.
-        It also includes the diff between the current row and the previous one,
-        and the mean of those diffs.
+        The result also includes the mean of the networth computed on each
+        date, with a rolling window of `prior` months before and `after` months
+        after. It also includes the diff between the current row and the
+        previous one, and the mean of those diffs.
         """
-        query = f"""WITH RECURSIVE {self._cte_list_of_dates()}
+        query = f"""WITH {self._cte_list_of_dates()}
             SELECT
                tmp2.date,
                tmp2.diff,
@@ -121,7 +144,7 @@ class Mean:
         """
         query = (
             f"""
-            WITH RECURSIVE {self._cte_list_of_dates()}
+            WITH {self._cte_list_of_dates()}
             SELECT
                tmp.month,
                inc_total,
@@ -139,23 +162,23 @@ class Mean:
                   --  Sum of splits for a given months, organized per
                   --  category
                   SELECT
-                     strftime("%%Y-%%m", months.date) as month,
+                     strftime("%%Y-%%m", dates.date) as month,
                      SUM(value) FILTER (WHERE
                         k.category = {alere.models.AccountKindCategory.INCOME}
                      ) as inc_total,
                      SUM(value) FILTER (WHERE
                         k.category = {alere.models.AccountKindCategory.EXPENSE}
                      ) as exp_total
-                  FROM months
+                  FROM dates
                      JOIN alr_splits_with_value
                         ON (strftime("%%Y-%%m", post_date) =
-                            strftime("%%Y-%%m", months.date))
+                            strftime("%%Y-%%m", dates.date))
                      JOIN alr_accounts
                         ON (alr_splits_with_value.account_id=alr_accounts.id)
                      JOIN alr_account_kinds k
                         ON (alr_accounts.kind_id=k.id)
                   WHERE alr_splits_with_value.value_commodity_id=%s
-                  GROUP BY months.date
+                  GROUP BY dates.date
                ) tmp
               """
         )

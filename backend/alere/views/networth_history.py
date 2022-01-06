@@ -9,6 +9,7 @@ class NetworthHistoryView(JSONView):
             start=self.as_time(params, 'mindate'),
             end=self.as_time(params, 'maxdate'),
             currency_id=self.as_commodity_id(params, 'currency'),
+            groupby=params.get('groupby'),
         )
 
         return [
