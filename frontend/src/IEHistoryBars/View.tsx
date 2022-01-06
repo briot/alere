@@ -1,5 +1,4 @@
 import * as React from 'react';
-import * as d3Scale from 'd3-scale';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { ComposedChart, XAxis, YAxis, CartesianGrid, Bar, Cell,
    Tooltip, TooltipProps } from 'recharts';
@@ -8,6 +7,7 @@ import { CommodityId, is_expense } from '@/services/useAccounts';
 import useAccountIds, { AccountIdSet } from '@/services/useAccountIds';
 import { DateRange, rangeDisplay } from '@/Dates';
 import usePrefs from '@/services/usePrefs';
+import useColors from '@/services/useColors';
 import Numeric from '@/Numeric';
 import { numComp } from '@/services/utils';
 import "./IEHistoryBars.scss";
@@ -67,20 +67,6 @@ const CustomTooltip = (
    );
 }
 
-const toColor = (expenses: boolean, maxIndex: number) => {
-   const style = getComputedStyle(
-      document.getElementById('app') || document.documentElement);
-   const color1 = style.getPropertyValue(
-      expenses ? "--expense-gradient-1" : "--income-gradient-1");
-   const color2 = style.getPropertyValue(
-      expenses ? "--expense-gradient-2" : "--income-gradient-2");
-   const scale = d3Scale.scaleLinear<string>()
-      .domain([0, maxIndex])
-      .range([color1, color2]);
-   return (index: number) => scale(index % maxIndex);
-};
-
-
 const IEHistoryBars: React.FC<IEHistoryBarsProps> = p => {
    const { prefs } = usePrefs();
    const included = useAccountIds(p.accountIds);
@@ -114,8 +100,8 @@ const IEHistoryBars: React.FC<IEHistoryBarsProps> = p => {
       [account_to_data, p.ranges, included_ids]
    );
 
-   const expColor = toColor(true, p.ranges.length);
-   const incColor = toColor(false, p.ranges.length);
+   const expColor = useColors(true, p.ranges.length);
+   const incColor = useColors(false, p.ranges.length);
    const BAR_SIZE = 10;
    const BAR_GAP =  15;
 

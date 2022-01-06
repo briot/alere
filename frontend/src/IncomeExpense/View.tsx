@@ -1,14 +1,13 @@
 import * as React from 'react';
-import * as d3Scale from 'd3-scale';
 import { Legend, PieChart, PieLabelRenderProps,
+         XAxis, YAxis, BarChart, Bar, CartesianGrid, LabelList,
          Pie, Cell, Tooltip, TooltipProps } from 'recharts';
-import { XAxis, YAxis, BarChart, Bar, CartesianGrid,
-         LabelList } from "recharts";
 import { DateRange } from '@/Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import Numeric from '@/Numeric';
 import AccountName from '@/Account/AccountName';
 import usePrefs from '@/services/usePrefs';
+import useColors from '@/services/useColors';
 import useFetchIE, {
    IncomeExpenseInPeriod, OneIE } from '@/services/useFetchIE';
 import './IncomeExpense.scss';
@@ -85,7 +84,6 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
       include_expenses: p.expenses,
       include_income: !p.expenses,
    });
-
    const normalized = React.useMemo(
       () => {
          if (!data) {
@@ -101,6 +99,10 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
                  items};
       },
       [data, p.expenses]
+   );
+   const color = useColors(
+      p.expenses,
+      Math.min(10, normalized?.items.length ?? 1)
    );
 
    if (!normalized) {
@@ -133,19 +135,6 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
               />
            </span>
          );
-
-   const style = getComputedStyle(
-      document.getElementById('app') || document.documentElement);
-   const color1 = style.getPropertyValue(
-      p.expenses ? "--expense-gradient-1" : "--income-gradient-1");
-   const color2 = style.getPropertyValue(
-      p.expenses ? "--expense-gradient-2" : "--income-gradient-2");
-
-   const modulo = 10;
-   const colorScale = d3Scale.scaleLinear<string>()
-      .domain([0, Math.min(modulo, normalized.items.length - 1)])
-      .range([color1, color2]);
-   const color = (index: number) => colorScale(index % modulo);
 
    return (
       <div className="columns">
@@ -197,9 +186,16 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
                         />
                         <Bar
                             dataKey="value"
-                            fill={color1}
                             isAnimationActive={false}
                         >
+                           {
+                              normalized.items.map((it, idx) =>
+                                 <Cell
+                                    key={idx}
+                                    fill={color(idx)}
+                                 />
+                              )
+                           }
                            <LabelList
                               dataKey="name"
                               position="left"

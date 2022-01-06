@@ -99,9 +99,9 @@ $themes: (
 
    // Colors for the Income-Expenses panel. These are used to create gradients
    income-gradient-1:          [ --green-600,      --green-700 ],
-   income-gradient-2:          [ #ffffff,          --green-400 ],
+   income-gradient-2:          [ --green-100,      --green-400 ],
    expense-gradient-1:         [ --red-600,        --red-700   ],
-   expense-gradient-2:         [ #ffffff,          --red-400   ],
+   expense-gradient-2:         [ --red-100,        --red-400   ],
 
    // The background grid in graphs
    cartesian-grid:             [ --gray-700,       --gray-400  ],
@@ -112,9 +112,6 @@ $themes: (
    graph-shares:               [ --gray-300,       --gray-800  ],
    graph-holding:              [ --color-500,      --color-200 ],
    graph-networth:             [ --color-600,      --color-200 ],
-   graph-mean-realized:        [ --green-400,      --green-600 ],
-   graph-mean-unrealized:      [ --green-400-50p,  --green-600-50p ],
-   graph-mean-expenses:        [ --red-500,        --red-600 ],
 
    // Colors used in forms
    input-bg:                   [ --gray-900,       #f3f3f3 ],

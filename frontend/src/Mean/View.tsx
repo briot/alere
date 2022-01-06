@@ -9,6 +9,7 @@ import { AccountIdSet } from '@/services/useAccountIds';
 import usePrefs from '@/services/usePrefs';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import useFetch from '@/services/useFetch';
+import useColors from '@/services/useColors';
 import './Mean.scss';
 
 interface Point {
@@ -202,6 +203,8 @@ const Mean: React.FC<MeanProps> = p => {
       p.range, p.prior, p.after,
       p.showUnrealized, p.negateExpenses, prefs.currencyId);
    const history = useHistory();
+   const colorExpense = useColors(true, 1);
+   const colorIncome = useColors(false, 2);
 
    const clickOnBar = React.useCallback(
       (data: Point, accounts: AccountIdSet) => {
@@ -285,23 +288,23 @@ const Mean: React.FC<MeanProps> = p => {
                   />
                   { p.showIncome &&
                     getBar('value_realized',
-                            'var(--graph-mean-realized)',
-                            'income',
-                            'realized_income') }
+                           colorIncome(0),
+                           'income',
+                           'realized_income') }
                   { p.showUnrealized &&
                     getBar('value_unrealized',
-                            'var(--graph-mean-unrealized)',
-                            'income',
-                            'unrealized_income') }
+                           colorIncome(1),
+                           'income',
+                           'unrealized_income') }
                   { p.showExpenses &&
                     getBar('value_exp',
-                            'var(--graph-mean-expenses)',
-                            'expenses',
-                            'expenses') }
+                           colorExpense(0),
+                           'expenses',
+                           'expenses') }
                   { p.showIncome && p.showMean &&
-                    getLine('average_income', 'var(--graph-mean-realized)') }
+                    getLine('average_income', colorIncome(0)) }
                   { p.showExpenses && p.showMean &&
-                    getLine ('avg_exp', 'var(--graph-mean-expenses)') }
+                    getLine ('avg_exp', colorExpense(0)) }
                </ComposedChart>
             )
          }
