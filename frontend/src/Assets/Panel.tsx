@@ -81,6 +81,7 @@ const AssetsPanel: React.FC<PanelProps<AssetsPanelProps>> = p => {
       <Panel
          {...p}
          header={{ name: 'assets' }}
+         fixedSize={true}
          Settings={() =>
             <Settings
                props={p.props}

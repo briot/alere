@@ -47,7 +47,10 @@ export const Page: React.FC<PageProps & SetHeader> = React.memo(p => {
    const page = getPage(p.url);
    const { headerNode } = page;
    const centralPanels = getPanels(page, "central");
-   const rightPanels = getPanels(page, "right");
+   const rightPanels = React.useMemo(
+      () => getPanels(page, "right").map(p => ({...p, allowCollapse: true})),
+      [getPanels, page]
+   );
 
    const updateRight = React.useCallback(
       (func: ((prev: PanelBaseProps[]) => PanelBaseProps[])) =>

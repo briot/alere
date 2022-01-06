@@ -89,7 +89,10 @@ a.roundButton:hover {
          font-size: 0.7em;
       }
       span:first-child {
-         margin: 5px 8px 5px 2px;
+         margin: 2px;
+      }
+      span:first-child + span {
+         margin-left: 8px;
       }
    }
 

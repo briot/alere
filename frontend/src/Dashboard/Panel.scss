@@ -13,12 +13,16 @@
 
    display: flex;
    flex-flow: column nowrap;
-   min-height: var(--panel-height);
    width: 100%;
 
-   .panel {
-      min-height: var(--panel-height);
-      width: 100%;
+   min-height: var(--panel-height);
+   &.row0 {
+      // when the panel is minimized
+      min-height: auto;
+   }
+
+   &.fixedsize {
+      flex-grow: 0;
    }
 
    .panel {
@@ -72,12 +76,17 @@
    }
 }
 
+// Panels could be children of a grid (main dashboard), or a flexbox (side
+// bars), so we setup properties for both.
+// col0 and row0 are set when a panel is minimized.
+.col0 { grid-column: auto }
 .col1 { grid-column: auto / span 1; }
 .col2 { grid-column: auto / span 2; }
 .col3 { grid-column: auto / span 3; }
 .col4 { grid-column: auto / span 4; }
 
-.row1 { grid-row: auto / span 1; }
-.row2 { grid-row: auto / span 2; }
-.row3 { grid-row: auto / span 3; }
-.row4 { grid-row: auto / span 4; }
+.row0 { grid-row: auto;          flex: 0 0; }
+.row1 { grid-row: auto / span 1; flex: 1 1; }
+.row2 { grid-row: auto / span 2; flex: 2 1; }
+.row3 { grid-row: auto / span 3; flex: 3 1; }
+.row4 { grid-row: auto / span 4; flex: 4 1; }

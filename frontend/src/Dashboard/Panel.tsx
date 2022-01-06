@@ -25,20 +25,31 @@ interface Props <T extends PanelBaseProps> extends PanelProps<T> {
    // if undefined, default menu only.
 
    className?: string;
+
+   fixedSize?: boolean;
+   // if true, the panel doesn't grow to occupy as much space as it is
+   // allowed. Only applicable when in side panels.
 }
 
 function Panel<T extends PanelBaseProps>(
    p : React.PropsWithChildren<Props<T>>
 ): React.ReactElement|null {
+   const [ minimized, setMinimized ] = React.useState(false);
    const changeRows = (rowspan: number) => p.save?.({rowspan} as Partial<T>);
    const changeCols = (colspan: number) => p.save?.({colspan} as Partial<T>);
+
+   const onMinimize = React.useCallback(
+      () => setMinimized(old => !old),
+      []
+   )
 
    const c = classes(
       p.className,
       'panel',
       `dash-${p.props.type}`,
-      `row${p.props.rowspan}`,
-      `col${p.props.colspan}`,
+      minimized ? 'row0' : `row${p.props.rowspan}`,
+      minimized ? 'col0' : `col${p.props.colspan}`,
+      p.fixedSize && 'fixedsize',
    );
 
    return (
@@ -93,6 +104,15 @@ function Panel<T extends PanelBaseProps>(
                        }
                     />
                  }
+                 {
+                    p.props.allowCollapse &&
+                    <RoundButton
+                       fa="fa-minus"
+                       tooltip="Minimize this widget"
+                       size="tiny"
+                       onClick={onMinimize}
+                    />
+                 }
                  {/*
                     <span className="fa fa-info-circle" />
                     <span className="fa fa-window-close" />
@@ -100,9 +120,12 @@ function Panel<T extends PanelBaseProps>(
               </Header>
            </div>
         }
-        <div className="content">
-           {p.children}
-        </div>
+        {
+           !minimized &&
+           <div className="content">
+              {p.children}
+           </div>
+        }
       </div>
    );
 }

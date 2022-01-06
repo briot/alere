@@ -7,6 +7,9 @@ export interface PanelBaseProps {
    rowspan: number;
    colspan: number;
    hidePanelHeader?: boolean;
+
+   allowCollapse?: boolean;
+   // Whether the panel can be reduced to its title bar
 }
 
 /**
