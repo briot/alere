@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { Legend, PieChart, PieLabelRenderProps,
-         XAxis, YAxis, BarChart, Bar, CartesianGrid, LabelList,
-         Pie, Cell, Tooltip, TooltipProps } from 'recharts';
+         XAxis, YAxis, BarChart, Bar, CartesianGrid, LabelList, Label,
+         Pie, Cell, Tooltip, TooltipProps, LabelProps } from 'recharts';
 import { DateRange } from '@/Dates';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import Numeric from '@/Numeric';
+import Numeric, { useNumericFormat } from '@/Numeric';
 import AccountName from '@/Account/AccountName';
 import usePrefs from '@/services/usePrefs';
 import useColors from '@/services/useColors';
@@ -29,7 +29,7 @@ const renderCustomizedLabel = (p: PieLabelRenderProps) => {
       <text
          x={x}
          y={y}
-         fill="white"
+         fill="black"
          textAnchor={x > cx ? 'start' : 'end'}
          dominantBaseline="central"
       >
@@ -105,6 +105,43 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
       Math.min(10, normalized?.items.length ?? 1)
    );
 
+   const formatted = useNumericFormat({
+      amount: normalized?.total,
+      commodity: prefs.currencyId,
+      scale: p.roundValues ? 0 : undefined,
+   });
+
+   const centerLabel = React.useCallback(
+      (p: LabelProps) => {
+         // We expect PolarViewBox, not CartesianViewBox
+         if (!p.viewBox || !("cx" in p.viewBox)) {
+            window.console.log('MANU not cartesian', p);
+            return;
+         }
+         const cx = p.viewBox.cx ?? 0;
+         return (
+            <text
+              x={cx}
+              y={p.viewBox.cy ?? 0}
+              className="recharts-text recharts-label total"
+              textAnchor="middle"
+              dominantBaseline="central"
+            >
+              <tspan
+                  alignmentBaseline="middle"
+                  className="numeric"
+              >
+                {formatted.prefix}{formatted.text}{formatted.suffix}
+              </tspan>
+              <tspan className="legend" x={cx} dy="1.2em" >
+                total
+              </tspan>
+            </text>
+         );
+      },
+      [formatted]
+   );
+
    if (!normalized) {
       return null; // only when fetch was disabled
    }
@@ -137,131 +174,134 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
          );
 
    return (
-      <div className="columns">
-         <div className="total">
-            <h5>Total</h5>
-            <Numeric
-               amount={normalized.total}
-               commodity={prefs.currencyId}
-               scale={p.roundValues ? 0 : undefined}
-            />
-         </div>
-         <div style={{ flex: '1 1 auto' }}>
-            <AutoSizer>
-            {
-               p.showBars ?
-                  ({width, height}) => (
-                  <div
-                     style={{width: width,
-                             height: height,
-                             overflow:'auto'}}
-                  >
-                     <BarChart
-                        width={width - 20 /* scrollbar width ??? */}
-                        height={
-                           /* lines should have minimal height to keep label
-                            * readable */
-                           Math.max(
-                              normalized.items.length * MIN_BAR_HEIGHT,
-                              height
-                           ) - 4
-                        }
-                        className="incomeexpense"
-                        layout="vertical"
-                        data={normalized.items}
-                        barGap={0}
-                     >
-                        <XAxis
-                           dataKey="value"
-                           domain={['auto', 'auto']}
-                           type="number"
-                           tickCount={10}
-                        />
-                        <YAxis
-                           dataKey="name"
-                           type="category"
-                           hide={true}
-                           interval={0}
-                        />
-                        <CartesianGrid
-                           horizontal={false}
-                           strokeDasharray="5 5"
-                        />
-                        <Tooltip
-                           content={
-                              <CustomTooltip
-                                 data={normalized}
-                                 range={p.range}
-                              />}
-                        />
-                        <Bar
-                            dataKey="value"
-                            isAnimationActive={false}
-                        >
-                           {
-                              normalized.items.map((it, idx) =>
-                                 <Cell
-                                    key={idx}
-                                    fill={color(idx)}
-                                 />
-                              )
-                           }
-                           <LabelList
-                              dataKey="name"
-                              position="left"
-                              width={undefined /* do not break lines */}
-                           />
-                        </Bar>
-                     </BarChart>
-                  </div>
-
-               ) :
-                  ({width, height}) => (
-                  <PieChart
-                     width={width}
-                     height={height}
+      <div style={{ flex: '1 1 auto' }}>
+         <AutoSizer>
+         {
+            p.showBars ?
+               ({width, height}) => (
+               <div
+                  style={{width: width,
+                          height: height,
+                          overflow:'auto'}}
+               >
+                  <BarChart
+                     width={width - 20 /* scrollbar width ??? */}
+                     height={
+                        /* lines should have minimal height to keep label
+                         * readable */
+                        Math.max(
+                           normalized.items.length * MIN_BAR_HEIGHT,
+                           height
+                        ) - 4
+                     }
                      className="incomeexpense"
-                  >
-                  {
-                     width >= 400 &&
-                     <Legend
-                        align="right"
-                        formatter={legendItem}
-                        layout="vertical"
-                        verticalAlign="top"
-                     />
-                  }
-                  <Tooltip
-                     content={
-                        <CustomTooltip data={normalized} range={p.range} />
-                     }
-                  />
-                  <Pie
+                     layout="vertical"
                      data={normalized.items}
-                     cx="50%"
-                     cy="50%"
-                     isAnimationActive={false}
-                     labelLine={false}
-                     label={false && renderCustomizedLabel}
-                     outerRadius="100%"
-                     innerRadius="60%"
-                     fill="#8884d8"
-                     dataKey="value"
-                     nameKey="name"
+                     barGap={0}
                   >
-                     {
-                        normalized.items.map((entry, index) =>
-                           <Cell
-                              key={`cell-${index}`}
-                              fill={color(index)}
-                           />)
-                     }
-                  </Pie>
-                  </PieChart>
-               )
-            }
-            </AutoSizer>
-         </div>
+                     <XAxis
+                        dataKey="value"
+                        domain={['auto', 'auto']}
+                        type="number"
+                        tickCount={10}
+                     />
+                     <YAxis
+                        dataKey="name"
+                        type="category"
+                        hide={true}
+                        interval={0}
+                     />
+                     <CartesianGrid
+                        horizontal={false}
+                        strokeDasharray="5 5"
+                     />
+                     <Tooltip
+                        content={
+                           <CustomTooltip
+                              data={normalized}
+                              range={p.range}
+                           />}
+                     />
+                     <Bar
+                         dataKey="value"
+                         isAnimationActive={false}
+                     >
+                        {
+                           normalized.items.map((it, idx) =>
+                              <Cell
+                                 key={idx}
+                                 fill={color(idx)}
+                              />
+                           )
+                        }
+                        <LabelList
+                           dataKey="name"
+                           position="left"
+                           width={undefined /* do not break lines */}
+                        />
+                     </Bar>
+                  </BarChart>
+               </div>
+
+            ) :
+               ({width, height}) => (
+               <PieChart
+                  width={width}
+                  height={height}
+                  className="incomeexpense"
+               >
+               {
+                  width >= 400 &&
+                  <Legend
+                     align="right"
+                     formatter={legendItem}
+                     layout="vertical"
+                     verticalAlign="top"
+                  />
+               }
+               <Tooltip
+                  content={
+                     <CustomTooltip data={normalized} range={p.range} />
+                  }
+               />
+               <Pie
+                  data={normalized.items}
+                  cx="50%"
+                  cy="50%"
+                  isAnimationActive={false}
+                  labelLine={false}
+                  label={false && renderCustomizedLabel}
+                  outerRadius="100%"
+                  innerRadius="70%"
+                  fill="#8884d8"
+                  dataKey="value"
+                  nameKey="name"
+               >
+                  {
+                     normalized.items.map((entry, index) =>
+                        <Cell
+                           key={`cell-${index}`}
+                           fill={color(index)}
+                        />)
+                  }
+                  <Label content={centerLabel} />
+               </Pie>
+               </PieChart>
+            )
+         }
+         </AutoSizer>
+         {
+            p.showBars &&
+            <div className="totalBars">
+               Total:&nbsp;
+               <Numeric
+                  className="total"
+                  amount={normalized?.total}
+                  commodity={prefs.currencyId}
+                  scale={p.roundValues ? 0 : undefined}
+               />
+            </div>
+         }
       </div>
    );
 }

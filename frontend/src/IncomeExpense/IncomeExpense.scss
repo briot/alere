@@ -36,26 +36,18 @@
       }
    }
 
-   .columns {
-      display: flex;
-      flex-flow: row nowrap;
-      justify-content: flex-start;
-      align-items: stretch;
-      height: 100%;
-   }
    .total {
-      flex: 0 0;
-      font-size: 1.5em;
+      font-size: 1.8em;
+   }
+   .legend {
+      font-size: 0.6em;
+      fill: var(--cartesian-grid);
+   }
 
-      min-width: 100px;
-      display: flex;
-      flex-flow: column nowrap;
-      align-items: center;
-      justify-content: center;
-
-      h4 {
-         text-align: center;
-         margin:0 0;
-      }
+   .totalBars {
+      text-align: right;
+      position: absolute;
+      bottom: 2.5em;
+      width: 100%;
    }
 }
