@@ -187,6 +187,7 @@ const NetworthHistory: React.FC<NetworthHistoryProps> = p => {
                         commodity={prefs.currencyId}
                         colored={true}
                         forceSign={true}
+                        showArrow={true}
                         tooltip={ago1yearTooltip}
                      />
                   </span>
@@ -200,6 +201,7 @@ const NetworthHistory: React.FC<NetworthHistoryProps> = p => {
                         commodity={prefs.currencyId}
                         colored={true}
                         forceSign={true}
+                        showArrow={true}
                         tooltip={ago3monthsTooltip}
                      />
                   </span>
