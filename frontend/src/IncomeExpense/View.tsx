@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Legend, PieChart, PieLabelRenderProps,
+import { Legend, PieChart, PieLabelRenderProps, Sector, SectorProps,
          XAxis, YAxis, BarChart, Bar, CartesianGrid, LabelList, Label,
          Pie, Cell, Tooltip, TooltipProps, LabelProps } from 'recharts';
 import { DateRange } from '@/Dates';
@@ -13,7 +13,9 @@ import useFetchIE, {
 import './IncomeExpense.scss';
 
 const MIN_BAR_HEIGHT = 10;
+const ACTIVE_SECTOR_RADIUS = 4;  // extra radius for active sector
 const RADIAN = Math.PI / 180;
+const MAX_GRADIENT_STEPS = 20;
 
 const renderCustomizedLabel = (p: PieLabelRenderProps) => {
    const inner = p.innerRadius as number;
@@ -70,15 +72,32 @@ const CustomTooltip = (
      ) : null;
 };
 
+const renderActiveShape = (p: SectorProps) => {
+  return (
+     <Sector
+       cx={p.cx}
+       cy={p.cy}
+       innerRadius={p.innerRadius}
+       outerRadius={p.outerRadius! + ACTIVE_SECTOR_RADIUS}
+       startAngle={p.startAngle}
+       endAngle={p.endAngle}
+       fill={p.fill}
+     />
+  );
+};
+
+
 export interface IncomeExpenseProps {
    expenses: boolean;
    range: DateRange;
    roundValues?: boolean;
    showBars?: boolean;
+   hideLegend?: boolean;
 }
 
 const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
    const { prefs } = usePrefs();
+   const [ activeIndex, setActiveIndex ] = React.useState(-1);
    const data = useFetchIE({
       ...p,
       include_expenses: p.expenses,
@@ -102,44 +121,83 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
    );
    const color = useColors(
       p.expenses,
-      Math.min(10, normalized?.items.length ?? 1)
+      Math.min(MAX_GRADIENT_STEPS, normalized?.items.length ?? 1)
    );
 
    const formatted = useNumericFormat({
-      amount: normalized?.total,
+      amount:
+         activeIndex === -1
+         ? normalized?.total
+         : normalized?.items[activeIndex].value,
       commodity: prefs.currencyId,
       scale: p.roundValues ? 0 : undefined,
    });
 
+   const onEnter = React.useCallback(
+      (_, index) => setActiveIndex(index),
+      []
+   );
+   const onLeave = React.useCallback(
+      (_, index) => setActiveIndex(-1),
+      []
+   );
+
    const centerLabel = React.useCallback(
-      (p: LabelProps) => {
+      (a: LabelProps) => {
          // We expect PolarViewBox, not CartesianViewBox
-         if (!p.viewBox || !("cx" in p.viewBox)) {
-            window.console.log('MANU not cartesian', p);
+         if (!a.viewBox || !("cx" in a.viewBox) || !normalized) {
             return;
          }
-         const cx = p.viewBox.cx ?? 0;
+         const cx = a.viewBox.cx ?? 0;
+         const title = (
+            activeIndex !== -1
+            ? normalized.items[activeIndex]?.name
+            : p.expenses
+            ? 'Expenses'
+            : 'Income'
+         );
+         const percent = (
+            activeIndex === -1
+            ? NaN
+            : (normalized.items[activeIndex].value ?? NaN) / normalized.total
+         );
+
          return (
             <text
               x={cx}
-              y={p.viewBox.cy ?? 0}
+              y={a.viewBox.cy ?? 0}
+              dy="-1em"
               className="recharts-text recharts-label total"
               textAnchor="middle"
               dominantBaseline="central"
             >
+              <tspan className="legend" x={cx}>
+                 {title}
+              </tspan>
               <tspan
                   alignmentBaseline="middle"
                   className="numeric"
+                  dy="0.8em"
+                  x={cx}
               >
-                {formatted.prefix}{formatted.text}{formatted.suffix}
+                {formatted.prefix} {formatted.text} {formatted.suffix}
               </tspan>
-              <tspan className="legend" x={cx} dy="1.2em" >
-                total
-              </tspan>
+              {
+                 activeIndex !== -1 && !isNaN(percent)
+                 ? (
+                    <tspan className="legend" x={cx} dy="1.6em" >
+                       {(percent * 100).toFixed(2)} %
+                    </tspan>
+                 ) : (
+                    <tspan className="legend" x={cx} dy="1.6em" >
+                      in period
+                    </tspan>
+                 )
+              }
             </text>
          );
       },
-      [formatted]
+      [formatted, p.expenses, activeIndex, normalized]
    );
 
    if (!normalized) {
@@ -251,7 +309,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
                   className="incomeexpense"
                >
                {
-                  width >= 400 &&
+                  width >= 400 && !p.hideLegend &&
                   <Legend
                      align="right"
                      formatter={legendItem}
@@ -259,29 +317,33 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
                      verticalAlign="top"
                   />
                }
-               <Tooltip
-                  content={
-                     <CustomTooltip data={normalized} range={p.range} />
-                  }
-               />
                <Pie
                   data={normalized.items}
                   cx="50%"
                   cy="50%"
+                  activeIndex={activeIndex}
+                  activeShape={renderActiveShape}
                   isAnimationActive={false}
                   labelLine={false}
                   label={false && renderCustomizedLabel}
-                  outerRadius="100%"
+                  outerRadius={`${100 - ACTIVE_SECTOR_RADIUS}%`}
                   innerRadius="70%"
                   fill="#8884d8"
                   dataKey="value"
                   nameKey="name"
+                  onMouseEnter={onEnter}
+                  onMouseLeave={onLeave}
                >
                   {
                      normalized.items.map((entry, index) =>
                         <Cell
                            key={`cell-${index}`}
                            fill={color(index)}
+                           className={
+                              activeIndex !== -1
+                              && index !== activeIndex
+                              ? 'inactive' : ''
+                           }
                         />)
                   }
                   <Label content={centerLabel} />

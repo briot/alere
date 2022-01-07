@@ -9,6 +9,7 @@ const Settings: React.FC<PanelProps<IncomeExpensePanelProps>> = p => {
    const changeRange = (range: DateRange) => p.save({ range });
    const changeRound = (roundValues: boolean) => p.save({ roundValues });
    const changeBars = (showBars: boolean) => p.save({ showBars });
+   const changeLegend = (l: boolean) => p.save({ hideLegend: !l });
    return (
       <fieldset>
          <legend>Income and Expenses</legend>
@@ -26,6 +27,11 @@ const Settings: React.FC<PanelProps<IncomeExpensePanelProps>> = p => {
             value={p.props.showBars}
             onChange={changeBars}
             text="Bar chart"
+         />
+         <Checkbox
+            value={!p.props.hideLegend}
+            onChange={changeLegend}
+            text="Legend"
          />
          <DateRangePicker
             text="Time period"

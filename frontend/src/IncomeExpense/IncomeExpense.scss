@@ -43,6 +43,10 @@
       font-size: 0.6em;
       fill: var(--cartesian-grid);
    }
+   .inactive {
+      opacity: 0.7;
+      transition: opacity ease-out 0.2s;
+   }
 
    .totalBars {
       text-align: right;
