@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Select } from '@/Form';
 import RoundButton from '@/RoundButton';
-import { PageButton } from '@/Page';
 import Dropdown from '@/Form/Dropdown';
 import Header, { HeaderProps } from '@/Header';
 import { PanelBaseProps, PanelProps } from '@/Dashboard/Props';
@@ -57,11 +56,10 @@ function Panel<T extends PanelBaseProps>(
         {
            !p.props.hidePanelHeader &&
            <div className="header">
-              <Header {...p.header}>
-                 <PageButton
-                     name={p.header.name || ''}
-                     panel={p.props}
-                 />
+              <Header
+                  {...p.header}
+                  panel={p.props.allowMaximize ? p.props : undefined}
+              >
                  {
                     p.Settings !== null &&
                     <Dropdown

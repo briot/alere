@@ -60,7 +60,7 @@ export const DashboardFromPanels: React.FC<DashboardFromPanelsProps> = p => {
             p.panels.map((p2, idx) =>
                <PanelWrapper
                   key={idx}
-                  panel={p2}
+                  panel={{...p2, allowMaximize: p.panels.length > 1}}
                   setPanels={p.setPanels}
                   index={idx}
                />

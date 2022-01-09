@@ -10,6 +10,9 @@ export interface PanelBaseProps {
 
    allowCollapse?: boolean;
    // Whether the panel can be reduced to its title bar
+
+   allowMaximize?: boolean;
+   // Whether this panel can be maximized
 }
 
 /**
