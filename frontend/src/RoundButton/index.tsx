@@ -20,7 +20,9 @@ interface RoundButtonProps {
    aspect?: ButtonAspect;
 
    url?: string;          // the button should be a link
-   onClick?: () => void;  // or a custom callback
+
+   onClick?: (e: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+   // or a custom callback
 }
 
 const RoundButton: React.FC<RoundButtonProps> = p => {

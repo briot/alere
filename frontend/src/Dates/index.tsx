@@ -264,14 +264,17 @@ export const monthCount = (name: DateRange): number => {
 }
 
 interface DateRangePickerProps {
-   onChange?: (val: DateRange) => void;
+   onChange?: (
+      val: DateRange,
+      e: React.MouseEvent<HTMLElement, MouseEvent>) => void;
    text: string;
    value: DateRange;
 }
 export const DateRangePicker: React.FC<DateRangePickerProps> = p => {
    const { onChange } = p;
    const localChange = React.useCallback(
-      (val: string) => onChange?.(val as DateRange),
+      (val: string, e: React.MouseEvent<HTMLElement, MouseEvent>) =>
+         onChange?.(val as DateRange, e),
       [onChange]
    );
    const groups = Object.entries(dateRanges).reduce(

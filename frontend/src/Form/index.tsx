@@ -210,7 +210,7 @@ export const divider: Option<any> = {value: 'divider'};
 export interface SelectProps<T>
    extends React.PropsWithChildren<SharedInputProps<T>>
 {
-   onChange?: (val: T) => void;
+   onChange?: (val: T, e: React.MouseEvent<HTMLElement, MouseEvent>) => void;
    options: Option<T>[];
    required?: boolean;
    direction?: "left" | "right";
@@ -236,7 +236,7 @@ export const Select = <T extends { toString: () => string }> (p: SelectProps<T>)
                   `option${o.value === p.value ? ' selected' : ''}`
                }
                style={q.style}
-               onClick={() => onChange?.(o.value as T)}
+               onClick={e => onChange?.(o.value as T, e)}
             >
                <span style={o.style}>{o.text ?? o.value.toString()}</span>
             </div>
@@ -269,7 +269,7 @@ export const Select = <T extends { toString: () => string }> (p: SelectProps<T>)
             }
             menu={() =>
                <div
-                   style={{height: ROW_HEIGHT * Math.min(p.options.length, 15) }}
+                   style={{height: ROW_HEIGHT * Math.min(p.options.length, 15)}}
                >
                   <AutoSizer>
                     {
