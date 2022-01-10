@@ -525,7 +525,87 @@ class Migration(migrations.Migration):
            WHERE
               --  intervals intersect
               b.mindate < p.maxdate
-              AND p.mindate < b.maxdate
+              AND p.mindate < b.maxdate;
+
+
+        --  Compute when scheduled transactions occur
+        DROP VIEW IF EXISTS alr_future_transactions;
+        CREATE VIEW alr_future_transactions AS
+           WITH RECURSIVE nextEvents AS (
+              SELECT *,
+                 (CASE
+
+                  --  We want an exact day in the month. If this day is in the
+                  --  past for the current month, we take that date on the next
+                  --  valid month instead
+                  WHEN exact_day IS NOT NULL THEN
+                     CASE
+
+                        --  If we would be creating an invalid date (like
+                        --  2021-02-30), we need to move to the next month).
+                        --  Assuming that exact_day is <= 31, the next month
+                        --  will always be valid.
+                        WHEN (
+                           (
+                              strftime("%Y-%m-", start)
+                              || substr('0' || exact_day, -2)
+                           ) IS NOT date(
+                              strftime("%Y-%m-", start)
+                              || substr('0' || exact_day, -2),
+                              '+0 days'
+                           ))
+                        THEN
+                           date(
+                              start,
+                              'start of month',
+                              '+1 months',
+                              '+' || (exact_day - 1) || ' days'
+                           )
+
+                        WHEN (strftime("%Y-%m-", start)
+                           || substr('0' || exact_day, -2)) >= start
+                        THEN (strftime("%Y-%m-", start)
+                           || substr('0' || exact_day, -2))
+
+                        ELSE date(start,
+                                  'start of month',
+                                  '+' || (exact_day - 1) || ' days',
+                                  '+1 months')
+                     END
+                  ELSE
+                     null
+                  END
+                 ) AS nextdate
+                 FROM alr_scheduled
+                 WHERE end IS NULL or CURRENT_DATE <= end
+              UNION
+              SELECT
+                 n.id, n.name, n.exact_day, n.month_pattern, n.start, n.end,
+
+                 (CASE
+                  WHEN exact_day IS NOT NULL THEN
+
+                     --  Is the day invalid in the next month ?
+                     CASE WHEN
+                        strftime("%m", date(n.nextdate, "+1 month")) + 0 <>
+                        (strftime("%m", n.nextdate)) % 12 + 1
+                     THEN
+                        date(n.nextdate, "+2 month")
+                     ELSE
+                        date(n.nextDate, '+1 month')
+                     END
+                  ELSE
+                     null
+                  END)
+              FROM
+                 nextEvents n
+                 WHERE n.end IS NULL or n.nextdate <= n.end
+           )
+           SELECT
+              row_number() OVER () as id,   --  for django's sake
+              name, nextdate
+           FROM nextEvents
+           WHERE alr_valid_month(strftime("%m", nextdate), month_pattern);
         """
         )
     ]

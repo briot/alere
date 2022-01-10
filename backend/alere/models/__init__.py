@@ -472,6 +472,47 @@ class Splits(AlereModel):
             )
 
 
+class Scheduled(AlereModel):
+    """
+    Scheduled transactions.
+    This includes both actual transactions that will be executed, and
+    transactions that are part of scenarios to guess future networth
+    """
+    JAN = 1
+    FEB = 2
+    MAR = 4
+    APR = 8
+    MAY = 16
+    JUN = 32
+    JUL = 64
+    AUG = 128
+    SEP = 256
+    OCT = 512
+    NOV = 1024
+    DEC = 2048
+    ALL_MONTHS = 4095
+
+    name = models.TextField()
+
+    exact_day = models.SmallIntegerField(null=True)
+    # the transaction occurs on a specific day of a month. This takes
+    # priority over all other kinds of schedules
+    # The occurrence is skipped if the day doesn't exist in the month (for
+    # instance Feb-30)
+    # ??? Should add check that this is 1 <= exact_date <= 31
+
+    month_pattern = models.IntegerField(null=True)
+    # On which months will this transaction occur. See constants above
+
+    start = models.DateField()
+    end = models.DateField(null=True)
+    # when is the first occurrence (might be in the past), and optionally when
+    # is the last ocurrence
+
+    class Meta:
+        db_table = prefix + "scheduled"
+
+
 class Splits_With_Value(AlereModel):
     """
     Similar to Splits, but includes the value (number of shares * price at
@@ -485,7 +526,7 @@ class Splits_With_Value(AlereModel):
     transaction = models.ForeignKey(
         Transactions, on_delete=models.CASCADE, related_name='+',
     )
-    account     = models.ForeignKey(
+    account = models.ForeignKey(
         Accounts, on_delete=models.CASCADE, related_name='+',
     )
     payee = models.ForeignKey(
@@ -497,7 +538,7 @@ class Splits_With_Value(AlereModel):
         default=ReconcileKinds.NEW
     )
     reconcile_date = models.DateTimeField(null=True)
-    post_date   = models.DateTimeField()
+    post_date = models.DateTimeField()
     value_commodity = models.ForeignKey(
         Commodities, on_delete=models.DO_NOTHING, related_name='+')
 
@@ -661,3 +702,15 @@ class RoI(AlereModel):
 
     def __str__(self):
         return "RoI([%s,%s), roi=%s)" % (self.mindate, self.maxdate, self.roi)
+
+
+class Future_Transactions(AlereModel):
+    name = models.TextField()
+    nextdate = models.DateField()
+
+    class Meta:
+        managed = False
+        db_table = "alr_future_transactions"
+
+    def __repr__(self):
+        return "Future(%s, %s)" % (self.name, self.nextdate)
