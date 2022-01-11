@@ -10,9 +10,10 @@ class Split:
     def __init__(
             self, account,
             qty,   # in account.commodity, scaled by account.commodity_scu
-            date,
-            value_commodity=None,
-            value=None): # scaled by value_commodity.price_scale
+            date: str,
+            value_commodity: alere.models.Commodities = None,
+            value: float = None,   # scaled by value_commodity.price_scale
+            ):
         self.account = account
         self.qty = qty
         self.date = date
@@ -94,36 +95,41 @@ class BaseTest(TestCase, ParamDecoder):
 
     def create_transaction(
             self,
-            splits=List[Split],
-        ):
-            t = alere.models.Transactions.objects.create(
-                timestamp=self.convert_time(splits[0].date),
+            splits: List[Split] = [],
+            timestamp: str = None,  # defaults to the first split's date
+            scheduled: str = None,
+            ):
+        t = alere.models.Transactions.objects.create(
+            timestamp=self.convert_time(timestamp or splits[0].date),
+            scheduled=scheduled,
+        )
+        for s in splits:
+            t.splits.create(
+                account=s.account,
+                post_date=self.convert_time(s.date),
+                scaled_qty=s.qty,
+                value_commodity=s.value_commodity,
+                scaled_value=s.value
             )
-            for s in splits:
-                t.splits.create(
-                    account=s.account,
-                    post_date=self.convert_time(s.date),
-                    scaled_qty=s.qty,
-                    value_commodity=s.value_commodity,
-                    scaled_value=s.value
-                )
-            t.save()
-            return t
+        t.save()
+        return t
 
     def create_prices(
             self,
             origin: alere.models.Commodities,
             target: alere.models.Commodities,
             prices: List[Tuple[str, int]],
-               # (date, price scaled by origin.price_scale)
-        ):
-            alere.models.Prices.objects.bulk_create([
-                alere.models.Prices(
-                    origin=origin,
-                    target=target,
-                    date=self.convert_time(p[0]),
-                    scaled_price=p[1],
-                    source_id=alere.models.PriceSources.USER)
-                for p in prices
-            ])
+            ):
+        """
+        :param prices: (date, price scaled by origin.price_scale)
+        """
 
+        alere.models.Prices.objects.bulk_create([
+            alere.models.Prices(
+                origin=origin,
+                target=target,
+                date=self.convert_time(p[0]),
+                scaled_price=p[1],
+                source_id=alere.models.PriceSources.USER)
+            for p in prices
+        ])

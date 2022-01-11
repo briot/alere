@@ -24,6 +24,7 @@ class CategoryPlotView(JSONView):
             .filter(post_date__gte=mindate,
                     post_date__lte=maxdate,
                     value_commodity_id=currency,
+                    transaction__scheduled=None,  # ignore scheduled ones
                     account__kind__category__in=categories,
                     account__kind__is_unrealized=False) \
             .values('account_id') \

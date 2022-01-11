@@ -164,6 +164,7 @@ class Mean:
         """
         Computes the total realized income and expenses for all months.
         The result includes the rolling mean.
+        This ignores scheduled transactions.
         """
         query = (
             f"""
@@ -196,6 +197,14 @@ class Mean:
                      JOIN alr_splits_with_value
                         ON (strftime("%%Y-%%m", post_date) =
                             strftime("%%Y-%%m", dates.date))
+
+                     --  ignore scheduled transactions, which did not actually
+                     --  occur.
+                     JOIN alr_transactions
+                        ON (alr_splits_with_value.transaction_id =
+                            alr_transactions.id
+                            AND alr_transactions.scheduled IS NULL)
+
                      JOIN alr_accounts
                         ON (alr_splits_with_value.account_id=alr_accounts.id)
                      JOIN alr_account_kinds k

@@ -34,6 +34,15 @@ class NetworthTestCase(BaseTest):
                 ),
              Split(self.checking,  -180, '2020-11-25')])
 
+        # Create a scheduled transaction, which should be ignored in all
+        # results below.
+        self.create_transaction(
+            scheduled="freq=DAILY",
+            splits=[
+                Split(self.salary,  -101000, '2020-11-10'),
+                Split(self.checking, 101000, '2020-11-12'),
+            ])
+
     def test_networth(self):
 
         # No date specified

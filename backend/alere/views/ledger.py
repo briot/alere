@@ -11,9 +11,11 @@ def ledger(
         ids: List[int],
         mindate: datetime.datetime,
         maxdate: datetime.datetime,
-    ) -> None:
+        ) -> None:
     q = alere.models.Splits_With_Value.objects \
         .select_related('transaction', 'account', 'payee') \
+        .filter(transaction__scheduled=None,  # ignore scheduled ones
+                ) \
         .order_by('transaction__timestamp', 'transaction_id')
 
     if ids:

@@ -299,6 +299,10 @@ class Migration(migrations.Migration):
            FROM alr_raw_prices_with_turnkey p
         ;
 
+        --------------------
+        --  Ignores scheduled transactions
+        --------------------
+
         DROP VIEW IF EXISTS alr_balances;
         CREATE VIEW alr_balances AS
            SELECT
@@ -320,9 +324,19 @@ class Migration(migrations.Migration):
                 ) / alr_accounts.commodity_scu
                 AS balance
            FROM alr_splits
+              JOIN alr_transactions
+                 ON (alr_splits.transaction_id = alr_transactions.id
+                     AND alr_transactions.scheduled IS NULL)
               JOIN alr_accounts
                  ON (alr_splits.account_id = alr_accounts.id)
         ;
+
+        --------------------
+        --  Similar to balances, but instead of giving the balance as shares
+        --  for stock accounts, it computes their monetary value by using the
+        --  historical price of the stock at that time.
+        --  Ignores scheduled transactions
+        --------------------
 
         DROP VIEW IF EXISTS alr_balances_currency;
         CREATE VIEW alr_balances_currency AS
@@ -360,6 +374,13 @@ class Migration(migrations.Migration):
                AND alr_commodities.kind='C'
         ;
 
+        ------------------
+        --  Returns all splits with the associated value, scaled
+        --  as needed.
+        --  This includes splits from scheduled transactions, which might have
+        --  to be ignored later.
+        ------------------
+
         DROP VIEW IF EXISTS alr_splits_with_value;
         CREATE VIEW alr_splits_with_value AS
             SELECT
@@ -379,6 +400,10 @@ class Migration(migrations.Migration):
                   ON (alr_splits.value_commodity_id=alr_commodities.id)
         ;
 
+        --------------------
+        --  Compute current prices
+        --------------------
+
         DROP VIEW IF EXISTS alr_latest_price;
         CREATE VIEW alr_latest_price AS
             SELECT
@@ -390,6 +415,7 @@ class Migration(migrations.Migration):
               AND alr_prices.date=latest.date
         ;
 
+        --------------------
         --  For all accounts, compute the total amount invested (i.e. money
         --  transfered from other user accounts) and realized gains (i.e.
         --  money transferred to other user accounts).
@@ -402,6 +428,7 @@ class Migration(migrations.Migration):
         --  rate at the time of the transaction.
         --
         --  All values given in currency_id and unscaled
+        --------------------
 
         DROP VIEW IF EXISTS alr_invested;
         CREATE VIEW alr_invested AS
@@ -487,10 +514,12 @@ class Migration(migrations.Migration):
             WHERE mindate <> maxdate
         ;
 
+        --------------------
         --  For all accounts, compute the return on investment at any point
         --  in time, by combining the balance at that time with the total
         --  amount invested that far and realized gains moved out of the
         --  account.
+        --------------------
 
         DROP VIEW IF EXISTS alr_roi;
         CREATE VIEW alr_roi AS
@@ -525,26 +554,34 @@ class Migration(migrations.Migration):
            WHERE
               --  intervals intersect
               b.mindate < p.maxdate
-              AND p.mindate < b.maxdate;
+              AND p.mindate < b.maxdate
+        ;
 
-
+        --------------------
         --  Compute when scheduled transactions occur
+        --------------------
+
         DROP VIEW IF EXISTS alr_future_transactions;
         CREATE VIEW alr_future_transactions AS
            WITH RECURSIVE nextEvents AS (
-              SELECT n.name, n.rrule, alr_next_event(n.rrule, null) as nextdate
-              FROM alr_scheduled n
+              SELECT n.id, n.timestamp, n.scheduled,
+                 alr_next_event(n.scheduled, n.timestamp, null) as nextdate
+              FROM alr_transactions n
+              WHERE n.scheduled IS NOT NULL
 
               UNION
-              SELECT n.name, n.rrule, alr_next_event(n.rrule, nextdate)
+              SELECT n.id, n.timestamp, n.scheduled,
+                 alr_next_event(n.scheduled, n.timestamp, nextdate)
               FROM nextEvents n
               WHERE n.nextdate IS NOT NULL
            )
            SELECT
               row_number() OVER () as id,   --  for django's sake
-              name, nextdate
+              id as transaction_id,
+              nextdate
            FROM nextEvents
-           WHERE nextdate IS NOT NULL;
+           WHERE nextdate IS NOT NULL
+        ;
         """
         )
     ]

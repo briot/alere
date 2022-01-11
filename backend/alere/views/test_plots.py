@@ -20,6 +20,15 @@ class PlotTestCase(BaseTest):
             [Split(self.groceries, 1000, '2020-11-03'),
              Split(self.checking, -1000, '2020-11-03')])
 
+        # Create a scheduled transaction, which should be ignored in all
+        # results below.
+        self.create_transaction(
+            scheduled="freq=DAILY",
+            splits=[
+                Split(self.salary,  -101000, '2020-11-10'),
+                Split(self.checking, 101000, '2020-11-12'),
+            ])
+
     def test_income(self):
         req = RequestFactory().get(
             '/api/incomeexpense',
@@ -34,8 +43,9 @@ class PlotTestCase(BaseTest):
         self.assertDictEqual(
             {
                 'items': [
-                    {'accountId': self.salary.id,
-                     'value': 1334.0,
+                    {
+                        'accountId': self.salary.id,
+                        'value': 1334.0,
                     }
                 ],
                 'maxdate': datetime.datetime(

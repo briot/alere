@@ -333,9 +333,76 @@ class Transactions(AlereModel):
 
     check_number = models.TextField(null=True)
 
-    # is_scheduled = models.Boolean()   # kmyMoney has txType = ('N', 'S')
-    # ??? better stored in a separate table, which can include recurrence
-    # information for instance
+    scheduled = models.TextField(null=True)
+    # The recurrence rule. See python dateutil.rrule module, or RFC-5545
+    #  iCalendar RFC <https://tools.ietf.org/html/rfc5545>
+    #
+    # A scheduled transaction has not occurred yet, and is actually a template
+    # for future transactions. It describes how it will be recurring (or not).
+    # When an instance of a recurring transaction is validated by the user, a
+    # separate transaction is created for it.
+    #
+    # The start date for this transaction is given by timestamp.
+    #
+    # The string is a list of semi-colon separated parameters:
+    #   - freq=<val>    YEARLY|MONTHLY|WEEKLY|DAILY|HOURLY|MINUTELY|SECONDLY
+    #     How often can events occur (once a year for YEARLY, once a month for
+    #     MONTHLY and so on).
+    #
+    #   - interval=<integer_or_list>
+    #     The interval between each freq iteration. For example, when using
+    #     YEARLY, an interval of 2 means once every two years, but with HOURLY,
+    #     it means once every two hours.
+    #
+    #   - wkst=<integer>   (monday=1, tuesday=2,...)
+    #     Specify the first day of the week.
+    #     This will affect recurrences based on weekly periods.
+    #
+    #   - until=<date>
+    #   - count=<integer>
+    #     Only one of these two fields can be specified.
+    #     until is the last valid date (included).
+    #
+    #   - bysetpos=<integer_or_list>
+    #     Each given integer will specify an occurrence number, corresponding
+    #     to the nth occurrence of the rule inside the frequency period. For
+    #     example, a set_pos of -1 if combined with a MONTHLY frequency, and a
+    #     week_day of (MO, TU, WE, TH, FR), will result in the last work day of
+    #     every month.
+    #
+    #   - bymonth=<integer_or_list>
+    #     The list of months to apply the recurrence to.
+    #
+    #   - bymonthday=<integer_or_list>
+    #     The exact day(s) of the month to apply the recurrence to.
+    #
+    #   - year_day=<integer_or_list>
+    #     The exact day(s) of the year this recurrence applies to.
+    #
+    #   - easter=<integer_or_list>
+    #     Each integer will define an offset from the Easter Sunday. Passing
+    #     the offset 0 to byeaster will yield the Easter Sunday itself. This is
+    #     an extension to the RFC specification.
+    #
+    #   - byweekno=<integer_or_list>
+    #     The week numbers to apply the recurrence to. Week numbers have the
+    #     meaning described in ISO8601, that is, the first week of the year is
+    #     that containing at least four days of the new year.
+    #
+    #   - byweekday=<integer_or_list>
+    #     a combination of the MO, TU,... constants.
+    #     It’s also possible to use an argument n for the weekday instances,
+    #     which will mean the nth occurrence of this weekday in the period. For
+    #     example, with MONTHLY, or with YEARLY and BYMONTH, using FR(+1) in
+    #     byweekday will specify the first friday of the month where the
+    #     recurrence happens. Notice that in the RFC documentation, this is
+    #     specified as BYDAY, but was renamed to avoid the ambiguity of that
+    #     keyword.
+    #
+    #   - byhour
+    #   - byminute
+    #   - bysecond
+    #     irrelevant, we only use dates
 
     # ??? bankId: likely used by kmymoney when importing OFX
 
@@ -440,7 +507,7 @@ class Splits(AlereModel):
     )
     reconcile_date = models.DateTimeField(null=True)
 
-    post_date   = models.DateTimeField()
+    post_date = models.DateTimeField()
     # When has the split impacted the account.
     # For instance, a transfer done on 2020-01-01 between accountA and accountB
     # could have:
@@ -472,89 +539,6 @@ class Splits(AlereModel):
             )
 
 
-class Scheduled(AlereModel):
-    """
-    Scheduled transactions.
-    This includes both actual transactions that will be executed, and
-    transactions that are part of scenarios to guess future networth.
-
-    The recurring rules are specified by the iCalendar RFC rrule set.
-    """
-
-    name = models.TextField()
-
-    rrule = models.TextField()
-    # The recurrence rule. See python dateutil.rrule module, or RFC-5545
-    #  iCalendar RFC <https://tools.ietf.org/html/rfc5545>
-    #
-    # The string should be two lines:
-    #   * first starts with "DTSTART: <date>" and is the first state
-    #   * the second starts with "RRULE:" and contains the rules. It is a set
-    #     of parameters:
-    #
-    #   - freq=<val>    YEARLY|MONTHLY|WEEKLY|DAILY|HOURLY|MINUTELY|SECONDLY
-    #     How often can events occur (once a year for YEARLY, once a month for
-    #     MONTHLY and so on).
-    #
-    #   - interval=<integer_or_list>
-    #     The interval between each freq iteration. For example, when using
-    #     YEARLY, an interval of 2 means once every two years, but with HOURLY,
-    #     it means once every two hours.
-    #
-    #   - wkst=<integer>   (monday=1, tuesday=2,...)
-    #     Specify the first day of the week.
-    #     This will affect recurrences based on weekly periods.
-    #
-    #   - until=<date>
-    #   - count=<integer>
-    #     Only one of these two fields can be specified.
-    #     until is the last valid date (included).
-    #
-    #   - bysetpos=<integer_or_list>
-    #     Each given integer will specify an occurrence number, corresponding
-    #     to the nth occurrence of the rule inside the frequency period. For
-    #     example, a set_pos of -1 if combined with a MONTHLY frequency, and a
-    #     week_day of (MO, TU, WE, TH, FR), will result in the last work day of
-    #     every month.
-    #
-    #   - bymonth=<integer_or_list>
-    #     The list of months to apply the recurrence to.
-    #
-    #   - bymonthday=<integer_or_list>
-    #     The exact day(s) of the month to apply the recurrence to.
-    #
-    #   - year_day=<integer_or_list>
-    #     The exact day(s) of the year this recurrence applies to.
-    #
-    #   - easter=<integer_or_list>
-    #     Each integer will define an offset from the Easter Sunday. Passing
-    #     the offset 0 to byeaster will yield the Easter Sunday itself. This is
-    #     an extension to the RFC specification.
-    #
-    #   - byweekno=<integer_or_list>
-    #     The week numbers to apply the recurrence to. Week numbers have the
-    #     meaning described in ISO8601, that is, the first week of the year is
-    #     that containing at least four days of the new year.
-    #
-    #   - byweekday=<integer_or_list>
-    #     a combination of the MO, TU,... constants.
-    #     It’s also possible to use an argument n for the weekday instances,
-    #     which will mean the nth occurrence of this weekday in the period. For
-    #     example, with MONTHLY, or with YEARLY and BYMONTH, using FR(+1) in
-    #     byweekday will specify the first friday of the month where the
-    #     recurrence happens. Notice that in the RFC documentation, this is
-    #     specified as BYDAY, but was renamed to avoid the ambiguity of that
-    #     keyword.
-    #
-    #   - byhour
-    #   - byminute
-    #   - bysecond
-    #     irrelevant, we only use dates
-
-    class Meta:
-        db_table = prefix + "scheduled"
-
-
 class Splits_With_Value(AlereModel):
     """
     Similar to Splits, but includes the value (number of shares * price at
@@ -566,13 +550,13 @@ class Splits_With_Value(AlereModel):
 
     # ??? fields from Splits
     transaction = models.ForeignKey(
-        Transactions, on_delete=models.CASCADE, related_name='+',
+        Transactions, on_delete=models.DO_NOTHING, related_name='+',
     )
     account = models.ForeignKey(
-        Accounts, on_delete=models.CASCADE, related_name='+',
+        Accounts, on_delete=models.DO_NOTHING, related_name='+',
     )
     payee = models.ForeignKey(
-        Payees, on_delete=models.CASCADE, null=True, related_name='+')
+        Payees, on_delete=models.DO_NOTHING, null=True, related_name='+')
     scaled_qty = models.IntegerField()
     reconcile = models.CharField(
         max_length=1,
@@ -630,6 +614,15 @@ class Balances(AlereModel):
     class Meta:
         managed = False
         db_table = prefix + "balances"
+
+    def __eq__(self, right):
+        return (
+            self.account_id == right.account_id
+            and self.commodity_id == right.commodity_id
+            and self.mindate == right.mindate
+            and self.maxdate == right.maxdate
+            and self.balance == right.balance
+        )
 
     def __str__(self):
         return (
@@ -747,7 +740,8 @@ class RoI(AlereModel):
 
 
 class Future_Transactions(AlereModel):
-    name = models.TextField()
+    transaction_id = models.ForeignKey(
+        Transactions, on_delete=models.DO_NOTHING)
     nextdate = models.DateField()
 
     class Meta:

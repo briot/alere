@@ -19,6 +19,15 @@ class MetricsTestCase(BaseTest):
             [Split(self.groceries, 1000, '2020-11-03'),
              Split(self.checking, -1000, '2020-11-03')])
 
+        # Create a scheduled transaction, which should be ignored in all
+        # results below.
+        self.create_transaction(
+            scheduled="freq=DAILY",
+            splits=[
+                Split(self.salary,  -101000, '2020-11-10'),
+                Split(self.checking, 101000, '2020-11-12'),
+            ])
+
     def test_metrics(self):
         req = RequestFactory().get(
             '/api/metrics',
