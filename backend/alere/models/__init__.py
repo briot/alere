@@ -472,14 +472,6 @@ class Splits(AlereModel):
             )
 
 
-class ListOfIntegerField(models.TextField):
-    """
-    A field that stores a list of integers
-    """
-    pass
-
-
-
 class Scheduled(AlereModel):
     """
     Scheduled transactions.
@@ -491,141 +483,73 @@ class Scheduled(AlereModel):
 
     name = models.TextField()
 
-#    rrule = models.TextField()
-#    # The recurrence rule. See python dateutil.rrule module, or the RFC
-#    # mentioned above.
-#    #  iCalendar RFC <https://tools.ietf.org/html/rfc5545>
-
-
-#     start = models.DateField()
-#     # Start of the recurrence. This might not be an actually valid date for
-#     # this event.
-#
-#     YEARLY = 0
-#     MONTHLY = 1
-#     WEEKLY = 2
-#     DAILY = 3
-#     HOURLY = 4
-#     MINUTELY = 5
-#     SECONDLY = 6
-#     freq = models.SmallIntegerField()
-#     # How often can events occur (once a year for YEARLY, once a month for
-#     # MONTHLY and so on).
-#
-#     interval = models.PositiveSmallIntegerField(default=1)
-#     # The interval between each freq iteration. For example, when using YEARLY,
-#     # an interval of 2 means once every two years, but with HOURLY, it means
-#     # once every two hours.
-#     # ??? Should check it is not 0
-#
-#     MO = 1
-#     TU = 2
-#     WE = 4
-#     TH = 8
-#     FR = 16
-#     SA = 32
-#     SU = 64
-#     ALL_DAYS = 127
-#     ALL_WORK_DAYS = 31
-#     week_start = models.SmallIntegerField(default=MO)
-#     # Specify the first day of the week.
-#     # This will affect recurrences based on weekly periods.
-#
-#     until = models.DateField(null=True)
-#     count = models.PositiveIntegerField(null=True)
-#     # Only one of these two fields can be specified.
-#     # until is the last valid date (included).
-#
-#     set_pos = ListOfIntegerField(null=True)
-#     # Each given integer will specify an occurrence number, corresponding to
-#     # the nth occurrence of the rule inside the frequency period. For example,
-#     # a set_pos of -1 if combined with a MONTHLY frequency, and a
-#     # week_day of (MO, TU, WE, TH, FR), will result in the last work day of
-#     # every month.
-#
-#     JAN = 1
-#     FEB = 2
-#     MAR = 4
-#     APR = 8
-#     MAY = 16
-#     JUN = 32
-#     JUL = 64
-#     AUG = 128
-#     SEP = 256
-#     OCT = 512
-#     NOV = 1024
-#     DEC = 2048
-#     ALL_MONTHS = 4095
-#     month = models.SmallIntegerField(null=True)
-#     # The list of months to apply the recurrence to.
-#
-#     month_day = ListOfIntegerField(null=True)
-#     # The exact day(s) of the month to apply the recurrence to.
-#
-#     year_day = ListOfIntegerField(null=True)
-#     # The exact day(s) of the year this recurrence applies to.
-#
-#     easter = ListOfIntegerField(null=True)
-#     # Each integer will define an offset from the Easter Sunday. Passing the
-#     # offset 0 to byeaster will yield the Easter Sunday itself. This is an
-#     # extension to the RFC specification.
-#
-#     week_no = ListOfIntegerField(null=True)
-#     # The week numbers to apply the recurrence to. Week numbers have the
-#     # meaning described in ISO8601, that is, the first week of the year is that
-#     # containing at least four days of the new year.
-#
-#     week_day = models.SmallIntegerField(null=True)
-#     # a combination of the MO, TU,... constants.
-#
-#     # – If given, it must be either an integer (0 == MO), a sequence of integers, one of the weekday constants (MO, TU, etc), or a sequence of these constants. When given, these variables will define the weekdays where the recurrence will be applied. It’s also possible to use an argument n for the weekday instances, which will mean the nth occurrence of this weekday in the period. For example, with MONTHLY, or with YEARLY and BYMONTH, using FR(+1) in byweekday will specify the first friday of the month where the recurrence happens. Notice that in the RFC documentation, this is specified as BYDAY, but was renamed to avoid the ambiguity of that keyword.
-#
-# byhour – If given, it must be either an integer, or a sequence of integers, meaning the hours to apply the recurrence to.
-# byminute – If given, it must be either an integer, or a sequence of integers, meaning the minutes to apply the recurrence to.
-# bysecond – If given, it must be either an integer, or a sequence of integers, meaning the seconds to apply the recurrence to.
-# cache – If given, it must be a boolean value specifying to enable or disable caching of results. If you will use the same rrule instance multiple times, enabling caching will improve the performance considerably.
-
-    start = models.DateField()
-    # Start of the recurrence. This might not be an actually valid date for
-    # this event.
-
-    until = models.DateField(null=True)
-    count = models.PositiveIntegerField(null=True)
-    # Only one of these two fields can be specified.
-    # until is the last valid date (included).
-
-    month_day = models.SmallIntegerField(null=True)
-    # The transaction occurs on a specific day of a month.
-    # The occurrence is skipped if the day doesn't exist in the month.
-    # ??? Should add check that this is 1 <= month_day <= 31
-    # ??? Should we allow multiple days (comma-separated)
-
-    JAN = 1
-    FEB = 2
-    MAR = 4
-    APR = 8
-    MAY = 16
-    JUN = 32
-    JUL = 64
-    AUG = 128
-    SEP = 256
-    OCT = 512
-    NOV = 1024
-    DEC = 2048
-    ALL_MONTHS = 4095
-    month = models.IntegerField(default=ALL_MONTHS)
-    # On which months will this transaction occur. See constants above
-
-    MON = 1
-    TUE = 2
-    WED = 4
-    THU = 8
-    FRI = 16
-    SAT = 32
-    SUN = 64
-    ALL_DAYS = 127
-    week_day = models.IntegerField(default=ALL_DAYS)
-    # Which days are allowed
+    rrule = models.TextField()
+    # The recurrence rule. See python dateutil.rrule module, or RFC-5545
+    #  iCalendar RFC <https://tools.ietf.org/html/rfc5545>
+    #
+    # The string should be two lines:
+    #   * first starts with "DTSTART: <date>" and is the first state
+    #   * the second starts with "RRULE:" and contains the rules. It is a set
+    #     of parameters:
+    #
+    #   - freq=<val>    YEARLY|MONTHLY|WEEKLY|DAILY|HOURLY|MINUTELY|SECONDLY
+    #     How often can events occur (once a year for YEARLY, once a month for
+    #     MONTHLY and so on).
+    #
+    #   - interval=<integer_or_list>
+    #     The interval between each freq iteration. For example, when using
+    #     YEARLY, an interval of 2 means once every two years, but with HOURLY,
+    #     it means once every two hours.
+    #
+    #   - wkst=<integer>   (monday=1, tuesday=2,...)
+    #     Specify the first day of the week.
+    #     This will affect recurrences based on weekly periods.
+    #
+    #   - until=<date>
+    #   - count=<integer>
+    #     Only one of these two fields can be specified.
+    #     until is the last valid date (included).
+    #
+    #   - bysetpos=<integer_or_list>
+    #     Each given integer will specify an occurrence number, corresponding
+    #     to the nth occurrence of the rule inside the frequency period. For
+    #     example, a set_pos of -1 if combined with a MONTHLY frequency, and a
+    #     week_day of (MO, TU, WE, TH, FR), will result in the last work day of
+    #     every month.
+    #
+    #   - bymonth=<integer_or_list>
+    #     The list of months to apply the recurrence to.
+    #
+    #   - bymonthday=<integer_or_list>
+    #     The exact day(s) of the month to apply the recurrence to.
+    #
+    #   - year_day=<integer_or_list>
+    #     The exact day(s) of the year this recurrence applies to.
+    #
+    #   - easter=<integer_or_list>
+    #     Each integer will define an offset from the Easter Sunday. Passing
+    #     the offset 0 to byeaster will yield the Easter Sunday itself. This is
+    #     an extension to the RFC specification.
+    #
+    #   - byweekno=<integer_or_list>
+    #     The week numbers to apply the recurrence to. Week numbers have the
+    #     meaning described in ISO8601, that is, the first week of the year is
+    #     that containing at least four days of the new year.
+    #
+    #   - byweekday=<integer_or_list>
+    #     a combination of the MO, TU,... constants.
+    #     It’s also possible to use an argument n for the weekday instances,
+    #     which will mean the nth occurrence of this weekday in the period. For
+    #     example, with MONTHLY, or with YEARLY and BYMONTH, using FR(+1) in
+    #     byweekday will specify the first friday of the month where the
+    #     recurrence happens. Notice that in the RFC documentation, this is
+    #     specified as BYDAY, but was renamed to avoid the ambiguity of that
+    #     keyword.
+    #
+    #   - byhour
+    #   - byminute
+    #   - bysecond
+    #     irrelevant, we only use dates
 
     class Meta:
         db_table = prefix + "scheduled"

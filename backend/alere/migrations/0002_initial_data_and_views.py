@@ -532,34 +532,19 @@ class Migration(migrations.Migration):
         DROP VIEW IF EXISTS alr_future_transactions;
         CREATE VIEW alr_future_transactions AS
            WITH RECURSIVE nextEvents AS (
-              SELECT
-                 n.name, n.month_day, n.month, n.start, n.until, n.count,
-                 n.week_day,
-                 alr_next_event(
-                     start, 1, month_day, month, week_day, until) as nextdate,
-                 1 as occurrence
+              SELECT n.name, n.rrule, alr_next_event(n.rrule, null) as nextdate
               FROM alr_scheduled n
-              WHERE (count IS NULL OR count >= 1)
 
               UNION
-              SELECT
-                 n.name, n.month_day, n.month, n.start, n.until, n.count,
-                 n.week_day,
-                 alr_next_event(
-                     nextdate, occurrence + 1, month_day,
-                     month, week_day, until),
-                 occurrence + 1
-              FROM
-                 nextEvents n
-                 WHERE n.nextdate is not NULL
-                    AND (n.count is NULL OR occurrence < n.count)
+              SELECT n.name, n.rrule, alr_next_event(n.rrule, nextdate)
+              FROM nextEvents n
+              WHERE n.nextdate IS NOT NULL
            )
            SELECT
               row_number() OVER () as id,   --  for django's sake
               name, nextdate
            FROM nextEvents
            WHERE nextdate IS NOT NULL;
-
         """
         )
     ]
