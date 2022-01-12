@@ -26,21 +26,31 @@ class NetworthTestCase(BaseTest):
         # bought 2.12 USD  (price_scale is 1000)
         # equivalent to 1.802 EUR (qty_scale is 100)
         self.create_transaction(
-            [Split(self.groceries,
-                   212,   # scaled by groceries'commodity (EUR), i.e. 100
-                   '2020-11-25',
-                   value_commodity=self.usd,
-                   value=1802,
-                ),
+            [Split(
+                self.groceries,
+                212,   # scaled by groceries'commodity (EUR), i.e. 100
+                '2020-11-25',
+                value_commodity=self.usd,
+                value=1802,
+             ),
              Split(self.checking,  -180, '2020-11-25')])
 
         # Create a scheduled transaction, which should be ignored in all
-        # results below.
+        # results below by default.
         self.create_transaction(
-            scheduled="freq=DAILY",
+            scheduled="freq=MONTHLY",
             splits=[
                 Split(self.salary,  -101000, '2020-11-10'),
                 Split(self.checking, 101000, '2020-11-12'),
+            ])
+
+        # A transaction from a different scenario, should also be ignored
+        # in general.
+        self.create_transaction(
+            scenario=self.scenario_1,
+            splits=[
+                Split(self.salary,  -202000, '2020-11-10'),
+                Split(self.checking, 202000, '2020-11-12'),
             ])
 
     def test_networth(self):
@@ -85,6 +95,32 @@ class NetworthTestCase(BaseTest):
                  'price': [1.0], 'shares': [1.54]},
             ])
 
+        # Scenario 1
+        self.assertEqual(
+            networth(
+                dates=[self.convert_time('2022-11-26')],
+                currency_id=self.eur,
+                scenario=self.scenario_1.id,
+            ),
+            [
+                {'accountId': self.checking.id,
+                 'price':  [1.0],
+                 'shares': [1.54 + 2020]},
+            ])
+
+        # Planned networth. This includes scheduled transactions
+        self.assertEqual(
+            networth(
+                dates=[self.convert_time('2022-11-26')],
+                currency_id=self.eur,
+                include_scheduled=True,
+            ),
+            [
+                {'accountId': self.checking.id,
+                 'price':  [1.0],
+                 'shares': [1.54 + 1010 * 24]},   # 24 months elapsed
+            ])
+
     def test_ledger(self):
         self.assertEqual(
             [
@@ -95,14 +131,15 @@ class NetworthTestCase(BaseTest):
                  'memo': None,
                  'checknum': None,
                  'splits': [
-                     {'accountId': self.salary.id,
-                      'amount': -12.34,
-                      'currency': 1,
-                      'date': '2020-11-01',
-                      'payee': None,
-                      'price': 1.0,
-                      'reconcile': 'n',
-                      'shares': -12.34,
+                     {
+                         'accountId': self.salary.id,
+                         'amount': -12.34,
+                         'currency': 1,
+                         'date': '2020-11-01',
+                         'payee': None,
+                         'price': 1.0,
+                         'reconcile': 'n',
+                         'shares': -12.34,
                      },
                      {'accountId': self.checking.id,
                       'amount': 12.34,

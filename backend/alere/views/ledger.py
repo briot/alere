@@ -12,11 +12,19 @@ def ledger(
         mindate: datetime.datetime,
         maxdate: datetime.datetime,
         ) -> None:
+
+    include_scheduled = False
+    scenario_id = alere.models.Scenarios.NO_SCENARIO
+
     q = alere.models.Splits_With_Value.objects \
         .select_related('transaction', 'account', 'payee') \
-        .filter(transaction__scheduled=None,  # ignore scheduled ones
-                ) \
+        .filter(
+            Q(transaction__scenario=alere.models.Scenarios.NO_SCENARIO)
+            | Q(transaction__scenario=scenario_id)) \
         .order_by('transaction__timestamp', 'transaction_id')
+
+    if not include_scheduled:
+        q = q.filter(transaction__scheduled=None)
 
     if ids:
         # Find all splits that apply to the selected accounts. We want to

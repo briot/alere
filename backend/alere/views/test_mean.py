@@ -28,17 +28,31 @@ class PlotTestCase(BaseTest):
                 Split(self.checking, 101000, '2020-11-12'),
             ])
 
+        # A transaction from a different scenario, should also be ignored
+        # in general.
+        self.create_transaction(
+            scenario=self.scenario_1,
+            splits=[
+                Split(self.salary,  -202000, '2020-11-10'),
+                Split(self.checking, 202000, '2020-11-12'),
+            ])
+
     def test_balances(self):
         # Testing the alr_balances view
         self.assertListEqual(
             list(
                 alere.models.Balances.objects
+                .filter(
+                    include_scheduled=False,
+                    scenario=self.no_scenario)
                 .order_by("account", "mindate").all()
             ),
             [
                 alere.models.Balances(
                     account=self.checking,
                     commodity=self.eur,
+                    scenario=self.no_scenario,
+                    include_scheduled=False,
                     balance=1234.0,
                     mindate=self.convert_time("2020-11-02"),
                     maxdate=self.convert_time("2020-11-03"),
@@ -46,6 +60,8 @@ class PlotTestCase(BaseTest):
                 alere.models.Balances(
                     account=self.checking,
                     commodity=self.eur,
+                    scenario=self.no_scenario,
+                    include_scheduled=False,
                     balance=1224.0,
                     mindate=self.convert_time("2020-11-03"),
                     maxdate=self.convert_time("2020-11-05"),
@@ -53,6 +69,8 @@ class PlotTestCase(BaseTest):
                 alere.models.Balances(
                     account=self.checking,
                     commodity=self.eur,
+                    scenario=self.no_scenario,
+                    include_scheduled=False,
                     balance=1324.0,
                     mindate=self.convert_time("2020-11-05"),
                     maxdate=self.convert_time("2999-12-31"),
@@ -60,6 +78,8 @@ class PlotTestCase(BaseTest):
                 alere.models.Balances(
                     account=self.salary,
                     commodity=self.eur,
+                    scenario=self.no_scenario,
+                    include_scheduled=False,
                     balance=-1234.0,
                     mindate=self.convert_time("2020-11-01"),
                     maxdate=self.convert_time("2020-11-04"),
@@ -67,6 +87,8 @@ class PlotTestCase(BaseTest):
                 alere.models.Balances(
                     account=self.salary,
                     commodity=self.eur,
+                    scenario=self.no_scenario,
+                    include_scheduled=False,
                     balance=-1334.0,
                     mindate=self.convert_time("2020-11-04"),
                     maxdate=self.convert_time("2999-12-31"),
@@ -74,6 +96,8 @@ class PlotTestCase(BaseTest):
                 alere.models.Balances(
                     account=self.groceries,
                     commodity=self.eur,
+                    scenario=self.no_scenario,
+                    include_scheduled=False,
                     balance=10.0,
                     mindate=self.convert_time("2020-11-03"),
                     maxdate=self.convert_time("2999-12-31"),

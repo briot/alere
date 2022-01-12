@@ -20,6 +20,23 @@ class CommodityKinds(models.TextChoices):
     BOND = 'B', 'Bond'
 
 
+class Scenarios(AlereModel):
+    """
+    Some elements from the database (in particular transactions) might only be
+    activated to simulate some scenario (retirement planning,...)
+    """
+    NO_SCENARIO = 0
+
+    name = models.TextField()
+    # The name of the scenario as should appear in the GUI
+
+    description = models.TextField(null=True)
+    # A more extensive description of the scenario
+
+    class Meta:
+        db_table = prefix + "scenarios"
+
+
 class PriceSources(AlereModel):
     """
     All known source of prices
@@ -404,6 +421,13 @@ class Transactions(AlereModel):
     #   - bysecond
     #     irrelevant, we only use dates
 
+    scenario = models.ForeignKey(
+        Scenarios, on_delete=models.CASCADE, related_name='transactions')
+    # The scenario this transaction is active in. All past transactions
+    # reconciled from bank acccounts will in general have a null scenario,
+    # indicating they should always be taken into account. But it is possible
+    # to add hypothetical transactions by setting scenario to a non-null value.
+
     # ??? bankId: likely used by kmymoney when importing OFX
 
     class Meta:
@@ -591,9 +615,8 @@ class Balances(AlereModel):
          AND  :date < maxdate
     """
     id = models.BigIntegerField(primary_key=True)
-    account = models.ForeignKey(Accounts,
-        on_delete=models.DO_NOTHING,
-        related_name='balance')
+    account = models.ForeignKey(
+        Accounts, on_delete=models.DO_NOTHING, related_name='balance')
 
     commodity = models.ForeignKey(
         Commodities,
@@ -611,6 +634,15 @@ class Balances(AlereModel):
     # a slight loss of precision. It is appropriate for display, but not to do
     # further computations.
 
+    scenario = models.ForeignKey(
+        Scenarios, on_delete=models.DO_NOTHING, related_name='+')
+    # The balances are computed include all transactions from this scenario
+    # (in addition to all transactions not part of a scenario).
+
+    include_scheduled = models.BooleanField()
+    # If true, scheduled transactions (and all their occurrences) are taken
+    # into account to compute the balances.
+
     class Meta:
         managed = False
         db_table = prefix + "balances"
@@ -622,18 +654,20 @@ class Balances(AlereModel):
             and self.mindate == right.mindate
             and self.maxdate == right.maxdate
             and self.balance == right.balance
+            and self.scenario_id == right.scenario_id
+            and self.include_scheduled == right.include_scheduled
         )
 
     def __str__(self):
         return (
-            "Balance(account=%s, commodity=%s,"
-            " balance=%s, dates=[%s, %s))"
-        ) % (
-            self.account_id,
-            self.commodity_id,
-            self.balance,
-            self.mindate,
-            self.maxdate)
+            f"Balance(account={self.account_id},"
+            f" commodity={self.commodity_id},"
+            f" balance={self.balance},"
+            f" dates=[{self.mindate}, {self.maxdate}),"
+            f" scenario={self.scenario_id},"
+            f" scheduled={self.include_scheduled})"
+        )
+
 
 class Balances_Currency(AlereModel):
     """
@@ -662,6 +696,15 @@ class Balances_Currency(AlereModel):
 
     mindate = models.DateTimeField()   # included in range
     maxdate = models.DateTimeField()   # not included in range
+
+    scenario = models.ForeignKey(
+        Scenarios, on_delete=models.DO_NOTHING, related_name='+')
+    # The balances are computed include all transactions from this scenario
+    # (in addition to all transactions not part of a scenario).
+
+    include_scheduled = models.BooleanField()
+    # If true, scheduled transactions (and all their occurrences) are taken
+    # into account to compute the balances.
 
     class Meta:
         managed = False

@@ -93,15 +93,24 @@ class BaseTest(TestCase, ParamDecoder):
             commodity=kls.stock_usd,
             commodity_scu=1000)
 
+        # scenarios
+
+        kls.no_scenario = alere.models.Scenarios.objects.get(id=0)
+        kls.scenario_1 = alere.models.Scenarios.objects.create(
+            name='Scenario 1'
+        )
+
     def create_transaction(
             self,
             splits: List[Split] = [],
             timestamp: str = None,  # defaults to the first split's date
             scheduled: str = None,
+            scenario: alere.models.Scenarios = None,
             ):
         t = alere.models.Transactions.objects.create(
             timestamp=self.convert_time(timestamp or splits[0].date),
             scheduled=scheduled,
+            scenario=scenario or self.no_scenario,
         )
         for s in splits:
             t.splits.create(

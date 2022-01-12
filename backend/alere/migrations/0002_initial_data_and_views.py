@@ -8,7 +8,13 @@ import sys
 
 armageddon = "'2999-12-31 00:00:00'"
 
+
 def create_views(apps, schema_editor):
+    models.Scenarios.objects.create(
+        id=models.Scenarios.NO_SCENARIO,
+        name='Actual transactions',
+    )
+
     models.PriceSources.objects.create(
         id=models.PriceSources.USER,
         name="User",
@@ -305,28 +311,45 @@ class Migration(migrations.Migration):
 
         DROP VIEW IF EXISTS alr_balances;
         CREATE VIEW alr_balances AS
+           WITH scenarios AS (
+              SELECT id FROM alr_scenarios
+           ), scheduled(include) AS (
+              SELECT *
+              FROM (VALUES (1), (0)) foo
+           )
            SELECT
               row_number() OVER () as id,   --  for django's sake
               alr_accounts.id AS account_id,
               alr_accounts.commodity_id,
               alr_splits.post_date as mindate,
+              scenarios.id as scenario_id,
+              scheduled.include as include_scheduled,
               COALESCE(
                  LEAD(alr_splits.post_date)
-                    OVER (PARTITION BY alr_accounts.id
+                    OVER (PARTITION BY alr_accounts.id,
+                             scenarios.id, scheduled.include
                           ORDER by post_date),
                  {armageddon}
                 ) AS maxdate,
               CAST( sum(alr_splits.scaled_qty)
-                 OVER (PARTITION BY alr_accounts.id
+                 OVER (PARTITION BY alr_accounts.id,
+                             scenarios.id, scheduled.include
                        ORDER BY post_date
                        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
                  AS FLOAT
                 ) / alr_accounts.commodity_scu
                 AS balance
-           FROM alr_splits
+           FROM
+              scenarios,
+              scheduled,
+              alr_splits
               JOIN alr_transactions
                  ON (alr_splits.transaction_id = alr_transactions.id
-                     AND alr_transactions.scheduled IS NULL)
+                     AND (alr_transactions.scheduled IS NULL
+                          OR scheduled.include)
+                     AND (alr_transactions.scenario_id =
+                             {models.Scenarios.NO_SCENARIO}
+                          OR alr_transactions.scenario_id = scenarios.id))
               JOIN alr_accounts
                  ON (alr_splits.account_id = alr_accounts.id)
         ;
@@ -344,6 +367,8 @@ class Migration(migrations.Migration):
                alr_balances.id,
                alr_balances.account_id,
                alr_commodities.id as currency_id,
+               alr_balances.scenario_id,
+               alr_balances.include_scheduled,
                max(alr_balances.mindate, p.mindate) as mindate,
                min(alr_balances.maxdate, p.maxdate) as maxdate,
                CAST(alr_balances.balance * p.scaled_price

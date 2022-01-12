@@ -22,6 +22,8 @@ class Mean:
             end: Union[datetime.date, datetime.datetime],
             currency_id: int,
             groupby: GroupBy = None,
+            scenario_id: int = 0,
+            include_scheduled: bool = False,
             prior=0,
             after=0):
 
@@ -31,6 +33,8 @@ class Mean:
         self.prior = int(prior)
         self.after = int(after)
         self.groupby = groupby or 'months'
+        self.scenario_id = scenario_id
+        self.include_scheduled = include_scheduled
 
     def _cte_list_of_dates(self):
         """
@@ -203,7 +207,12 @@ class Mean:
                      JOIN alr_transactions
                         ON (alr_splits_with_value.transaction_id =
                             alr_transactions.id
-                            AND alr_transactions.scheduled IS NULL)
+                            AND (alr_transactions.scheduled IS NULL
+                                 OR {self.include_scheduled})
+                            AND (alr_transactions.scenario_id =
+                                   {alere.models.Scenarios.NO_SCENARIO}
+                                 OR alr_transactions.scenario_id =
+                                   {self.scenario_id}))
 
                      JOIN alr_accounts
                         ON (alr_splits_with_value.account_id=alr_accounts.id)

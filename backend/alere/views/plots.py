@@ -1,4 +1,4 @@
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from .json import JSONView
 import alere
 
@@ -11,6 +11,8 @@ class CategoryPlotView(JSONView):
         include_expense = self.as_bool(params, 'expense')
         mindate = self.as_time(params, 'mindate')
         maxdate = self.as_time(params, 'maxdate')
+        include_scheduled = False
+        scenario = alere.models.Scenarios.NO_SCENARIO
 
         accounts = None
 
@@ -24,11 +26,16 @@ class CategoryPlotView(JSONView):
             .filter(post_date__gte=mindate,
                     post_date__lte=maxdate,
                     value_commodity_id=currency,
-                    transaction__scheduled=None,  # ignore scheduled ones
                     account__kind__category__in=categories,
                     account__kind__is_unrealized=False) \
+            .filter(
+                Q(transaction__scenario=alere.models.Scenarios.NO_SCENARIO)
+                | Q(transaction__scenario=scenario)) \
             .values('account_id') \
             .annotate(Sum('value'))
+
+        if not include_scheduled:
+            query = query.filter(transaction__scheduled=None)
 
         return {
             "mindate": mindate,

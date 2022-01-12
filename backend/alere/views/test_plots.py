@@ -29,6 +29,15 @@ class PlotTestCase(BaseTest):
                 Split(self.checking, 101000, '2020-11-12'),
             ])
 
+        # A transaction from a different scenario, should also be ignored
+        # in general.
+        self.create_transaction(
+            scenario=self.scenario_1,
+            splits=[
+                Split(self.salary,  -202000, '2020-11-10'),
+                Split(self.checking, 202000, '2020-11-12'),
+            ])
+
     def test_income(self):
         req = RequestFactory().get(
             '/api/incomeexpense',
