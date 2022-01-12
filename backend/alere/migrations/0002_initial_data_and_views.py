@@ -306,32 +306,82 @@ class Migration(migrations.Migration):
         ;
 
         --------------------
-        --  Ignores scheduled transactions
+        --  Compute the balance of accounts at a certain date.
+        --  Those balances are computed for all scenarios (so filtering will
+        --  be needed, which also improves the performance), and whether or
+        --  not to include scheduled transactions and their recurrences.
         --------------------
 
         DROP VIEW IF EXISTS alr_balances;
         CREATE VIEW alr_balances AS
-           WITH scenarios AS (
+           WITH RECURSIVE scenarios AS (
               SELECT id FROM alr_scenarios
+
            ), scheduled(include) AS (
               SELECT *
               FROM (VALUES (1), (0)) foo
+
+           ), recurring_splits_and_transaction AS (
+              --  overrides the post_date for the splits associated with a
+              --  recurring transaction
+              SELECT
+                 t.timestamp,
+                 t.scheduled,
+                 t.scenario_id,
+                 s.account_id,
+                 s.scaled_qty,
+                 alr_next_event(t.scheduled, t.timestamp, null) as post_date
+              FROM alr_transactions t
+                 JOIN alr_splits s ON (s.transaction_id = t.id)
+              WHERE t.scheduled IS NOT NULL
+
+              --  and compute the later occurrences of those splits
+              UNION
+              SELECT
+                 s.timestamp,
+                 s.scheduled,
+                 s.scenario_id,
+                 s.account_id,
+                 s.scaled_qty,
+                 alr_next_event(s.scheduled, s.timestamp, s.post_date)
+              FROM recurring_splits_and_transaction s
+              WHERE s.post_date IS NOT NULL
+                 AND s.post_date <= '2023-01-01'   --   MANU artificial limit
+
+           ), splits_and_transaction AS (
+              --  The recurring splits
+              SELECT * FROM recurring_splits_and_transaction
+              WHERE post_date IS NOT NULL
+
+              --  The non-recurring splits
+              UNION
+              SELECT
+                 t.timestamp,
+                 t.scheduled,
+                 t.scenario_id,
+                 s.account_id,
+                 s.scaled_qty,
+                 s.post_date
+              FROM alr_transactions t
+                 JOIN alr_splits s ON (s.transaction_id = t.id)
+              WHERE t.scheduled IS NULL
            )
+
            SELECT
               row_number() OVER () as id,   --  for django's sake
               alr_accounts.id AS account_id,
               alr_accounts.commodity_id,
-              alr_splits.post_date as mindate,
+              s.post_date as mindate,
               scenarios.id as scenario_id,
               scheduled.include as include_scheduled,
               COALESCE(
-                 LEAD(alr_splits.post_date)
+                 LEAD(s.post_date)
                     OVER (PARTITION BY alr_accounts.id,
                              scenarios.id, scheduled.include
                           ORDER by post_date),
                  {armageddon}
                 ) AS maxdate,
-              CAST( sum(alr_splits.scaled_qty)
+              CAST( sum(s.scaled_qty)
                  OVER (PARTITION BY alr_accounts.id,
                              scenarios.id, scheduled.include
                        ORDER BY post_date
@@ -340,18 +390,13 @@ class Migration(migrations.Migration):
                 ) / alr_accounts.commodity_scu
                 AS balance
            FROM
-              scenarios,
-              scheduled,
-              alr_splits
-              JOIN alr_transactions
-                 ON (alr_splits.transaction_id = alr_transactions.id
-                     AND (alr_transactions.scheduled IS NULL
-                          OR scheduled.include)
-                     AND (alr_transactions.scenario_id =
-                             {models.Scenarios.NO_SCENARIO}
-                          OR alr_transactions.scenario_id = scenarios.id))
-              JOIN alr_accounts
-                 ON (alr_splits.account_id = alr_accounts.id)
+              splits_and_transaction s
+              JOIN scenarios ON
+                 (s.scenario_id = {models.Scenarios.NO_SCENARIO}
+                  OR s.scenario_id = scenarios.id)
+              JOIN scheduled ON
+                 (s.scheduled IS NULL OR scheduled.include)
+              JOIN alr_accounts ON (s.account_id = alr_accounts.id)
         ;
 
         --------------------

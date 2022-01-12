@@ -118,7 +118,7 @@ class NetworthTestCase(BaseTest):
             [
                 {'accountId': self.checking.id,
                  'price':  [1.0],
-                 'shares': [1.54 + 1010 * 24]},   # 24 months elapsed
+                 'shares': [1.54 + 1010 * 25]},   # 25 months elapsed
             ])
 
     def test_ledger(self):

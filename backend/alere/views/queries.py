@@ -102,8 +102,7 @@ class Mean:
                LIMIT {MAX_ROWS}
             )"""
 
-    @staticmethod
-    def query_networth():
+    def query_networth(self):
         """
         Create a query that returns the networth as computed for a set of
         dates. These dates must be found in the "dates(date)" table, which
@@ -124,13 +123,16 @@ class Mean:
               --  the time. Otherwise, 2020-11-30 is less than
               --  2020-11-30 00:00:00 and we do not get transactions
               --  on the last day of the month
-              strftime("%%Y-%%m-%%d", alr_balances_currency.mindate)
-                 <= strftime("%%Y-%%m-%%d", dates.date)
-              AND strftime("%%Y-%%m-%%d", dates.date)
-                 < strftime("%%Y-%%m-%%d", alr_balances_currency.maxdate)
+              strftime("%Y-%m-%d", alr_balances_currency.mindate)
+                 <= strftime("%Y-%m-%d", dates.date)
+              AND strftime("%Y-%m-%d", dates.date)
+                 < strftime("%Y-%m-%d", alr_balances_currency.maxdate)
               AND alr_balances_currency.currency_id=%s
               AND alr_balances_currency.account_id = alr_accounts.id
               AND k.is_networth
+              AND alr_balances_currency.include_scheduled =
+                 {1 if self.include_scheduled else 0}
+              AND alr_balances_currency.scenario_id = {self.scenario_id}
            GROUP BY dates.date
         """
 

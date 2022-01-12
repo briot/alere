@@ -1,5 +1,7 @@
 from django.db import models
 import enum
+from .funcs import extend_sqlite   # register extra sqlite functions
+
 
 prefix = "alr_"    # prefix for all table names
 
@@ -712,14 +714,13 @@ class Balances_Currency(AlereModel):
 
     def __str__(self):
         return (
-            "Balance_Currency(account=%s, commodity=%s,"
-            " balance=%s, dates=[%s, %s))"
-        ) % (
-            self.account_id,
-            self.commodity_id,
-            self.balance,
-            self.mindate,
-            self.maxdate)
+            f"Balance_Currency(account={self.account_id},"
+            f" currency={self.currency_id},"
+            f" balance={self.balance},"
+            f" dates=[{self.mindate}, {self.maxdate}),"
+            f" scenario={self.scenario_id}"
+            f" scheduled={self.include_scheduled})"
+        )
 
 
 class Latest_Price(AlereModel):
@@ -785,7 +786,7 @@ class RoI(AlereModel):
 class Future_Transactions(AlereModel):
     transaction_id = models.ForeignKey(
         Transactions, on_delete=models.DO_NOTHING)
-    nextdate = models.DateField()
+    nextdate = models.DateTimeField()
 
     class Meta:
         managed = False

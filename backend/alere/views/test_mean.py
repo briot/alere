@@ -22,7 +22,7 @@ class PlotTestCase(BaseTest):
         # Create a scheduled transaction, which should be ignored in all
         # results below.
         self.create_transaction(
-            scheduled="freq=DAILY",
+            scheduled="freq=MONTHLY;until=20210430",
             splits=[
                 Split(self.salary,  -101000, '2020-11-10'),
                 Split(self.checking, 101000, '2020-11-12'),
@@ -38,70 +38,65 @@ class PlotTestCase(BaseTest):
             ])
 
     def test_balances(self):
-        # Testing the alr_balances view
-        self.assertListEqual(
-            list(
-                alere.models.Balances.objects
-                .filter(
-                    include_scheduled=False,
-                    scenario=self.no_scenario)
-                .order_by("account", "mindate").all()
-            ),
+        """
+        Testing the alr_balances view
+        """
+        def b(account, balance: float, mindate: str, maxdate: str):
+            return alere.models.Balances(
+                account=account,
+                commodity=self.eur,
+                scenario=self.no_scenario,
+                include_scheduled=include_scheduled,
+                balance=balance,
+                mindate=self.convert_time(mindate),
+                maxdate=self.convert_time(maxdate),
+            )
+
+        include_scheduled = False
+        self.assertSequenceEqual(
+            alere.models.Balances.objects
+            .filter(
+                include_scheduled=include_scheduled,
+                scenario=self.no_scenario)
+            .order_by("account", "mindate").all(),
             [
-                alere.models.Balances(
-                    account=self.checking,
-                    commodity=self.eur,
-                    scenario=self.no_scenario,
-                    include_scheduled=False,
-                    balance=1234.0,
-                    mindate=self.convert_time("2020-11-02"),
-                    maxdate=self.convert_time("2020-11-03"),
-                ),
-                alere.models.Balances(
-                    account=self.checking,
-                    commodity=self.eur,
-                    scenario=self.no_scenario,
-                    include_scheduled=False,
-                    balance=1224.0,
-                    mindate=self.convert_time("2020-11-03"),
-                    maxdate=self.convert_time("2020-11-05"),
-                ),
-                alere.models.Balances(
-                    account=self.checking,
-                    commodity=self.eur,
-                    scenario=self.no_scenario,
-                    include_scheduled=False,
-                    balance=1324.0,
-                    mindate=self.convert_time("2020-11-05"),
-                    maxdate=self.convert_time("2999-12-31"),
-                ),
-                alere.models.Balances(
-                    account=self.salary,
-                    commodity=self.eur,
-                    scenario=self.no_scenario,
-                    include_scheduled=False,
-                    balance=-1234.0,
-                    mindate=self.convert_time("2020-11-01"),
-                    maxdate=self.convert_time("2020-11-04"),
-                ),
-                alere.models.Balances(
-                    account=self.salary,
-                    commodity=self.eur,
-                    scenario=self.no_scenario,
-                    include_scheduled=False,
-                    balance=-1334.0,
-                    mindate=self.convert_time("2020-11-04"),
-                    maxdate=self.convert_time("2999-12-31"),
-                ),
-                alere.models.Balances(
-                    account=self.groceries,
-                    commodity=self.eur,
-                    scenario=self.no_scenario,
-                    include_scheduled=False,
-                    balance=10.0,
-                    mindate=self.convert_time("2020-11-03"),
-                    maxdate=self.convert_time("2999-12-31"),
-                ),
+                b(self.checking,   1234.0, "2020-11-02", "2020-11-03"),
+                b(self.checking,   1224.0, "2020-11-03", "2020-11-05"),
+                b(self.checking,   1324.0, "2020-11-05", "2999-12-31"),
+                b(self.salary,    -1234.0, "2020-11-01", "2020-11-04"),
+                b(self.salary,    -1334.0, "2020-11-04", "2999-12-31"),
+                b(self.groceries,    10.0, "2020-11-03", "2999-12-31"),
+            ]
+        )
+
+        include_scheduled = True
+        self.assertSequenceEqual(
+            alere.models.Balances.objects
+            .filter(
+                include_scheduled=True,
+                scenario=self.no_scenario)
+            .order_by("account", "mindate").all(),
+            [
+                b(self.checking,   1234.0, "2020-11-02", "2020-11-03"),
+                b(self.checking,   1224.0, "2020-11-03", "2020-11-05"),
+                b(self.checking,   1324.0, "2020-11-05", "2020-11-10"),
+                b(self.checking,   2334.0, "2020-11-10", "2020-12-10"),
+                b(self.checking,   3344.0, "2020-12-10", "2021-01-10"),
+                b(self.checking,   4354.0, "2021-01-10", "2021-02-10"),
+                b(self.checking,   5364.0, "2021-02-10", "2021-03-10"),
+                b(self.checking,   6374.0, "2021-03-10", "2021-04-10"),
+                b(self.checking,   7384.0, "2021-04-10", "2999-12-31"),
+
+                b(self.salary,    -1234.0, "2020-11-01", "2020-11-04"),
+                b(self.salary,    -1334.0, "2020-11-04", "2020-11-10"),
+                b(self.salary,    -2344.0, "2020-11-10", "2020-12-10"),
+                b(self.salary,    -3354.0, "2020-12-10", "2021-01-10"),
+                b(self.salary,    -4364.0, "2021-01-10", "2021-02-10"),
+                b(self.salary,    -5374.0, "2021-02-10", "2021-03-10"),
+                b(self.salary,    -6384.0, "2021-03-10", "2021-04-10"),
+                b(self.salary,    -7394.0, "2021-04-10", "2999-12-31"),
+
+                b(self.groceries,    10.0, "2020-11-03", "2999-12-31"),
             ]
         )
 
