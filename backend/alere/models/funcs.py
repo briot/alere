@@ -19,6 +19,12 @@ def next_event(
         previous: Union[str, None],
         ) -> str:
     try:
+        if rule == '':   # only occurs once, no recurring
+            if previous is None:
+                return timestamp
+            else:
+                return None
+
         n = __parse_rrule(f"DTSTART:{timestamp[:10]}\nRRULE:{rule}")
 
         if previous is None:

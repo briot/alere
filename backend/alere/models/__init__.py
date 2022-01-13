@@ -361,6 +361,9 @@ class Transactions(AlereModel):
     # When an instance of a recurring transaction is validated by the user, a
     # separate transaction is created for it.
     #
+    # This could be the empty string, in which case this is a scheduled,
+    # non-recurring event.
+    #
     # The start date for this transaction is given by timestamp.
     #
     # The string is a list of semi-colon separated parameters:

@@ -5,7 +5,7 @@ import sys
 from alere import models
 from decimal import Decimal, ROUND_DOWN, ROUND_UP
 from django.db import connection, transaction
-from typing import Tuple
+from typing import Tuple, Dict, Optional
 
 
 def print_to_stderr(msg):
@@ -481,6 +481,56 @@ def __import_payees(cur, payees):
         )
 
 
+def __compute_scheduled(
+        freq: int,
+        interval: int,
+        end: Optional[str],
+        last_in_month: bool,
+        week_end: int,
+        ) -> Optional[str]:
+
+    if freq == 1:   # once
+        return ""
+
+    parts = []
+
+    if freq == 2:
+        parts.append("freq=DAILY")
+    elif freq == 4:
+        parts.append("freq=WEEKLY")
+    elif freq == 18:
+        parts.append("freq=HALFMONTHLY")  # ???
+    elif freq == 32:
+        parts.append("freq=MONTHLY")
+    elif freq == 16384:
+        parts.append("freq=YEARLY")
+    else:
+        raise Exception(f"wrong frequency {freq}")
+
+    parts.append(f"interval={interval}")
+
+    if end is not None:
+        parts.append(f"until={end}")
+
+    if last_in_month:
+        assert freq == 32   # must be MONTHLY
+        parts.append(f"bysetpos=-1")
+
+    if week_end == 0:     # previous working day
+        raise Exception(
+            "Cannot handle scheduled transactions that"
+            " use previous working day when on week-ends"
+        )
+    elif week_end == 1:   # next working day
+        parts.append(f"byweekday=MO,TU,WE,TH,FR")
+    elif week_end == 2:   # always on given day
+        pass
+    else:
+        raise Exception(f"wrong week end processing {week_end}")
+
+    return ";".join(parts)
+
+
 def __import_transactions(cur, accounts, commodities, payees):
 
     # Example of multi-currency transaction:
@@ -496,48 +546,112 @@ def __import_transactions(cur, accounts, commodities, payees):
     #      shares=32     (in STOCK)
     #      price=48.85   (in USD)
 
-    cur.execute("""
+    ######
+    # First import the transactions themselves. We need to resolve scheduled
+    # transactions too
+    # - transaction.entryDate:  not needed
+    # - ??? transaction.bankId: for imports
+    # - ??? transaction.txType: Normal or Scheduled
+    # - ??? kmmSchedules.name
+    # - ??? kmmSchedules.autoEnter
+    # - ??? kmmSchedules.type    Bill/Deposit/Transfer
+    # - ??? kmmSchedules.paymentType ('Other')
+    #    also: write check, bank transfer, standing order, direct debit,
+    #          manual deposit, direct deposit
+    # - ??? Check that transPostDate == schedule_start when the latter exists
+    # - ??? schedule_freq is Once, Day, Week, Half-month, month, year
+    # - ??? kmmSchedules.fixed
+    #    indicates whether the amount is an estimate ('N') or fixed ('Y')
+    ######
+
+    cur.execute(
+        """
         SELECT
-           kmmTransactions.txType as transTxType,
-           kmmTransactions.postDate as transPostDate,
-           kmmTransactions.memo as transMemo,
-           kmmTransactions.currencyId as transCurrency,
-           kmmSplits.*
-        FROM kmmTransactions, kmmSplits
-        WHERE kmmTransactions.id=kmmSplits.transactionId
-        ORDER BY transactionId
+           kmmTransactions.id,
+           kmmTransactions.postDate,
+           kmmTransactions.memo,
+           kmmTransactions.currencyId,
+           kmmSchedules.occurence,
+           kmmSchedules.occurenceMultiplier,
+           kmmSchedules.startDate,
+           kmmSchedules.endDate,
+           kmmSchedules.lastDayInMonth,
+           kmmSchedules.weekendOption
+        FROM kmmTransactions LEFT JOIN kmmSchedules USING (id)
         """
     )
-    trans = None
-    prev_trans_id = None
+    transactions: Dict[str, models.Transactions] = {}
+    currencies: Dict[str, models.Commodity] = {}
 
-    for row in cur:
-        trans_id = row['transactionId']
-        if trans_id != prev_trans_id:
-            if trans:
-                trans.save()
+    for (transId, transPostDate, transMemo, transCurrency,
+            schedule_freq, schedule_interval, schedule_start, schedule_end,
+            schedule_last_in_month, schedule_week_end) in cur:
 
-            trans = models.Transactions.objects.create(
-                timestamp=__time(row['transPostDate']),
-                memo=row['transMemo'] or "",
-                check_number="",
-            )
-            prev_trans_id = trans_id
-
-        acc = accounts[row['accountId']]
-        trans_currency = commodities[row['transCurrency']]
-        reconcile = (
-            models.ReconcileKinds.NEW
-            if row['reconcileFlag'] == '0'
-            else models.ReconcileKinds.CLEARED
-            if row['reconcileFlag'] == '1'
-            else models.ReconcileKinds.RECONCILED
+        assert (
+            schedule_start is None
+            or schedule_start == transPostDate
         )
 
-        shares, _ = scaled_price(
-            row['shares'], scale=acc.commodity_scu, inverse_scale=0)
+        scheduled = (
+            None if schedule_freq is None
+            else __compute_scheduled(
+                int(schedule_freq),
+                int(schedule_interval),
+                schedule_end,
+                schedule_last_in_month == 'Y',
+                int(schedule_week_end),
+            )
+        )
 
-        if row['action'] in ('Dividend', 'Add') or row['price'] is None:
+        transactions[transId] = models.Transactions.objects.create(
+            timestamp=__time(transPostDate),
+            memo=transMemo,
+            check_number="",
+            scheduled=scheduled,
+            scenario_id=models.Scenarios.NO_SCENARIO,
+        )
+        currencies[transId] = commodities[transCurrency]
+
+    #######
+    # Now import the splits associated with those transactions.
+    # We'll alter the transactions based on the extra information we now
+    # have
+    #######
+
+    cur.execute(
+        """
+        SELECT
+           kmmSplits.transactionId,
+           kmmSplits.accountId,
+           kmmSplits.payeeId,
+           kmmSplits.shares,
+           kmmSplits.price,
+           kmmSplits.action,
+           kmmSplits.memo,
+           kmmSplits.reconcileFlag,
+           kmmSplits.reconcileDate,
+           kmmSplits.postDate,
+           kmmSplits.checkNumber
+        FROM kmmSplits
+        """
+    )
+
+    for (trans_id, account_id, payee_id, split_shares, price,
+            action, memo, reconcile_flag, reconcile_date, post_date,
+            check_num) in cur:
+
+        reconcile = (
+            models.ReconcileKinds.NEW
+            if reconcile_flag == '0'
+            else models.ReconcileKinds.CLEARED
+            if reconcile_flag == '1'
+            else models.ReconcileKinds.RECONCILED
+        )
+        acc = accounts[account_id]
+        shares, _ = scaled_price(
+            split_shares, scale=acc.commodity_scu, inverse_scale=0)
+
+        if action in ('Dividend', 'Add') or price is None:
             # kmymoney sets "1.00" for the price, which does not reflect the
             # current price of the share at the time, so better have nothing.
             #
@@ -549,24 +663,21 @@ def __import_transactions(cur, accounts, commodities, payees):
             # for a stock account
             S = 1_000_000
 
-            price, _ = scaled_price(
-                row['price'], scale=S, inverse_scale=0)
-            currency = trans_currency
+            price, _ = scaled_price(price, scale=S, inverse_scale=0)
+            currency = currencies[trans_id]
             scaled_value = (
                 shares * price * currency.price_scale
-                / (S                     # scale for price
-                   * acc.commodity_scu   # scale for shares
+                / (
+                    S                     # scale for price
+                    * acc.commodity_scu   # scale for shares
                 )
             )
 
-        # assert price is not None, "while processing %s" % dict(row)
-
         s = models.Splits.objects.create(
-            transaction=trans,
+            transaction=transactions[trans_id],
             payee=(
-               None
-               if acc.kind.is_networth
-               else payees[row['payeeId']] if row['payeeId']
+               payees[payee_id] if payee_id
+               else None if acc.kind.is_networth
                else None
             ),
             account=acc,
@@ -574,34 +685,35 @@ def __import_transactions(cur, accounts, commodities, payees):
             scaled_value=scaled_value,
             value_commodity=currency,
             reconcile=reconcile,
-            reconcile_date=__time(row['reconcileDate']),
-            post_date=__time(row['postDate']),
+            reconcile_date=__time(reconcile_date),
+            post_date=__time(post_date),
         )
 
-        trans.memo = "\n".join([
+        transactions[trans_id].memo = "\n".join([
             f
             for f in [
-                trans.memo,
-                row['memo'],
-                ('Add Shares' if shares >= 0 else 'Remove Shares')
-                    if row['action'] == 'Add' else None,
-                ('Buy Shares' if shares >= 0 else 'Sell Shares')
-                    if row['action'] == 'Buy' else None,
-                'Dividends' if row['action'] == 'Dividend' else None,
-                'Reinvested dividend' if row['action'] == 'Reinvest' else None,
+                transactions[trans_id].memo,   # from transaction
+                memo,                          # from the split
+                'Add shares' if action == 'Add' and shares >= 0
+                else 'Remove shares' if action == 'Add'
+                else 'Buy Shares' if action == 'Buy' and shares >= 0
+                else 'Sell Shares' if action == 'Buy'
+                else 'Dividends' if action == 'Dividend'
+                else 'Reinvested dividend' if action == 'Reinvest'
+                else None,
             ]
             if f
         ])
+        transactions[trans_id].check_number += (check_num or "")
 
-        trans.check_number = trans.check_number + (row['checkNumber'] or "")
+    #########
+    # and save everything
+    #########
 
-    if trans:
+    for trans in transactions.values():
         trans.save()
 
-    # transaction.entryDate:  not needed
-    # ??? transaction.bankId: ???
-    # ??? transaction.txType: Normal or Scheduled
-    # ??? splits.txType:  Normal or Scheduled
+    # Not needed splits.txType:  Normal or Scheduled
     # ??? splits.action
     # not needed:  splits.value = shares*price
     # ??? splits.costCenterId
