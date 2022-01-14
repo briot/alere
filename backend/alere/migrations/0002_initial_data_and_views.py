@@ -330,7 +330,7 @@ class Migration(migrations.Migration):
                  t.scenario_id,
                  s.account_id,
                  s.scaled_qty,
-                 alr_next_event(t.scheduled, t.timestamp, null) as post_date
+                 alr_next_event(t.scheduled, t.timestamp, t.last_occurrence) as post_date
               FROM alr_transactions t
                  JOIN alr_splits s ON (s.transaction_id = t.id)
               WHERE t.scheduled IS NOT NULL
@@ -635,7 +635,7 @@ class Migration(migrations.Migration):
         CREATE VIEW alr_future_transactions AS
            WITH RECURSIVE nextEvents AS (
               SELECT n.id, n.timestamp, n.scheduled,
-                 alr_next_event(n.scheduled, n.timestamp, null) as nextdate
+                 alr_next_event(n.scheduled, n.timestamp, n.last_occurrence) as nextdate
               FROM alr_transactions n
               WHERE n.scheduled IS NOT NULL
 

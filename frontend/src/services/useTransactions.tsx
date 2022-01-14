@@ -14,7 +14,7 @@ const useTransactions = (
 ): Transaction[] => {
    const { accounts } = useAccounts();
    const idsForQuery = accountList.map(a => a.id).sort().join(',');
-   const queryKeepIE = accountList.length > 1;
+   const discardIE = accountList.length > 1;
    const { data } = useFetch({
       url: `/api/ledger/${idsForQuery}?${rangeToHttp(range, refDate)}`,
       placeholder: [],
@@ -24,10 +24,10 @@ const useTransactions = (
          trans.forEach(t =>
             t.splits.forEach(s => s.account = accounts.getAccount(s.accountId))
          );
-         if (queryKeepIE) {
-            // remove internal transfers
-            trans = trans.filter(t => incomeExpenseSplits(t).length > 0);
-         }
+//         if (discardIE) {
+//            // remove internal transfers
+//            trans = trans.filter(t => incomeExpenseSplits(t).length > 0);
+//         }
          return trans;
       },
    });

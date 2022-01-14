@@ -1,11 +1,11 @@
 from .json import JSONView
-from .queries import Mean
+from .queries import Queries
 
 
 class NetworthHistoryView(JSONView):
 
     def get_json(self, params):
-        m = Mean(
+        m = Queries(
             start=self.as_time(params, 'mindate'),
             end=self.as_time(params, 'maxdate'),
             currency_id=self.as_commodity_id(params, 'currency'),

@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models    # type: ignore
 import enum
 from .funcs import extend_sqlite   # register extra sqlite functions
 
@@ -353,6 +353,7 @@ class Transactions(AlereModel):
     check_number = models.TextField(null=True)
 
     scheduled = models.TextField(null=True)
+    last_occurrence = models.DateTimeField(null=True)
     # The recurrence rule. See python dateutil.rrule module, or RFC-5545
     #  iCalendar RFC <https://tools.ietf.org/html/rfc5545>
     #
@@ -364,7 +365,10 @@ class Transactions(AlereModel):
     # This could be the empty string, in which case this is a scheduled,
     # non-recurring event.
     #
-    # The start date for this transaction is given by timestamp.
+    # The start date for this transaction is given by timestamp. If an
+    # occurrence has already occurred, we save the date of the last occurrence,
+    # so that we can later easily compute the single next occurrence (e.g. in
+    # the ledger).
     #
     # The string is a list of semi-colon separated parameters:
     #   - freq=<val>    YEARLY|MONTHLY|WEEKLY|DAILY|HOURLY|MINUTELY|SECONDLY
@@ -462,6 +466,9 @@ class Payees(AlereModel):
     # ??? matchDate
     # ??? matchIgnoreCase
     # ??? matchKeys
+
+    class Meta:
+        db_table = prefix + "payees"
 
 
 class Splits(AlereModel):

@@ -122,117 +122,246 @@ class NetworthTestCase(BaseTest):
             ])
 
     def test_ledger(self):
-        self.assertEqual(
-            [
-                {'id': 1,
-                 'date': '2020-11-01',
-                 'balance': 12.34,
-                 'balanceShares': 12.34,
-                 'memo': None,
-                 'checknum': None,
-                 'splits': [
-                     {
-                         'accountId': self.salary.id,
-                         'amount': -12.34,
-                         'currency': 1,
-                         'date': '2020-11-01',
-                         'payee': None,
-                         'price': 1.0,
-                         'reconcile': 'n',
-                         'shares': -12.34,
-                     },
-                     {'accountId': self.checking.id,
-                      'amount': 12.34,
-                      'currency': 1,
-                      'date': '2020-11-02',
-                      'payee': None,
-                      'price': 1.0,
-                      'reconcile': 'n',
-                      'shares': 12.34,
-                      }
-                ]},
-                {'id': 2,
-                 'date': '2020-11-03',
-                 'balance': 13.34,
-                 'balanceShares': 13.34,
-                 'memo': None,
-                 'checknum': None,
-                 'splits': [
-                     {'accountId': self.salary.id,
-                      'date': '2020-11-03',
-                      'currency': 1,
-                      'amount': -1.0,
-                      'payee': None,
-                      'reconcile': 'n',
-                      'shares': -1.0,
-                      'price': 1.0
-                     },
-                     {'accountId': self.checking.id,
-                      'date': '2020-11-04',
-                      'currency': 1,
-                      'amount': 1.0,
-                      'payee': None,
-                      'reconcile': 'n',
-                      'shares': 1.0,
-                      'price': 1.0
-                     }
-                ]},
-                {'id': 3,
-                 'date': '2020-11-03',
-                 'balance': 3.34,
-                 'balanceShares': 3.34,
-                 'memo': None,
-                 'checknum': None,
-                 'splits': [
-                     {'accountId': self.salary.id,
-                      'date': '2020-11-03',
-                      'currency': 1,
-                      'amount': 10.0,
-                      'payee': None,
-                      'reconcile': 'n',
-                      'shares': 10.0,
-                      'price': 1.0
-                      },
-                     {'accountId': self.checking.id,
-                      'date': '2020-11-03',
-                      'currency': 1,
-                      'amount': -10.0,
-                      'payee': None,
-                      'reconcile': 'n',
-                      'shares': -10.0,
-                      'price': 1.0
-                      }
-                ]},
-                {'id': 4,
-                 'date': '2020-11-25',
-                 'balance': 1.5399999999999998,
-                 'balanceShares': 1.5399999999999998,   # 1.54 EUR
-                 'memo': None,
-                 'checknum': None,
-                 'splits': [
-                     {'accountId': self.groceries.id,
-                      'amount': 1.802,   # in EUR
-                      'date': '2020-11-25',
-                      'currency': 2,
-                      'payee': None,
-                      'price': 0.85,     # conversion rate
-                      'reconcile': 'n',
-                      'shares': 2.12,    # in USD
-                      },
-                     {'accountId': self.checking.id,
-                      'amount': -1.8,    # in EUR
-                      'date': '2020-11-25',
-                      'currency': 1,
-                      'payee': None,
-                      'price': 1.0,
-                      'reconcile': 'n',
-                      'shares': -1.8,    # in EUR
-                     }
+        def get_trans1(balance: int, date: str):
+            return {
+                'id': 1,
+                'occ': 1,
+                'date': date,
+                'balance': balance,
+                'balanceShares': balance,
+                'memo': None,
+                'checknum': None,
+                'recurring': False,
+                'splits': [
+                    {
+                        'accountId': self.checking.id,
+                        'amount': 12.34,
+                        'currency': 1,
+                        'date': '2020-11-02',
+                        'payee': None,
+                        'price': 1.0,
+                        'reconcile': 'n',
+                        'shares': 12.34,
+                    },
+                    {
+                        'accountId': self.salary.id,
+                        'amount': -12.34,
+                        'currency': 1,
+                        'date': '2020-11-01',
+                        'payee': None,
+                        'price': 1.0,
+                        'reconcile': 'n',
+                        'shares': -12.34,
+                    },
+                ]
+            }
+
+        def get_trans2(balance: int, date: str):
+            return {
+                'id': 2,
+                'occ': 1,
+                'date': date,
+                'balance': balance,
+                'balanceShares': balance,
+                'memo': None,
+                'checknum': None,
+                'recurring': False,
+                'splits': [
+                    {
+                        'accountId': self.checking.id,
+                        'date': '2020-11-04',
+                        'currency': 1,
+                        'amount': 1.0,
+                        'payee': None,
+                        'reconcile': 'n',
+                        'shares': 1.0,
+                        'price': 1.0
+                    },
+                    {
+                        'accountId': self.salary.id,
+                        'date': '2020-11-03',
+                        'currency': 1,
+                        'amount': -1.0,
+                        'payee': None,
+                        'reconcile': 'n',
+                        'shares': -1.0,
+                        'price': 1.0
+                    },
+                ]
+            }
+
+        def get_trans3(balance: int, date: str):
+            return {
+                'id': 3,
+                'occ': 1,
+                'date': date,
+                'balance': balance,
+                'balanceShares': balance,
+                'memo': None,
+                'checknum': None,
+                'recurring': False,
+                'splits': [
+                    {
+                        'accountId': self.checking.id,
+                        'date': '2020-11-03',
+                        'currency': 1,
+                        'amount': -10.0,
+                        'payee': None,
+                        'reconcile': 'n',
+                        'shares': -10.0,
+                        'price': 1.0
+                    },
+                    {
+                        'accountId': self.salary.id,
+                        'date': '2020-11-03',
+                        'currency': 1,
+                        'amount': 10.0,
+                        'payee': None,
+                        'reconcile': 'n',
+                        'shares': 10.0,
+                        'price': 1.0
+                    },
+                ]
+            }
+
+        def get_trans4(balance: int, date: str):
+            return {
+                'id': 4,
+                'occ': 1,
+                'date': date,
+                'balance': balance,
+                'balanceShares': balance,   # EUR
+                'memo': None,
+                'checknum': None,
+                'recurring': False,
+                'splits': [
+                    {
+                        'accountId': self.checking.id,
+                        'amount': -1.8,    # in EUR
+                        'date': '2020-11-25',
+                        'currency': 1,
+                        'payee': None,
+                        'price': 1.0,
+                        'reconcile': 'n',
+                        'shares': -1.8,    # in EUR
+                    },
+                    {
+                        'accountId': self.groceries.id,
+                        'amount': 1.802,   # in EUR
+                        'date': '2020-11-25',
+                        'currency': 2,
+                        'payee': None,
+                        'price': 0.85,     # conversion rate
+                        'reconcile': 'n',
+                        'shares': 2.12,    # in USD
+                    },
                 ]}
+
+        def get_occurrence(occ: int, balance: int, date: str):
+            return {
+                'id': 5,   # First occurrence of the scheduled transaction
+                'occ': occ,
+                'date': date,
+                'balance': balance,
+                'balanceShares': balance,
+                'memo': None,
+                'checknum': None,
+                'recurring': True,
+                'splits': [
+                    {
+                        'accountId': self.checking.id,
+                        'amount': 1010.0,
+                        'date': date,
+                        'currency': 1,
+                        'payee': None,
+                        'price': 1.0,
+                        'reconcile': 'n',
+                        'shares': 1010.0,    # in EUR
+                    },
+                    {
+                        'accountId': self.salary.id,
+                        'amount': -1010.0,
+                        'date': date,
+                        'currency': 1,
+                        'payee': None,
+                        'price': 1.0,
+                        'reconcile': 'n',
+                        'shares': -1010.0,
+                    },
+                 ]
+            }
+
+        # All scheduled transactions, and mindate is before any transaction
+        self.assertListEqual(
+            [
+                get_trans1(       balance=12.34,   date='2020-11-01'),
+                get_trans2(       balance=13.34,   date='2020-11-03'),
+                get_trans3(       balance=3.34,    date='2020-11-03'),
+                get_occurrence(1, balance=1013.34, date='2020-11-10'),
+                get_trans4(       balance=1011.54, date='2020-11-25'),
+                get_occurrence(2, balance=2021.54, date='2020-12-10'),
+                get_occurrence(3, balance=3031.54, date='2021-01-10'),
             ],
-            ledger(
-                ids=[self.checking.id],
-                mindate=self.convert_time('2010-01-01'),
-                maxdate=self.convert_time('2999-01-01'),
-            )
+            [
+                trans.to_json()
+                for trans in ledger(
+                    account_ids=[self.checking.id],
+                    mindate=self.convert_time('2010-01-01'),
+                    maxdate=self.convert_time('2021-02-01'),
+                    max_occurrences=2000,
+                )
+            ],
+        )
+
+        # All scheduled tranasctions, but mindate is not the date of the
+        # transaction. The balance should still be correct.
+        self.assertListEqual(
+            [
+                get_occurrence(1, balance=1013.34, date='2020-11-10'),
+                get_trans4(       balance=1011.54, date='2020-11-25'),
+                get_occurrence(2, balance=2021.54, date='2020-12-10'),
+                get_occurrence(3, balance=3031.54, date='2021-01-10'),
+            ],
+            [
+                trans.to_json()
+                for trans in ledger(
+                    account_ids=[self.checking.id],
+                    mindate=self.convert_time('2020-11-05'),
+                    maxdate=self.convert_time('2021-02-01'),
+                    max_occurrences=2000,
+                )
+            ],
+        )
+
+        # Only the first occurrence of scheduled transactions
+        self.assertListEqual(
+            [
+                get_occurrence(1, balance=1013.34, date='2020-11-10'),
+                get_trans4(       balance=1011.54, date='2020-11-25'),
+            ],
+            [
+                trans.to_json()
+                for trans in ledger(
+                    account_ids=[self.checking.id],
+                    mindate=self.convert_time('2020-11-05'),
+                    maxdate=self.convert_time('2021-02-01'),
+                    max_occurrences=1,
+                )
+            ],
+        )
+
+        # No scheduled transactions
+        self.assertListEqual(
+            [
+                get_trans4(balance=1.54, date='2020-11-25'),
+            ],
+            [
+                trans.to_json()
+                for trans in ledger(
+                    account_ids=[self.checking.id],
+                    mindate=self.convert_time('2020-11-05'),
+                    maxdate=self.convert_time('2021-02-01'),
+                    max_occurrences=0,
+                )
+            ],
         )

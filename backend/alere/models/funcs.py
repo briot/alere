@@ -27,10 +27,11 @@ def next_event(
 
         n = __parse_rrule(f"DTSTART:{timestamp[:10]}\nRRULE:{rule}")
 
-        if previous is None:
-            c = n.after(datetime.datetime.min, inc=True)
-        else:
-            c = n.after(dateutil.parser.parse(previous), inc=False)
+        c = n.after(
+            dateutil.parser.parse(previous)
+            if previous is not None
+            else datetime.datetime.min,
+            inc=False)
 
         if c is None:
             return None

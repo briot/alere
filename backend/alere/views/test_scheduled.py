@@ -133,7 +133,7 @@ class ScheduledTests(BaseTest):
         Transactions.objects.all().delete()
         self.create_transaction(
             timestamp="2022-01-11",
-            scheduled=(
+            scheduled=(   # last workday of month
                 "freq=MONTHLY;"
                 "bysetpos=-1;"
                 "byday=MO,TU,WE,TH,FR"

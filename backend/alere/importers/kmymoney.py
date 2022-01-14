@@ -515,6 +515,7 @@ def __compute_scheduled(
     if last_in_month:
         assert freq == 32   # must be MONTHLY
         parts.append(f"bysetpos=-1")
+        parts.append("byday=MO,TU,WE,TH,FR,SA,SU")
 
     if week_end == 0:     # previous working day
         raise Exception(
@@ -576,7 +577,8 @@ def __import_transactions(cur, accounts, commodities, payees):
            kmmSchedules.startDate,
            kmmSchedules.endDate,
            kmmSchedules.lastDayInMonth,
-           kmmSchedules.weekendOption
+           kmmSchedules.weekendOption,
+           kmmSchedules.lastPayment
         FROM kmmTransactions LEFT JOIN kmmSchedules USING (id)
         """
     )
@@ -585,12 +587,12 @@ def __import_transactions(cur, accounts, commodities, payees):
 
     for (transId, transPostDate, transMemo, transCurrency,
             schedule_freq, schedule_interval, schedule_start, schedule_end,
-            schedule_last_in_month, schedule_week_end) in cur:
+            schedule_last_in_month, schedule_week_end, last_payment) in cur:
 
-        assert (
-            schedule_start is None
-            or schedule_start == transPostDate
-        )
+        # For a recurring transaction, transPostDate is the date of the next
+        # occurrence.
+        if schedule_start is not None:
+            transPostDate = schedule_start
 
         scheduled = (
             None if schedule_freq is None
@@ -608,6 +610,7 @@ def __import_transactions(cur, accounts, commodities, payees):
             memo=transMemo,
             check_number="",
             scheduled=scheduled,
+            last_occurrence=__time(last_payment),
             scenario_id=models.Scenarios.NO_SCENARIO,
         )
         currencies[transId] = commodities[transCurrency]
@@ -639,6 +642,9 @@ def __import_transactions(cur, accounts, commodities, payees):
     for (trans_id, account_id, payee_id, split_shares, price,
             action, memo, reconcile_flag, reconcile_date, post_date,
             check_num) in cur:
+
+        # ??? For a split associated with a scheduled transaction, the post
+        # date is set to that of the next occurrence
 
         reconcile = (
             models.ReconcileKinds.NEW

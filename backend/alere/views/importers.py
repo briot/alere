@@ -1,4 +1,3 @@
-from .queries import Mean
 from ..importers.kmymoney import import_kmymoney
 from .json import JSONView
 import alere

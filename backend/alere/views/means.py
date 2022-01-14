@@ -1,4 +1,4 @@
-from .queries import Mean
+from .queries import Queries
 from .json import JSONView
 import alere
 
@@ -8,11 +8,14 @@ class MeanView(JSONView):
     def get_json(self, params):
         unrealized = self.as_bool(params, 'unrealized')
 
-        m = Mean(start=self.as_time(params, 'mindate'),
-                 end=self.as_time(params, 'maxdate'),
-                 prior=int(params.get('prior', 6)),
-                 after=int(params.get('after', 6)),
-                 currency_id=self.as_commodity_id(params, 'currency'))
+        m = Queries(
+            start=self.as_time(params, 'mindate'),
+            end=self.as_time(params, 'maxdate'),
+            prior=int(params.get('prior', 6)),
+            after=int(params.get('after', 6)),
+            currency_id=self.as_commodity_id(params, 'currency'),
+            max_occurrences=0,   # no scheduled transactions
+        )
 
         result = {
             month: {
