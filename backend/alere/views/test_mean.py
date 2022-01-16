@@ -1,8 +1,8 @@
-import alere
+import alere.models
 import datetime
 from .means import MeanView
 from .base_test import BaseTest, Split
-from django.test import RequestFactory
+from django.test import RequestFactory    # type: ignore
 
 
 class PlotTestCase(BaseTest):

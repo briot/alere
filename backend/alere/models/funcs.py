@@ -3,8 +3,8 @@ import dateutil.parser
 import dateutil.rrule
 import functools
 import traceback
-from django.db.backends.signals import connection_created
-from django.dispatch import receiver
+from django.db.backends.signals import connection_created   # type: ignore
+from django.dispatch import receiver                        # type: ignore
 from typing import Union
 
 
@@ -17,7 +17,7 @@ def next_event(
         rule: str,
         timestamp: str,
         previous: Union[str, None],
-        ) -> str:
+        ) -> Union[None, str]:
     try:
         if rule == '':   # only occurs once, no recurring
             if previous is None:

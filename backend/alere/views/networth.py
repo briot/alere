@@ -1,8 +1,8 @@
-import alere
+import alere.models
 import datetime
 from .json import JSONView
 from .queries import Queries, MAX_OCCURRENCES
-from typing import List, Union
+from typing import List, Union, Dict
 
 
 def networth(
@@ -32,8 +32,8 @@ def networth(
         max_scheduled_occurrences=max_scheduled_occurrences,
     )
 
-    dict_shares = {}
-    dict_prices = {}
+    dict_shares: Dict[int, List[float]] = {}
+    dict_prices: Dict[int, List[float]] = {}
     for (date_idx, account_id, shares, price) in q.networth(dates):
         # create default entries if needed
         s = dict_shares.setdefault(account_id, [0] * len(dates))

@@ -2,7 +2,7 @@
 Some queries that cannot be created as SQL views
 """
 
-import alere
+import alere.models
 import datetime
 import django.db    # type: ignore
 import logging
@@ -143,7 +143,7 @@ class Queries:
         self.scenario_id = scenario_id
         self.max_scheduled_occurrences = max_scheduled_occurrences
 
-    def _cte_list_of_dates(self):
+    def _cte_list_of_dates(self) -> str:
         """
         A common table expression that returns all dates between
         the (start - prio) to (after + prio), depending on self's config.
@@ -205,7 +205,7 @@ class Queries:
                LIMIT {MAX_DATES}
             )"""
 
-    def _cte_list_splits(self):
+    def _cte_list_splits(self) -> str:
         """
         A common table expression that returns all splits to consider in the
         given time range, including the recurrences of scheduled transactions.
@@ -293,7 +293,7 @@ class Queries:
         else:
             return f"{CTE_SPLITS} AS ({non_recurring_splits})"
 
-    def _cte_splits_with_values(self):
+    def _cte_splits_with_values(self) -> str:
         """
         Returns all splits and their associated value, scaled as needed.
         Requires _cte_list_splits
@@ -312,7 +312,7 @@ class Queries:
         )
         """
 
-    def query_networth(self):
+    def query_networth(self) -> str:
         """
         Create a query that returns the networth as computed for a set of
         dates. These dates must be found in the "dates(date)" table, which
@@ -446,7 +446,7 @@ class Queries:
     def _cte_transactions_for_accounts(
             self,
             account_ids: List[int],
-            ):
+            ) -> str:
         """
         The list of transactions for which one of the splits is about one of
         the accounts.
@@ -587,7 +587,7 @@ class Queries:
         if current is not None:
             yield current
 
-    def _cte_balances(self):
+    def _cte_balances(self) -> str:
         """
         Compute the balance of accounts for all time ranges.
         The result is a set of tuple
@@ -624,7 +624,7 @@ class Queries:
         )
         """
 
-    def _cte_balances_currency(self):
+    def _cte_balances_currency(self) -> str:
         """
         Similar to _cte_balances, but also combines with the prices history to
         compute the money value of those shares. This might result in more
@@ -675,7 +675,7 @@ class Queries:
             return
 
         all_dates = ", ".join(
-                f"({idx}, '{d.strftime('%Y-%m-%d %H:%M:%s')}')"
+            f"({idx}, '{d.strftime('%Y-%m-%d %H:%M:%s')}')"
             for idx, d in enumerate(dates)
         )
 

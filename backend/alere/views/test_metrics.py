@@ -1,7 +1,7 @@
 import alere
 from .metrics import MetricsView
 from .base_test import BaseTest, Split
-from django.test import RequestFactory
+from django.test import RequestFactory     # type: ignore
 
 
 class MetricsTestCase(BaseTest):

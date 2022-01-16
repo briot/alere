@@ -1,8 +1,12 @@
 import datetime
-from django.http import HttpResponse   # type: ignore
+from django.http import QueryDict, HttpResponse, HttpRequest   # type: ignore
 from django.views.generic import View  # type: ignore
 import json
 import math
+from typing import Optional, List, Any, Union, Dict
+
+JSON = Union[str, int, Dict, List]
+
 
 def nan_enc(p: float):
     """
@@ -12,7 +16,7 @@ def nan_enc(p: float):
 
 
 class CustomJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
+    def default(self, obj: Any) -> JSON:
         if hasattr(obj, "to_json"):
             return obj.to_json()
         elif isinstance(obj, datetime.datetime):
@@ -28,7 +32,7 @@ coder = CustomJSONEncoder(allow_nan=True)
 
 class ParamDecoder:
 
-    def convert_time(self, value: str = None):
+    def convert_time(self, value: str = None) -> Optional[datetime.datetime]:
         """
         Return the given parameter as a datetime
         """
@@ -39,37 +43,46 @@ class ParamDecoder:
             .fromisoformat(value) \
             .astimezone(datetime.timezone.utc)
 
-    def convert_to_int_list(self, value: str = None):
+    def convert_to_int_list(self, value: str = None) -> Optional[List[int]]:
         if value is None:
-            return value
+            return None
         return [int(d) for d in value.split(',')]
 
 
 class JSONView(View, ParamDecoder):
-    def get_json(self, params, *args, **kwargs):
+    def get_json(
+            self,
+            params: QueryDict,
+            **kwargs: str) -> Any:
         return {}
 
-    def post_json(self, params, files, body, *args, **kwargs):
+    def post_json(
+            self,
+            params: QueryDict,
+            files,
+            body,
+            *args,
+            **kwargs) -> Any:
         return {}
 
-    def to_json(self, obj):
+    def to_json(self, obj: Any) -> JSON:
         return coder.encode(obj)
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         resp = self.get_json(request.GET, *args, **kwargs)
         return HttpResponse(
             self.to_json(resp), content_type="application/json")
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         resp = self.post_json(
             request.POST, request.FILES, request.body, *args, **kwargs)
         return HttpResponse(
             self.to_json(resp), content_type="application/json")
 
-    def as_commodity_id(self, params, name):
+    def as_commodity_id(self, params: QueryDict, name: str) -> int:
         return int(params[name])
 
-    def as_bool(self, params, name, default=False) -> bool:
+    def as_bool(self, params: QueryDict, name: str, default=False) -> bool:
         """
         Return the given parameter as a boolean
         """
@@ -78,10 +91,20 @@ class JSONView(View, ParamDecoder):
             return default
         return bool(v) and v.lower() not in ('false', '0', 'undefined')
 
-    def as_time(self, params, name, default=None):
+    def as_time(
+            self,
+            params: QueryDict,
+            name: str,
+            default: str = None,
+            ) -> Optional[datetime.datetime]:
         return self.convert_time(params.get(name, default))
 
-    def as_time_list(self, params, name, default=None):
+    def as_time_list(
+            self,
+            params: QueryDict,
+            name: str,
+            default: str = None,
+            ) -> Optional[List[datetime.datetime]]:
         """
         Return the given parameter as a list of datetime
         """
@@ -89,9 +112,15 @@ class JSONView(View, ParamDecoder):
         if v is None:
             return v
         return [
-            datetime.datetime.fromisoformat(d).astimezone(datetime.timezone.utc)
+            datetime.datetime.fromisoformat(d).astimezone(
+                datetime.timezone.utc)
             for d in v.split(',')
         ]
 
-    def as_int_list(self, params, name, default=None):
+    def as_int_list(
+            self,
+            params: QueryDict,
+            name: str,
+            default: str = None,
+            ) -> Optional[List[int]]:
         return self.convert_to_int_list(params.get(name, default))

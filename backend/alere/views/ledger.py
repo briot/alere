@@ -1,9 +1,10 @@
 from .json import JSONView
 from .queries import Queries, Transaction_Descr
-from typing import List, Optional
-import alere
+from typing import List, Optional, Any
+import alere.models
 import datetime
-import django.db  # type: ignore
+import django.db                    # type: ignore
+from django.http import QueryDict   # type: ignore
 
 
 def ledger(
@@ -22,9 +23,9 @@ def ledger(
 
 
 class LedgerView(JSONView):
-    def get_json(self, params, ids: str):
+    def get_json(self, params: QueryDict, **kwargs: str) -> Any:
         return ledger(
-            account_ids=self.convert_to_int_list(ids),
+            account_ids=self.convert_to_int_list(kwargs['ids']),
             maxdate=self.as_time(params, 'maxdate'),
             mindate=self.as_time(params, 'mindate'),
         )

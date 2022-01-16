@@ -1,10 +1,10 @@
-from django.conf import settings
-from django.http import HttpResponse
-from django.template import Template, Context
-from django.template.context_processors import csrf
-from django.urls import path, re_path
-import django.shortcuts
-import django.views
+from django.conf import settings                        # type: ignore
+from django.http import HttpResponse                    # type: ignore
+from django.template import Template, Context           # type: ignore
+from django.template.context_processors import csrf     # type: ignore
+from django.urls import path, re_path                   # type: ignore
+import django.shortcuts                                 # type: ignore
+import django.views                                     # type: ignore
 import os
 
 from .views.accounts import AccountList

@@ -1,7 +1,7 @@
-import alere
+import alere.models
 import datetime
 import os
-from django.test import TestCase
+from django.test import TestCase     # type: ignore
 from typing import List, Tuple
 from .json import ParamDecoder
 

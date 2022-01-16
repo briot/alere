@@ -1,12 +1,12 @@
 from .json import JSONView
-from forex_python.converter import CurrencyRates
+#  from forex_python.converter import CurrencyRates    # type: ignore
 import alere
 import datetime
-import django.db
+import django.db         # type: ignore
 import logging
 import math
 import time
-import yfinance as yf
+import yfinance as yf    # type: ignore
 
 
 me = logging.getLogger(__name__)

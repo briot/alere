@@ -2,7 +2,7 @@ import alere
 import datetime
 from .plots import CategoryPlotView
 from .base_test import BaseTest, Split
-from django.test import RequestFactory
+from django.test import RequestFactory     # type: ignore
 
 
 class PlotTestCase(BaseTest):

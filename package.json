@@ -64,7 +64,7 @@
     "build": "tsc && vite build",
     "serve": "vite preview",
     "manage": "./env/bin/python3 ./backend/manage.py",
-    "tests:backend": "$npm_execpath run manage test --parallel --verbosity=0 --buffer alere",
+    "tests:backend": "$npm_execpath run manage test --parallel --verbosity=0 alere",
     "watch-back": "$npm_execpath run manage migrate; $npm_execpath run manage runserver 8000",
     "watch-vite": "VITE_API_URL=127.0.0.1:8000 vite --clearScreen false",
     "watch-tsc": "tsc -w --preserveWatchOutput",

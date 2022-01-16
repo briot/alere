@@ -1,10 +1,10 @@
-import alere
+import alere.models
 import calendar
 import datetime
 from .means import MeanView
 from .base_test import BaseTest, Split
 from dateutil.relativedelta import relativedelta
-from django.test import RequestFactory
+from django.test import RequestFactory    # type: ignore
 from typing import Union, Dict
 
 

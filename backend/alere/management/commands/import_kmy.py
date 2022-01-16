@@ -1,5 +1,5 @@
 from alere.importers.kmymoney import import_kmymoney
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand     # type: ignore
 
 
 class Command(BaseCommand):

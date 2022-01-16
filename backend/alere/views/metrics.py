@@ -1,4 +1,4 @@
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q     # type: ignore
 from .json import JSONView
 import alere
 import math

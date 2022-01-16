@@ -4,13 +4,12 @@ import sqlite3
 import sys
 from alere import models
 from decimal import Decimal, ROUND_DOWN, ROUND_UP
-from django.db import connection, transaction
+from django.db import connection, transaction         # type: ignore
 from typing import Tuple, Dict, Optional
 
 
-def print_to_stderr(msg):
+def print_to_stderr(msg: str) -> None:
     sys.stderr.write(msg)
-
 log_error = print_to_stderr
 # meant to be overridden in tests
 

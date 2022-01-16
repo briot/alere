@@ -1,11 +1,12 @@
 from .json import nan_enc, JSONView
-import alere
+from typing import List
+import alere.models
 import datetime
 import math
 
 
 class Position:
-    def __init__(self, r: alere.models.RoI =None):
+    def __init__(self, r: alere.models.RoI = None):
         if r is not None:
             self.avg_cost = r.average_cost
             self.equity = r.balance or 0
@@ -103,7 +104,7 @@ class Symbol:
         self.id = commodity_id
         self.source = source
         self.ticker = ticker
-        self.accounts = []   # array of Account
+        self.accounts: List[alere.models.Accounts] = []   # array of Account
         self.oldest = None
         self.is_currency = is_currency
         self.price_scale = price_scale

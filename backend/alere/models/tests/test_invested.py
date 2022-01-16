@@ -1,6 +1,6 @@
 from alere.models import RoI, PriceSources
 from alere.views.base_test import BaseTest, Split
-from django.db import connection
+from django.db import connection     # type: ignore
 import alere
 import datetime
 import os
