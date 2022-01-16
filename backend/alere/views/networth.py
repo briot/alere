@@ -1,15 +1,16 @@
 import alere
 import datetime
 from .json import JSONView
+from .queries import Queries, MAX_OCCURRENCES
 from typing import List, Union
 
 
 def networth(
         dates: List[datetime.datetime],
-        currency_id: int,
+        currency_id: Union[int, alere.models.Commodities],
+        max_scheduled_occurrences: int = MAX_OCCURRENCES,
         scenario: Union[int, alere.models.Scenarios] =
             alere.models.Scenarios.NO_SCENARIO,
-        include_scheduled: bool = False,
         ):
     """
     Compute the networth as of certain dates.
@@ -22,35 +23,32 @@ def networth(
        be the exchange rate between that currency and currency_id).
     """
 
-    scenario_id = (
-        scenario.id if isinstance(scenario, alere.models.Scenarios)
-        else scenario
+    q = Queries(
+        currency_id=currency_id,
+        scenario_id=(
+            scenario.id if isinstance(scenario, alere.models.Scenarios)
+            else scenario
+        ),
+        max_scheduled_occurrences=max_scheduled_occurrences,
     )
 
-    shares = {}
-    prices = {}
-    for d_idx, dt in enumerate(dates):
-        for acc in alere.models.Balances_Currency.objects \
-               .filter(currency_id=currency_id,
-                       mindate__lte=dt,
-                       maxdate__gt=dt,
-                       include_scheduled=include_scheduled,
-                       scenario_id=scenario,
-                       account__kind__is_networth=True):
+    dict_shares = {}
+    dict_prices = {}
+    for (date_idx, account_id, shares, price) in q.networth(dates):
+        # create default entries if needed
+        s = dict_shares.setdefault(account_id, [0] * len(dates))
+        p = dict_prices.setdefault(account_id, [0] * len(dates))
 
-            s = shares.setdefault(acc.account_id, [0] * len(dates))
-            s[d_idx] = acc.shares
-
-            p = prices.setdefault(acc.account_id, [0] * len(dates))
-            p[d_idx] = acc.computed_price
+        s[date_idx] = shares
+        p[date_idx] = price
 
     return [
         {
             "accountId": acc,
-            "shares": s,
-            "price": prices[acc],
+            "shares": dict_shares[acc],
+            "price": dict_prices[acc],
         }
-        for acc, s in shares.items()
+        for acc in dict_shares
     ]
 
 

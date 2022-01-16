@@ -10,13 +10,13 @@ def ledger(
         account_ids: Optional[List[int]],
         mindate: Optional[datetime.datetime],
         maxdate: Optional[datetime.datetime],
-        max_occurrences=1,
+        max_scheduled_occurrences=1,
         ) -> List[Transaction_Descr]:
     q = Queries(
         start=mindate,
         end=maxdate,
         scenario_id=alere.models.Scenarios.NO_SCENARIO,
-        max_occurrences=max_occurrences,
+        max_scheduled_occurrences=max_scheduled_occurrences,
     )
     return list(q.ledger(account_ids=account_ids))
 

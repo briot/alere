@@ -14,7 +14,7 @@ class MeanView(JSONView):
             prior=int(params.get('prior', 6)),
             after=int(params.get('after', 6)),
             currency_id=self.as_commodity_id(params, 'currency'),
-            max_occurrences=0,   # no scheduled transactions
+            max_scheduled_occurrences=0,   # no scheduled transactions
         )
 
         result = {

@@ -56,20 +56,25 @@ class NetworthTestCase(BaseTest):
     def test_networth(self):
 
         # No date specified
-        a = networth(dates=[], currency_id=1)
+        a = networth(
+            dates=[],
+            currency_id=1,
+            max_scheduled_occurrences=0)
         self.assertEqual(a, [])
 
         # Date prior to all transactions
         a = networth(
             dates=[self.convert_time('2010-11-20')],
-            currency_id=self.eur)
+            currency_id=self.eur,
+            max_scheduled_occurrences=0)
         self.assertEqual(a, [])
 
         # Date in the middle of transactions
         self.assertEqual(
             networth(
                 dates=[self.convert_time('2020-11-02')],
-                currency_id=self.eur),
+                currency_id=self.eur,
+                max_scheduled_occurrences=0),
             [
                 {'accountId': self.checking.id,
                  'price': [1.0], 'shares': [12.34]},
@@ -79,7 +84,8 @@ class NetworthTestCase(BaseTest):
         self.assertEqual(
             networth(
                 dates=[self.convert_time('2020-11-20')],
-                currency_id=self.eur),
+                currency_id=self.eur,
+                max_scheduled_occurrences=0),
             [
                 {'accountId': self.checking.id,
                  'price': [1.0], 'shares': [3.34]},
@@ -89,17 +95,19 @@ class NetworthTestCase(BaseTest):
         self.assertEqual(
             networth(
                 dates=[self.convert_time('2020-11-26')],
-                currency_id=self.eur),
+                currency_id=self.eur,
+                max_scheduled_occurrences=0),
             [
                 {'accountId': self.checking.id,
                  'price': [1.0], 'shares': [1.54]},
             ])
 
-        # Scenario 1
+        # Scenario 1, but no scheduled transactions
         self.assertEqual(
             networth(
                 dates=[self.convert_time('2022-11-26')],
                 currency_id=self.eur,
+                max_scheduled_occurrences=0,
                 scenario=self.scenario_1.id,
             ),
             [
@@ -113,7 +121,7 @@ class NetworthTestCase(BaseTest):
             networth(
                 dates=[self.convert_time('2022-11-26')],
                 currency_id=self.eur,
-                include_scheduled=True,
+                max_scheduled_occurrences=2000,
             ),
             [
                 {'accountId': self.checking.id,
@@ -308,7 +316,7 @@ class NetworthTestCase(BaseTest):
                     account_ids=[self.checking.id],
                     mindate=self.convert_time('2010-01-01'),
                     maxdate=self.convert_time('2021-02-01'),
-                    max_occurrences=2000,
+                    max_scheduled_occurrences=2000,
                 )
             ],
         )
@@ -328,7 +336,7 @@ class NetworthTestCase(BaseTest):
                     account_ids=[self.checking.id],
                     mindate=self.convert_time('2020-11-05'),
                     maxdate=self.convert_time('2021-02-01'),
-                    max_occurrences=2000,
+                    max_scheduled_occurrences=2000,
                 )
             ],
         )
@@ -345,7 +353,7 @@ class NetworthTestCase(BaseTest):
                     account_ids=[self.checking.id],
                     mindate=self.convert_time('2020-11-05'),
                     maxdate=self.convert_time('2021-02-01'),
-                    max_occurrences=1,
+                    max_scheduled_occurrences=1,
                 )
             ],
         )
@@ -361,7 +369,7 @@ class NetworthTestCase(BaseTest):
                     account_ids=[self.checking.id],
                     mindate=self.convert_time('2020-11-05'),
                     maxdate=self.convert_time('2021-02-01'),
-                    max_occurrences=0,
+                    max_scheduled_occurrences=0,
                 )
             ],
         )
