@@ -4,6 +4,7 @@ from django.views.generic import View  # type: ignore
 import json
 import math
 from typing import Optional, List, Any, Union, Dict
+from .utils import convert_time
 
 JSON = Union[str, int, Dict, List]
 
@@ -31,17 +32,6 @@ coder = CustomJSONEncoder(allow_nan=True)
 
 
 class ParamDecoder:
-
-    def convert_time(self, value: str = None) -> Optional[datetime.datetime]:
-        """
-        Return the given parameter as a datetime
-        """
-        if value is None:
-            return None
-
-        return datetime.datetime \
-            .fromisoformat(value) \
-            .astimezone(datetime.timezone.utc)
 
     def convert_to_int_list(self, value: str = None) -> Optional[List[int]]:
         if value is None:
@@ -97,7 +87,7 @@ class JSONView(View, ParamDecoder):
             name: str,
             default: str = None,
             ) -> Optional[datetime.datetime]:
-        return self.convert_time(params.get(name, default))
+        return convert_time(params.get(name, default))
 
     def as_time_list(
             self,

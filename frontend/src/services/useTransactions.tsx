@@ -24,10 +24,10 @@ const useTransactions = (
          trans.forEach(t =>
             t.splits.forEach(s => s.account = accounts.getAccount(s.accountId))
          );
-//         if (discardIE) {
-//            // remove internal transfers
-//            trans = trans.filter(t => incomeExpenseSplits(t).length > 0);
-//         }
+         if (0 && discardIE) {   //  MANU
+            // remove internal transfers
+            trans = trans.filter(t => incomeExpenseSplits(t).length > 0);
+         }
          return trans;
       },
    });

@@ -4,6 +4,7 @@ import os
 from django.test import TestCase     # type: ignore
 from typing import List, Tuple
 from .json import ParamDecoder
+from .utils import convert_time
 
 
 class Split:
@@ -108,14 +109,14 @@ class BaseTest(TestCase, ParamDecoder):
             scenario: alere.models.Scenarios = None,
             ):
         t = alere.models.Transactions.objects.create(
-            timestamp=self.convert_time(timestamp or splits[0].date),
+            timestamp=convert_time(timestamp or splits[0].date),
             scheduled=scheduled,
             scenario=scenario or self.no_scenario,
         )
         for s in splits:
             t.splits.create(
                 account=s.account,
-                post_date=self.convert_time(s.date),
+                post_date=convert_time(s.date),
                 scaled_qty=s.qty,
                 value_commodity=s.value_commodity,
                 scaled_value=s.value
@@ -137,7 +138,7 @@ class BaseTest(TestCase, ParamDecoder):
             alere.models.Prices(
                 origin=origin,
                 target=target,
-                date=self.convert_time(p[0]),
+                date=convert_time(p[0]),
                 scaled_price=p[1],
                 source_id=alere.models.PriceSources.USER)
             for p in prices

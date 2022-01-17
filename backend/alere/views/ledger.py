@@ -1,33 +1,26 @@
 from .json import JSONView
-from .queries import Queries, Transaction_Descr
-from typing import List, Optional, Any
+from typing import Any
 import alere.models
-import datetime
-import django.db                    # type: ignore
+import alere.views.queries as queries
+import alere.views.queries.ledger
+from alere.views.queries.dates import DateSet
 from django.http import QueryDict   # type: ignore
-
-
-def ledger(
-        account_ids: Optional[List[int]],
-        mindate: Optional[datetime.datetime],
-        maxdate: Optional[datetime.datetime],
-        max_scheduled_occurrences=1,
-        ) -> List[Transaction_Descr]:
-    q = Queries()
-
-    return list(q.ledger(
-        start=mindate,
-        end=maxdate,
-        account_ids=account_ids,
-        scenario=alere.models.Scenarios.NO_SCENARIO,
-        max_scheduled_occurrences=max_scheduled_occurrences,
-        ))
 
 
 class LedgerView(JSONView):
     def get_json(self, params: QueryDict, **kwargs: str) -> Any:
-        return ledger(
+        scenario = alere.models.Scenarios.NO_SCENARIO
+        max_scheduled_occurrences = 1
+
+        return list(queries.ledger.ledger(
+            dates=DateSet.from_range(
+                start=self.as_time(params, 'mindate'),
+                end=self.as_time(params, 'maxdate'),
+                granularity='months',   # irrelevant
+                scenario=scenario,
+                max_scheduled_occurrences=max_scheduled_occurrences,
+            ),
             account_ids=self.convert_to_int_list(kwargs['ids']),
-            maxdate=self.as_time(params, 'maxdate'),
-            mindate=self.as_time(params, 'mindate'),
-        )
+            scenario=scenario,
+            max_scheduled_occurrences=max_scheduled_occurrences,
+        ))

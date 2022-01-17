@@ -31,7 +31,7 @@ export interface Balance {
 export interface BalanceList {
    currencyId: CommodityId;
    dates: RelativeDate[];
-   list: Balance[];   // indexed on date
+   list: Balance[];   // for each account_id
    totalValue: number[];  // indexed on date
 }
 
@@ -41,8 +41,8 @@ export interface BalanceList {
 
 interface JSONBalance {
    accountId: AccountId;
-   shares: number[];
-   price: (number|undefined)[];
+   shares: (number|undefined)[];  //  one entry per date
+   price: (number|undefined)[];  //  one entry per date
 }
 
 /**
@@ -57,24 +57,26 @@ const useBalance = (p: {
    currencyId: CommodityId;
    dates: RelativeDate[];
 }): BalanceList => {
+   const dates_str = p.dates.map(d => dateToString(d));
+
    const { data } = useFetch<BalanceList, JSONBalance[]>({
       url: `/api/plots/networth`
          + `?currency=${p.currencyId}`
-         + `&dates=${p.dates.map(d => dateToString(d)).join(',')}`,
+         + `&dates=${dates_str.join(',')}`,
       parse: (json: JSONBalance[]) => ({
          dates: p.dates,
          currencyId: p.currencyId,
          list: json.map(a => ({
             accountId: a.accountId,
-            atDate: p.dates.map((date, idx) => ({
-               shares: a.shares[idx],
+            atDate: p.dates.map((_, idx) => ({
+               shares: a.shares[idx] ?? NaN,
                price: a.price[idx] ?? NaN,
             })),
          })),
          totalValue: p.dates.map((_, idx) =>
             json
-            .filter(d => d.price[idx])  // remove undefined and NaN
-            .reduce((t, d) => t + d.price[idx]! * d.shares[idx], 0)),
+            .filter(d => d.price[idx] && d.shares[idx])  // remove undefined
+            .reduce((t, d) => t + d.price[idx]! * d.shares[idx]!, 0)),
       }),
       placeholder: {currencyId: p.currencyId, dates: [], list: [], totalValue: []},
    });

@@ -1,13 +1,25 @@
-from .queries import Queries
 from .json import JSONView
 import alere
+import alere.views.queries as queries
+from alere.views.queries.dates import DateSet
 from typing import Any
 
 
 class MeanView(JSONView):
 
     def get_json(self, params, **kwargs: str) -> Any:
-        m = Queries()
+        max_scheduled_occurrences = 0   # no scheduled transactions
+        scenario = alere.models.Scenarios.NO_SCENARIO
+
+        dates = DateSet.from_range(
+            start=self.as_time(params, 'mindate'),
+            end=self.as_time(params, 'maxdate'),
+            prior=int(params.get('prior', 6)),
+            after=int(params.get('after', 6)),
+            granularity='months',
+            max_scheduled_occurrences=max_scheduled_occurrences,
+            scenario=scenario,
+        )
 
         result = {
             month: {
@@ -17,28 +29,21 @@ class MeanView(JSONView):
                 "value_realized": -(income or 0),
                 "average_realized": -(income_avg or 0),
             }
-            for month, income, income_avg, exp, exp_avg in m.monthly_cashflow(
-                start=self.as_time(params, 'mindate'),
-                end=self.as_time(params, 'maxdate'),
-                prior=int(params.get('prior', 6)),
-                after=int(params.get('after', 6)),
+            for (month, income, income_avg, exp,
+                    exp_avg) in queries.monthly_cashflow(
+                dates=dates,
                 currency=self.as_commodity_id(params, 'currency'),
-                groupby='months',
-                scenario=alere.models.Scenarios.NO_SCENARIO,
-                max_scheduled_occurrences=0,   # no scheduled transactions
+                scenario=scenario,
+                max_scheduled_occurrences=max_scheduled_occurrences,
             )
         }
 
         if self.as_bool(params, 'unrealized'):
-            for date, diff, average, value in m.networth_history(
-                    start=self.as_time(params, 'mindate'),
-                    end=self.as_time(params, 'maxdate'),
-                    prior=int(params.get('prior', 6)),
-                    after=int(params.get('after', 6)),
-                    scenario=alere.models.Scenarios.NO_SCENARIO,
-                    groupby='months',
+            for date, diff, average, value in queries.networth_history(
+                    dates=dates,
+                    scenario=scenario,
                     currency=self.as_commodity_id(params, 'currency'),
-                    max_scheduled_occurrences=0,   # no scheduled transactions
+                    max_scheduled_occurrences=max_scheduled_occurrences,
                     ):
                 index = date[:7]  # only yyyy-mm
                 if index in result:

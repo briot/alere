@@ -2,6 +2,7 @@ import alere.models
 import datetime
 from .means import MeanView
 from .base_test import BaseTest, Split
+from .utils import convert_time
 from django.test import RequestFactory    # type: ignore
 
 
@@ -48,8 +49,8 @@ class PlotTestCase(BaseTest):
                 scenario=self.no_scenario,
                 include_scheduled=include_scheduled,
                 balance=balance,
-                mindate=self.convert_time(mindate),
-                maxdate=self.convert_time(maxdate),
+                mindate=convert_time(mindate),
+                maxdate=convert_time(maxdate),
             )
 
         include_scheduled = False
