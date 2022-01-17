@@ -13,13 +13,15 @@ def ledger(
         maxdate: Optional[datetime.datetime],
         max_scheduled_occurrences=1,
         ) -> List[Transaction_Descr]:
-    q = Queries(
+    q = Queries()
+
+    return list(q.ledger(
         start=mindate,
         end=maxdate,
-        scenario_id=alere.models.Scenarios.NO_SCENARIO,
+        account_ids=account_ids,
+        scenario=alere.models.Scenarios.NO_SCENARIO,
         max_scheduled_occurrences=max_scheduled_occurrences,
-    )
-    return list(q.ledger(account_ids=account_ids))
+        ))
 
 
 class LedgerView(JSONView):

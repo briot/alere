@@ -6,7 +6,10 @@ import alere.models
 import datetime
 import django.db    # type: ignore
 import logging
-from typing import List, Union, Literal, Optional, Generator, Tuple
+from typing import (
+    List, Union, Literal, Optional, Generator, Tuple, Iterable
+)
+from .json import JSON
 
 
 me = logging.getLogger(__name__)
@@ -58,7 +61,7 @@ class Split_Descr:
         self.price = price
         self.payee = payee
 
-    def to_json(self):
+    def to_json(self) -> JSON:
         return {
             "accountId": self.account_id,
             "amount": self.amount,
@@ -96,7 +99,7 @@ class Transaction_Descr:
         self.is_recurring = is_recurring
         self.splits: List[Split_Descr] = []
 
-    def to_json(self):
+    def to_json(self) -> JSON:
         return {
             "id": self.id,
             "occ": self.occurrence,
@@ -114,48 +117,63 @@ class Transaction_Descr:
 
 
 class Queries:
-    def __init__(
+    def _get_currency_id(
+            self,
+            currency: Union[int, alere.models.Commodities],
+            ) -> int:
+        return currency if isinstance(currency, int) else currency.id
+
+    def _get_scenario_id(
+            self,
+            scenario: Union[alere.models.Scenarios, int] =
+                alere.models.Scenarios.NO_SCENARIO,
+            ) -> int:
+        return scenario if isinstance(scenario, int) else scenario.id
+
+    def _get_max_occurrences(
+            self,
+            max_scheduled_occurrences: Optional[int] = None,
+            ) -> int:
+        return (
+            MAX_OCCURRENCES if max_scheduled_occurrences is None
+            else min(max_scheduled_occurrences, MAX_OCCURRENCES)
+        )
+
+    def _get_start_date(
             self,
             start: Union[None, datetime.date, datetime.datetime] = None,
+            ) -> str:
+        return (start or datetime.datetime.min).strftime("%Y-%m-%d")
+
+    def _get_end_date(
+            self,
             end: Union[None, datetime.date, datetime.datetime] = None,
-            currency_id: Union[int, alere.models.Commodities] = -1,
-            groupby: GroupBy = None,
-            scenario_id: int = alere.models.Scenarios.NO_SCENARIO,
-            max_scheduled_occurrences=MAX_OCCURRENCES,
-            prior=0,
-            after=0,
-            ):
-        """
-        :param max_scheduled_occurrences:
-            if 0, ignore all scheduled transactions.
-            if 1, only look at the next occurrence of them.
-        """
+            ) -> str:
+        return min(end or maxdate, maxdate).strftime("%Y-%m-%d")
 
-        self.start = (start or datetime.datetime.min).strftime("%Y-%m-%d")
-        self.end = min(end or maxdate, maxdate).strftime("%Y-%m-%d")
-        self.currency_id = (
-            currency_id if isinstance(currency_id, int)
-            else currency_id.id
-        )
-        self.prior = int(prior)
-        self.after = int(after)
-        self.groupby = groupby or 'months'
-        self.scenario_id = scenario_id
-        self.max_scheduled_occurrences = max_scheduled_occurrences
-
-    def _cte_list_of_dates(self) -> str:
+    def _cte_list_of_dates(
+            self,
+            start: Union[None, datetime.date, datetime.datetime],
+            end: Union[None, datetime.date, datetime.datetime],
+            groupby: GroupBy,
+            prior,
+            after,
+            ) -> str:
         """
         A common table expression that returns all dates between
         the (start - prio) to (after + prio), depending on self's config.
         """
-        if self.groupby == 'years':
+        start_date = self._get_start_date(start)
+        end_date = self._get_end_date(end)
+
+        if groupby == 'years':
             return f"""{CTE_DATES} (date) AS (
             SELECT
                 MIN(d1, d2)
                 FROM (
                    SELECT
-                      date('{self.end}', '+1 YEAR', 'start of year', '-1 day',
-                         '+{self.after:d} YEARS') as d1,
+                      date('{end_date}', '+1 YEAR', 'start of year', '-1 day',
+                         '+{after:d} YEARS') as d1,
                       MAX(alr_balances_currency.mindate) as d2
                    FROM alr_balances_currency
                 )
@@ -164,18 +182,18 @@ class Queries:
                FROM {CTE_DATES} m,
                   (SELECT MIN(alr_balances_currency.mindate) as date
                    FROM alr_balances_currency) range
-               WHERE m.date >= date('{self.start}', '-{self.prior:d} YEARS')
+               WHERE m.date >= date('{start_date}', '-{prior:d} YEARS')
                   AND m.date >= range.date
                LIMIT {MAX_DATES}
             )"""
 
-        elif self.groupby == 'days':
+        elif groupby == 'days':
             return f"""{CTE_DATES} (date) AS (
-            SELECT date('{self.end}', '+{self.after:d} DAYS')
+            SELECT date('{end_date}', '+{after:d} DAYS')
             UNION
                SELECT date(m.date, "-1 day")
                FROM {CTE_DATES} m
-               WHERE m.date >= date('{self.start}', '-{self.prior:d} DAYS')
+               WHERE m.date >= date('{start_date}', '-{prior:d} DAYS')
                LIMIT {MAX_DATES}
             )"""
 
@@ -187,8 +205,8 @@ class Queries:
                date(MAX(user.d1, user.d2), '+1 month', '-1 day')
                FROM
                   (SELECT
-                      date('{self.start}',
-                           '-{self.prior:d} MONTHS', 'start of month') as d1,
+                      date('{start_date}',
+                           '-{prior:d} MONTHS', 'start of month') as d1,
                       MIN(alr_balances_currency.mindate) as d2
                    FROM alr_balances_currency
                   ) user
@@ -200,17 +218,28 @@ class Queries:
                FROM {CTE_DATES} m,
                   (SELECT MAX(alr_balances_currency.mindate) as date
                    FROM alr_balances_currency) range
-               WHERE m.date < DATE('{self.end}', "+{self.after:d} MONTHS")
+               WHERE m.date < DATE('{end_date}', "+{after:d} MONTHS")
                   and m.date <= range.date
                LIMIT {MAX_DATES}
             )"""
 
-    def _cte_list_splits(self) -> str:
+    def _cte_list_splits(
+            self,
+            start: Union[None, datetime.date, datetime.datetime],
+            end: Union[None, datetime.date, datetime.datetime],
+            scenario: Union[alere.models.Scenarios, int],
+            max_scheduled_occurrences: Optional[int],
+            ) -> str:
         """
         A common table expression that returns all splits to consider in the
         given time range, including the recurrences of scheduled transactions.
         Does not require _cte_list_of_dates.
         """
+        scenario_id = self._get_scenario_id(scenario)
+        max_occurrences = self._get_max_occurrences(max_scheduled_occurrences)
+        start_date = self._get_start_date(start)
+        end_date = self._get_end_date(end)
+
         non_recurring_splits = f"""
             SELECT
                t.id as transaction_id,
@@ -231,10 +260,11 @@ class Queries:
                JOIN alr_splits s ON (s.transaction_id = t.id)
             WHERE t.scheduled IS NULL
                 AND (t.scenario_id = {alere.models.Scenarios.NO_SCENARIO}
-                     OR t.scenario_id = {self.scenario_id})
+                     OR t.scenario_id = {scenario_id})
+                AND post_date <= '{end_date}'
         """
 
-        if self.max_scheduled_occurrences > 0:
+        if max_occurrences > 0:
             # overrides the post_date for the splits associated with a
             # recurring transaction
             return f"""recurring_splits_and_transaction AS (
@@ -259,7 +289,7 @@ class Queries:
                JOIN alr_splits s ON (s.transaction_id = t.id)
             WHERE t.scheduled IS NOT NULL
                AND (t.scenario_id = {alere.models.Scenarios.NO_SCENARIO}
-                    OR t.scenario_id = {self.scenario_id})
+                    OR t.scenario_id = {scenario_id})
 
             UNION SELECT
                s.transaction_id,
@@ -277,15 +307,15 @@ class Queries:
                s.payee_id,
                alr_next_event(s.scheduled, s.initial_timestamp, s.post_date)
             FROM recurring_splits_and_transaction s
-            WHERE s.post_date IS NOT NULL AND s.post_date < '{self.end}'
-              AND s.occurrence < {self.max_scheduled_occurrences}
+            WHERE s.post_date IS NOT NULL AND s.post_date < '{end_date}'
+              AND s.occurrence < {max_occurrences}
         ), {CTE_SPLITS} AS (
            SELECT * FROM recurring_splits_and_transaction
               WHERE post_date IS NOT NULL
 
                 --  The last computed occurrence might be later than expected
                 --  date
-                AND post_date <= '{self.end}'
+                AND post_date <= '{end_date}'
            UNION {non_recurring_splits}
         )
             """
@@ -312,14 +342,27 @@ class Queries:
         )
         """
 
-    def query_networth(self) -> str:
+    def query_networth(
+            self,
+            currency: Union[int, alere.models.Commodities],
+            scenario: Union[alere.models.Scenarios, int],
+            max_scheduled_occurrences: Optional[int],
+            ) -> str:
         """
         Create a query that returns the networth as computed for a set of
         dates. These dates must be found in the "dates(date)" table, which
         typically will be provided as a common table expression.
 
         This query also accepts one parameter, the currency_id for the result.
+
+        :param max_scheduled_occurrences:
+            if 0, ignore all scheduled transactions.
+            if 1, only look at the next occurrence of them.
         """
+        currency_id = self._get_currency_id(currency)
+        scenario_id = self._get_scenario_id(scenario)
+        max_occurrences = self._get_max_occurrences(max_scheduled_occurrences)
+
         return f"""
            SELECT
               {CTE_DATES}.date,
@@ -333,20 +376,30 @@ class Queries:
               --  the time. Otherwise, 2020-11-30 is less than
               --  2020-11-30 00:00:00 and we do not get transactions
               --  on the last day of the month
-              strftime("%%Y-%%m-%%d", alr_balances_currency.mindate)
-                 <= strftime("%%Y-%%m-%%d", {CTE_DATES}.date)
-              AND strftime("%%Y-%%m-%%d", {CTE_DATES}.date)
-                 < strftime("%%Y-%%m-%%d", alr_balances_currency.maxdate)
-              AND alr_balances_currency.currency_id=%s
+              strftime("%Y-%m-%d", alr_balances_currency.mindate)
+                 <= strftime("%Y-%m-%d", {CTE_DATES}.date)
+              AND strftime("%Y-%m-%d", {CTE_DATES}.date)
+                 < strftime("%Y-%m-%d", alr_balances_currency.maxdate)
+              AND alr_balances_currency.currency_id = {currency_id}
               AND alr_balances_currency.account_id = alr_accounts.id
               AND k.is_networth
               AND alr_balances_currency.include_scheduled =
-                 {1 if self.max_scheduled_occurrences > 0 else 0}
-              AND alr_balances_currency.scenario_id = {self.scenario_id}
+                 {1 if max_occurrences > 0 else 0}
+              AND alr_balances_currency.scenario_id = {scenario_id}
            GROUP BY {CTE_DATES}.date
         """
 
-    def networth_history(self):
+    def networth_history(
+            self,
+            start: Union[None, datetime.date, datetime.datetime],
+            end: Union[None, datetime.date, datetime.datetime],
+            currency: Union[int, alere.models.Commodities],
+            groupby: GroupBy,
+            scenario: Union[alere.models.Scenarios, int],
+            max_scheduled_occurrences: Optional[int],
+            prior,
+            after,
+            ):
         """
         Computes the networth at the end of each month.
         The result also includes the mean of the networth computed on each
@@ -354,55 +407,94 @@ class Queries:
         after. It also includes the diff between the current row and the
         previous one, and the mean of those diffs.
         """
-        query = f"""WITH RECURSIVE {self._cte_list_of_dates()}
+        list_of_dates = self._cte_list_of_dates(
+            start=start,
+            end=end,
+            groupby=groupby,
+            prior=prior,
+            after=after,
+        )
+        q_networth = self.query_networth(
+            scenario=scenario,
+            currency=currency,
+            max_scheduled_occurrences=max_scheduled_occurrences,
+        )
+
+        query = f"""WITH RECURSIVE {list_of_dates}
             SELECT
                tmp2.date,
                tmp2.diff,
                AVG(tmp2.diff) OVER
                    (ORDER BY tmp2.date
-                    ROWS BETWEEN {self.prior:d} PRECEDING
-                    AND {self.after:d} FOLLOWING) AS average,
+                    ROWS BETWEEN {prior:d} PRECEDING
+                    AND {after:d} FOLLOWING) AS average,
                tmp2.value
             FROM
                (SELECT
                   tmp.date,
                   tmp.value - LAG(tmp.value) OVER (ORDER BY tmp.date) as diff,
                   tmp.value
-                FROM ({self.query_networth()}) tmp
+                FROM ({q_networth}) tmp
                ) tmp2"""
 
         with django.db.connection.cursor() as cur:
-            cur.execute(query, [self.currency_id])
+            cur.execute(query)
             for date, diff, average, value in cur.fetchall():
                 yield date, diff, average, value
 
-    def monthly_cashflow(self):
+    def monthly_cashflow(
+            self,
+            start: Union[None, datetime.date, datetime.datetime],
+            end: Union[None, datetime.date, datetime.datetime],
+            currency: Union[int, alere.models.Commodities],
+            scenario: Union[alere.models.Scenarios, int],
+            max_scheduled_occurrences: Optional[int],
+            groupby: GroupBy,
+            prior,
+            after,
+            ):
         """
         Computes the total realized income and expenses for all months.
         The result includes the rolling mean.
         This ignores scheduled transactions.
+
+        :param max_scheduled_occurrences:
+            if 0, ignore all scheduled transactions.
+            if 1, only look at the next occurrence of them.
         """
-        query = (
-            f"""
-            WITH RECURSIVE {self._cte_list_of_dates()}
+        list_of_dates = self._cte_list_of_dates(
+            start=start,
+            end=end,
+            groupby=groupby,
+            prior=prior,
+            after=after,
+        )
+        currency_id = self._get_currency_id(currency)
+        scenario_id = self._get_scenario_id(scenario)
+        max_occurrences = self._get_max_occurrences(max_scheduled_occurrences)
+        start_date = self._get_start_date(start)
+        end_date = self._get_end_date(end)
+
+        query = f"""
+            WITH RECURSIVE {list_of_dates}
             SELECT
                tmp.month,
                inc_total,
                AVG(inc_total) OVER
                    (ORDER BY tmp.month
-                    ROWS BETWEEN {self.prior:d} PRECEDING
-                    AND {self.after:d} FOLLOWING) AS inc_average,
+                    ROWS BETWEEN {prior:d} PRECEDING
+                    AND {after:d} FOLLOWING) AS inc_average,
                exp_total,
                AVG(exp_total) OVER
                    (ORDER BY tmp.month
-                    ROWS BETWEEN {self.prior:d} PRECEDING
-                    AND {self.after:d} FOLLOWING) AS exp_average
+                    ROWS BETWEEN {prior:d} PRECEDING
+                    AND {after:d} FOLLOWING) AS exp_average
             FROM
                (
                   --  Sum of splits for a given months, organized per
                   --  category
                   SELECT
-                     strftime("%%Y-%%m", {CTE_DATES}.date) as month,
+                     strftime("%Y-%m", {CTE_DATES}.date) as month,
                      SUM(value) FILTER (WHERE
                         k.category = {alere.models.AccountKindCategory.INCOME}
                      ) as inc_total,
@@ -411,8 +503,8 @@ class Queries:
                      ) as exp_total
                   FROM {CTE_DATES}
                      JOIN alr_splits_with_value
-                        ON (strftime("%%Y-%%m", post_date) =
-                            strftime("%%Y-%%m", {CTE_DATES}.date))
+                        ON (strftime("%Y-%m", post_date) =
+                            strftime("%Y-%m", {CTE_DATES}.date))
 
                      --  ignore scheduled transactions, which did not actually
                      --  occur.
@@ -420,28 +512,26 @@ class Queries:
                         ON (alr_splits_with_value.transaction_id =
                             alr_transactions.id
                             AND (alr_transactions.scheduled IS NULL
-                                 OR {self.max_scheduled_occurrences > 0})
+                                 OR {max_occurrences > 0})
                             AND (alr_transactions.scenario_id =
                                    {alere.models.Scenarios.NO_SCENARIO}
                                  OR alr_transactions.scenario_id =
-                                   {self.scenario_id}))
+                                   {scenario_id}))
 
                      JOIN alr_accounts
                         ON (alr_splits_with_value.account_id=alr_accounts.id)
                      JOIN alr_account_kinds k
                         ON (alr_accounts.kind_id=k.id)
-                  WHERE alr_splits_with_value.value_commodity_id=%s
+                  WHERE alr_splits_with_value.value_commodity_id={currency_id}
                   GROUP BY {CTE_DATES}.date
                ) tmp
-              """
-        )
-        min_month = self.start[:7]
-        max_month = self.end[:7]
+        """
+#            WHERE '{start_date[:7]}' < tmp.month
+#              AND tmp.month <= '{end_date[:7]}'
         with django.db.connection.cursor() as cur:
-            cur.execute(query, [self.currency_id])
+            cur.execute(query)
             for month, inc, inc_avg, expenses, expenses_avg in cur.fetchall():
-                if min_month < month and month <= max_month:
-                    yield month, inc, inc_avg, expenses, expenses_avg
+                yield month, inc, inc_avg, expenses, expenses_avg
 
     def _cte_transactions_for_accounts(
             self,
@@ -462,7 +552,11 @@ class Queries:
 
     def ledger(
             self,
-            account_ids: List[int] = None,
+            start: Union[None, datetime.date, datetime.datetime],
+            end: Union[None, datetime.date, datetime.datetime],
+            account_ids: Optional[List[int]],
+            scenario: Union[alere.models.Scenarios, int],
+            max_scheduled_occurrences: Optional[int],
             ) -> Generator[Transaction_Descr, None, None]:
         """
         Return the ledger information.
@@ -473,6 +567,9 @@ class Queries:
             Can be used to restrict the output to those transactions that
             impact those accounts (all splits of the transactions are still
             returned, even those that are not for one of the accounts.
+        :param max_scheduled_occurrences:
+            if 0, ignore all scheduled transactions.
+            if 1, only look at the next occurrence of them.
         """
 
         filter_account_cte = (
@@ -483,8 +580,16 @@ class Queries:
         filter_account_from = (
             f" JOIN {CTE_TRANSACTIONS_FOR_ACCOUNTS} t USING (transaction_id)"
         )
+        list_splits = self._cte_list_splits(
+            start=start,
+            end=end,
+            scenario=scenario,
+            max_scheduled_occurrences=max_scheduled_occurrences,
+        )
+        start_date = self._get_start_date(start)
+        end_date = self._get_end_date(end)
 
-        query = f"""WITH RECURSIVE {self._cte_list_splits()}
+        query = f"""WITH RECURSIVE {list_splits}
            , {self._cte_splits_with_values()}
            {filter_account_cte}
            , all_splits_since_epoch AS (
@@ -517,7 +622,7 @@ class Queries:
            )
         SELECT s.*
         FROM all_splits_since_epoch s
-        WHERE s.post_date >= '{self.start}'
+        WHERE s.post_date >= '{start_date}'
 
           --  Always include non-validated occurrences of recurring
           --  transactions.
@@ -668,20 +773,32 @@ class Queries:
 
     def networth(
             self,
-            dates: List[datetime.datetime],
+            dates: Iterable[Optional[datetime.datetime]],
+            currency: Union[int, alere.models.Commodities],
+            scenario: Union[alere.models.Scenarios, int],
+            max_scheduled_occurrences: Optional[int],
             ) -> Generator[Tuple[int, int, float, float], None, None]:
 
         if not dates:
             return
 
+        currency_id = self._get_currency_id(currency)
+
         all_dates = ", ".join(
             f"({idx}, '{d.strftime('%Y-%m-%d %H:%M:%s')}')"
             for idx, d in enumerate(dates)
+            if d is not None
+        )
+        list_splits = self._cte_list_splits(
+            start=None,   # from beginning to get balances right
+            end=None,
+            scenario=scenario,
+            max_scheduled_occurrences=max_scheduled_occurrences,
         )
 
         query = f"""
            WITH RECURSIVE
-              {self._cte_list_splits()},
+              {list_splits},
               {self._cte_balances()},
               {self._cte_balances_currency()},
               dates(idx, day) AS (VALUES {all_dates})
@@ -695,7 +812,7 @@ class Queries:
               JOIN alr_account_kinds k ON (a.kind_id = k.id),
               dates
            WHERE
-              b.currency_id = {self.currency_id}
+              b.currency_id = {currency_id}
               AND b.mindate <= dates.day
               AND dates.day < b.maxdate
               AND k.is_networth

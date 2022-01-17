@@ -53,19 +53,19 @@ class NetworthTestCase(BaseTest):
                 Split(self.checking, 202000, '2020-11-12'),
             ])
 
-    def test_networth(self):
+    def test_networth(self) -> None:
 
         # No date specified
         a = networth(
             dates=[],
-            currency_id=1,
+            currency=1,
             max_scheduled_occurrences=0)
         self.assertEqual(a, [])
 
         # Date prior to all transactions
         a = networth(
             dates=[self.convert_time('2010-11-20')],
-            currency_id=self.eur,
+            currency=self.eur,
             max_scheduled_occurrences=0)
         self.assertEqual(a, [])
 
@@ -73,7 +73,7 @@ class NetworthTestCase(BaseTest):
         self.assertEqual(
             networth(
                 dates=[self.convert_time('2020-11-02')],
-                currency_id=self.eur,
+                currency=self.eur,
                 max_scheduled_occurrences=0),
             [
                 {'accountId': self.checking.id,
@@ -84,7 +84,7 @@ class NetworthTestCase(BaseTest):
         self.assertEqual(
             networth(
                 dates=[self.convert_time('2020-11-20')],
-                currency_id=self.eur,
+                currency=self.eur,
                 max_scheduled_occurrences=0),
             [
                 {'accountId': self.checking.id,
@@ -95,7 +95,7 @@ class NetworthTestCase(BaseTest):
         self.assertEqual(
             networth(
                 dates=[self.convert_time('2020-11-26')],
-                currency_id=self.eur,
+                currency=self.eur,
                 max_scheduled_occurrences=0),
             [
                 {'accountId': self.checking.id,
@@ -106,7 +106,7 @@ class NetworthTestCase(BaseTest):
         self.assertEqual(
             networth(
                 dates=[self.convert_time('2022-11-26')],
-                currency_id=self.eur,
+                currency=self.eur,
                 max_scheduled_occurrences=0,
                 scenario=self.scenario_1.id,
             ),
@@ -120,7 +120,7 @@ class NetworthTestCase(BaseTest):
         self.assertEqual(
             networth(
                 dates=[self.convert_time('2022-11-26')],
-                currency_id=self.eur,
+                currency=self.eur,
                 max_scheduled_occurrences=2000,
             ),
             [
@@ -129,8 +129,8 @@ class NetworthTestCase(BaseTest):
                  'shares': [1.54 + 1010 * 25]},   # 25 months elapsed
             ])
 
-    def test_ledger(self):
-        def get_trans1(balance: int, date: str):
+    def test_ledger(self) -> None:
+        def get_trans1(balance: float, date: str):
             return {
                 'id': 1,
                 'occ': 1,
@@ -164,7 +164,7 @@ class NetworthTestCase(BaseTest):
                 ]
             }
 
-        def get_trans2(balance: int, date: str):
+        def get_trans2(balance: float, date: str):
             return {
                 'id': 2,
                 'occ': 1,
@@ -198,7 +198,7 @@ class NetworthTestCase(BaseTest):
                 ]
             }
 
-        def get_trans3(balance: int, date: str):
+        def get_trans3(balance: float, date: str):
             return {
                 'id': 3,
                 'occ': 1,
@@ -232,7 +232,7 @@ class NetworthTestCase(BaseTest):
                 ]
             }
 
-        def get_trans4(balance: int, date: str):
+        def get_trans4(balance: float, date: str):
             return {
                 'id': 4,
                 'occ': 1,
@@ -265,7 +265,7 @@ class NetworthTestCase(BaseTest):
                     },
                 ]}
 
-        def get_occurrence(occ: int, balance: int, date: str):
+        def get_occurrence(occ: int, balance: float, date: str):
             return {
                 'id': 5,   # First occurrence of the scheduled transaction
                 'occ': occ,

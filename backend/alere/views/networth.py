@@ -2,12 +2,12 @@ import alere.models
 import datetime
 from .json import JSONView
 from .queries import Queries, MAX_OCCURRENCES
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Optional
 
 
 def networth(
-        dates: List[datetime.datetime],
-        currency_id: Union[int, alere.models.Commodities],
+        dates: List[Optional[datetime.datetime]],
+        currency: Union[int, alere.models.Commodities],
         max_scheduled_occurrences: int = MAX_OCCURRENCES,
         scenario: Union[int, alere.models.Scenarios] =
             alere.models.Scenarios.NO_SCENARIO,
@@ -23,18 +23,16 @@ def networth(
        be the exchange rate between that currency and currency_id).
     """
 
-    q = Queries(
-        currency_id=currency_id,
-        scenario_id=(
-            scenario.id if isinstance(scenario, alere.models.Scenarios)
-            else scenario
-        ),
-        max_scheduled_occurrences=max_scheduled_occurrences,
-    )
+    q = Queries()
 
     dict_shares: Dict[int, List[float]] = {}
     dict_prices: Dict[int, List[float]] = {}
-    for (date_idx, account_id, shares, price) in q.networth(dates):
+    for (date_idx, account_id, shares, price) in q.networth(
+            dates,
+            currency=currency,
+            scenario=scenario,
+            max_scheduled_occurrences=max_scheduled_occurrences,
+            ):
         # create default entries if needed
         s = dict_shares.setdefault(account_id, [0] * len(dates))
         p = dict_prices.setdefault(account_id, [0] * len(dates))

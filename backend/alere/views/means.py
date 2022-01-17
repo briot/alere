@@ -1,21 +1,13 @@
 from .queries import Queries
 from .json import JSONView
 import alere
+from typing import Any
 
 
 class MeanView(JSONView):
 
-    def get_json(self, params):
-        unrealized = self.as_bool(params, 'unrealized')
-
-        m = Queries(
-            start=self.as_time(params, 'mindate'),
-            end=self.as_time(params, 'maxdate'),
-            prior=int(params.get('prior', 6)),
-            after=int(params.get('after', 6)),
-            currency_id=self.as_commodity_id(params, 'currency'),
-            max_scheduled_occurrences=0,   # no scheduled transactions
-        )
+    def get_json(self, params, **kwargs: str) -> Any:
+        m = Queries()
 
         result = {
             month: {
@@ -25,11 +17,29 @@ class MeanView(JSONView):
                 "value_realized": -(income or 0),
                 "average_realized": -(income_avg or 0),
             }
-            for month, income, income_avg, exp, exp_avg in m.monthly_cashflow()
+            for month, income, income_avg, exp, exp_avg in m.monthly_cashflow(
+                start=self.as_time(params, 'mindate'),
+                end=self.as_time(params, 'maxdate'),
+                prior=int(params.get('prior', 6)),
+                after=int(params.get('after', 6)),
+                currency=self.as_commodity_id(params, 'currency'),
+                groupby='months',
+                scenario=alere.models.Scenarios.NO_SCENARIO,
+                max_scheduled_occurrences=0,   # no scheduled transactions
+            )
         }
 
-        if unrealized:
-            for date, diff, average, value in m.networth_history():
+        if self.as_bool(params, 'unrealized'):
+            for date, diff, average, value in m.networth_history(
+                    start=self.as_time(params, 'mindate'),
+                    end=self.as_time(params, 'maxdate'),
+                    prior=int(params.get('prior', 6)),
+                    after=int(params.get('after', 6)),
+                    scenario=alere.models.Scenarios.NO_SCENARIO,
+                    groupby='months',
+                    currency=self.as_commodity_id(params, 'currency'),
+                    max_scheduled_occurrences=0,   # no scheduled transactions
+                    ):
                 index = date[:7]  # only yyyy-mm
                 if index in result:
                     result[index]["value_networth_delta"] = diff or 0
