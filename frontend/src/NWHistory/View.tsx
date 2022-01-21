@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as d3Array from 'd3-array';
-import { DateRange, RelativeDate, rangeToHttp, dateToDate } from '@/Dates';
+import { daysCount, DateRange, RelativeDate,
+   rangeToHttp, dateToDate } from '@/Dates';
 import { ComposedChart, XAxis, YAxis, CartesianGrid, Bar,
          Tooltip, TooltipProps } from 'recharts';
 import { CommodityId } from '@/services/useAccounts';
@@ -26,7 +27,7 @@ interface Point {
 }
 const noPoint: Point = {date: "", networth: NaN, parsedDate: new Date()};
 
-const bisectDate = d3Array.bisector((p: Point) => p.parsedDate).left;
+const bisectDate = d3Array.bisector((p: Point) => p.parsedDate);
 
 const useNetworthHistory = (
    range: DateRange,
@@ -88,15 +89,32 @@ const NetworthHistory: React.FC<NetworthHistoryProps> = p => {
 
    const now = points.length ? points[points.length - 1] : noPoint;
 
-   // Return the point to use, assuming we have the information
+   // Return the point to use, assuming we have the information.
+   // When grouping by years, it is possible that we find a match 1 month ago
+   // or 11 months ago. This results in strange results, so we also require
+   // that the date is close enough
+   const THRESHOLD = 30;
    const getOld = (when: RelativeDate) => {
-      const d = dateToDate(when);
-      const idx = p.hideLegend ? NaN : bisectDate(points, d);
-      const pt = isNaN (idx) ? undefined : points[idx];
-      if (idx > 0 || !pt) {
-         return pt;
+      if (p.hideLegend) {
+         return undefined;
       }
-      return d >= pt.parsedDate ? pt : undefined;
+      const d = dateToDate(when);
+      const idx = bisectDate.left(points, d);
+
+      const daysR = points[idx]
+         ? daysCount(points[idx].parsedDate, d)
+         : NaN;
+      if (Math.abs(daysR) < THRESHOLD) {
+         return points[idx];
+      }
+
+      const daysL = points[idx - 1]
+         ? daysCount(points[idx - 1].parsedDate, d)
+         : NaN;
+      if (Math.abs(daysL) < THRESHOLD) {
+         return points[idx - 1];
+      }
+      return undefined;
    }
    const ago1year = getOld("1 year ago");
    const ago3months = getOld("3 months ago");
@@ -105,24 +123,26 @@ const NetworthHistory: React.FC<NetworthHistoryProps> = p => {
       (v: Point) => (
          <div className="tooltip-base">
             <table>
-               <tr>
-                  <th>{v.date}</th>
-                  <td>
-                     <Numeric
-                        amount={v.networth}
-                        commodity={prefs.currencyId}
-                     />
-                  </td>
-               </tr>
-               <tr>
-                  <th>{now?.date}</th>
-                  <td>
-                     <Numeric
-                        amount={now?.networth}
-                        commodity={prefs.currencyId}
-                     />
-                  </td>
-               </tr>
+               <tbody>
+                  <tr>
+                     <th>{v.date}</th>
+                     <td>
+                        <Numeric
+                           amount={v.networth}
+                           commodity={prefs.currencyId}
+                        />
+                     </td>
+                  </tr>
+                  <tr>
+                     <th>{now?.date}</th>
+                     <td>
+                        <Numeric
+                           amount={now?.networth}
+                           commodity={prefs.currencyId}
+                        />
+                     </td>
+                  </tr>
+               </tbody>
             </table>
          </div>
       ),

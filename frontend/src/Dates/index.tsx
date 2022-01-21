@@ -7,6 +7,12 @@ import './Dates.scss';
 type Ref = Date|undefined;  //  a reference date
 
 /**
+ * Number of days between two dates
+ */
+export const daysCount = (date1: Date, date2: Date): number =>
+   (date2.getTime() - date1.getTime()) / (1000 * 60 * 60 * 24);
+
+/**
  * Modifies d in place to set the last day n months ago
  */
 export const endOfMonth = (months: number, refdate?: Ref) => {
