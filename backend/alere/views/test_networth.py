@@ -3,9 +3,9 @@ import datetime
 import alere.views.queries as queries
 import alere.views.queries.ledger
 import alere.views.queries.networth
-from alere.views.queries.dates import DateSet
+from alere.views.queries.dates import DateRange, DateValues
 from .base_test import BaseTest, Split
-from .utils import convert_time
+from .utils import convert_date
 from typing import List, Tuple
 
 
@@ -60,7 +60,7 @@ class NetworthTestCase(BaseTest):
 
         # No date specified
         a = queries.networth.networth(
-            dates=DateSet.from_dates([]),
+            dates=DateValues([]),
             currency=1,
             scenario=alere.models.Scenarios.NO_SCENARIO,
             max_scheduled_occurrences=0)
@@ -68,7 +68,7 @@ class NetworthTestCase(BaseTest):
 
         # Date prior to all transactions
         a = queries.networth.networth(
-            dates=DateSet.from_dates([convert_time('2010-11-20')]),
+            dates=DateValues([convert_date('2010-11-20')]),
             currency=self.eur,
             scenario=alere.models.Scenarios.NO_SCENARIO,
             max_scheduled_occurrences=0)
@@ -77,7 +77,7 @@ class NetworthTestCase(BaseTest):
         # Date in the middle of transactions
         self.assertEqual(
             queries.networth.networth(
-                dates=DateSet.from_dates([convert_time('2020-11-02')]),
+                dates=DateValues([convert_date('2020-11-02')]),
                 currency=self.eur,
                 scenario=alere.models.Scenarios.NO_SCENARIO,
                 max_scheduled_occurrences=0),
@@ -92,7 +92,7 @@ class NetworthTestCase(BaseTest):
         # Date after the transactions
         self.assertEqual(
             queries.networth.networth(
-                dates=DateSet.from_dates([convert_time('2020-11-20')]),
+                dates=DateValues([convert_date('2020-11-20')]),
                 currency=self.eur,
                 scenario=alere.models.Scenarios.NO_SCENARIO,
                 max_scheduled_occurrences=0),
@@ -106,7 +106,7 @@ class NetworthTestCase(BaseTest):
         # Date after transactions in foreign currency
         self.assertEqual(
             queries.networth.networth(
-                dates=DateSet.from_dates([convert_time('2020-11-26')]),
+                dates=DateValues([convert_date('2020-11-26')]),
                 currency=self.eur,
                 scenario=alere.models.Scenarios.NO_SCENARIO,
                 max_scheduled_occurrences=0),
@@ -120,7 +120,7 @@ class NetworthTestCase(BaseTest):
         # Scenario 1, but no scheduled transactions
         self.assertEqual(
             queries.networth.networth(
-                dates=DateSet.from_dates([convert_time('2022-11-26')]),
+                dates=DateValues([convert_date('2022-11-26')]),
                 currency=self.eur,
                 max_scheduled_occurrences=0,
                 scenario=self.scenario_1.id,
@@ -135,7 +135,7 @@ class NetworthTestCase(BaseTest):
         # Planned networth. This includes scheduled transactions
         self.assertEqual(
             queries.networth.networth(
-                dates=DateSet.from_dates([convert_time('2022-11-26')]),
+                dates=DateValues([convert_date('2022-11-26')]),
                 currency=self.eur,
                 scenario=alere.models.Scenarios.NO_SCENARIO,
                 max_scheduled_occurrences=2000,
@@ -332,12 +332,9 @@ class NetworthTestCase(BaseTest):
                 trans.to_json()
                 for trans in queries.ledger.ledger(
                     account_ids=[self.checking.id],
-                    dates=DateSet.from_range(
-                        start=convert_time('2010-01-01'),
-                        end=convert_time('2021-02-01'),
-                        granularity='months',   # irrelevant
-                        max_scheduled_occurrences=2000,
-                        scenario=alere.models.Scenarios.NO_SCENARIO,
+                    dates=DateRange(
+                        start=convert_date('2010-01-01'),
+                        end=convert_date('2021-02-01'),
                     ),
                     max_scheduled_occurrences=2000,
                     scenario=alere.models.Scenarios.NO_SCENARIO,
@@ -358,12 +355,9 @@ class NetworthTestCase(BaseTest):
                 trans.to_json()
                 for trans in queries.ledger.ledger(
                     account_ids=[self.checking.id],
-                    dates=DateSet.from_range(
-                        start=convert_time('2020-11-05'),
-                        end=convert_time('2021-02-01'),
-                        granularity='months',   # irrelevant
-                        max_scheduled_occurrences=2000,
-                        scenario=alere.models.Scenarios.NO_SCENARIO,
+                    dates=DateRange(
+                        start=convert_date('2020-11-05'),
+                        end=convert_date('2021-02-01'),
                     ),
                     max_scheduled_occurrences=2000,
                     scenario=alere.models.Scenarios.NO_SCENARIO,
@@ -381,12 +375,9 @@ class NetworthTestCase(BaseTest):
                 trans.to_json()
                 for trans in queries.ledger.ledger(
                     account_ids=[self.checking.id],
-                    dates=DateSet.from_range(
-                        start=convert_time('2020-11-05'),
-                        end=convert_time('2021-02-01'),
-                        granularity='months',   # irrelevant
-                        max_scheduled_occurrences=1,
-                        scenario=alere.models.Scenarios.NO_SCENARIO,
+                    dates=DateRange(
+                        start=convert_date('2020-11-05'),
+                        end=convert_date('2021-02-01'),
                     ),
                     max_scheduled_occurrences=1,
                     scenario=alere.models.Scenarios.NO_SCENARIO,
@@ -403,12 +394,9 @@ class NetworthTestCase(BaseTest):
                 trans.to_json()
                 for trans in queries.ledger.ledger(
                     account_ids=[self.checking.id],
-                    dates=DateSet.from_range(
-                        start=convert_time('2020-11-05'),
-                        end=convert_time('2021-02-01'),
-                        granularity='months',   # irrelevant
-                        max_scheduled_occurrences=0,
-                        scenario=alere.models.Scenarios.NO_SCENARIO,
+                    dates=DateRange(
+                        start=convert_date('2020-11-05'),
+                        end=convert_date('2021-02-01'),
                     ),
                     max_scheduled_occurrences=0,
                     scenario=alere.models.Scenarios.NO_SCENARIO,

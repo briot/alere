@@ -4,7 +4,7 @@ Some queries that cannot be created as SQL views
 
 import alere.models
 import alere.views.queries as queries
-from alere.views.queries.dates import DateSet
+from alere.views.queries.dates import DateRange, DateValues, CTE_DATES
 import datetime
 import django.db    # type: ignore
 from typing import Union, Optional, List, Tuple, Sequence, TypedDict, Dict
@@ -24,7 +24,7 @@ class Per_Account(TypedDict):
 
 
 def networth(
-        dates: Optional[DateSet],
+        dates: DateValues,
         currency: Union[int, alere.models.Commodities],
         scenario: Union[alere.models.Scenarios, int],
         max_scheduled_occurrences: Optional[int],
@@ -36,20 +36,11 @@ def networth(
        account's commodity is a currency (in which case, the price will
        be the exchange rate between that currency and currency_id).
     """
-
-    if not dates:
-        return []
-
     currency_id = queries.get_currency_id(currency)
     list_splits = queries.cte_list_splits(
-        dates=DateSet.from_range(
-            # ??? Wrong, this executes a query on all splits to find the
-            # range, though we do not need it here
+        dates=DateRange(
             start=None,   # from beginning to get balances right
-            end=None,
-            granularity='years',   # irrelevant
-            scenario=scenario,
-            max_scheduled_occurrences=max_scheduled_occurrences,
+            end=dates.end,
         ),
         scenario=scenario,
         max_scheduled_occurrences=max_scheduled_occurrences,
@@ -60,20 +51,20 @@ def networth(
           {list_splits},
           {queries.cte_balances()},
           {queries.cte_balances_currency()},
-          {dates.cte}
+          {dates.cte()}
        SELECT
-          {DateSet.CTE}.idx,
+          {CTE_DATES}.idx,
           b.account_id,
           b.shares,
           b.computed_price
        FROM {queries.CTE_BALANCES_CURRENCY} b
           JOIN alr_accounts a ON (b.account_id = a.id)
           JOIN alr_account_kinds k ON (a.kind_id = k.id),
-          {DateSet.CTE}
+          {CTE_DATES}
        WHERE
           b.currency_id = {currency_id}
-          AND b.mindate <= {DateSet.CTE}.date
-          AND {DateSet.CTE}.date < b.maxdate
+          AND b.mindate <= {CTE_DATES}.date
+          AND {CTE_DATES}.date < b.maxdate
           AND k.is_networth
     """
 

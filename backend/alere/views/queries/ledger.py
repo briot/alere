@@ -1,6 +1,6 @@
 import alere.models
 import alere.views.queries as queries
-from alere.views.queries.dates import DateSet
+from alere.views.queries.dates import DateRange, Dates
 import datetime
 import django.db    # type: ignore
 import logging
@@ -85,7 +85,7 @@ class Transaction_Descr:
 
 
 def ledger(
-        dates: DateSet,
+        dates: DateRange,
         account_ids: Optional[List[int]],
         scenario: Union[alere.models.Scenarios, int],
         max_scheduled_occurrences: Optional[int],
@@ -114,12 +114,9 @@ def ledger(
         f" USING (transaction_id)"
     )
     list_splits = queries.cte_list_splits(
-        dates=DateSet.from_range(
+        dates=DateRange(
             start=None,  # from beginning to get balance right
-            end=dates.max,
-            granularity='months',  # irrelevant
-            max_scheduled_occurrences=max_scheduled_occurrences,
-            scenario=scenario,
+            end=dates.end,
         ),
         scenario=scenario,
         max_scheduled_occurrences=max_scheduled_occurrences,
@@ -158,7 +155,7 @@ def ledger(
        )
     SELECT s.*
     FROM all_splits_since_epoch s
-    WHERE s.post_date >= '{dates.datemin}'
+    WHERE s.post_date >= '{dates.start_str}'
 
       --  Always include non-validated occurrences of recurring
       --  transactions.

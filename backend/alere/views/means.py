@@ -1,7 +1,7 @@
 from .json import JSONView
 import alere
 import alere.views.queries as queries
-from alere.views.queries.dates import DateSet
+from alere.views.queries.dates import Dates
 from typing import Any
 
 
@@ -11,12 +11,12 @@ class MeanView(JSONView):
         max_scheduled_occurrences = 0   # no scheduled transactions
         scenario = alere.models.Scenarios.NO_SCENARIO
 
-        dates = DateSet.from_range(
+        dates = Dates(
             start=self.as_time(params, 'mindate'),
             end=self.as_time(params, 'maxdate'),
-            prior=int(params.get('prior', 6)),
-            after=int(params.get('after', 6)),
             granularity='months',
+        )
+        dates.restrict_to_splits(
             max_scheduled_occurrences=max_scheduled_occurrences,
             scenario=scenario,
         )
@@ -35,6 +35,8 @@ class MeanView(JSONView):
                 currency=self.as_commodity_id(params, 'currency'),
                 scenario=scenario,
                 max_scheduled_occurrences=max_scheduled_occurrences,
+                prior=int(params.get('prior', 6)),
+                after=int(params.get('after', 6)),
             )
         }
 
