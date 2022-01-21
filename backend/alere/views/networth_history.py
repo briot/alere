@@ -9,7 +9,11 @@ from alere.views.queries.dates import Dates
 class NetworthHistoryView(JSONView):
 
     def get_json(self, params: QueryDict, **kwargs: str) -> Any:
-        max_scheduled_occurrences = None   # include all scheduled
+        max_scheduled_occurrences = (
+            None
+            if self.as_bool(params, 'scheduled')
+            else 0
+        )
         scenario = alere.models.Scenarios.NO_SCENARIO
         dates = Dates(
             start=self.as_time(params, 'mindate'),

@@ -14,5 +14,9 @@ class NetworthView(JSONView):
             dates=DateValues(self.as_time_list(params, 'dates')),
             currency=self.as_commodity_id(params, 'currency'),
             scenario=alere.models.Scenarios.NO_SCENARIO,
-            max_scheduled_occurrences=None,
+            max_scheduled_occurrences=(
+                None
+                if self.as_bool(params, 'scheduled')
+                else 0
+            ),
         )

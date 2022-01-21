@@ -32,11 +32,13 @@ const useNetworthHistory = (
    range: DateRange,
    groupBy: GroupBy,
    currencyId: CommodityId,
+   includeScheduled?: boolean,
 ) => {
    const { data } = useFetch<Point[], any>({
       url: `/api/networth_history?${rangeToHttp(range)}`
          + `&groupby=${groupBy}`
-         + `&currency=${currencyId}`,
+         + `&currency=${currencyId}`
+         + `&scheduled=${includeScheduled}`
    });
    return React.useMemo(
       () => data
@@ -50,13 +52,15 @@ export interface NetworthHistoryProps {
    range: DateRange;
    hideLegend?: boolean;
    groupBy?: GroupBy;
+   includeScheduled?: boolean;
 }
 
 const formatVal = (p: number|string|React.ReactText[]) =>
    (p as number).toFixed(0);
 
 const CustomTooltip = (
-   p: TooltipProps<number, string> & {currency: CommodityId, props: NetworthHistoryProps}
+   p: TooltipProps<number, string> &
+      {currency: CommodityId, props: NetworthHistoryProps}
 ) => {
    const d = p.payload?.[0]?.payload;
    if (!d) {
@@ -79,7 +83,8 @@ const CustomTooltip = (
 const NetworthHistory: React.FC<NetworthHistoryProps> = p => {
    const { prefs } = usePrefs();
    const points = useNetworthHistory(
-      p.range, p.groupBy ?? 'months', prefs.currencyId);
+      p.range, p.groupBy ?? 'months', prefs.currencyId,
+      p.includeScheduled);
 
    const now = points.length ? points[points.length - 1] : noPoint;
 

@@ -10,6 +10,8 @@ const Settings: React.FC<PanelProps<NetworthHistoryPanelProps>> = p => {
    const changeRange = (range: DateRange) => p.save({ range });
    const changeLegend = (show: boolean) => p.save({ hideLegend: !show });
    const changeGroup = (groupBy: GroupBy) => p.save({ groupBy });
+   const changeScheduled =
+      (includeScheduled: boolean) => p.save({ includeScheduled });
 
    return (
       <fieldset>
@@ -18,6 +20,11 @@ const Settings: React.FC<PanelProps<NetworthHistoryPanelProps>> = p => {
             value={!p.props.hideLegend}
             onChange={changeLegend}
             text="Show legend"
+         />
+         <Checkbox
+            value={!!p.props.includeScheduled}
+            onChange={changeScheduled}
+            text="Include scheduled transactions"
          />
          {
             !p.excludeFields?.includes("range") &&
