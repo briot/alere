@@ -108,7 +108,7 @@ const cumulatedValue = (
            (total, row) =>
               total + cumulatedValue(
                  row, settings, date_idx, isExpanded),
-           val ?? 0
+           isNaN(val) ? 0 : val,
       );
 }
 
