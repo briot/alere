@@ -6,9 +6,11 @@
       @include set-colors(panel);
       box-shadow: 6px 6px 10px 0 var(--shadow-color);
       border: 1px solid var(--panel-border);
+      border-radius: 10px;
    }
    .neumorph_mode & {
       @include neumorphism($hover: false, $margin: false, $distance: 3px);
+      border-radius: 15px;
    }
 
    display: flex;
