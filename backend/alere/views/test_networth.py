@@ -103,6 +103,41 @@ class NetworthTestCase(BaseTest):
                 },
             ])
 
+        # Both of the above two queries merged together. Check that the order
+        # of dates doesn't matter
+        self.assertEqual(
+            queries.networth.networth(
+                dates=DateValues([
+                    convert_date('2020-11-02'),
+                    convert_date('2020-11-20'),
+                ]),
+                currency=self.eur,
+                scenario=alere.models.Scenarios.NO_SCENARIO,
+                max_scheduled_occurrences=0),
+            [
+                {
+                    'accountId': self.checking.id,
+                    'price': [1.0, 1.0],
+                    'shares': [12.34, 3.34],
+                },
+            ])
+        self.assertEqual(
+            queries.networth.networth(
+                dates=DateValues([
+                    convert_date('2020-11-20'),
+                    convert_date('2020-11-02'),
+                ]),
+                currency=self.eur,
+                scenario=alere.models.Scenarios.NO_SCENARIO,
+                max_scheduled_occurrences=0),
+            [
+                {
+                    'accountId': self.checking.id,
+                    'price': [1.0, 1.0],
+                    'shares': [3.34, 12.34],
+                },
+            ])
+
         # Date after transactions in foreign currency
         self.assertEqual(
             queries.networth.networth(

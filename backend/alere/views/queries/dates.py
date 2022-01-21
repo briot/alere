@@ -191,8 +191,8 @@ class DateValues(DateRange):
 
         if dates:
             super().__init__(
-                max(d for d in dates if d),
                 min(d for d in dates if d),
+                max(d for d in dates if d),
             )
         else:
             super().__init__(mindate, maxdate)
@@ -209,3 +209,6 @@ class DateValues(DateRange):
             if d is not None
         )
         return f"{CTE_DATES} (idx, date) AS (VALUES {d})"
+
+    def __str__(self) -> str:
+        return str(self.__dates)

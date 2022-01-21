@@ -45,7 +45,6 @@ def networth(
         scenario=scenario,
         max_scheduled_occurrences=max_scheduled_occurrences,
     )
-
     query = f"""
        WITH RECURSIVE
           {list_splits},
