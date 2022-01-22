@@ -4,7 +4,7 @@ from django.views.generic import View  # type: ignore
 import json
 import math
 from typing import Optional, List, Any, Union, Dict
-from .utils import convert_time
+from .utils import convert_time, convert_date
 
 JSON = Union[str, int, Dict, List]
 
@@ -88,6 +88,14 @@ class JSONView(View, ParamDecoder):
             default: str = None,
             ) -> Optional[datetime.datetime]:
         return convert_time(params.get(name, default))
+
+    def as_date(
+            self,
+            params: QueryDict,
+            name: str,
+            default: str = None,
+            ) -> Optional[datetime.date]:
+        return convert_date(params.get(name, default))
 
     def as_time_list(
             self,

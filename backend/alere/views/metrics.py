@@ -1,115 +1,122 @@
 from django.db.models import Sum, Q     # type: ignore
+import django.db    # type: ignore
 from .json import JSONView
 import alere
 import math
+import alere.models
 from alere.models import AccountKindCategory
+from alere.views.queries.dates import DateValues, DateRange
+from alere.views.queries.networth import networth, Per_Account
+from alere.views.queries.splits import splits_with_values
+from typing import List, Dict, Callable
+
+
+def compute_networth(
+        all_networth: List[Per_Account],
+        accounts: Dict[int, alere.models.Accounts],
+        filter: Callable[[alere.models.Accounts], bool],
+        idx: int,
+        ) -> float:
+
+    accs = [
+        nw
+        for nw in all_networth
+        if filter(accounts[nw['accountId']])
+        and nw['shares'][idx] is not None
+        and nw['price'][idx] is not None
+    ]
+
+    if accs:
+        return sum(nw['shares'][idx] * nw['price'][idx] for nw in accs)
+    else:
+        return 0
 
 
 class MetricsView(JSONView):
 
     def get_json(self, params):
-        maxdate = self.as_time(params, 'maxdate')
-        mindate = self.as_time(params, 'mindate')
+        maxdate = self.as_date(params, 'maxdate')
+        mindate = self.as_date(params, 'mindate')
         currency = self.as_commodity_id(params, 'currency')
 
         include_scheduled = False
         scenario_id = alere.models.Scenarios.NO_SCENARIO
 
-        over_period = alere.models.Splits_With_Value.objects \
-            .filter(post_date__gte=mindate,
-                    post_date__lte=maxdate,
-                    value_commodity=currency) \
-            .filter(
-                Q(transaction__scenario=alere.models.Scenarios.NO_SCENARIO)
-                | Q(transaction__scenario=scenario_id))
+        all_networth = networth(
+            dates=DateValues(dates=[mindate, maxdate]),
+            currency=currency,
+            scenario=scenario_id,
+            max_scheduled_occurrences=0,
+        )
+        over_period = splits_with_values(
+            dates=DateRange(start=mindate, end=maxdate),
+            currency=currency,
+            scenario=scenario_id,
+            max_scheduled_occurrences=0,
+        )
+        accounts = {
+            a.id: a
+            for a in alere.models.Accounts.objects.select_related('kind')
+        }
 
-        if not include_scheduled:
-            over_period = over_period.filter(transaction__scheduled=None)
-
-        at_start = alere.models.Balances_Currency.objects \
-            .filter(mindate__lte=mindate,
-                    maxdate__gt=mindate,
-                    currency_id=currency,
-                    scenario_id=scenario_id,
-                    include_scheduled=include_scheduled)
-
-        at_end = alere.models.Balances_Currency.objects \
-            .filter(mindate__lte=maxdate,
-                    maxdate__gt=maxdate,
-                    currency_id=currency,
-                    scenario_id=scenario_id,
-                    include_scheduled=include_scheduled)
-
-        income = -(
-            over_period
-            .filter(
-                account__kind__category=AccountKindCategory.INCOME,
-                account__kind__is_unrealized=False,
-            ).aggregate(value=Sum('value'))['value']
-            or 0)
-
-        passive_income = -(
-            over_period
-            .filter(account__kind__is_passive_income=True)
-            .aggregate(value=Sum('value'))['value']
-            or 0)
-
-        work_income = -(
-            over_period
-            .filter(account__kind__is_work_income=True)
-            .aggregate(value=Sum('value'))['value']
-            or 0)
-
-        expense = (
-            over_period
-            .filter(
-                account__kind__category=AccountKindCategory.EXPENSE
-            )
-            .aggregate(value=Sum('value'))['value']
-            or 0)
-
-        other_taxes = (
-            over_period
-            .filter(account__kind__is_misc_tax=True)
-            .aggregate(value=Sum('value'))['value']
-            or 0)
-
-        income_taxes = (
-            over_period
-            .filter(account__kind__is_income_tax=True)
-            .aggregate(value=Sum('value'))['value']
-            or 0)
-
-        networth = (
-            at_end
-            .filter(account__kind__is_networth=True)
-            .aggregate(value=Sum('balance'))['value']
-            or 0)
-
-        networth_start = (
-            at_start
-            .filter(account__kind__is_networth=True)
-            .aggregate(value=Sum('balance'))['value']
-            or 0)
-
-        liquid_assets = (
-            at_end
-            .filter(
-                account__kind__category=AccountKindCategory.EQUITY,
-                account__kind__is_networth=True,
-            )
-            .aggregate(value=Sum('balance'))['value']
-            or 0)
-
-        liquid_assets_at_start = (
-            at_start
-            .filter(
-                account__kind__category=AccountKindCategory.EQUITY,
-                account__kind__is_networth=True,
-            )
-            .aggregate(value=Sum('balance'))['value']
-            or 0)
-
+        networth_start = compute_networth(
+            all_networth,
+            accounts,
+            lambda acc: acc.kind.is_networth,
+            0)
+        networth_end = compute_networth(
+            all_networth,
+            accounts,
+            lambda acc: acc.kind.is_networth,
+            1)
+        liquid_assets_at_start = compute_networth(
+            all_networth,
+            accounts,
+            lambda acc: (
+                acc.kind.category == AccountKindCategory.EQUITY
+                and acc.kind.is_networth
+            ),
+            0)
+        liquid_assets = compute_networth(
+            all_networth,
+            accounts,
+            lambda acc: (
+                acc.kind.category == AccountKindCategory.EQUITY
+                and acc.kind.is_networth
+            ),
+            1)
+        income = -sum(
+            value
+            for account_id, value in over_period.items()
+            if accounts[account_id].kind.category == AccountKindCategory.INCOME
+            and not accounts[account_id].kind.is_unrealized
+        )
+        passive_income = -sum(
+            value
+            for account_id, value in over_period.items()
+            if accounts[account_id].kind.is_passive_income
+        )
+        work_income = -sum(
+            value
+            for account_id, value in over_period.items()
+            if accounts[account_id].kind.is_work_income
+        )
+        expense = sum(
+            value
+            for account_id, value in over_period.items()
+            if accounts[account_id].kind.category ==
+                AccountKindCategory.EXPENSE
+        )
+        other_taxes = sum(
+            value
+            for account_id, value in over_period.items()
+            if accounts[account_id].kind.is_misc_tax
+        )
+        income_taxes = sum(
+            value
+            for account_id, value in over_period.items()
+            if accounts[account_id].kind.is_income_tax
+        )
         return {
             "income": income,
             "passive_income": passive_income,
@@ -117,7 +124,7 @@ class MetricsView(JSONView):
             "expenses": expense,
             "income_taxes": income_taxes,
             "other_taxes": other_taxes,
-            "networth": networth,
+            "networth": networth_end,
             "networth_start": networth_start,
             "liquid_assets": liquid_assets,
             "liquid_assets_at_start": liquid_assets_at_start,
