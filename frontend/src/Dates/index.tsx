@@ -224,14 +224,23 @@ export const parseRange = (s: string | undefined): DateRange|undefined =>
 export const rangeToHttp = (
    name: DateRange|undefined,
    relativeTo?: Date|undefined,
+   roundToMonth?: boolean,
 ): string => {
    if (!name) {
       return '';
    }
    const r = rangeToDate(name);
-   const min = dateToString(r[0], relativeTo);
-   const max = dateToString(r[1], relativeTo);
-   return `mindate=${min}&maxdate=${max}`;
+   const exact_min = dateToDate(r[0], relativeTo);
+   const min = roundToMonth
+       ? startOfMonth(0, exact_min)
+       : exact_min;
+
+   const exact_max = dateToDate(r[1], relativeTo);
+   const max = roundToMonth
+       ? endOfMonth(0, exact_max)
+       : exact_max;
+
+   return `mindate=${formatDate(min)}&maxdate=${formatDate(max)}`;
 }
 
 interface RangeDisplay {

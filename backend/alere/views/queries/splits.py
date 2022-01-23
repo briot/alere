@@ -25,14 +25,11 @@ def splits_with_values(
     query = f"""
        WITH RECURSIVE {cte_splits},
           {queries.cte_splits_with_values()}
-       SELECT s.account_id, s.value
+       SELECT s.account_id, SUM(s.value)
           FROM {queries.CTE_SPLITS_WITH_VALUE} s
        WHERE s.value_commodity_id = {currency}
+       GROUP BY s.account_id
     """
-
-    result: Per_Account_Splits = {}
     with django.db.connection.cursor() as cur:
         cur.execute(query)
-        for account_id, val in cur:
-            result[account_id] = result.get(account_id, 0.0) + val
-    return result
+        return {account_id: val for account_id, val in cur}

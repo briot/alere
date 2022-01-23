@@ -305,32 +305,6 @@ class Migration(migrations.Migration):
            FROM alr_raw_prices_with_turnkey p
         ;
 
-        ------------------
-        --  Returns all splits with the associated value, scaled
-        --  as needed.
-        --  This includes splits from scheduled transactions, which might have
-        --  to be ignored later.
-        ------------------
-
-        DROP VIEW IF EXISTS alr_splits_with_value;
-        CREATE VIEW alr_splits_with_value AS
-            SELECT
-               row_number() OVER () as id,   --  for django's sake
-               alr_splits.*,
-               CAST(alr_splits.scaled_value AS FLOAT)
-                  / alr_commodities.price_scale
-                  AS value,
-               CAST(alr_splits.scaled_value
-                    * alr_accounts.commodity_scu AS FLOAT)
-                  / (alr_splits.scaled_qty * alr_commodities.price_scale)
-                  AS computed_price
-            FROM
-               alr_splits
-               JOIN alr_accounts ON (alr_splits.account_id=alr_accounts.id)
-               JOIN alr_commodities
-                  ON (alr_splits.value_commodity_id=alr_commodities.id)
-        ;
-
         --------------------
         --  For all accounts, compute the total amount invested (i.e. money
         --  transfered from other user accounts) and realized gains (i.e.

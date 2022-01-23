@@ -14,19 +14,20 @@ import './Mean.scss';
 
 interface Point {
    date: string;
-   value_expenses?: number;
-   average_expenses?: number;
+   value_expenses: number;
+   average_expenses: number;
 
-   value_realized?: number;
-   average_realized?: number;
+   value_realized: number;
+   average_realized: number;
 
-   value_networth_delta?: number;
-   average_networth_delta?: number;
+   value_networth_delta: number; // how much the networth changed that month
+   average_networth_delta: number;
 
-   average_income?: number; // computed on the client
-   value_unrealized?: number; // computed on the client
-   value_exp?: number;        // computed on the client
-   avg_exp?: number;          // computed on the client
+   value_unrealized?: number;    // computed on client
+   average_unrealized?: number;  // computed on client
+   average_income?: number;
+   value_exp?: number;          // computed on client
+   avg_exp?: number;            // computed on client
 }
 
 const useMeanHistory = (
@@ -37,8 +38,13 @@ const useMeanHistory = (
    negateExpenses: boolean|undefined,
    currencyId: CommodityId,
 ) => {
+   // Round the dates so that we always start and end on month boundaries.
+   // Otherwise, the graph will only show a subset of all the splits for the
+   // start and end bars, which is confusing for users.
+   const dates = rangeToHttp(range, undefined, true);
+
    const { data } = useFetch<Point[], Point[]>({
-      url: `/api/mean?${rangeToHttp(range)}&prior=${prior}&after=${after}`
+      url: `/api/mean?${dates}&prior=${prior}&after=${after}`
          + `&unrealized=${unrealized}&currency=${currencyId}`,
       parse: (data: Point[]) => {
          data.forEach(p => {
@@ -106,7 +112,7 @@ const CustomTooltip = (
                   {
                      p.props.showIncome &&
                      <tr>
-                        <td>Monthly</td>
+                        <td>Monthly (realized)</td>
                         <td>
                            <Numeric
                               amount={d.value_realized}
@@ -116,7 +122,7 @@ const CustomTooltip = (
                      </tr>
                   }
                   {
-                     p.props.showUnrealized &&
+                     p.props.showUnrealized && p.props.showIncome &&
                      <tr>
                         <td>Stocks, real-estate,.. (unrealized)</td>
                         <td>

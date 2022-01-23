@@ -54,12 +54,12 @@ class PlotTestCase(BaseTest):
             [
                 {
                     'average_expenses': -10.0,
-                    'average_networth_delta': 0,
                     'average_realized': 1334.0,
+                    'average_networth_delta': 0.0,
                     'date': '2020-11',
                     'value_expenses': -10.0,
-                    'value_networth_delta': 0,
                     'value_realized': 1334.0,
+                    'value_networth_delta': 0.0,
                 }
             ],
             view.get_json(req.GET),

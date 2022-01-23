@@ -2,7 +2,7 @@ from .json import JSONView
 import alere
 import alere.views.queries as queries
 from alere.views.queries.dates import Dates
-from typing import Any
+from typing import Any, Dict, Tuple
 
 
 class MeanView(JSONView):
@@ -21,35 +21,48 @@ class MeanView(JSONView):
             scenario=scenario,
         )
 
-        result = {
-            month: {
-                "date": month,
-                "value_expenses": -(exp or 0),
-                "average_expenses": -(exp_avg or 0),
-                "value_realized": -(income or 0),
-                "average_realized": -(income_avg or 0),
-            }
-            for (month, income, income_avg, exp,
-                    exp_avg) in queries.monthly_cashflow(
+        # The "unrealized" part must be computed from variations in the
+        # networth since the variation in prices, for instance, are not
+        # recorded as explicit transaction.
+
+        # month => (delta, average)
+        unrealized: Dict[str, Tuple[float, float]] = {}
+
+        if self.as_bool(params, "unrealized"):
+            for date, diff, average, value in queries.networth_history(
                 dates=dates,
                 currency=self.as_commodity_id(params, 'currency'),
                 scenario=scenario,
                 max_scheduled_occurrences=max_scheduled_occurrences,
                 prior=int(params.get('prior', 6)),
                 after=int(params.get('after', 6)),
-            )
-        }
+            ):
+                month = date[:7]
+                unrealized[month] = (diff or 0, average or 0)
 
-        if self.as_bool(params, 'unrealized'):
-            for date, diff, average, value in queries.networth_history(
+        return [
+            {
+                "date": month,
+                "value_expenses": -(exp or 0),
+                "average_expenses": -(exp_avg or 0),
+                "value_realized": -(realized_income or 0),
+                "average_realized": -(realized_income_avg or 0),
+                "value_networth_delta": (unrealized.get(month, (0, 0))[0]),
+                "average_networth_delta": (unrealized.get(month, (0, 0))[1]),
+                # "value_unrealized": -(unrealized_income or 0),
+                # "average_unrealized": -(unrealized_income_avg or 0),
+            }
+            for (
+                    month,
+                    realized_income, realized_income_avg,
+                    unrealized_income, unrealized_income_avg,
+                    exp, exp_avg,
+                ) in queries.monthly_cashflow(
                     dates=dates,
-                    scenario=scenario,
                     currency=self.as_commodity_id(params, 'currency'),
+                    scenario=scenario,
                     max_scheduled_occurrences=max_scheduled_occurrences,
-                    ):
-                index = date[:7]  # only yyyy-mm
-                if index in result:
-                    result[index]["value_networth_delta"] = diff or 0
-                    result[index]["average_networth_delta"] = average or 0
-
-        return list(result.values())
+                    prior=int(params.get('prior', 6)),
+                    after=int(params.get('after', 6)),
+               )
+        ]

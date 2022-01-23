@@ -4,7 +4,11 @@ import django.db   # type: ignore
 from typing import Union, Literal, TypeVar, Type, Sequence, Optional
 import alere.models
 import alere.views.queries as queries
+import logging
 from ..utils import convert_time
+
+
+me = logging.getLogger(__name__)
 
 
 GroupBy = Literal['months', 'days', 'years']

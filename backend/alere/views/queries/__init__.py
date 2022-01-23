@@ -290,69 +290,67 @@ def monthly_cashflow(
         if 0, ignore all scheduled transactions.
         if 1, only look at the next occurrence of them.
     """
+    currency_id = get_currency_id(currency)
     adjusted = dates.extend_range(
         prior=prior,
         after=after,
     )
-    currency_id = get_currency_id(currency)
-    scenario_id = get_scenario_id(scenario)
-    max_occurrences = get_max_occurrences(max_scheduled_occurrences)
+    splits = cte_list_splits(
+        dates=dates,
+        scenario=scenario,
+        max_scheduled_occurrences=max_scheduled_occurrences,
+    )
 
     query = f"""
-        WITH RECURSIVE {adjusted.cte()}
+        WITH RECURSIVE {adjusted.cte()},
+            {splits},
+            {cte_splits_with_values()}
         SELECT
            tmp.month,
-           inc_total,
-           AVG(inc_total) OVER
+           tmp.realized_inc_total,
+           AVG(tmp.realized_inc_total) OVER
                (ORDER BY tmp.month
                 ROWS BETWEEN {prior:d} PRECEDING
                 AND {after:d} FOLLOWING) AS inc_average,
-           exp_total,
-           AVG(exp_total) OVER
+           tmp.unrealized_inc_total,
+           AVG(tmp.unrealized_inc_total) OVER
+               (ORDER BY tmp.month
+                ROWS BETWEEN {prior:d} PRECEDING
+                AND {after:d} FOLLOWING) AS inc_average,
+           tmp.exp_total,
+           AVG(tmp.exp_total) OVER
                (ORDER BY tmp.month
                 ROWS BETWEEN {prior:d} PRECEDING
                 AND {after:d} FOLLOWING) AS exp_average
         FROM
            (
-              --  Sum of splits for a given months, organized per
-              --  category
+              --  Sum of splits for a given months, organized per category
               SELECT
-                 strftime("%Y-%m", {CTE_DATES}.date) as month,
+                 strftime("%Y-%m", s.post_date) as month,
                  SUM(value) FILTER (WHERE
                     k.category = {alere.models.AccountKindCategory.INCOME}
-                 ) as inc_total,
+                    AND NOT k.is_unrealized
+                 ) as realized_inc_total,
+                 SUM(value) FILTER (WHERE
+                    k.category = {alere.models.AccountKindCategory.INCOME}
+                    AND k.is_unrealized
+                 ) as unrealized_inc_total,
                  SUM(value) FILTER (WHERE
                     k.category = {alere.models.AccountKindCategory.EXPENSE}
                  ) as exp_total
-              FROM {CTE_DATES}
-                 JOIN alr_splits_with_value
-                    ON (strftime("%Y-%m", post_date) =
-                        strftime("%Y-%m", {CTE_DATES}.date))
-
-                 --  ignore scheduled transactions, which did not actually
-                 --  occur.
-                 JOIN alr_transactions
-                    ON (alr_splits_with_value.transaction_id =
-                        alr_transactions.id
-                        AND (alr_transactions.scheduled IS NULL
-                             OR {max_occurrences > 0})
-                        AND (alr_transactions.scenario_id =
-                               {alere.models.Scenarios.NO_SCENARIO}
-                             OR alr_transactions.scenario_id =
-                               {scenario_id}))
-
-                 JOIN alr_accounts
-                    ON (alr_splits_with_value.account_id=alr_accounts.id)
-                 JOIN alr_account_kinds k
-                    ON (alr_accounts.kind_id=k.id)
-              WHERE alr_splits_with_value.value_commodity_id={currency_id}
-              GROUP BY {CTE_DATES}.date
-           ) tmp
+              FROM
+                 {CTE_SPLITS_WITH_VALUE} s
+                 JOIN alr_accounts a ON (s.account_id=a.id)
+                 JOIN alr_account_kinds k ON (a.kind_id=k.id)
+              WHERE s.value_commodity_id={currency_id}
+              GROUP BY month
+           ) tmp,
+           {CTE_DATES}
+        WHERE tmp.month = strftime("%Y-%m", {CTE_DATES}.date);
     """
     with django.db.connection.cursor() as cur:
         cur.execute(query)
-        for month, inc, inc_avg, expenses, expenses_avg in cur.fetchall():
-            yield month, inc, inc_avg, expenses, expenses_avg
+        yield from cur
 
 
 def cte_transactions_for_accounts(
