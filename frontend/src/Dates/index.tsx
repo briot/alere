@@ -99,8 +99,10 @@ export type RelativeDate = 'today' | 'yesterday' | 'tomorrow'
    | '1 year ago' | '2 years ago' | '3 years ago' | '4 years ago'
    | '5 years ago' | 'start of last year' | 'start of year'
    | 'start of 2 years ago' | 'start of 3 years ago'
+   | 'start of 4 years ago' | 'start of 5 years ago'
    | 'end of year' | 'end of last year' | 'end of 2 years ago'
-   | 'end of 3 years ago' | 'epoch' | 'armageddon';
+   | 'end of 3 years ago' | 'end of 4 years ago' | 'end of 5 years ago'
+   | 'epoch' | 'armageddon';
 
 const relativeDates: Record<RelativeDate, RelativeDateType> = {
    "today":                 {group: 0, toDate: (r: Ref) => addDay(0, r)},
@@ -137,6 +139,12 @@ const relativeDates: Record<RelativeDate, RelativeDateType> = {
    "start of 3 years ago":
       {group: 5, text: "start of year (3 years ago)",
          toDate: (r: Ref) => startOfYear(-3, r)},
+   "start of 4 years ago":
+      {group: 5, text: "start of year (4 yeears ago)",
+         toDate: (r: Ref) => startOfYear(-4, r)},
+   "start of 5 years ago":
+      {group: 5, text: "start of year (5 yeears ago)",
+         toDate: (r: Ref) => startOfYear(-5, r)},
 
    "end of year":           {group: 6, toDate: (r: Ref) => endOfYear(0, r)},
    "end of last year":      {group: 6, toDate: (r: Ref) => endOfYear(-1, r)},
@@ -146,6 +154,12 @@ const relativeDates: Record<RelativeDate, RelativeDateType> = {
    "end of 3 years ago":
       {group: 6, text: "end of year (3 years ago)",
        toDate: (r: Ref) => endOfYear(-3, r)},
+   "end of 4 years ago":
+      {group: 6, text: "end of year (4 years ago)",
+       toDate: (r: Ref) => endOfYear(-4, r)},
+   "end of 5 years ago":
+      {group: 6, text: "end of year (5 years ago)",
+       toDate: (r: Ref) => endOfYear(-4, r)},
 
    "epoch":
       {group: 7, text: "earliest date", toDate: () => new Date(1970, 0, 1)},
@@ -162,7 +176,8 @@ interface DateRangeType {
 export type DateRange = '1 day' | '1 month' | '2 months' | '3 months'
    | 'current month' | 'month so far' | 'last month' | '1 year' | '2 years'
    | '3 years' | '4 years' | '5 years' | 'current year so far' | 'current year'
-   | 'last year' | '2 years ago' | '3 years ago' | 'all' | 'upcoming';
+   | 'last year' | '2 years ago' | '3 years ago' | '4 years ago'
+   | '5 years ago' | 'all' | 'upcoming';
 
 const dateRanges: Record<DateRange, DateRangeType> = {
    '1 day':    { range: ['yesterday', 'today'],                      group: 0},
@@ -185,6 +200,10 @@ const dateRanges: Record<DateRange, DateRangeType> = {
       range: ['start of 2 years ago', 'end of 2 years ago'],         group: 3},
    '3 years ago': {
       range: ['start of 3 years ago', 'end of 3 years ago'],         group: 3},
+   '4 years ago': {
+      range: ['start of 4 years ago', 'end of 4 years ago'],         group: 3},
+   '5 years ago': {
+      range: ['start of 5 years ago', 'end of 5 years ago'],         group: 3},
    'all': { range: ['epoch', 'armageddon'], text: "All dates",       group: 4},
    'upcoming': {
       range: ['tomorrow', 'armageddon'],
