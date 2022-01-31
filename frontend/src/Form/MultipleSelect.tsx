@@ -67,7 +67,7 @@ const EditItem = <T, > (p: EditItemProps<T>) => {
          e.preventDefault();
          const draggedIdx = parseInt(
             e.dataTransfer.getData("alere/multiselect"), 10);
-         onReorder?.(p.idx, draggedIdx  /* ref */);
+         onReorder?.(draggedIdx, p.idx  /* ref */);
          setTargetPos('');
       },
       [p.idx, onReorder]
