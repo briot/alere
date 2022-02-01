@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Legend, PieChart, PieLabelRenderProps, Sector, SectorProps,
+import { Legend, PieChart, Sector, SectorProps,
          XAxis, YAxis, BarChart, Bar, CartesianGrid, LabelList, Label,
          Pie, Cell, Tooltip, TooltipProps, LabelProps } from 'recharts';
 import { DateRange } from '@/Dates';
@@ -14,31 +14,7 @@ import './IncomeExpense.scss';
 
 const MIN_BAR_HEIGHT = 10;
 const ACTIVE_SECTOR_RADIUS = 4;  // extra radius for active sector
-const RADIAN = Math.PI / 180;
 const MAX_GRADIENT_STEPS = 20;
-
-const renderCustomizedLabel = (p: PieLabelRenderProps) => {
-   const inner = p.innerRadius as number;
-   const outer = p.outerRadius as number;
-   const mid = p.midAngle || 0;
-   const radius = inner + (outer - inner) * 0.5;
-   const cx = Number(p.cx) || 0;
-   const cy = Number(p.cy) || 0
-   const x = cx + radius * Math.cos(-mid * RADIAN) || 0;
-   const y = cy + radius * Math.sin(-mid * RADIAN) || 0;
-
-   return (
-      <text
-         x={x}
-         y={y}
-         fill="black"
-         textAnchor={x > cx ? 'start' : 'end'}
-         dominantBaseline="central"
-      >
-         {`${((p.percent ?? 0) * 100).toFixed(0)}%`}
-      </text>
-  );
-};
 
 const CustomTooltip = (
    p: TooltipProps<number, string>
@@ -72,6 +48,10 @@ const CustomTooltip = (
      ) : null;
 };
 
+/**
+ * In the pie chart, render the sector currently underneath the mouse cursor
+ * in a slightly different size
+ */
 const renderActiveShape = (p: SectorProps) => {
   return (
      <Sector
@@ -299,8 +279,16 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
                         />
                      </Bar>
                   </BarChart>
+                  <div className="totalBars">
+                     Total:&nbsp;
+                     <Numeric
+                        className="total"
+                        amount={normalized?.total}
+                        commodity={prefs.currencyId}
+                        scale={p.roundValues ? 0 : undefined}
+                     />
+                  </div>
                </div>
-
             ) :
                ({width, height}) => (
                <PieChart
@@ -325,7 +313,6 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
                   activeShape={renderActiveShape}
                   isAnimationActive={false}
                   labelLine={false}
-                  label={false && renderCustomizedLabel}
                   outerRadius={`${100 - ACTIVE_SECTOR_RADIUS}%`}
                   innerRadius="70%"
                   fill="#8884d8"
@@ -352,18 +339,6 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
             )
          }
          </AutoSizer>
-         {
-            p.showBars &&
-            <div className="totalBars">
-               Total:&nbsp;
-               <Numeric
-                  className="total"
-                  amount={normalized?.total}
-                  commodity={prefs.currencyId}
-                  scale={p.roundValues ? 0 : undefined}
-               />
-            </div>
-         }
       </div>
    );
 }
