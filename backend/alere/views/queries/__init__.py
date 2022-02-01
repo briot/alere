@@ -241,7 +241,10 @@ def networth_history(
         max_scheduled_occurrences=max_scheduled_occurrences,
     )
     list_splits = cte_list_splits(
-        dates=adjusted,
+        dates=DateRange(
+            start=None,  # from the start, to get balances right
+            end=adjusted.end,
+        ),
         max_scheduled_occurrences=max_scheduled_occurrences,
         scenario=scenario,
     )
