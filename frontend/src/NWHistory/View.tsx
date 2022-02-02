@@ -214,6 +214,7 @@ const NetworthHistory: React.FC<NetworthHistoryProps> = p => {
                         forceSign={true}
                         showArrow={true}
                         tooltip={ago1yearTooltip}
+                        scale={0}
                      />
                   </span>
                }
@@ -228,6 +229,7 @@ const NetworthHistory: React.FC<NetworthHistoryProps> = p => {
                         forceSign={true}
                         showArrow={true}
                         tooltip={ago3monthsTooltip}
+                        scale={0}
                      />
                   </span>
                }
