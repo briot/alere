@@ -509,7 +509,7 @@ class Splits(AlereModel):
 
     scaled_value = models.IntegerField()
     value_commodity = models.ForeignKey(Commodities, on_delete=models.CASCADE)
-    # The amount of the transaction as original made.
+    # The amount of the transaction as made originally.
     # Scaled by  value_commodity.price_scale
     # This is potentially given in another currency or commodity.
     # The goal is to support multiple currencies transactions.

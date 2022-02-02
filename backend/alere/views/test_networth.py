@@ -1,12 +1,10 @@
 import alere
-import datetime
 import alere.views.queries as queries
 import alere.views.queries.ledger
 import alere.views.queries.networth
 from alere.views.queries.dates import DateRange, DateValues
 from .base_test import BaseTest, Split
 from .utils import convert_date
-from typing import List, Tuple
 
 
 class NetworthTestCase(BaseTest):
@@ -97,9 +95,10 @@ class NetworthTestCase(BaseTest):
                 scenario=alere.models.Scenarios.NO_SCENARIO,
                 max_scheduled_occurrences=0),
             [
-                {'accountId': self.checking.id,
-                 'price': [1.0],
-                 'shares': [3.34],
+                {
+                    'accountId': self.checking.id,
+                    'price': [1.0],
+                    'shares': [3.34],
                 },
             ])
 
@@ -146,9 +145,10 @@ class NetworthTestCase(BaseTest):
                 scenario=alere.models.Scenarios.NO_SCENARIO,
                 max_scheduled_occurrences=0),
             [
-                {'accountId': self.checking.id,
-                 'price': [1.0],
-                 'shares': [1.54],
+                {
+                    'accountId': self.checking.id,
+                    'price': [1.0],
+                    'shares': [1.54],
                 },
             ])
 
@@ -161,9 +161,10 @@ class NetworthTestCase(BaseTest):
                 scenario=self.scenario_1.id,
             ),
             [
-                {'accountId': self.checking.id,
-                 'price':  [1.0],
-                 'shares': [1.54 + 2020],
+                {
+                    'accountId': self.checking.id,
+                    'price':  [1.0],
+                    'shares': [1.54 + 2020],
                 },
             ])
 
@@ -176,9 +177,10 @@ class NetworthTestCase(BaseTest):
                 max_scheduled_occurrences=2000,
             ),
             [
-                {'accountId': self.checking.id,
-                 'price':  [1.0],
-                 'shares': [1.54 + 1010 * 25],
+                {
+                    'accountId': self.checking.id,
+                    'price':  [1.0],
+                    'shares': [1.54 + 1010 * 25],
                 },   # 25 months elapsed
             ])
 
