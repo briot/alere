@@ -3,13 +3,9 @@ Some queries that cannot be created as SQL views
 """
 
 import alere.models
-import datetime
 import django.db    # type: ignore
 import logging
-from typing import (
-    List, Union, Literal, Optional, Generator, Tuple, Iterable
-)
-from ..json import JSON
+from typing import List, Union, Literal, Optional
 from .dates import Dates, DateRange, CTE_DATES
 
 
@@ -71,6 +67,8 @@ def cte_list_splits(
            t.timestamp AS initial_timestamp,
            t.scheduled,
            t.scenario_id,
+           t.check_number,
+           t.memo,
            s.account_id,
            s.scaled_qty,
            s.scaled_value,
@@ -100,6 +98,8 @@ def cte_list_splits(
            t.timestamp AS initial_timestamp,
            t.scheduled,
            t.scenario_id,
+           t.check_number,
+           t.memo,
            s.account_id,
            s.scaled_qty,
            s.scaled_value,
@@ -122,6 +122,8 @@ def cte_list_splits(
            s.initial_timestamp,
            s.scheduled,
            s.scenario_id,
+           s.check_number,
+           s.memo,
            s.account_id,
            s.scaled_qty,
            s.scaled_value,
@@ -188,9 +190,6 @@ def cte_query_networth(
         if 1, only look at the next occurrence of them.
     """
     currency_id = get_currency_id(currency)
-    scenario_id = get_scenario_id(scenario)
-    max_occurrences = get_max_occurrences(max_scheduled_occurrences)
-
     return f"""
        {CTE_QUERY_NETWORTH} AS (
        SELECT

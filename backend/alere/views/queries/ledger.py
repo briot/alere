@@ -130,8 +130,8 @@ def ledger(
              s.transaction_id,
              s.occurrence,
              s.timestamp,
-             t.memo,
-             t.check_number,
+             s.memo,
+             s.check_number,
              s.scaled_qty,
              a.commodity_scu,
              s.computed_price,
@@ -149,7 +149,6 @@ def ledger(
                 AS scaled_qty_balance
           FROM {queries.CTE_SPLITS_WITH_VALUE} s
              {filter_account_from}
-             JOIN alr_transactions t ON (s.transaction_id = t.id)
              JOIN alr_accounts a ON (s.account_id = a.id)
              LEFT JOIN alr_payees p ON (s.payee_id = p.id)
        )
