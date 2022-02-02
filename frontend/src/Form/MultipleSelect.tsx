@@ -37,7 +37,7 @@ const EditItem = <T, > (p: EditItemProps<T>) => {
       [p.idx]
    );
    const onDragEnd = React.useCallback(
-      (e: React.DragEvent<unknown>) => {
+      (_: React.DragEvent<unknown>) => {
          setInDrag(false);
          setTargetPos('');
       },

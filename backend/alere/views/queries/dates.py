@@ -17,6 +17,8 @@ MAX_DATES = 366
 # A limit that controls how many dates we return. This is used to limit the
 # scope of queries.
 
+# The range of dates that makes sense, as an artificial limit when looking
+# up recurring transactions.
 mindate = datetime.datetime(1980, 1, 1, tzinfo=datetime.timezone.utc)
 maxdate = (
     datetime.datetime.now(tz=datetime.timezone.utc)

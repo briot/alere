@@ -130,7 +130,8 @@ def cte_list_splits(
            s.payee_id,
            alr_next_event(s.scheduled, s.initial_timestamp, s.post_date)
         FROM recurring_splits_and_transaction s
-        WHERE s.post_date IS NOT NULL AND s.post_date < '{dates.end_str}'
+        WHERE s.post_date IS NOT NULL
+          AND s.post_date <= '{dates.end_str}'
           AND s.occurrence < {max_occurrences}
     ), {CTE_SPLITS} AS (
        SELECT * FROM recurring_splits_and_transaction

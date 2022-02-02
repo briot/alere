@@ -1,34 +1,37 @@
 import alere.models
-import calendar
 import datetime
-from .means import MeanView
+from alere.models import Transactions
 from .base_test import BaseTest, Split
-from dateutil.relativedelta import relativedelta
-from django.test import RequestFactory    # type: ignore
-from typing import Union, Dict
-
-
-Transactions = alere.models.Transactions
-Future = alere.models.Future_Transactions
+from .queries.dates import DateRange
+from .queries.splits import splits_with_values
 
 
 class ScheduledTests(BaseTest):
 
     def _assert_future(self, expected):
         f = [
-            str(d[0])[:10]
-            for d in
-            Future.objects.values_list('nextdate')
-            [:len(expected)]
+            s.post_date.strftime("%Y-%m-%d")
+            for s in splits_with_values(
+                dates=DateRange(
+                    start=None,
+                    end=datetime.date(2200, 1, 1),
+                ),
+                currency=self.eur,
+                scenario=alere.models.Scenarios.NO_SCENARIO,
+                max_scheduled_occurrences=len(expected),
+                accounts=[self.checking.id],
+            )
         ]
         f = f + [None] * (len(expected) - len(f))   # complete
         self.assertListEqual(f, expected)
 
     def test_exact_day(self):
         self.create_transaction(
-            timestamp="2021-12-15",
+            splits=[
+                Split(self.checking, 1000, '2021-12-15'),
+            ],
             scheduled=(
-                "freq=MONTHLY;"  # once a month
+                "freq=MONTHLY;"        # at most once a month
                 "bymonthday=3;"        # on the third
                 "bymonth=1,2,3,5,6,7,8,9,10,11,12"
             ))
@@ -37,9 +40,11 @@ class ScheduledTests(BaseTest):
 
         Transactions.objects.all().delete()
         self.create_transaction(
-            timestamp="2021-12-15",
+            splits=[
+                Split(self.checking, 1000, '2021-12-15'),
+            ],
             scheduled=(
-                "freq=DAILY;"    # at most once a day
+                "freq=DAILY;"          # at most once a day
                 "bymonthday=3;"        # on the third of the month
                 "bymonth=1,2,3,5,6,7,8,9,10,11,12"
             ))
@@ -51,7 +56,9 @@ class ScheduledTests(BaseTest):
 
         Transactions.objects.all().delete()
         self.create_transaction(
-            timestamp="2021-12-30",
+            splits=[
+                Split(self.checking, 1000, '2021-12-30'),
+            ],
             scheduled=(
                 "freq=MONTHLY;"
                 "bymonthday=30;"    # invalid for February
@@ -62,7 +69,9 @@ class ScheduledTests(BaseTest):
 
         Transactions.objects.all().delete()
         self.create_transaction(
-            timestamp="2022-02-01",
+            splits=[
+                Split(self.checking, 1000, '2022-02-01'),
+            ],
             scheduled=(
                 "freq=MONTHLY;"
                 "bymonthday=30;"    # invalid for February
@@ -76,7 +85,9 @@ class ScheduledTests(BaseTest):
 
         Transactions.objects.all().delete()
         self.create_transaction(
-            timestamp="2022-02-01",
+            splits=[
+                Split(self.checking, 1000, '2022-02-01'),
+            ],
             scheduled=(
                 "freq=MONTHLY;"
                 "bymonthday=30;"    # invalid for February
@@ -89,7 +100,9 @@ class ScheduledTests(BaseTest):
 
         Transactions.objects.all().delete()
         self.create_transaction(
-            timestamp="2022-02-15",
+            splits=[
+                Split(self.checking, 1000, '2022-02-15'),
+            ],
             scheduled=(
                 "freq=MONTHLY;"
                 "bymonthday=3;"
@@ -99,7 +112,9 @@ class ScheduledTests(BaseTest):
 
         Transactions.objects.all().delete()
         self.create_transaction(
-            timestamp="2021-02-15",
+            splits=[
+                Split(self.checking, 1000, '2021-02-15'),
+            ],
             scheduled=(
                 "freq=MONTHLY;"
                 "bymonthday=3;"
@@ -109,18 +124,24 @@ class ScheduledTests(BaseTest):
 
         Transactions.objects.all().delete()
         self.create_transaction(
-            timestamp="2021-01-01",
+            splits=[
+                Split(self.checking, 1000, '2021-01-01'),
+            ],
             scheduled=(
                 "freq=MONTHLY;"
                 "bymonthday=29;"
                 "bymonth=2;"
                 "byday=MO"
             ))
-        self._assert_future(['2044-02-29', '2072-02-29', '2112-02-29'])
+
+        # last date would be 2112-02-29, too far in the future
+        self._assert_future(['2044-02-29', '2072-02-29', None])
 
         Transactions.objects.all().delete()
         self.create_transaction(
-            timestamp="2022-01-11",
+            splits=[
+                Split(self.checking, 1000, '2022-01-11'),
+            ],
             scheduled=(
                 "freq=MONTHLY;"
                 "bymonth=1,3,4,5,6,7,8,9,10,11,12;"
@@ -132,7 +153,9 @@ class ScheduledTests(BaseTest):
 
         Transactions.objects.all().delete()
         self.create_transaction(
-            timestamp="2022-01-11",
+            splits=[
+                Split(self.checking, 1000, '2022-01-11'),
+            ],
             scheduled=(   # last workday of month
                 "freq=MONTHLY;"
                 "bysetpos=-1;"
@@ -144,7 +167,9 @@ class ScheduledTests(BaseTest):
 
         Transactions.objects.all().delete()
         self.create_transaction(
-            timestamp="2022-01-11",
+            splits=[
+                Split(self.checking, 1000, '2022-01-11'),
+            ],
             scheduled=(
                 "freq=MONTHLY;"
                 "bysetpos=-2;"
@@ -156,7 +181,9 @@ class ScheduledTests(BaseTest):
 
         Transactions.objects.all().delete()
         self.create_transaction(
-            timestamp="2022-01-11",
+            splits=[
+                Split(self.checking, 1000, '2022-01-11'),
+            ],
             scheduled=(
                 "freq=MONTHLY;"
                 "bysetpos=-1;"
@@ -165,4 +192,3 @@ class ScheduledTests(BaseTest):
         self._assert_future([
             '2022-01-31', '2022-02-28', '2022-03-31',
             '2022-04-30', '2022-05-31', '2022-06-30', '2022-07-31'])
-

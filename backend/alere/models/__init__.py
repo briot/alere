@@ -614,16 +614,3 @@ class RoI(AlereModel):
 
     def __str__(self):
         return "RoI([%s,%s), roi=%s)" % (self.mindate, self.maxdate, self.roi)
-
-
-class Future_Transactions(AlereModel):
-    transaction_id = models.ForeignKey(
-        Transactions, on_delete=models.DO_NOTHING)
-    nextdate = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = "alr_future_transactions"
-
-    def __repr__(self):
-        return "Future(%s, %s)" % (self.name, self.nextdate)

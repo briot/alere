@@ -447,31 +447,6 @@ class Migration(migrations.Migration):
               AND p.mindate < b.maxdate
         ;
 
-        --------------------
-        --  Compute when scheduled transactions occur
-        --------------------
-
-        DROP VIEW IF EXISTS alr_future_transactions;
-        CREATE VIEW alr_future_transactions AS
-           WITH RECURSIVE nextEvents AS (
-              SELECT n.id, n.timestamp, n.scheduled,
-                 alr_next_event(n.scheduled, n.timestamp, n.last_occurrence) as nextdate
-              FROM alr_transactions n
-              WHERE n.scheduled IS NOT NULL
-
-              UNION
-              SELECT n.id, n.timestamp, n.scheduled,
-                 alr_next_event(n.scheduled, n.timestamp, nextdate)
-              FROM nextEvents n
-              WHERE n.nextdate IS NOT NULL
-           )
-           SELECT
-              row_number() OVER () as id,   --  for django's sake
-              id as transaction_id,
-              nextdate
-           FROM nextEvents
-           WHERE nextdate IS NOT NULL
-        ;
         """
         )
     ]

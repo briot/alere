@@ -1,4 +1,4 @@
-from alere.views.queries.splits import splits_with_values
+from alere.views.queries.splits import sum_splits_per_account
 from alere.views.queries.dates import DateRange
 from .json import JSONView
 import alere.models
@@ -18,7 +18,7 @@ class CategoryPlotView(JSONView):
         if include_income:
             categories.append(alere.models.AccountKindCategory.INCOME)
 
-        per_account = splits_with_values(
+        per_account = sum_splits_per_account(
             dates=DateRange(mindate, maxdate),
             currency=self.as_commodity_id(params, 'currency'),
             scenario=alere.models.Scenarios.NO_SCENARIO,

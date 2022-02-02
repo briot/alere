@@ -96,17 +96,18 @@ class BaseTest(TestCase, ParamDecoder):
 
         # scenarios
 
-        kls.no_scenario = alere.models.Scenarios.objects.get(id=0)
+        kls.no_scenario = alere.models.Scenarios.objects.get(
+            id=alere.models.Scenarios.NO_SCENARIO)
         kls.scenario_1 = alere.models.Scenarios.objects.create(
             name='Scenario 1'
         )
 
     def create_transaction(
             self,
-            splits: List[Split] = [],
+            splits: List[Split],
             timestamp: str = None,  # defaults to the first split's date
             scheduled: str = None,
-            scenario: alere.models.Scenarios = None,
+            scenario: alere.models.Scenarios = None,  # defaults to NO_SCENARIO
             ):
         t = alere.models.Transactions.objects.create(
             timestamp=convert_time(timestamp or splits[0].date),

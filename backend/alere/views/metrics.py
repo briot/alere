@@ -1,13 +1,10 @@
-from django.db.models import Sum, Q     # type: ignore
-import django.db    # type: ignore
 from .json import JSONView
 import alere
-import math
 import alere.models
 from alere.models import AccountKindCategory
 from alere.views.queries.dates import DateValues, DateRange
 from alere.views.queries.networth import networth, Per_Account
-from alere.views.queries.splits import splits_with_values
+from alere.views.queries.splits import sum_splits_per_account
 from typing import List, Dict, Callable
 
 
@@ -27,7 +24,9 @@ def compute_networth(
     ]
 
     if accs:
-        return sum(nw['shares'][idx] * nw['price'][idx] for nw in accs)
+        return sum(
+            (nw['shares'][idx] or 0) * (nw['price'][idx] or 0)
+            for nw in accs)
     else:
         return 0
 
@@ -39,7 +38,6 @@ class MetricsView(JSONView):
         mindate = self.as_date(params, 'mindate')
         currency = self.as_commodity_id(params, 'currency')
 
-        include_scheduled = False
         scenario_id = alere.models.Scenarios.NO_SCENARIO
 
         all_networth = networth(
@@ -48,7 +46,7 @@ class MetricsView(JSONView):
             scenario=scenario_id,
             max_scheduled_occurrences=0,
         )
-        over_period = splits_with_values(
+        over_period = sum_splits_per_account(
             dates=DateRange(start=mindate, end=maxdate),
             currency=currency,
             scenario=scenario_id,
@@ -105,7 +103,7 @@ class MetricsView(JSONView):
             value
             for account_id, value in over_period.items()
             if accounts[account_id].kind.category ==
-                AccountKindCategory.EXPENSE
+            AccountKindCategory.EXPENSE
         )
         other_taxes = sum(
             value
