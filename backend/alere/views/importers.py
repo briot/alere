@@ -1,6 +1,7 @@
 from ..importers.kmymoney import import_kmymoney
 from .json import JSONView
-import alere
+from .ofx import OFX_Exporter
+import alere.models
 import tempfile
 
 
@@ -14,4 +15,15 @@ class ImportKmymoney(JSONView):
                     tmp.write(chunk)
                 tmp.flush()
                 import_kmymoney(tmp.name)
+        return {"success": True}
+
+
+class ExportOFX(JSONView):
+
+    def get_json(self, params):
+        e = OFX_Exporter(
+            filename="export.ofx",
+            currency=alere.models.Commodities.objects.get(iso_code="EUR"),
+        )
+        e.export()
         return {"success": True}

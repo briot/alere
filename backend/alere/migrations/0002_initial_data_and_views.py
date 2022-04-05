@@ -443,7 +443,6 @@ class Migration(migrations.Migration):
               b.mindate < p.maxdate
               AND p.mindate < b.maxdate
         ;
-
         """
         )
     ]

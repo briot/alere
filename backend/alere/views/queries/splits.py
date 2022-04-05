@@ -1,6 +1,7 @@
 import alere.models
 import alere.views.queries as queries
 import datetime
+import decimal
 import django.db    # type: ignore
 from typing import Union, Optional, Dict, Iterable, List, NamedTuple
 from .dates import DateRange
@@ -11,9 +12,11 @@ Per_Account_Splits = Dict[int, float]  # account_id => sum of splits
 
 
 class Simple_Split(NamedTuple):
+    # When was the split posted to the account
     post_date: datetime.datetime
+
     account_id: int
-    value: float
+    value: decimal.Decimal
 
 
 def sum_splits_per_account(
@@ -53,6 +56,8 @@ def splits_with_values(
         ) -> List[Simple_Split]:
     """
     List all splits in the given time range, for a subset of the accounts.
+
+    ??? How is this different from ledger()
     """
     cte_splits = queries.cte_list_splits(
         dates=dates,
@@ -77,7 +82,7 @@ def splits_with_values(
             Simple_Split(
                 post_date,
                 int(account_id),
-                float(value),
+                decimal.Decimal(value),
             )
             for post_date, account_id, value in cur
         ]
