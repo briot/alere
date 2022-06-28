@@ -12,12 +12,11 @@ export interface FetchProps<T, RAW_T> {
 }
 
 const toQueryProps = <T, RAW_T> (p: FetchProps<T, RAW_T>) => ({
-   queryKey: p.key || p.url,
-   queryFn: async () => {
-      const controller = new AbortController();
+   queryKey: p.key ?? p.url,
+   queryFn: async ({ signal }: {signal?: AbortSignal}) => {
       const promise = window.fetch(
          p.url,
-         {...p.init, signal: controller.signal},
+         {...p.init, signal},
       ).then(r => {
          if (!r.ok) {
             throw new Error(`Failed to fetch ${p.url}`);
