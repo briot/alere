@@ -17,6 +17,8 @@ import { PrefProvider } from '@/services/usePrefs';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { TooltipProvider } from '@/Tooltip';
 
+import { invoke } from '@tauri-apps/api'
+
 import './App.scss';
 import "font-awesome/css/font-awesome.min.css";
 
@@ -27,6 +29,9 @@ const queryClient = new QueryClient({
      },
    },
 });
+
+const show_account_kinds = () =>
+   invoke('show_account_kinds').then(resp => window.console.log(resp));
 
 const Main: React.FC<{}> = () => {
    const location = useLocation();
@@ -50,6 +55,12 @@ const Main: React.FC<{}> = () => {
                      <OnlineUpdate />
                      <Settings />
                   </Header>
+                  <div>
+                     <button
+                         style={{width: 150, height: 100}}
+                         onClick={show_account_kinds}
+                     />
+                  </div>
                   <LeftSideBar />
                   {
                      !accounts.loaded

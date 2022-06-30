@@ -5,13 +5,17 @@ You need to install the latest node.js, needs to run both npm and all the
 tools needed for the frontend:
 
    * Download from:  https://github.com/coreybutler/nvm-windows
-   * Run:            nvm install latest
+   > nvm install latest
    * In "command prompt", as administrator:   nvm use latest
 
 When you are creating a new app (so not needed if you are just compiling
 Alere):
 
-   * Run:      npm create tauri-app
+   > npm create tauri-app
+
+Also install the diesel command line tools:
+
+   > cargo install diesel_cli --no-default-features --features "sqlite-bundled"
 
 You then need to install rustup and git:
 
@@ -20,13 +24,13 @@ You then need to install rustup and git:
 Optionally, you can install development tools like neovim, git,... If you are
 using PowerShell, you can edit the configuration file with:
 
-   * notepad $profile
-   * or   nvim $profile
+   > notepad $profile
+   or >  nvim $profile
 
 And then add
 
-   * $env:PATH += ";C:\Users\briot\.cargo\bin"
-   * $env:PATH += ";C:\Program Files\Git\bin"
+   > $env:PATH += ";C:\Users\briot\.cargo\bin"
+   > $env:PATH += ";C:\Program Files\Git\bin"
 
 My own usage is as follows:
 
@@ -36,6 +40,9 @@ My own usage is as follows:
 
    * Split the terminal and open a WSL2 terminal so that I have all the usual
      linux tools to edit/commit/...
+
+   * To create new migrations:
+     > diesel migration generate <name>
 
 
 See also  
