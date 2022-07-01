@@ -17,8 +17,6 @@ import { PrefProvider } from '@/services/usePrefs';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { TooltipProvider } from '@/Tooltip';
 
-import { invoke } from '@tauri-apps/api'
-
 import './App.scss';
 import "font-awesome/css/font-awesome.min.css";
 
@@ -30,9 +28,6 @@ const queryClient = new QueryClient({
    },
 });
 
-const show_account_kinds = () =>
-   invoke('show_account_kinds').then(resp => window.console.log(resp));
-
 const Main: React.FC<{}> = () => {
    const location = useLocation();
    const { prefs } = usePrefs();
@@ -41,6 +36,9 @@ const Main: React.FC<{}> = () => {
    const c = classes(
       'page',
       prefs.neumorph_mode ? 'neumorph_mode' : 'not_neumorph_mode',
+   );
+   window.console.log('MANU Main accounts.loaded=', accounts.loaded,
+      'has_accounts=', accounts.has_accounts(),
    );
 
    return (
@@ -55,20 +53,19 @@ const Main: React.FC<{}> = () => {
                      <OnlineUpdate />
                      <Settings />
                   </Header>
-                  <div>
-                     <button
-                         style={{width: 150, height: 100}}
-                         onClick={show_account_kinds}
-                     />
-                  </div>
                   <LeftSideBar />
-                  {
-                     !accounts.loaded
-                     ? <div className="dashboard main"><Spinner /></div>
-                     : !accounts.has_accounts()
-                     ? <Redirect to="/welcome" />
-                     : <Page setHeader={setHeader} url={location.pathname} />
-                  }
+                  <Route path="/welcome">
+                      <Page setHeader={setHeader} url={location.pathname} />
+                  </Route>
+                  <Route>
+                     {
+                        !accounts.loaded
+                        ? <div className="dashboard main"><Spinner /></div>
+                        : !accounts.has_accounts()
+                        ? <Redirect to="/welcome" />
+                        : <Page setHeader={setHeader} url={location.pathname} />
+                     }
+                  </Route>
                </div>
             </div>
          </Route>

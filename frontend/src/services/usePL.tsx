@@ -1,6 +1,8 @@
-import { DateRange, rangeToHttp } from '@/Dates';
+import * as React from 'react';
+import { DateRange, rangeToHttp, toDates } from '@/Dates';
 import { CommodityId } from '@/services/useAccounts';
-import useFetch, { useFetchMultiple } from '@/services/useFetch';
+import { useFetchMultiple } from '@/services/useFetch';
+import { invoke } from '@tauri-apps/api'
 
 export interface Metric {
    income: number;
@@ -28,11 +30,23 @@ const NULL_METRIC: Metric = {
    other_taxes: NaN,
 };
 
+const invokeMetrics = (
+       mindate: Date, maxdate: Date, currency: CommodityId
+): Promise<Metric> => invoke('compute_networth', {mindate, maxdate, currency})
+
 const usePL = (range: DateRange, currencyId: CommodityId) => {
-   const { data } = useFetch<Metric, any>({
-      url: `/api/metrics?${rangeToHttp(range)}&currency=${currencyId}`,
-   });
-   return data ?? NULL_METRIC;
+   const [metrics, setMetrics] = React.useState(NULL_METRIC);
+
+   React.useEffect(
+      () => {
+         const r = toDates(range);
+         invokeMetrics(r[0], r[1], currencyId)
+            .then(resp => setMetrics(resp));
+      },
+      [range, currencyId]
+   );
+
+   return metrics;
 }
 
 export const usePLMultiple = (

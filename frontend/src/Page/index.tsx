@@ -51,6 +51,8 @@ export const Page: React.FC<PageProps & SetHeader> = React.memo(p => {
       [setHeader, page.name, headerNode]
    );
 
+   window.console.log('MANU Page', page);
+
    if (!page) {
       return <Redirect to="/" />;
    }

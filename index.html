@@ -51,13 +51,6 @@
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
     -->
     <link rel="manifest" href="/manifest.json" />
-
-    <!-- Needed to send POST data to Django.
-        This sets the csrf cookie
-        The django-corsheaders extension will likely help here. We were
-        serving a html file, but loading it as javascript.
-    -->
-    <script type="text/javascript" src="/api/csrf" ></script>
   </head>
 
   <body>

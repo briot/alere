@@ -7,30 +7,23 @@
 extern crate diesel;
 extern crate dotenv;
 
+#[macro_use]
+extern crate lazy_static;
+
 pub mod schema;
 pub mod models;
+pub mod metrics;
+pub mod accounts;
+pub mod connections;
+pub mod scenarios;
 
 use diesel::prelude::*;
-use diesel::sqlite::SqliteConnection;
-use dotenv::dotenv;
-use std::env;
-
-// use self::models::*;
-// use self::diesel::prelude::*;
-
-fn establish_connection() -> SqliteConnection {
-   dotenv().ok();
-   let database_url = env::var("DATABASE_URL")
-       .expect("DATABASE_URL must be set");
-   SqliteConnection::establish(&database_url)
-       .expect(&format!("Error connecting to {}", database_url))
-}
 
 #[tauri::command]
 fn show_account_kinds() {
     use schema::alr_account_kinds::dsl::*;
 
-    let connection = establish_connection();
+    let connection = connections::POOL.get().unwrap();
     let results = alr_account_kinds
         .limit(5)
         .load::<models::AlrAccountKinds>(&connection)
@@ -51,8 +44,12 @@ fn main() {
   let context = tauri::generate_context!();
   tauri::Builder::default()
     .menu(tauri::Menu::os_default(&context.package_info().name))
-    .invoke_handler(tauri::generate_handler![greet])
-    .invoke_handler(tauri::generate_handler![show_account_kinds])
+    .invoke_handler(tauri::generate_handler![
+        greet,
+        show_account_kinds,
+        metrics::compute_networth,
+        accounts::fetch_accounts,
+    ])
     .run(context)
     .expect("error while running tauri application");
 }

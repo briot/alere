@@ -35,6 +35,8 @@ const Welcome: React.FC<WelcomeProps> = p => {
    const { accounts } = useAccounts();
    const has_accounts = accounts.has_accounts();
 
+   window.console.log('MANU Welcome');
+
    return (
       <div className="welcome">
          <h1>Start importing accounts</h1>

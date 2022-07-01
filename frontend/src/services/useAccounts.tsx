@@ -1,7 +1,7 @@
 import * as React from 'react';
-import useFetch from '@/services/useFetch';
 import usePost from '@/services/usePost';
 import { useQueryClient } from 'react-query';
+import { invoke } from '@tauri-apps/api'
 
 export type AccountId = number;
 export type CommodityId = number;
@@ -130,9 +130,12 @@ const nullAccountJSON: AccountJSON = {
    institution: undefined,
 }
 
-type ServerJSON = [
-   AccountJSON[], Commodity[], AccountKindJSON[], InstitutionJSON[]
-];
+type ServerJSON = {
+   accounts: AccountJSON[],
+   commodities: Commodity[],
+   kinds: AccountKindJSON[],
+   institutions: InstitutionJSON[],
+};
 
 export class Account {
    readonly id: AccountId;
@@ -220,16 +223,16 @@ export class AccountList {
 
    constructor(json: ServerJSON, public loaded: boolean) {
       this.allCommodities = {};
-      json[1].forEach(c => this.allCommodities[c.id] = c);
+      json.commodities.forEach(c => this.allCommodities[c.id] = c);
 
       this.allAccountKinds = {};
-      json[2].forEach(c => this.allAccountKinds[c.id] = c);
+      json.kinds.forEach(c => this.allAccountKinds[c.id] = c);
 
       this.allInstitutions = {};
-      json[3].forEach(c => this.allInstitutions[c.id] = c);
+      json.institutions.forEach(c => this.allInstitutions[c.id] = c);
 
       this.accounts = new Map();
-      json[0].forEach(a =>
+      json.accounts.forEach(a =>
          this.accounts.set(Number(a.id), this.buildAccount(a)));
       this.accounts.forEach(a =>
          a.parentAccount = a.parentId === undefined
@@ -294,13 +297,19 @@ interface IAccountsContext {
 }
 
 const noContext: IAccountsContext = {
-   accounts: new AccountList([[], [], [], []], false /* loaded */),
+   accounts: new AccountList(
+      {
+         accounts: [],
+         commodities: [],
+         kinds: [],
+         institutions: [],
+      },
+      false /* loaded */
+   ),
 }
 
 
 const AccountsContext = React.createContext(noContext);
-
-const ACCOUNT_LIST_URL = '/api/account/list';
 
 /**
  * Provide a addOrEdit function used to save accounts in the database.
@@ -326,18 +335,27 @@ interface AccountsProviderProps {
    children?: React.ReactNode;
 }
 
+const invokeFetchAccounts = (): Promise<ServerJSON> =>
+   invoke('fetch_accounts');
+
+
 export const AccountsProvider = (p: AccountsProviderProps) => {
-   const { data } = useFetch<IAccountsContext, ServerJSON>({
-      url: ACCOUNT_LIST_URL,
-      parse: (json: ServerJSON) => {
-         return {
-            accounts: new AccountList(json, true /* loaded */),
-         };
+   const [data, setData] = React.useState(noContext);
+
+   React.useEffect(
+      () => {
+         invokeFetchAccounts().then(json => {
+            window.console.log('MANU accountsProvider received', json);
+            setData({
+               accounts: new AccountList(json, true /* loaded */),
+            });
+         });
       },
-   });
+      []
+   );
 
    return (
-      <AccountsContext.Provider value={data || noContext}>
+      <AccountsContext.Provider value={data}>
          {p.children}
       </AccountsContext.Provider>
    );
