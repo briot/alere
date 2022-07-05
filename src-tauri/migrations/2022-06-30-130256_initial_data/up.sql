@@ -13,7 +13,7 @@ INSERT INTO alr_account_kinds
     is_networth, is_trading, is_stock, is_income_tax, is_misc_tax,
     name_when_positive, name_when_negative)
 VALUES
-   --                 category 1=INCOME 2=EXPENSE 3=LIABILITY 4=EQUITY 5=ASSET
+   --                 category 1=INCOME 0=EXPENSE 4=LIABILITY 2=EQUITY 3=ASSET
    --                 |  is_work_income
    --                 |  |  is_passive_income
    --                 |  |  |  is_unrealized
@@ -27,18 +27,18 @@ VALUES
    ('Misc income',    1, 0, 0, 0, 0, 0, 0, 0, 0, 'Expense',  'Income'),
    ('Unrealized gain',1, 0, 0, 1, 0, 0, 0, 0, 0, 'Expense',  'Income'),
 
-   ('Expense',        2, 0, 0, 0, 0, 0, 0, 0, 0, 'Expense',  'Income'),
-   ('Income tax',     2, 0, 0, 0, 0, 0, 0, 1, 0, 'Increase', 'Decrease'),
-   ('Other tax',      2, 0, 0, 0, 0, 0, 0, 0, 1, 'Increase', 'Decrease'),
+   ('Expense',        0, 0, 0, 0, 0, 0, 0, 0, 0, 'Expense',  'Income'),
+   ('Income tax',     0, 0, 0, 0, 0, 0, 0, 1, 0, 'Increase', 'Decrease'),
+   ('Other tax',      0, 0, 0, 0, 0, 0, 0, 0, 1, 'Increase', 'Decrease'),
 
-   ('Liability',      3, 0, 0, 0, 1, 0, 0, 0, 0, 'Deposit',  'Paiement'),
+   ('Liability',      4, 0, 0, 0, 1, 0, 0, 0, 0, 'Deposit',  'Paiement'),
 
-   ('Stock',          4, 0, 0, 0, 1, 1, 1, 0, 0, 'Add',      'Remove'),
-   ('Bank account',   4, 0, 0, 0, 1, 0, 0, 0, 0, 'Deposit',  'Paiement'),
-   ('Equity',         4, 0, 0, 0, 1, 0, 0, 0, 0, 'Increase', 'Decrease'),
-   ('Investment',     4, 0, 0, 0, 1, 1, 0, 0, 0, 'Deposit',  'Paiement'), 
+   ('Stock',          2, 0, 0, 0, 1, 1, 1, 0, 0, 'Add',      'Remove'),
+   ('Bank account',   2, 0, 0, 0, 1, 0, 0, 0, 0, 'Deposit',  'Paiement'),
+   ('Equity',         2, 0, 0, 0, 1, 0, 0, 0, 0, 'Increase', 'Decrease'),
+   ('Investment',     2, 0, 0, 0, 1, 1, 0, 0, 0, 'Deposit',  'Paiement'), 
 
-   ('Asset',          5, 0, 0, 0, 1, 0, 0, 0, 0, 'Increase', 'Decrease'), 
+   ('Asset',          3, 0, 0, 0, 1, 0, 0, 0, 0, 'Increase', 'Decrease'), 
    ('Non-liquid investment',
-                      5, 0, 0, 0, 1, 1, 0, 0, 0, 'Deposit', 'Paiement')
+                      3, 0, 0, 0, 1, 1, 0, 0, 0, 'Deposit', 'Paiement')
 ;

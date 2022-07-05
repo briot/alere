@@ -16,6 +16,7 @@ pub mod metrics;
 pub mod accounts;
 pub mod connections;
 pub mod scenarios;
+pub mod dates;
 
 use diesel::prelude::*;
 
@@ -23,7 +24,7 @@ use diesel::prelude::*;
 fn show_account_kinds() {
     use schema::alr_account_kinds::dsl::*;
 
-    let connection = connections::POOL.get().unwrap();
+    let connection = connections::get_connection();
     let results = alr_account_kinds
         .limit(5)
         .load::<models::AlrAccountKinds>(&connection)

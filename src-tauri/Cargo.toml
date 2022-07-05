@@ -14,10 +14,14 @@ tauri-build = { version = "1.0.0", features = [] }
 
 [dependencies]
 chrono = { version = "0.4.19", features = ["serde"] }
-diesel = { version = "1.4.8", features = ["sqlite", "r2d2"] }
+chrono-tz = "0.6.1"
+diesel = { version = "1.4.8", features = ["sqlite", "r2d2", "chrono"] }
 dotenv = "0.15.0"
 lazy_static = "1.2.0"
 libsqlite3-sys = { version = "^0", features = ["bundled"] }
+memoize = { version = "0.3.0", features = ["full"] }
+regex = "1"
+rrule = { version = "0.8.0" }
 rust_decimal = "1.25"
 rust_decimal_macros = "1.25"
 serde_json = "1.0"

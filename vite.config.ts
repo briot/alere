@@ -12,7 +12,7 @@ export default defineConfig({
 
   // Tauri expects a fixed port, fail if that port is not available
   server: {
-    port: 3000,
+    port: 3001,
     strictPort: true,
   },
 

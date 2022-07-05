@@ -1,1 +1,3 @@
-pub const NO_SCENARIO: u16 = 0;
+pub type Scenario = u16;
+
+pub const NO_SCENARIO: Scenario = 0;
