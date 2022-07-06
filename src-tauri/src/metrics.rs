@@ -7,6 +7,7 @@ use super::scenarios::{NO_SCENARIO, Scenario};
 use super::dates::{DateSet, DateValues, CTE_DATES};
 
 type Currency = u16;
+type AccountId = i32;    //  Diesel does not provide Integer->u32 conversion
 
 
 type MaxScheduledOccurrences = Option<u16>;
@@ -16,7 +17,7 @@ fn get_max_occurrences(max: MaxScheduledOccurrences) -> u16 {
 
 #[derive(Clone, Debug)]
 pub struct PerAccount {
-    account_id: i32,
+    account_id: AccountId,
     shares: Vec<Decimal>,   // one entry per date index
     price: Vec<Decimal>,    // one entry per date index
 }
@@ -28,7 +29,7 @@ struct NetworthRow {
     idx: i32,
 
     #[sql_type = "Integer"]
-    account: i32,
+    account: AccountId,
 
     #[sql_type = "Float"]
     shares: f32,
@@ -40,8 +41,9 @@ struct NetworthRow {
 
 const CTE_SPLITS: &str = "cte_splits";
 const CTE_BALANCES: &str = "cte_bl";
-const CTE_BALANCES_CURRENCY:&str = "cte_bl_cur";
-const SQL_ARMAGEDDON: &str = "'2999-12-31 00:00:00'";
+const CTE_BALANCES_CURRENCY: &str = "cte_bl_cur";
+const CTE_SPLITS_WITH_VALUE: &str = "cte_splits_value";
+const SQL_ARMAGEDDON: &str = "'2999-12-31'";
 
 
 /// A common table expression that returns all splits to consider in the
@@ -146,6 +148,28 @@ fn cte_list_splits(
         return format!("{CTE_SPLITS} AS ({non_recurring_splits})")
     }
 }
+
+
+/// Returns all splits and their associated value, scaled as needed.
+/// Requires cte_list_splits
+
+fn cte_splits_with_values() -> String {
+    format!("
+        {CTE_SPLITS_WITH_VALUE} AS (
+           SELECT
+              s.*,
+              CAST(s.scaled_value AS FLOAT) / c.price_scale AS value,
+              CAST(s.scaled_value * alr_accounts.commodity_scu AS FLOAT)
+                 / (s.scaled_qty * c.price_scale)
+                 AS computed_price
+           FROM
+              {CTE_SPLITS} s
+              JOIN alr_accounts ON (s.account_id = alr_accounts.id)
+              JOIN alr_commodities c ON (s.value_commodity_id=c.id)
+        )
+    ")
+}
+
 
 /// Compute the balance of accounts for all time ranges.
 ///
@@ -265,7 +289,8 @@ pub fn networth(
     let result = super::connections::execute_and_log::<NetworthRow>(&query);
     match result {
         Ok(rows) => {
-            let mut per_account: HashMap<i32, PerAccount> = HashMap::new();
+            let mut per_account: HashMap<AccountId, PerAccount> =
+                HashMap::new();
             for row in rows.iter() {
                 let e = per_account.entry(row.account).or_insert(PerAccount {
                     account_id: row.account,
@@ -290,6 +315,63 @@ pub fn networth(
 }
 
 
+#[derive(Debug, QueryableByName)]
+struct SplitsPerAccount {
+
+    #[sql_type = "Integer"]
+    account_id: AccountId,
+
+    #[sql_type = "Float"]
+    value: f32,
+}
+
+
+/// For each account, computes the total of splits that apply to it in the
+/// given time range.
+
+fn sum_splits_per_account(
+    dates: &dyn DateSet,
+    currency: u16,
+    scenario: Scenario,
+    max_scheduled_occurrences: MaxScheduledOccurrences,
+) -> HashMap<AccountId, f32> {
+
+    let list_splits = cte_list_splits(
+        dates,
+        scenario,
+        max_scheduled_occurrences,
+    );
+    let with_values = cte_splits_with_values();
+    let query = format!("
+        WITH RECURSIVE {list_splits}, \
+          {with_values} \
+        SELECT s.account_id, SUM(s.value) AS value \
+        FROM {CTE_SPLITS_WITH_VALUE} s \
+        WHERE s.value_commodity_id = {currency} \
+        GROUP BY s.account_id
+        "
+    );
+    let rows = super::connections::execute_and_log::<SplitsPerAccount>(
+        &query
+    );
+    match rows {
+        Ok(r) => {
+            let mut res: HashMap<AccountId, f32> = HashMap::new();
+            for row in r.iter() {
+                res.insert(
+                    row.account_id,
+                    row.value,
+                );
+            }
+            res
+        },
+        Err(e) => {
+            print!("In sum_splits_per_account: {:?}\n", e);
+            HashMap::new()
+        }
+    }
+}
+
 /// Compute the total networth
 
 fn sum_networth<F>(
@@ -297,7 +379,7 @@ fn sum_networth<F>(
     filter: F,   // receives an account id
     idx: usize,
 ) -> Decimal
-   where F: Fn(&i32) -> bool
+   where F: Fn(&AccountId) -> bool
 {
     let mut result = Decimal::ZERO;
     for nw in all_networth {
@@ -308,10 +390,27 @@ fn sum_networth<F>(
     result
 }
 
+/// Sum splits
+
+fn sum_splits<F>(
+    all_splits: &HashMap<AccountId, f32>,
+    filter: F,   // receives an account id
+) -> f32
+   where F: Fn(&AccountId) -> bool
+{
+    let mut result: f32 = 0.0;
+    for (account_id, value) in all_splits {
+        if filter(&account_id) {
+            result += value;
+        }
+    }
+    result
+}
+
 #[derive(QueryableByName, Debug)]
 struct AccountIsNWRow {
     #[sql_type = "Integer"]
-    account_id: i32,
+    account_id: AccountId,
 
     #[sql_type = "Bool"]
     is_networth: bool,
@@ -360,7 +459,7 @@ pub fn compute_networth(
    currency: Currency,
 ) -> Networth {
 
-    let dates = DateValues::new(Some(vec![mindate, maxdate]));
+    let dates = DateValues::new(Some(vec![mindate.date(), maxdate.date()]));
     let all_networth = networth(
         &dates,
         currency,
@@ -368,13 +467,13 @@ pub fn compute_networth(
         Some(0),   // max_scheduled_occurrences
     );
 
-    let mut accounts: HashMap<i32, AccountIsNWRow> = HashMap::new();
+    let mut accounts: HashMap<AccountId, AccountIsNWRow> = HashMap::new();
     let equity = super::accounts::AccountKindCategory::EQUITY as u32;
     let income = super::accounts::AccountKindCategory::INCOME as u32;
     let expense = super::accounts::AccountKindCategory::EXPENSE as u32;
 
     let account_rows = super::connections::execute_and_log::<AccountIsNWRow>(
-        &format!("SELECT a.id AS account_id,
+        &format!("SELECT a.id AS account_id, \
             k.is_networth, \
             k.category = {equity} AND k.is_networth AS is_liquid, \
             k.category = {income} AND not k.is_unrealized AS realized_income, \
@@ -394,7 +493,7 @@ pub fn compute_networth(
             }
         },
         Err(e) => {
-            print!("metrics: error processing query {:?}", e);
+            print!("metrics: error processing query {:?}\n", e);
         },
     };
 
@@ -418,44 +517,46 @@ pub fn compute_networth(
         |a| accounts.get(a).map(|ac| ac.is_liquid).unwrap_or(false),
         1   //  index
     );
-    let income = -sum_networth(
-        &all_networth,
+
+    let over_period = sum_splits_per_account(
+        &dates,
+        currency,
+        super::scenarios::NO_SCENARIO,
+        Some(0),   // max_scheduled_occurrences
+    );
+
+    let income = -sum_splits(
+        &over_period,
         |a| accounts.get(a).map(|ac| ac.realized_income).unwrap_or(false),
-        1   //  index
     );
-    let passive_income = -sum_networth(
-        &all_networth,
+    let passive_income = -sum_splits(
+        &over_period,
         |a| accounts.get(a).map(|ac| ac.is_passive_income).unwrap_or(false),
-        1   //  index
     );
-    let work_income = -sum_networth(
-        &all_networth,
+    let work_income = -sum_splits(
+        &over_period,
         |a| accounts.get(a).map(|ac| ac.is_work_income).unwrap_or(false),
-        1   //  index
     );
-    let expense = -sum_networth(
-        &all_networth,
+    let expense = sum_splits(
+        &over_period,
         |a| accounts.get(a).map(|ac| ac.is_expense).unwrap_or(false),
-        1   //  index
     );
-    let other_taxes = -sum_networth(
-        &all_networth,
+    let other_taxes = sum_splits(
+        &over_period,
         |a| accounts.get(a).map(|ac| ac.is_misc_tax).unwrap_or(false),
-        1   //  index
     );
-    let income_taxes = -sum_networth(
-        &all_networth,
+    let income_taxes = sum_splits(
+        &over_period,
         |a| accounts.get(a).map(|ac| ac.is_income_tax).unwrap_or(false),
-        1   //  index
     );
 
     Networth{
-        income: income.to_f32().unwrap(),
-        passive_income: passive_income.to_f32().unwrap(),
-        work_income: work_income.to_f32().unwrap(),
-        expenses: expense.to_f32().unwrap(),
-        income_taxes: income_taxes.to_f32().unwrap(),
-        other_taxes: other_taxes.to_f32().unwrap(),
+        income: income,
+        passive_income: passive_income,
+        work_income: work_income,
+        expenses: expense,
+        income_taxes: income_taxes,
+        other_taxes: other_taxes,
         networth: networth_at_end.to_f32().unwrap(),
         networth_start: networth_at_start.to_f32().unwrap(),
         liquid_assets: liquid_assets_at_end.to_f32().unwrap(),
