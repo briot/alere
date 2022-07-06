@@ -5,15 +5,9 @@ use rust_decimal::Decimal;
 use std::collections::HashMap;
 use super::scenarios::{NO_SCENARIO, Scenario};
 use super::dates::{DateSet, DateValues, CTE_DATES};
+use super::models::{AccountId, CommodityId};
+use super::occurrences::Occurrences;
 
-type Currency = u16;
-type AccountId = i32;    //  Diesel does not provide Integer->u32 conversion
-
-
-type MaxScheduledOccurrences = Option<u16>;
-fn get_max_occurrences(max: MaxScheduledOccurrences) -> u16 {
-    max.unwrap_or(2000)
-}
 
 #[derive(Clone, Debug)]
 pub struct PerAccount {
@@ -52,11 +46,11 @@ const SQL_ARMAGEDDON: &str = "'2999-12-31'";
 fn cte_list_splits(
     dates: &dyn DateSet,
     scenario: Scenario,
-    max_scheduled_occurrences: MaxScheduledOccurrences,
+    max_scheduled_occurrences: Occurrences,
 ) -> String {
     let dates_start = dates.get_start();
     let dates_end = dates.get_end();
-    let maxo = get_max_occurrences(max_scheduled_occurrences);
+    let maxo = max_scheduled_occurrences.get_max_occurrences();
 
     let non_recurring_splits = format!("
         SELECT
@@ -252,9 +246,9 @@ fn cte_balances_currency() -> String {
 
 pub fn networth(
     dates: &dyn DateSet,
-    currency: u16,
+    currency: CommodityId,
     scenario: Scenario,
-    max_scheduled_occurrences: MaxScheduledOccurrences,
+    max_scheduled_occurrences: Occurrences,
 ) -> Vec<PerAccount> {
     let list_splits = cte_list_splits(
         &dates.unbounded_start(),
@@ -331,9 +325,9 @@ struct SplitsPerAccount {
 
 fn sum_splits_per_account(
     dates: &dyn DateSet,
-    currency: u16,
+    currency: CommodityId,
     scenario: Scenario,
-    max_scheduled_occurrences: MaxScheduledOccurrences,
+    max_scheduled_occurrences: Occurrences,
 ) -> HashMap<AccountId, f32> {
 
     let list_splits = cte_list_splits(
@@ -456,7 +450,7 @@ pub struct Networth {
 pub fn compute_networth(
    mindate: DateTime<Utc>,
    maxdate: DateTime<Utc>,
-   currency: Currency,
+   currency: CommodityId,
 ) -> Networth {
 
     let dates = DateValues::new(Some(vec![mindate.date(), maxdate.date()]));
@@ -464,7 +458,7 @@ pub fn compute_networth(
         &dates,
         currency,
         super::scenarios::NO_SCENARIO,
-        Some(0),   // max_scheduled_occurrences
+        Occurrences::No_Recurrence(),
     );
 
     let mut accounts: HashMap<AccountId, AccountIsNWRow> = HashMap::new();
@@ -522,7 +516,7 @@ pub fn compute_networth(
         &dates,
         currency,
         super::scenarios::NO_SCENARIO,
-        Some(0),   // max_scheduled_occurrences
+        Occurrences::No_Recurrence(),
     );
 
     let income = -sum_splits(

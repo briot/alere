@@ -1,9 +1,15 @@
 use chrono::{NaiveDateTime, NaiveDate};
 use serde::Serialize;
 
+pub type AccountId = i32;  //  Diesel does not provide Integer->u32 conversion
+pub type CommodityId = i32;
+pub type AccountKindId = i32;
+pub type InstitutionId = i32;
+
+
 #[derive(Queryable, Debug, Serialize)]
 pub struct AccountKind {
-   pub id: i32,
+   pub id: AccountKindId,
    pub name: String,
    pub name_when_positive: String,
    pub name_when_negative: String,
@@ -20,7 +26,7 @@ pub struct AccountKind {
 
 #[derive(Queryable, Debug, Serialize)]
 pub struct Account {
-    pub id: i32,
+    pub id: AccountId,
     pub name: String,
     pub description: Option<String>,
     pub iban: Option<String>,
@@ -29,15 +35,15 @@ pub struct Account {
     pub commodity_scu: i32,
     pub last_reconciled: Option<NaiveDateTime>,
     pub opening_date: Option<NaiveDate>,
-    pub commodity_id: i32,
-    pub institution_id: Option<i32>,
-    pub kind_id: i32,
-    pub parent_id: Option<i32>,
+    pub commodity_id: CommodityId,
+    pub institution_id: Option<InstitutionId>,
+    pub kind_id: AccountKindId,
+    pub parent_id: Option<AccountId>,
 }
 
 #[derive(Queryable, Debug, Serialize)]
 pub struct Commodity {
-    pub id: i32,
+    pub id: CommodityId,
     pub name: String,
     pub symbol_before: String,
     pub symbol_after: String,
@@ -51,7 +57,7 @@ pub struct Commodity {
 
 #[derive(Queryable, Debug, Serialize)]
 pub struct Institution {
-    pub id: i32,
+    pub id: InstitutionId,
     pub name: String,
     pub manager: Option<String>,
     pub address: Option<String>,
