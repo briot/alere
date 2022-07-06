@@ -39,7 +39,8 @@ const useNetworthHistory = (
       url: `/api/networth_history?${rangeToHttp(range)}`
          + `&groupby=${groupBy}`
          + `&currency=${currencyId}`
-         + `&scheduled=${includeScheduled}`
+         + `&scheduled=${includeScheduled}`,
+      placeholder: [],
    });
    return React.useMemo(
       () => data

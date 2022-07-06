@@ -5,7 +5,7 @@ export interface FetchProps<T, RAW_T> {
    url: string;
    init?: RequestInit;  // To override the method, for instance
    parse?: (json: RAW_T) => T;  // parse the server's response
-   placeholder?: T;
+   placeholder: T;
    enabled?: boolean;
    options?: UseQueryOptions<T, string /* error */, T /* TData */>;
    key?: QueryKey;
@@ -24,8 +24,10 @@ const toQueryProps = <T, RAW_T> (p: FetchProps<T, RAW_T>) => ({
          return r.json();
       }).then(json => {
          return (!p.parse) ? json as T : p.parse(json);
+      }).catch(err => {
+         window.console.error('Error while loading', p.url, err);
+         return p.placeholder;
       });
-//      (promise as unknown).cancel = () => controller.abort();  //  for react-query
       return promise;
    },
    ...p.options,

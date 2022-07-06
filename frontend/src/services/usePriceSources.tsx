@@ -12,6 +12,7 @@ export type PriceSources = {
 const usePriceSources = (): PriceSources => {
    const { data } = useFetch<PriceSources, any>({
       url: '/api/price_source/list',
+      placeholder: {},
    });
    return data ?? {};
 }

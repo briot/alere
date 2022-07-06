@@ -103,15 +103,15 @@ interface AccountJSON {
    description: string;
    account_num: string;
    favorite: boolean;
-   commodityId: CommodityId;
+   commodity_id: CommodityId;
    commodity_scu: number;
-   kindId: AccountKindId;
+   kind_id: AccountKindId;
    closed: boolean;
    iban: string;
    parent: AccountId | undefined;
    opening_date: string;
-   lastReconciled: string;
-   institution: InstitutionId | undefined;
+   last_reconciled: string;
+   institution_id: InstitutionId | undefined;
 }
 const nullAccountJSON: AccountJSON = {
    id: -1,
@@ -119,15 +119,15 @@ const nullAccountJSON: AccountJSON = {
    description: "",
    account_num: "",
    favorite: false,
-   commodityId: nullCommodity.id,
+   commodity_id: nullCommodity.id,
    commodity_scu: 1,
-   kindId: nullAccountKind.id,
+   kind_id: nullAccountKind.id,
    closed: true,
    iban: "",
    parent: undefined,
-   lastReconciled: "",
+   last_reconciled: "",
    opening_date: "",
-   institution: undefined,
+   institution_id: undefined,
 }
 
 type ServerJSON = {
@@ -161,18 +161,18 @@ export class Account {
       this.id = Number(d.id);
       this.name = d.name;
       this.favorite = d.favorite;
-      this.commodity = list.allCommodities[d.commodityId] ?? nullCommodity;
+      this.commodity = list.allCommodities[d.commodity_id] ?? nullCommodity;
       this.commodity_scu = d.commodity_scu
-      this.kind = list.allAccountKinds[d.kindId] ?? nullAccountKind;
+      this.kind = list.allAccountKinds[d.kind_id] ?? nullAccountKind;
       this.closed = d.closed;
       this.iban = d.iban;
-      this.lastReconciled = d.lastReconciled;
+      this.lastReconciled = d.last_reconciled;
       this.opening_date = d.opening_date;
       this.parentId = d.parent;
       this.description = d.description;
       this.account_num = d.account_num;
-      this.institution = d.institution === undefined
-         ? undefined : list.allInstitutions[d.institution];
+      this.institution = d.institution_id === undefined
+         ? undefined : list.allInstitutions[d.institution_id];
    }
 
    /**
@@ -201,15 +201,15 @@ export class Account {
          description: this.description,
          account_num: this.account_num,
          favorite: this.favorite,
-         commodityId: this.commodity.id,
+         commodity_id: this.commodity.id,
          commodity_scu: this.commodity_scu,
-         kindId: this.kind.id,
+         kind_id: this.kind.id,
          closed: this.closed,
          iban: this.iban,
          parent: this.parentId,
          opening_date: this.opening_date,
-         lastReconciled: this.lastReconciled,
-         institution: this.getInstitution()?.id,
+         last_reconciled: this.lastReconciled,
+         institution_id: this.getInstitution()?.id,
       };
    }
 }

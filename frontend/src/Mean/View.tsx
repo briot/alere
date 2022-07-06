@@ -46,6 +46,7 @@ const useMeanHistory = (
    const { data } = useFetch<Point[], Point[]>({
       url: `/api/mean?${dates}&prior=${prior}&after=${after}`
          + `&unrealized=${unrealized}&currency=${currencyId}`,
+      placeholder: [],
       parse: (data: Point[]) => {
          data.forEach(p => {
             if (unrealized) {

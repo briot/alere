@@ -1,18 +1,28 @@
+use super::models::{Account, AccountKind, Commodity, Institution};
+use diesel::prelude::*;
+
 #[derive(serde::Serialize)]
 pub struct Accounts {
-    accounts: Vec<i32>,
-    commodities: Vec<i32>,
-    kinds: Vec<i32>,
-    institutions: Vec<i32>,
+    accounts: Vec<Account>,
+    commodities: Vec<Commodity>,
+    kinds: Vec<AccountKind>,
+    institutions: Vec<Institution>,
 }
 
 #[tauri::command]
 pub fn fetch_accounts() -> Accounts {
+    use super::schema::alr_account_kinds::dsl::*;
+    use super::schema::alr_accounts::dsl::*;
+    use super::schema::alr_commodities::dsl::*;
+    use super::schema::alr_institutions::dsl::*;
+
+    let c = &super::connections::get_connection();
+
     Accounts{
-        accounts: vec!(),
-        commodities: vec!(),
-        kinds: vec!(),
-        institutions: vec!(),
+        accounts: alr_accounts.load(c).expect("Error for accounts"),
+        commodities: alr_commodities.load(c).expect("Error for commodities"),
+        kinds: alr_account_kinds.load(c).expect("Error for kinds"),
+        institutions: alr_institutions.load(c).expect("Error in institution"),
     }
 }
 

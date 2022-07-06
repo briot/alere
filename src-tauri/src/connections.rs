@@ -98,6 +98,10 @@ pub fn execute_and_log
     let query = RE_COLLAPSE_SPACES.replace_all(&t, " ");
     let connection = super::connections::get_connection();
     dbg!(&query);
-    sql_query(query).load(&connection)
+    let res = sql_query(query).load(&connection);
+    if let Err(ref r) = res {
+        print!("Error in query {:?}", r);
+    }
+    res
 }
 

@@ -56,6 +56,7 @@ export const usePLMultiple = (
    const result = useFetchMultiple<Metric, any>(
       ranges.map(r => ({
          url: `/api/metrics?${rangeToHttp(r)}&currency=${currencyId}`,
+         placeholder: NULL_METRIC,
       }))
    );
    return result.map(r => r.data ?? NULL_METRIC);

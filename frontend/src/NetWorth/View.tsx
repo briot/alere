@@ -189,7 +189,6 @@ const columnDelta = (
 const Networth: React.FC<NetworthProps> = p => {
    const { prefs } = usePrefs();
    const balances = useBalance({...p, currencyId: prefs.currencyId});
-
    const thresh = p.threshold ?? 1e-10;
    const accountToBalance = React.useMemo(
       () => {

@@ -56,6 +56,7 @@ const useTickers = (
          + (ids ? `&accounts=${ids}` : '')
          + `&${rangeToHttp(range)}`,
       enabled: !skip,
+      placeholder: [],
       options: {
          keepPreviousData: true,
       },

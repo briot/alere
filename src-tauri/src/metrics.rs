@@ -300,19 +300,11 @@ fn sum_networth<F>(
    where F: Fn(&i32) -> bool
 {
     let mut result = Decimal::ZERO;
-
     for nw in all_networth {
         if filter(&nw.account_id) {
-//        let acc = accounts.get(&nw.account_id);
-//        let keep = match acc {
-//            Some(a) => filter(a),
-//            None    => false,
-//        };
-//        if keep {
             result += nw.shares[idx] * nw.price[idx];
         }
     }
-
     result
 }
 
@@ -326,6 +318,24 @@ struct AccountIsNWRow {
 
     #[sql_type = "Bool"]
     is_liquid: bool,
+
+    #[sql_type = "Bool"]
+    realized_income: bool,
+
+    #[sql_type = "Bool"]
+    is_passive_income: bool,
+
+    #[sql_type = "Bool"]
+    is_work_income: bool,
+
+    #[sql_type = "Bool"]
+    is_expense: bool,
+
+    #[sql_type = "Bool"]
+    is_misc_tax: bool,
+
+    #[sql_type = "Bool"]
+    is_income_tax: bool,
 }
 
 
@@ -360,43 +370,95 @@ pub fn compute_networth(
 
     let mut accounts: HashMap<i32, AccountIsNWRow> = HashMap::new();
     let equity = super::accounts::AccountKindCategory::EQUITY as u32;
+    let income = super::accounts::AccountKindCategory::INCOME as u32;
+    let expense = super::accounts::AccountKindCategory::EXPENSE as u32;
 
     let account_rows = super::connections::execute_and_log::<AccountIsNWRow>(
-        &format!("SELECT alr_accounts.id AS account_id,
-            alr_account_kinds.is_networth, \
-            alr_account_kinds.category = {equity} \
-               AND alr_account_kinds.is_networth AS is_liquid \
-         FROM alr_accounts JOIN alr_account_kinds \
-         ON (alr_accounts.kind_id=alr_account_kinds.id)"
+        &format!("SELECT a.id AS account_id,
+            k.is_networth, \
+            k.category = {equity} AND k.is_networth AS is_liquid, \
+            k.category = {income} AND not k.is_unrealized AS realized_income, \
+            k.is_passive_income, \
+            k.is_work_income, \
+            k.category = {expense} AS is_expense, \
+            k.is_misc_tax, \
+            k.is_income_tax \
+         FROM alr_accounts a JOIN alr_account_kinds k \
+         ON (a.kind_id=k.id)"
         )
     );
-    if let Ok(acc) = account_rows {
-        for a in acc {
-            accounts.insert(a.account_id, a);
-        }
+    match account_rows {
+        Ok(acc) => {
+            for a in acc {
+                accounts.insert(a.account_id, a);
+            }
+        },
+        Err(e) => {
+            print!("metrics: error processing query {:?}", e);
+        },
     };
 
+    let networth_at_start = sum_networth(
+        &all_networth,
+        |a| accounts.get(a).map(|ac| ac.is_networth).unwrap_or(false),
+        0   //  index
+    );
     let networth_at_end = sum_networth(
         &all_networth,
         |a| accounts.get(a).map(|ac| ac.is_networth).unwrap_or(false),
         1   //  index
+    );
+    let liquid_assets_at_start = sum_networth(
+        &all_networth,
+        |a| accounts.get(a).map(|ac| ac.is_liquid).unwrap_or(false),
+        0   //  index
     );
     let liquid_assets_at_end = sum_networth(
         &all_networth,
         |a| accounts.get(a).map(|ac| ac.is_liquid).unwrap_or(false),
         1   //  index
     );
+    let income = -sum_networth(
+        &all_networth,
+        |a| accounts.get(a).map(|ac| ac.realized_income).unwrap_or(false),
+        1   //  index
+    );
+    let passive_income = -sum_networth(
+        &all_networth,
+        |a| accounts.get(a).map(|ac| ac.is_passive_income).unwrap_or(false),
+        1   //  index
+    );
+    let work_income = -sum_networth(
+        &all_networth,
+        |a| accounts.get(a).map(|ac| ac.is_work_income).unwrap_or(false),
+        1   //  index
+    );
+    let expense = -sum_networth(
+        &all_networth,
+        |a| accounts.get(a).map(|ac| ac.is_expense).unwrap_or(false),
+        1   //  index
+    );
+    let other_taxes = -sum_networth(
+        &all_networth,
+        |a| accounts.get(a).map(|ac| ac.is_misc_tax).unwrap_or(false),
+        1   //  index
+    );
+    let income_taxes = -sum_networth(
+        &all_networth,
+        |a| accounts.get(a).map(|ac| ac.is_income_tax).unwrap_or(false),
+        1   //  index
+    );
 
     Networth{
-        income: 0.0,
-        passive_income: 0.0,
-        work_income: 0.0,
-        expenses: 0.0,
-        income_taxes: 0.0,
-        other_taxes: 0.0,
+        income: income.to_f32().unwrap(),
+        passive_income: passive_income.to_f32().unwrap(),
+        work_income: work_income.to_f32().unwrap(),
+        expenses: expense.to_f32().unwrap(),
+        income_taxes: income_taxes.to_f32().unwrap(),
+        other_taxes: other_taxes.to_f32().unwrap(),
         networth: networth_at_end.to_f32().unwrap(),
-        networth_start: 0.0,
+        networth_start: networth_at_start.to_f32().unwrap(),
         liquid_assets: liquid_assets_at_end.to_f32().unwrap(),
-        liquid_assets_at_start: 0.0,
+        liquid_assets_at_start: liquid_assets_at_start.to_f32().unwrap(),
     }
 }

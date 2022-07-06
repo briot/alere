@@ -80,7 +80,6 @@ const useBalance = (p: {
       }),
       placeholder: {currencyId: p.currencyId, dates: [], list: [], totalValue: []},
    });
-
    return data as BalanceList;
 }
 
