@@ -37,9 +37,6 @@ const Main: React.FC<{}> = () => {
       'page',
       prefs.neumorph_mode ? 'neumorph_mode' : 'not_neumorph_mode',
    );
-   window.console.log('MANU Main accounts.loaded=', accounts.loaded,
-      'has_accounts=', accounts.has_accounts(),
-   );
 
    return (
       <Switch>
@@ -49,7 +46,7 @@ const Main: React.FC<{}> = () => {
          <Route>
             <div className={prefs.dark_mode ? 'darkpalette' : 'lightpalette'}>
                <div id="app" className={c} >
-                  <Header {...header} >
+                  <Header {...header} forpage={true} >
                      <OnlineUpdate />
                      <Settings />
                   </Header>

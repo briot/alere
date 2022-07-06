@@ -4,6 +4,7 @@ import { useHistory } from 'react-router-dom';
 import { usePages } from '@/services/usePages';
 import { PanelBaseProps } from '@/Dashboard/Props';
 import Tooltip from '@/Tooltip';
+import classes from '@/services/classes';
 import './Header.scss';
 
 export interface HeaderProps {
@@ -13,6 +14,9 @@ export interface HeaderProps {
    range?: DateRange;  // timestamp used to compute values
    tooltip?: string;
    buttons?: React.ReactNode|React.ReactNode[];
+
+   forpage?: boolean;
+   //  True if this is the main page header
 
    panel?: PanelBaseProps;
    //  If specified, clicking on the header name will maximize the
@@ -49,8 +53,13 @@ const Header = (p: HeaderProps) => {
    const canMaximize = p.panel !== undefined;
    // ??? and not already single panel in page
 
+   const className = classes(
+      'header',
+      p.forpage ? 'pageheader' : undefined,
+   );
+
    return (
-      <div className='header'>
+      <div className={className} >
          <Tooltip tooltip={ p.tooltip ?? r?.as_dates }>
             <h5>
                 {p.node}
