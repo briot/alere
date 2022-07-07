@@ -38,6 +38,8 @@ interface TickerJSON {
    }[];
 }
 
+const No_Tickers: Ticker[] = [];
+
 const useTickers = (
    currencyId: CommodityId,  // what currency should prices be given in
    accountIds: AccountIdSet, // restrict to a specific set of accounts
@@ -56,7 +58,7 @@ const useTickers = (
          + (ids ? `&accounts=${ids}` : '')
          + `&${rangeToHttp(range)}`,
       enabled: !skip,
-      placeholder: [],
+      placeholder: No_Tickers,
       options: {
          keepPreviousData: true,
       },
