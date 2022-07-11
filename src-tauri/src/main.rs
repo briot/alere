@@ -28,6 +28,7 @@ fn main() {
     .menu(tauri::Menu::os_default(&context.package_info().name))
     .invoke_handler(tauri::generate_handler![
         metrics::compute_networth,
+        metrics::balance,
         accounts::fetch_accounts,
         ledger::ledger,
     ])

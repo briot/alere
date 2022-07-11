@@ -1,6 +1,7 @@
+import * as React from 'react';
 import { AccountId, CommodityId } from '@/services/useAccounts';
-import { RelativeDate, dateToString } from '@/Dates';
-import useFetch from '@/services/useFetch';
+import { RelativeDate, dateToDate } from '@/Dates';
+import { invoke } from '@tauri-apps/api'
 
 /**
  * The balance for a specific account, at a specific date.
@@ -35,15 +36,35 @@ export interface BalanceList {
    totalValue: number[];  // indexed on date
 }
 
+const NO_BALANCE: BalanceList = {
+   currencyId: -1,
+   dates: [],
+   list: [],
+   totalValue: [],
+};
+
 /**
  * As fetched from the server
  */
 
 interface JSONBalance {
-   accountId: AccountId;
-   shares: (number|undefined)[];  //  one entry per date
-   price: (number|undefined)[];  //  one entry per date
+   account_id: AccountId;
+   shares: (string|undefined)[];  //  one entry per date
+   price: (string|undefined)[];  //  one entry per date
 }
+
+/**
+ * Low-level invocation of Tauri
+ */
+
+const invokeBalance = (
+   dates: RelativeDate[],
+   currency: CommodityId
+): Promise<JSONBalance[]> =>
+   invoke('balance', {
+      dates: dates.map(d => dateToDate(d)),
+      currency,
+   });
 
 /**
  * For each date specified in `dates`, fetch the current price and number of
@@ -57,30 +78,36 @@ const useBalance = (p: {
    currencyId: CommodityId;
    dates: RelativeDate[];
 }): BalanceList => {
-   const dates_str = p.dates.map(d => dateToString(d));
-
-   const { data } = useFetch<BalanceList, JSONBalance[]>({
-      url: `/api/plots/networth`
-         + `?currency=${p.currencyId}`
-         + `&dates=${dates_str.join(',')}`,
-      parse: (json: JSONBalance[]) => ({
-         dates: p.dates,
-         currencyId: p.currencyId,
-         list: json.map(a => ({
-            accountId: a.accountId,
-            atDate: p.dates.map((_, idx) => ({
-               shares: a.shares[idx] ?? NaN,
-               price: a.price[idx] ?? NaN,
-            })),
-         })),
-         totalValue: p.dates.map((_, idx) =>
-            json
-            .filter(d => d.price[idx] && d.shares[idx])  // remove undefined
-            .reduce((t, d) => t + d.price[idx]! * d.shares[idx]!, 0)),
-      }),
-      placeholder: {currencyId: p.currencyId, dates: [], list: [], totalValue: []},
-   });
-   return data as BalanceList;
+   const [data, setData] = React.useState(NO_BALANCE);
+   React.useEffect(
+      () => {
+         invokeBalance(p.dates, p.currencyId).then(json => {
+            const floating = json.map(a => ({
+               account_id: a.account_id,
+               shares: a.shares.map(s => s === undefined ? NaN : parseFloat(s)),
+               price: a.price.map(s => s === undefined ? NaN : parseFloat(s)),
+            }));
+            const d: BalanceList = {
+               dates: p.dates,
+               currencyId: p.currencyId,
+               list: floating.map(a => ({
+                  accountId: a.account_id,
+                  atDate: p.dates.map((_, idx) => ({
+                     shares: a.shares[idx],
+                     price: a.price[idx],
+                  })),
+               })),
+               totalValue: p.dates.map((_, idx) =>
+                  floating
+                  .filter(d => d.price[idx] && d.shares[idx])  // remove undefined
+                  .reduce((t, d) => t + d.price[idx] * d.shares[idx], 0)),
+            };
+            setData(d);
+         });
+      },
+      [p.currencyId, p.dates]
+   );
+   return data;
 }
 
 export default useBalance;

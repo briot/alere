@@ -55,10 +55,10 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 800,
+        "height": 1024,
         "resizable": true,
         "title": "alere",
-        "width": 1380
+        "width": 1700
       }
     ]
   }

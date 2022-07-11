@@ -17,7 +17,7 @@ impl Occurrences {
         self.max.unwrap_or(2000)
     }
 
-    pub fn No_Recurrence() -> Self {
+    pub fn no_recurrence() -> Self {
         Occurrences::new(Some(0))
     }
 }

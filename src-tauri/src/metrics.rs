@@ -1,7 +1,8 @@
-use chrono::{Utc, DateTime };
+use chrono::{Utc, DateTime};
 use diesel::sql_types::{Integer, Float, Bool};
 use rust_decimal::prelude::*;    //  to_f32
 use rust_decimal::Decimal;
+use serde::Serialize;
 use std::collections::HashMap;
 use super::scenarios::{Scenario};
 use super::dates::{DateSet, DateValues, CTE_DATES};
@@ -12,7 +13,7 @@ use super::cte_list_splits::{
     cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
 
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct PerAccount {
     account_id: AccountId,
     shares: Vec<Decimal>,   // one entry per date index
@@ -184,6 +185,24 @@ pub fn networth(
 
 }
 
+/// For each date, compute the current price and number of shares for each
+/// account.
+
+#[tauri::command]
+pub fn balance(
+    dates: Vec<DateTime<Utc>>,
+    currency: CommodityId,
+) -> Vec<PerAccount> {
+    networth(
+        // ??? Can we pass directly an iterator instead
+        &DateValues::new(Some(dates.iter().map(|d| d.date()).collect())),
+        currency,
+        super::scenarios::NO_SCENARIO,
+        Occurrences::no_recurrence(),
+    )
+}
+
+
 
 #[derive(Debug, QueryableByName)]
 struct SplitsPerAccount {
@@ -334,7 +353,7 @@ pub fn compute_networth(
         &dates,
         currency,
         super::scenarios::NO_SCENARIO,
-        Occurrences::No_Recurrence(),
+        Occurrences::no_recurrence(),
     );
 
     let mut accounts: HashMap<AccountId, AccountIsNWRow> = HashMap::new();
@@ -392,7 +411,7 @@ pub fn compute_networth(
         &dates,
         currency,
         super::scenarios::NO_SCENARIO,
-        Occurrences::No_Recurrence(),
+        Occurrences::no_recurrence(),
     );
 
     let income = -sum_splits(
