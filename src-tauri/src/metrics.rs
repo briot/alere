@@ -342,7 +342,7 @@ pub struct Networth {
 }
 
 #[tauri::command]
-pub fn compute_networth(
+pub fn metrics(
    mindate: DateTime<Utc>,
    maxdate: DateTime<Utc>,
    currency: CommodityId,
