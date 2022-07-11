@@ -108,7 +108,7 @@ interface AccountJSON {
    kind_id: AccountKindId;
    closed: boolean;
    iban: string;
-   parent: AccountId | undefined;
+   parent_id: AccountId | undefined;
    opening_date: string;
    last_reconciled: string;
    institution_id: InstitutionId | undefined;
@@ -124,7 +124,7 @@ const nullAccountJSON: AccountJSON = {
    kind_id: nullAccountKind.id,
    closed: true,
    iban: "",
-   parent: undefined,
+   parent_id: undefined,
    last_reconciled: "",
    opening_date: "",
    institution_id: undefined,
@@ -148,7 +148,7 @@ export class Account {
    readonly iban: string;
    readonly lastReconciled: string;
    readonly opening_date: string;
-   readonly parentId: AccountId | undefined;
+   readonly parent_id: AccountId | undefined;
    readonly description: string;
    readonly account_num: string;
    parentAccount: Account | undefined;
@@ -168,7 +168,7 @@ export class Account {
       this.iban = d.iban;
       this.lastReconciled = d.last_reconciled;
       this.opening_date = d.opening_date;
-      this.parentId = d.parent;
+      this.parent_id = d.parent_id;
       this.description = d.description;
       this.account_num = d.account_num;
       this.institution = d.institution_id === undefined
@@ -206,7 +206,7 @@ export class Account {
          kind_id: this.kind.id,
          closed: this.closed,
          iban: this.iban,
-         parent: this.parentId,
+         parent_id: this.parent_id,
          opening_date: this.opening_date,
          last_reconciled: this.lastReconciled,
          institution_id: this.getInstitution()?.id,
@@ -235,9 +235,9 @@ export class AccountList {
       json.accounts.forEach(a =>
          this.accounts.set(Number(a.id), this.buildAccount(a)));
       this.accounts.forEach(a =>
-         a.parentAccount = a.parentId === undefined
+         a.parentAccount = a.parent_id === undefined
             ? undefined
-            : this.accounts.get(a.parentId)
+            : this.accounts.get(a.parent_id)
       );
    }
 

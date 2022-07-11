@@ -92,9 +92,9 @@ const AccountEdit: React.FC<AccountEditProps> = p => {
             />
             <SelectAccount
                 text='Parent'
-                account={acc.parent === undefined
+                account={acc.parent_id === undefined
                    ? undefined
-                   : accounts.getAccount(acc.parent)}
+                   : accounts.getAccount(acc.parent_id)}
                 onChange={onParentChange}
             />
             <Input
