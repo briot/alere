@@ -1,16 +1,22 @@
-use chrono::{Utc, DateTime};
-use diesel::sql_types::{Integer, Float, Bool};
+use chrono::{Utc, DateTime, Duration, NaiveDate, TimeZone};
+use diesel::sql_types::{Integer, Float, Bool, Date};
+use core::cmp::{min, max};
 use rust_decimal::prelude::*;    //  to_f32
 use rust_decimal::Decimal;
 use serde::Serialize;
 use std::collections::HashMap;
 use super::scenarios::{Scenario};
-use super::dates::{DateSet, DateValues, CTE_DATES};
+use super::dates::{
+    DateRange, DateSet, DateValues, CTE_DATES, GroupBy};
 use super::models::{AccountId, CommodityId};
 use super::occurrences::Occurrences;
 use super::cte_list_splits::{
     cte_list_splits, CTE_SPLITS,
     cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
+use super::cte_query_networth::{CTE_QUERY_NETWORTH, cte_query_networth};
+use super::cte_query_balance::{
+    cte_balances,
+    CTE_BALANCES_CURRENCY, cte_balances_currency};
 
 
 #[derive(Clone, Debug, Serialize)]
@@ -36,86 +42,6 @@ struct NetworthRow {
     computed_price: f32,
 }
 
-
-const CTE_BALANCES: &str = "cte_bl";
-const CTE_BALANCES_CURRENCY: &str = "cte_bl_cur";
-const SQL_ARMAGEDDON: &str = "'2999-12-31'";
-
-
-/// Compute the balance of accounts for all time ranges.
-///
-/// The result is a set of tuple
-///    (account_id, shares, [min_date, max_date))
-/// that covers all time and all accounts.
-///
-/// Requires cte_list_splits
-
-fn cte_balances() -> String {
-    format!("
-        {CTE_BALANCES} AS (
-           SELECT
-              a.id AS account_id,
-              a.commodity_id,
-              s.post_date as mindate,
-              COALESCE(
-                 LEAD(s.post_date)
-                    OVER (PARTITION BY s.account_id ORDER by s.post_date),
-                 {SQL_ARMAGEDDON}
-                ) AS maxdate,
-              CAST( sum(s.scaled_qty)
-                 OVER (PARTITION BY s.account_id
-                       ORDER BY s.post_date
-                       ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
-                 AS FLOAT
-                ) / a.commodity_scu AS shares
-           FROM
-              {CTE_SPLITS} s
-              JOIN alr_accounts a ON (s.account_id = a.id)
-        )
-    ")
-}
-
-/// Similar to cte_balances, but also combines with the prices history to
-/// compute the money value of those shares. This might result in more
-/// time intervals.
-/// Requires cte_balances
-
-fn cte_balances_currency() -> String {
-    format!("
-    {CTE_BALANCES_CURRENCY} AS (
-        SELECT
-           b.account_id,
-           alr_commodities.id as currency_id,
-           max(b.mindate, p.mindate) as mindate,
-           min(b.maxdate, p.maxdate) as maxdate,
-           CAST(b.shares * p.scaled_price AS FLOAT)
-              / source.price_scale as balance,
-           b.shares,
-           CAST(p.scaled_price AS FLOAT) / source.price_scale
-              as computed_price
-        FROM
-           {CTE_BALANCES} b,
-           alr_price_history_with_turnkey p,
-           alr_commodities,
-           alr_commodities source
-        WHERE
-           --  price from: the account's commodity
-           source.id = b.commodity_id
-           AND b.commodity_id=p.origin_id
-
-           --  price target: the user's requested currency
-           AND p.target_id=alr_commodities.id
-
-           --  intervals intersect
-           AND b.mindate < p.maxdate
-           AND p.mindate < b.maxdate
-
-           --  target commodities can only be currencies
-           AND alr_commodities.kind = 'C'
-    )")
-}
-
-
 /// Compute the networth as of certain dates.
 /// The number of "shares" as returned might actually be monetary value, when
 /// the account's commodity is a currency (in which case, the price will
@@ -125,7 +51,7 @@ pub fn networth(
     dates: &dyn DateSet,
     currency: CommodityId,
     scenario: Scenario,
-    max_scheduled_occurrences: Occurrences,
+    max_scheduled_occurrences: &Occurrences,
 ) -> Vec<PerAccount> {
     let list_splits = cte_list_splits(
         &dates.unbounded_start(),
@@ -182,8 +108,167 @@ pub fn networth(
             vec![]
         }
     }
-
 }
+
+
+#[derive(QueryableByName, Serialize)]
+pub struct NWPoint {
+
+    #[sql_type = "Date"]
+    pub date: NaiveDate,
+
+    #[sql_type = "Float"]
+    pub diff: f32,
+
+    #[sql_type = "Float"]
+    pub average: f32,
+
+    #[sql_type = "Float"]
+    pub value: f32,
+}
+
+/// Computes the networth at the end of each month.
+/// The result also includes the mean of the networth computed on each
+/// date, with a rolling window of `prior` months before and `after` months
+/// after. It also includes the diff between the current row and the
+/// previous one, and the mean of those diffs.
+
+fn query_networth_history(
+    dates: &dyn DateSet,
+    currency: CommodityId,
+    scenario: Scenario,
+    max_scheduled_occurrences: &Occurrences,
+    prior: u8,   // number of rows preceding to compute rolling average
+    after: u8,   // number of rows following
+) -> Vec<NWPoint> {
+    let q_networth = cte_query_networth(currency);
+    let list_splits = cte_list_splits(
+        &dates.unbounded_start(),  //  from the start to get balances right
+        scenario,
+        max_scheduled_occurrences,
+    );
+    let balances = cte_balances();
+    let balances_currency = cte_balances_currency();
+    let dates_cte = dates.cte();
+    let query = format!("
+        WITH RECURSIVE {dates_cte}, \
+           {list_splits}, \
+           {balances}, \
+           {balances_currency}, \
+           {q_networth} \
+        SELECT \
+           tmp2.date, \
+           COALESCE(tmp2.diff, 0.0) AS diff, \
+           COALESCE(AVG(tmp2.diff) OVER \
+               (ORDER BY tmp2.date \
+                ROWS BETWEEN {prior} PRECEDING \
+                AND {after} FOLLOWING), 0.0) AS average, \
+           tmp2.value \
+        FROM \
+           (SELECT \
+              tmp.date, \
+              tmp.value - LAG(tmp.value) OVER (ORDER BY tmp.date) as diff, \
+              tmp.value \
+            FROM ({CTE_QUERY_NETWORTH}) tmp \
+           ) tmp2 \
+        ");
+
+    let result = super::connections::execute_and_log::<NWPoint>(&query);
+    match result {
+        Ok(rows) => rows,
+        Err(e)  => {
+            print!("In networth: {:?}\n", e);
+            vec![]
+        }
+    }
+}
+
+#[derive(QueryableByName)]
+struct SplitsRange {
+    #[sql_type = "Date"]
+    mindate: NaiveDate,
+    #[sql_type = "Date"]
+    maxdate: NaiveDate,
+}
+
+#[tauri::command]
+pub fn networth_history(
+    mindate: DateTime<Utc>,
+    maxdate: DateTime<Utc>,
+    currency: CommodityId,
+) -> Vec<NWPoint> {
+    let group_by: GroupBy = GroupBy::MONTHS;
+    let include_scheduled: bool = false;
+    let prior: u8 = 0;
+    let after: u8 = 0;
+    let prior_granularity = match group_by {
+        GroupBy::MONTHS => Duration::days(prior as i64 * 30),
+        GroupBy::DAYS   => Duration::days(prior as i64),
+        GroupBy::YEARS  => Duration::days(prior as i64 * 365),
+    };
+    let after_granularity = match group_by {
+        GroupBy::MONTHS => Duration::days(after as i64 * 30),
+        GroupBy::DAYS   => Duration::days(after as i64),
+        GroupBy::YEARS  => Duration::days(after as i64 * 365),
+    };
+
+    let scenario = super::scenarios::NO_SCENARIO;
+    let occurrences = match include_scheduled {
+        true  => Occurrences::unlimited(),
+        false => Occurrences::no_recurrence(),
+    };
+
+    // Restrict the range of dates to those with actual splits
+    let dates = DateValues::new(Some(vec![
+        mindate.date() - prior_granularity,
+        maxdate.date() + after_granularity,
+    ]));
+    let list_splits = cte_list_splits(
+        &dates,
+        scenario,
+        &occurrences,
+    );
+    let query = format!("
+        WITH RECURSIVE {list_splits}
+        SELECT strftime('%Y-%m-%d', min(post_date)) AS mindate,
+        strftime('%Y-%m-%d', max(post_date)) AS maxdate
+        FROM {CTE_SPLITS} "
+    );
+    let result = super::connections::execute_and_log::<SplitsRange>(&query);
+    let adjusted = match result {
+        Ok(rows) =>
+            match rows.first() {
+                Some(r) => DateRange::new(
+                    Some(max(
+                        Utc.from_utc_date(&r.mindate),
+                        dates.get_earliest())),
+                    Some(min(
+                        Utc.from_utc_date(&r.maxdate),
+                        dates.get_most_recent())),
+                    group_by,
+                ),
+                None => DateRange::new(
+                    Some(dates.get_earliest()),
+                    Some(dates.get_most_recent()),
+                    group_by,
+                ),
+            },
+        Err(e)  => {
+            print!("In networth_history: {:?}\n", e);
+            return vec![];
+        }
+    };
+
+    query_networth_history(
+        &adjusted,
+        currency,
+        scenario,
+        &occurrences,
+        prior,
+        after,
+    )
+}
+
 
 /// For each date, compute the current price and number of shares for each
 /// account.
@@ -198,7 +283,7 @@ pub fn balance(
         &DateValues::new(Some(dates.iter().map(|d| d.date()).collect())),
         currency,
         super::scenarios::NO_SCENARIO,
-        Occurrences::no_recurrence(),
+        &Occurrences::no_recurrence(),
     )
 }
 
@@ -222,7 +307,7 @@ fn sum_splits_per_account(
     dates: &dyn DateSet,
     currency: CommodityId,
     scenario: Scenario,
-    max_scheduled_occurrences: Occurrences,
+    max_scheduled_occurrences: &Occurrences,
 ) -> HashMap<AccountId, f32> {
 
     let list_splits = cte_list_splits(
@@ -353,7 +438,7 @@ pub fn metrics(
         &dates,
         currency,
         super::scenarios::NO_SCENARIO,
-        Occurrences::no_recurrence(),
+        &Occurrences::no_recurrence(),
     );
 
     let mut accounts: HashMap<AccountId, AccountIsNWRow> = HashMap::new();
@@ -411,7 +496,7 @@ pub fn metrics(
         &dates,
         currency,
         super::scenarios::NO_SCENARIO,
-        Occurrences::no_recurrence(),
+        &Occurrences::no_recurrence(),
     );
 
     let income = -sum_splits(

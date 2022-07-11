@@ -14,10 +14,14 @@ impl Occurrences {
     }
 
     pub fn get_max_occurrences(&self) -> u16 {
-        self.max.unwrap_or(2000)
+        self.max.unwrap_or(100)
     }
 
     pub fn no_recurrence() -> Self {
         Occurrences::new(Some(0))
+    }
+
+    pub fn unlimited() -> Self {
+        Occurrences::new(None)
     }
 }

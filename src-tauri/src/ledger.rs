@@ -124,7 +124,7 @@ pub fn ledger(
     let list_splits = cte_list_splits(
         &dates.unbounded_start(),   // from start to get balance right
         super::scenarios::NO_SCENARIO,
-        Occurrences::no_recurrence(),
+        &Occurrences::no_recurrence(),
     );
     let with_values = cte_splits_with_values();
     let dates_start = dates.get_start();

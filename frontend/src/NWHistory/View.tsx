@@ -1,13 +1,13 @@
 import * as React from 'react';
 import * as d3Array from 'd3-array';
-import { daysCount, DateRange, RelativeDate,
-   rangeToHttp, dateToDate } from '@/Dates';
+import { daysCount, DateRange, RelativeDate, toDates,
+   dateToDate } from '@/Dates';
 import { ComposedChart, XAxis, YAxis, CartesianGrid, Bar,
          Tooltip, TooltipProps } from 'recharts';
 import { CommodityId } from '@/services/useAccounts';
 import Numeric from '@/Numeric';
 import usePrefs from '@/services/usePrefs';
-import useFetch from '@/services/useFetch';
+import { invoke } from '@tauri-apps/api'
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { Option } from '@/Form';
 import './NetworthHistory.scss';
@@ -19,6 +19,10 @@ export const groupByOptions: Option<GroupBy>[] = [
    {value: 'years'},
 ];
 
+interface PointJSON {
+   date: string;
+   value: number;
+}
 
 interface Point {
    date: string;
@@ -29,25 +33,45 @@ const noPoint: Point = {date: "", networth: NaN, parsedDate: new Date()};
 
 const bisectDate = d3Array.bisector((p: Point) => p.parsedDate);
 
+const invokeNWHistory = (
+   range: DateRange,
+   group_by: GroupBy,
+   currency: CommodityId,
+   include_scheduled?: boolean,
+): Promise<Point[]> => {
+   const r = toDates(range);
+   return invoke<PointJSON[] | undefined>('networth_history', {
+      mindate: r[0],
+      maxdate: r[1],
+      currency,
+      // include_scheduled: !!include_scheduled,
+      // group_by,
+   }).then(data =>
+      data
+         ? data.map(d => ({
+            date: d.date,
+            networth: d.value,
+            parsedDate: new Date(d.date),
+         }))
+         : [],
+   );
+}
+
 const useNetworthHistory = (
    range: DateRange,
    groupBy: GroupBy,
    currencyId: CommodityId,
    includeScheduled?: boolean,
 ) => {
-   const { data } = useFetch<Point[], any>({
-      url: `/api/networth_history?${rangeToHttp(range)}`
-         + `&groupby=${groupBy}`
-         + `&currency=${currencyId}`
-         + `&scheduled=${includeScheduled}`,
-      placeholder: [],
-   });
-   return React.useMemo(
-      () => data
-         ? data.map(d => ({ ...d, parsedDate: new Date(d.date) }))
-         : [],
-      [data]
+   const [data, setData] = React.useState<Point[]>([]);
+   React.useEffect(
+      () => {
+         invokeNWHistory(range, groupBy, currencyId, includeScheduled)
+            .then(d => setData(d));
+      },
+      [range, groupBy, currencyId, includeScheduled],
    );
+   return data;
 }
 
 export interface NetworthHistoryProps {

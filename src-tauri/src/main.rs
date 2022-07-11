@@ -13,6 +13,8 @@ extern crate lazy_static;
 pub mod accounts;
 pub mod cte_accounts;
 pub mod cte_list_splits;
+pub mod cte_query_networth;
+pub mod cte_query_balance;
 pub mod connections;
 pub mod dates;
 pub mod ledger;
@@ -29,6 +31,7 @@ fn main() {
     .invoke_handler(tauri::generate_handler![
         metrics::metrics,
         metrics::balance,
+        metrics::networth_history,
         accounts::fetch_accounts,
         ledger::ledger,
     ])

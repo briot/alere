@@ -12,7 +12,7 @@ pub const CTE_SPLITS_WITH_VALUE: &str = "cte_splits_value";
 pub fn cte_list_splits(
     dates: &dyn DateSet,
     scenario: Scenario,
-    max_scheduled_occurrences: Occurrences,
+    max_scheduled_occurrences: &Occurrences,
 ) -> String {
     let dates_start = dates.get_start();
     let dates_end = dates.get_end();

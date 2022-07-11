@@ -1,14 +1,21 @@
 //! Describe a range or set of dates
 
 use chrono::{Utc, TimeZone, Date};
+use serde::Deserialize;
 
 pub const CTE_DATES: &str = "cte_dates";
+pub const SQL_ARMAGEDDON: &str = "'2999-12-31'";
+
+const MAX_DATES: u16 = 366;
+// A limit that controls how many dates we return. This is used to limit the
+// scope of queries.
 
 lazy_static! {
     static ref MIN_QUERY_DATE: Date<Utc> = Utc.ymd(2000, 1, 1);
     static ref MAX_QUERY_DATE: Date<Utc> = Utc.ymd(2200, 1, 1);
 }
 
+#[derive(Deserialize)]
 pub enum GroupBy {
     MONTHS,
     DAYS,
@@ -47,8 +54,8 @@ pub trait DateSet {
 /// in the range
 
 pub struct DateRange {
-    start: Option<Date<Utc>>,
-    end: Option<Date<Utc>>,
+    start: Date<Utc>,
+    end: Date<Utc>,
     granularity: GroupBy,
 }
 
@@ -60,8 +67,8 @@ impl DateRange {
         granularity: GroupBy,
     ) -> Self {
         DateRange {
-            start: start,
-            end: end,
+            start: start.unwrap_or(*MIN_QUERY_DATE),
+            end: end.unwrap_or(*MAX_QUERY_DATE),
             granularity: granularity,
         }
     }
@@ -70,15 +77,51 @@ impl DateRange {
 impl DateSet for DateRange {
 
     fn cte(&self) -> String {
-        "".to_string()
+        let start_str = self.start.format("%Y-%m-%d");
+        let end_str = self.end.format("%Y-%m-%d");
+
+        match self.granularity {
+            GroupBy::YEARS => format!("
+                {CTE_DATES} (date) AS (
+                SELECT date('{end_str}', '+1 YEAR', 'start of year', '-1 day')
+                UNION
+                   SELECT date(m.date, '-1 YEAR')
+                   FROM {CTE_DATES} m
+                   WHERE m.date >= '{start_str}'
+                   LIMIT {MAX_DATES})"),
+
+            GroupBy::MONTHS => format!("
+                {CTE_DATES} (date) AS (
+                SELECT
+                   --  end of first month (though no need to go past the oldest
+                   --  known date in the data)
+                   date('{start_str}', 'start of month', '+1 month', '-1 day')
+                UNION
+                   --  end of next month, though no need to go past the last known
+                   --  date in the data
+                   SELECT date(m.date, 'start of month', '+2 months', '-1 day')
+                   FROM {CTE_DATES} m
+                   WHERE m.date <= '{end_str}'
+                   LIMIT {MAX_DATES})"),
+
+            GroupBy::DAYS => format!("
+                {CTE_DATES} (date) AS (
+                SELECT '{end_str}'
+                UNION
+                   SELECT date(m.date, '-1 day')
+                   FROM {CTE_DATES} m
+                   WHERE m.date >= '{start_str}'
+                   LIMIT {MAX_DATES}
+                )"),
+        }
     }
 
     fn get_earliest(&self) -> Date<Utc> {
-        self.start.unwrap_or(*MIN_QUERY_DATE)
+        self.start
     }
 
     fn get_most_recent(&self) -> Date<Utc> {
-        self.end.unwrap_or(*MAX_QUERY_DATE)
+        self.end
     }
 }
 
