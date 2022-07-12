@@ -691,6 +691,7 @@ const Ledger: React.FC<BaseLedgerProps & ExtraProps> = p => {
    );
    const transactions = useTransactions(
       accounts.accounts, p.range, date, p.includeScheduled);
+   window.console.log('MANU transactions=', transactions);
    const singleAccount =
       accounts.accounts.length === 1 ? accounts.accounts[0] : undefined;
    const total = React.useMemo(

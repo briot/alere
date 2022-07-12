@@ -13,9 +13,8 @@ const invokeLedger = (
    return invoke('ledger', {
       mindate: r[0],
       maxdate: r[1],
-      account_ids: accounts.map(a => a.id).sort().join(','),
-      max_scheduled_occurrences:
-         include_scheduled === undefined ? undefined : 1,
+      accountids: accounts.map(a => a.id),
+      occurrences: include_scheduled ? 1 : 0,
    });
 }
 

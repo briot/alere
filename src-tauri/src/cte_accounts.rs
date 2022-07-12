@@ -17,6 +17,6 @@ pub fn cte_transactions_for_accounts(
         "{CTE_TRANSACTIONS_FOR_ACCOUNTS} AS ( \
         SELECT DISTINCT transaction_id \
         FROM {CTE_SPLITS} s \
-        WHERE s.account_id IN ({ids})"
+        WHERE s.account_id IN ({ids}))"
     )
 }

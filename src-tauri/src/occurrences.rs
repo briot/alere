@@ -1,15 +1,15 @@
 use serde::Deserialize;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(transparent)]   // serialize as if it was only 'max'
 pub struct Occurrences {
-    max: Option<u16>,
+    pub max: Option<u16>,
 }
 
 impl Occurrences {
-    pub fn new(max: Option<u16>) -> Self {
+    pub fn new(max: u16) -> Self {
         Occurrences {
-            max: max,
+            max: Some(max),
         }
     }
 
@@ -18,10 +18,12 @@ impl Occurrences {
     }
 
     pub fn no_recurrence() -> Self {
-        Occurrences::new(Some(0))
+        Occurrences::new(0)
     }
 
     pub fn unlimited() -> Self {
-        Occurrences::new(None)
+        Occurrences {
+            max: None,
+        }
     }
 }

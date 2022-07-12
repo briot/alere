@@ -4,11 +4,12 @@ use diesel::sqlite::{Sqlite, SqliteConnection};
 use diesel::sql_types::{Text, Timestamp, Nullable};
 use diesel::r2d2::{Pool, ConnectionManager, PooledConnection};
 use diesel::{sql_query, QueryResult, RunQueryDsl};
-use dotenv::dotenv;
 use memoize::memoize;
 use regex::Regex;
 use rrule::{RRule, RRuleSet, Unvalidated, RRuleError};
-use std::env;
+use tauri::api::path::document_dir;
+
+embed_migrations!();  //  creates embedded_migrations
 
 sql_function!(
     fn alr_next_event(
@@ -69,13 +70,35 @@ fn add_functions(connection: &SqliteConnection) {
 type SqlitePool = Pool<ConnectionManager<SqliteConnection>>;
 
 fn create_pool() -> SqlitePool {
-   dotenv().ok();
-   let database_url = env::var("DATABASE_URL")
-       .expect("DATABASE_URL must be set");
-   SqlitePool::builder()
-      .max_size(8)
-      .build(ConnectionManager::new(database_url))
-      .expect("Failed to create connection pool")
+    let db = match document_dir() {
+        Some(mut doc) => {
+            doc.push("alere");
+
+            // Create the directory if needed
+            _ = std::fs::create_dir(doc.as_path());
+
+            doc.push("alere_db.sqlite3");
+            String::from(doc.to_str().unwrap())
+        },
+        None => String::from("/tmp/alere_db.sqlite3"),
+    };
+    print!("Database is {:?}\n", &db);
+    let pool = SqlitePool::builder()
+       .max_size(8)
+       .build(ConnectionManager::new(db))
+       .expect("Failed to create connection pool");
+
+    let connection = pool.get().unwrap();
+
+    // Run the migrations (and create the schema if needed)
+//    embedded_migrations::run(&connection);
+
+    // By default the output is thrown out. If you want to redirect it to stdout, you
+    // should call embedded_migrations::run_with_output.
+    embedded_migrations::run_with_output(
+        &connection, &mut std::io::stdout());
+
+    pool
 }
 
 lazy_static! {
@@ -94,10 +117,10 @@ pub fn execute_and_log
    <U: diesel::query_source::QueryableByName<Sqlite>>
    (msg: &str, query: &str) -> QueryResult<Vec<U>>
 {
-    let t = RE_REMOVE_COMMENTS.replace_all(query, "");
-    let query = RE_COLLAPSE_SPACES.replace_all(&t, " ");
     let connection = super::connections::get_connection();
-//    dbg!(&query);
+    let query = RE_REMOVE_COMMENTS.replace_all(query, "");
+    let query = RE_COLLAPSE_SPACES.replace_all(&query, " ");
+    dbg!((&msg, &query));
     let res = sql_query(query).load(&connection);
     if let Err(ref r) = res {
         print!("{:?}: Error in query {:?}", msg, r);
