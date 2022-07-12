@@ -83,7 +83,8 @@ pub fn networth(
           AND k.is_networth
     ");
 
-    let result = super::connections::execute_and_log::<NetworthRow>(&query);
+    let result = super::connections::execute_and_log::<NetworthRow>(
+        &"networth", &query);
     match result {
         Ok(rows) => {
             let mut per_account: HashMap<AccountId, PerAccount> =
@@ -103,10 +104,7 @@ pub fn networth(
             }
             per_account.values().cloned().collect()
         },
-        Err(e)  => {
-            print!("In networth: {:?}\n", e);
-            vec![]
-        }
+        Err(_)  => vec![]
     }
 }
 
@@ -173,14 +171,9 @@ fn query_networth_history(
            ) tmp2 \
         ");
 
-    let result = super::connections::execute_and_log::<NWPoint>(&query);
-    match result {
-        Ok(rows) => rows,
-        Err(e)  => {
-            print!("In networth: {:?}\n", e);
-            vec![]
-        }
-    }
+    let result = super::connections::execute_and_log::<NWPoint>(
+        &"query_networth_history", &query);
+    result.unwrap_or(vec![])
 }
 
 #[derive(QueryableByName)]
@@ -234,7 +227,8 @@ pub fn networth_history(
         strftime('%Y-%m-%d', max(post_date)) AS maxdate
         FROM {CTE_SPLITS} "
     );
-    let result = super::connections::execute_and_log::<SplitsRange>(&query);
+    let result = super::connections::execute_and_log::<SplitsRange>(
+        &"networth_history", &query);
     let adjusted = match result {
         Ok(rows) =>
             match rows.first() {
@@ -253,10 +247,7 @@ pub fn networth_history(
                     group_by,
                 ),
             },
-        Err(e)  => {
-            print!("In networth_history: {:?}\n", e);
-            return vec![];
-        }
+        Err(_)  => return vec![],
     };
 
     query_networth_history(
@@ -326,24 +317,18 @@ fn sum_splits_per_account(
         "
     );
     let rows = super::connections::execute_and_log::<SplitsPerAccount>(
-        &query
+        &"sum_splits_per_account", &query
     );
-    match rows {
-        Ok(r) => {
-            let mut res: HashMap<AccountId, f32> = HashMap::new();
-            for row in r.iter() {
-                res.insert(
-                    row.account_id,
-                    row.value,
-                );
-            }
-            res
-        },
-        Err(e) => {
-            print!("In sum_splits_per_account: {:?}\n", e);
-            HashMap::new()
+    let mut res: HashMap<AccountId, f32> = HashMap::new();
+    if let Ok(r) = rows {
+        for row in r.iter() {
+            res.insert(
+                row.account_id,
+                row.value,
+            );
         }
     }
+    res
 }
 
 /// Compute the total networth
@@ -447,6 +432,7 @@ pub fn metrics(
     let expense = super::accounts::AccountKindCategory::EXPENSE as u32;
 
     let account_rows = super::connections::execute_and_log::<AccountIsNWRow>(
+        &"metrics",
         &format!("SELECT a.id AS account_id, \
             k.is_networth, \
             k.category = {equity} AND k.is_networth AS is_liquid, \
@@ -460,16 +446,11 @@ pub fn metrics(
          ON (a.kind_id=k.id)"
         )
     );
-    match account_rows {
-        Ok(acc) => {
-            for a in acc {
-                accounts.insert(a.account_id, a);
-            }
-        },
-        Err(e) => {
-            print!("metrics: error processing query {:?}\n", e);
-        },
-    };
+    if let Ok(acc) = account_rows {
+        for a in acc {
+            accounts.insert(a.account_id, a);
+        }
+    }
 
     let networth_at_start = sum_networth(
         &all_networth,

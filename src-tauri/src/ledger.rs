@@ -1,5 +1,5 @@
 use chrono::{Utc, DateTime, NaiveDate, TimeZone};
-use diesel::sql_types::{Integer, Float, Bool, Text, Date};
+use diesel::sql_types::{Integer, Float, Bool, Text, Date, Nullable};
 use serde::Serialize;
 use super::dates::{DateSet, DateValues};
 use super::models::{AccountId, CommodityId};
@@ -47,11 +47,11 @@ struct SplitRow {
     #[sql_type = "Date"]
     timestamp: NaiveDate,
 
-    #[sql_type = "Text"]
-    memo: String,
+    #[sql_type = "Nullable<Text>"]
+    memo: Option<String>,
 
-    #[sql_type = "Text"]
-    check_number: String,
+    #[sql_type = "Nullable<Text>"]
+    check_number: Option<String>,
 
     #[sql_type = "Float"]
     scaled_qty: f32,
@@ -80,8 +80,8 @@ struct SplitRow {
     #[sql_type = "Bool"]
     scheduled: bool,
 
-    #[sql_type = "Text"]
-    payee: String,
+    #[sql_type = "Nullable<Text>"]
+    payee: Option<String>,
 
     #[sql_type = "Integer"]
     scaled_qty_balance: i32,
@@ -107,7 +107,6 @@ pub fn ledger(
     max_scheduled_occurrences: Occurrences,
 ) -> Vec<TransactionDescr> {
     let dates = DateValues::new(Some(vec![mindate.date(), maxdate.date()]));
-    dbg!("ledger", &mindate, &maxdate);
     let filter_account_cte = match &account_ids {
         Some(ids) => {
             let acc = cte_transactions_for_accounts(&ids);
@@ -124,7 +123,7 @@ pub fn ledger(
     let list_splits = cte_list_splits(
         &dates.unbounded_start(),   // from start to get balance right
         super::scenarios::NO_SCENARIO,
-        &Occurrences::new(Some(1)),
+        &max_scheduled_occurrences,
     );
     let with_values = cte_splits_with_values();
     let dates_start = dates.get_start();
@@ -148,7 +147,7 @@ pub fn ledger(
              s.value_commodity_id,
              s.reconcile,
              s.scheduled,
-             COALESCE(p.name, '') AS payee,
+             p.name AS payee,
              sum(s.scaled_qty)
                 OVER (PARTITION BY s.account_id
                       ORDER BY s.timestamp, s.transaction_id, s.post_date
@@ -169,7 +168,8 @@ pub fn ledger(
        ORDER BY s.timestamp, s.transaction_id
        ");
 
-    let rows = super::connections::execute_and_log::<SplitRow>(&query);
+    let rows = super::connections::execute_and_log::<SplitRow>(
+        "ledger", &query);
     match rows {
         Ok(r) => {
             let mut result: Vec<TransactionDescr> = vec![];
@@ -186,8 +186,9 @@ pub fn ledger(
                             .and_hms(0, 0, 0),
                         balance: 0.0,
                         balance_shares: 0.0,
-                        memo: split.memo,
-                        check_number: split.check_number,
+                        memo: split.memo.unwrap_or("".to_string()),
+                        check_number: split.check_number
+                            .unwrap_or("".to_string()),
                         is_recurring: split.scheduled,
                         splits: vec![],
                     });
@@ -202,14 +203,11 @@ pub fn ledger(
                     reconcile: split.reconcile,
                     shares: split.scaled_qty / split.commodity_scu,
                     price: split.computed_price,
-                    payee: split.payee,
+                    payee: split.payee.unwrap_or("".to_string()),
                 });
             }
             result
         },
-        Err(e) => {
-            print!("ledger: error processing query {:?}\n", e);
-            vec![]
-        }
+        Err(_) => vec![]
     }
 }

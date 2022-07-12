@@ -117,6 +117,7 @@ const defaultPages: PageDescr[] = [
             valueColumn: true,
             hideBalance: true,
             hideReconcile: true,
+            includeScheduled: true,
             rowspan: 1,
             colspan: 2,
          } as LedgerPanelProps,

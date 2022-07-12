@@ -12,9 +12,6 @@ const Assets: React.FC<AssetsProps> = p => {
    const { prefs } = usePrefs();
    const currency = prefs.currencyId;
    const pl = usePL('1 day', currency);
-
-   window.console.log('MANU Assets pl=', pl);
-
    const assetrow = (r: {
       head: string,
       amount: number,

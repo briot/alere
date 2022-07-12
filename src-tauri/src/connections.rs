@@ -92,15 +92,15 @@ pub fn get_connection() -> PooledConnection<ConnectionManager<SqliteConnection>>
 
 pub fn execute_and_log
    <U: diesel::query_source::QueryableByName<Sqlite>>
-   (query: &str) -> QueryResult<Vec<U>>
+   (msg: &str, query: &str) -> QueryResult<Vec<U>>
 {
     let t = RE_REMOVE_COMMENTS.replace_all(query, "");
     let query = RE_COLLAPSE_SPACES.replace_all(&t, " ");
     let connection = super::connections::get_connection();
-    dbg!(&query);
+//    dbg!(&query);
     let res = sql_query(query).load(&connection);
     if let Err(ref r) = res {
-        print!("Error in query {:?}", r);
+        print!("{:?}: Error in query {:?}", msg, r);
     }
     res
 }

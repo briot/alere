@@ -345,7 +345,6 @@ export const AccountsProvider = (p: AccountsProviderProps) => {
    React.useEffect(
       () => {
          invokeFetchAccounts().then(json => {
-            window.console.log('MANU accountsProvider received', json);
             setData({
                accounts: new AccountList(json, true /* loaded */),
             });

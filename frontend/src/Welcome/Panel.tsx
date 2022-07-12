@@ -7,7 +7,6 @@ export interface WelcomePanelProps extends PanelBaseProps, WelcomeProps {
 }
 
 const WelcomePanel = (p: PanelProps<WelcomePanelProps>) => {
-   window.console.log('MANU welcome panel');
    return (
       <Panel
          {...p}

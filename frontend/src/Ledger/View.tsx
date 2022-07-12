@@ -48,6 +48,7 @@ export interface BaseLedgerProps extends TablePrefs {
    hideReconcile?: boolean;
    restrictExpandArrow?: boolean; // if true, only show arrow if more than 2 splits
    sortOn?: string;  // +colid  or -colid
+   includeScheduled?: boolean;
 }
 
 interface Totals {
@@ -688,9 +689,8 @@ const Ledger: React.FC<BaseLedgerProps & ExtraProps> = p => {
       () => p.date ?? new Date(),
       [p.date]
    );
-   const transactions = useTransactions(accounts.accounts, p.range, date);
-   window.console.log('MANU Ledger: transactions=', transactions,
-      'accounts=', accounts);
+   const transactions = useTransactions(
+      accounts.accounts, p.range, date, p.includeScheduled);
    const singleAccount =
       accounts.accounts.length === 1 ? accounts.accounts[0] : undefined;
    const total = React.useMemo(
