@@ -6,6 +6,7 @@
     "start": "concurrently --kill-others-on-fail -c=\"white,green,blue,red,cyan\" -n=\"vite,rust,tsc ,ftes,lint\" \"vite --clearScreen false\" \"cargo tauri dev\" \"tsc -w --preserveWatchOutput\" \"jest --watch\" \"esw -w --changed --ext .ts,.tsx src\"",
 
     "tauri": "tauri",
+    "fmt": "cd src-tauri && cargo fmt",
     "build": "tsc && vite build && tauri build"
   },
   "dependencies": {

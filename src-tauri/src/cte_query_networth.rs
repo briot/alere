@@ -1,6 +1,6 @@
-use super::dates::{CTE_DATES};
-use super::models::{CommodityId};
 use super::cte_query_balance::CTE_BALANCES_CURRENCY;
+use super::dates::CTE_DATES;
+use super::models::CommodityId;
 
 pub const CTE_QUERY_NETWORTH: &str = "cte_qn";
 
@@ -14,10 +14,9 @@ pub const CTE_QUERY_NETWORTH: &str = "cte_qn";
 ///     if 0, ignore all scheduled transactions.
 ///     if 1, only look at the next occurrence of them.
 
-pub fn cte_query_networth(
-    currency: CommodityId,
-) -> String {
-    return format!("
+pub fn cte_query_networth(currency: CommodityId) -> String {
+    return format!(
+        "
        {CTE_QUERY_NETWORTH} AS (  \
        SELECT   \
           {CTE_DATES}.date, \
@@ -39,5 +38,6 @@ pub fn cte_query_networth(
           AND {CTE_BALANCES_CURRENCY}.account_id = alr_accounts.id  \
           AND k.is_networth  \
        GROUP BY {CTE_DATES}.date \
-    )")
+    )"
+    );
 }

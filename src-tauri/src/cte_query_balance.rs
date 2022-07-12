@@ -1,10 +1,8 @@
-use super::dates::SQL_ARMAGEDDON;
 use super::cte_list_splits::CTE_SPLITS;
-
+use super::dates::SQL_ARMAGEDDON;
 
 pub const CTE_BALANCES: &str = "cte_bl";
 pub const CTE_BALANCES_CURRENCY: &str = "cte_bl_cur";
-
 
 /// Compute the balance of accounts for all time ranges.
 ///
@@ -15,7 +13,8 @@ pub const CTE_BALANCES_CURRENCY: &str = "cte_bl_cur";
 /// Requires cte_list_splits
 
 pub fn cte_balances() -> String {
-    format!("
+    format!(
+        "
         {CTE_BALANCES} AS (
            SELECT
               a.id AS account_id,
@@ -36,7 +35,8 @@ pub fn cte_balances() -> String {
               {CTE_SPLITS} s
               JOIN alr_accounts a ON (s.account_id = a.id)
         )
-    ")
+    "
+    )
 }
 
 /// Similar to cte_balances, but also combines with the prices history to
@@ -45,7 +45,8 @@ pub fn cte_balances() -> String {
 /// Requires cte_balances
 
 pub fn cte_balances_currency() -> String {
-    format!("
+    format!(
+        "
     {CTE_BALANCES_CURRENCY} AS (
         SELECT
            b.account_id,
@@ -76,5 +77,6 @@ pub fn cte_balances_currency() -> String {
 
            --  target commodities can only be currencies
            AND alr_commodities.kind = 'C'
-    )")
+    )"
+    )
 }

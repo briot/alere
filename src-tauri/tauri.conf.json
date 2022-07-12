@@ -3,7 +3,7 @@
     "beforeBuildCommand": "",
     "beforeDevCommand": "",
     "devPath": "http://localhost:3001",
-    "distDir": "../assets"
+    "distDir": "../dist"
   },
   "package": {
     "productName": "alere",
@@ -28,7 +28,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.geneaprove",
+      "identifier": "com.briot.alere",
       "longDescription": "",
       "macOS": {
         "entitlements": null,

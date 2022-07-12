@@ -1,27 +1,26 @@
-use chrono::{NaiveDateTime, NaiveDate};
+use chrono::{NaiveDate, NaiveDateTime};
 use serde::Serialize;
 
-pub type AccountId = i32;  //  Diesel does not provide Integer->u32 conversion
+pub type AccountId = i32; //  Diesel does not provide Integer->u32 conversion
 pub type CommodityId = i32;
 pub type AccountKindId = i32;
 pub type InstitutionId = i32;
 
-
 #[derive(Queryable, Debug, Serialize)]
 pub struct AccountKind {
-   pub id: AccountKindId,
-   pub name: String,
-   pub name_when_positive: String,
-   pub name_when_negative: String,
-   pub category: i32,
-   pub is_work_income: bool,
-   pub is_passive_income: bool,
-   pub is_unrealized: bool,
-   pub is_networth: bool,
-   pub is_trading: bool,
-   pub is_stock: bool,
-   pub is_income_tax: bool,
-   pub is_misc_tax: bool,
+    pub id: AccountKindId,
+    pub name: String,
+    pub name_when_positive: String,
+    pub name_when_negative: String,
+    pub category: i32,
+    pub is_work_income: bool,
+    pub is_passive_income: bool,
+    pub is_unrealized: bool,
+    pub is_networth: bool,
+    pub is_trading: bool,
+    pub is_stock: bool,
+    pub is_income_tax: bool,
+    pub is_misc_tax: bool,
 }
 
 #[derive(Queryable, Debug, Serialize)]

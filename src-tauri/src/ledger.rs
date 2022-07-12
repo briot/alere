@@ -1,13 +1,11 @@
-use chrono::{Utc, DateTime, NaiveDate, TimeZone};
-use diesel::sql_types::{Integer, Float, Bool, Text, Date, Nullable};
-use serde::Serialize;
+use super::cte_accounts::{cte_transactions_for_accounts, CTE_TRANSACTIONS_FOR_ACCOUNTS};
+use super::cte_list_splits::{cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
 use super::dates::{DateSet, DateValues};
 use super::models::{AccountId, CommodityId};
 use super::occurrences::Occurrences;
-use super::cte_list_splits::{
-    cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
-use super::cte_accounts::{
-    cte_transactions_for_accounts, CTE_TRANSACTIONS_FOR_ACCOUNTS};
+use chrono::{DateTime, NaiveDate, TimeZone, Utc};
+use diesel::sql_types::{Bool, Date, Float, Integer, Nullable, Text};
+use serde::Serialize;
 
 #[derive(Serialize, Clone, Debug)]
 pub struct SplitDescr {
@@ -106,32 +104,39 @@ pub fn ledger(
     accountids: Vec<AccountId>,
     occurrences: u16,
 ) -> Vec<TransactionDescr> {
-    print!("ledger {mindate} {maxdate} {:?} {:?}\n", accountids, occurrences);
+    print!(
+        "ledger {mindate} {maxdate} {:?} {:?}\n",
+        accountids, occurrences
+    );
     let occ = Occurrences::new(occurrences);
     let dates = DateValues::new(Some(vec![mindate.date(), maxdate.date()]));
     let (filter_acct_cte, filter_acct_from) = match accountids.len() {
         0 => ("".to_string(), "".to_string()),
         _ => {
             let acc = cte_transactions_for_accounts(&accountids);
-            (format!(", {acc}"),
-             format!(
-                " JOIN {CTE_TRANSACTIONS_FOR_ACCOUNTS} t \
-                 USING (transaction_id)"))
-        },
+            (
+                format!(", {acc}"),
+                format!(
+                    " JOIN {CTE_TRANSACTIONS_FOR_ACCOUNTS} t \
+                 USING (transaction_id)"
+                ),
+            )
+        }
     };
     let ref_id: AccountId = match accountids.len() {
         1 => *accountids.first().unwrap(),
-        _ => -1
+        _ => -1,
     };
 
     let list_splits = cte_list_splits(
-        &dates.unbounded_start(),   // from start to get balance right
+        &dates.unbounded_start(), // from start to get balance right
         super::scenarios::NO_SCENARIO,
         &occ,
     );
     let with_values = cte_splits_with_values();
     let dates_start = dates.get_start();
-    let query = format!(" \
+    let query = format!(
+        " \
        WITH RECURSIVE {list_splits}  \
        , {with_values}
        {filter_acct_cte}
@@ -170,29 +175,26 @@ pub fn ledger(
          --  transactions.
          OR s.scheduled IS NOT NULL
        ORDER BY s.timestamp, s.transaction_id
-       ");
+       "
+    );
 
-    let rows = super::connections::execute_and_log::<SplitRow>(
-        &"ledger", &query);
+    let rows = super::connections::execute_and_log::<SplitRow>(&"ledger", &query);
     match rows {
         Ok(r) => {
             let mut result: Vec<TransactionDescr> = vec![];
             for split in r {
-                let need_new =
-                    result.len() == 0
+                let need_new = result.len() == 0
                     || result.last().unwrap().id != split.transaction_id
                     || result.last().unwrap().occurrence != split.occurrence;
                 if need_new {
                     result.push(TransactionDescr {
                         id: split.transaction_id,
                         occurrence: split.occurrence,
-                        date: Utc.from_utc_date(&split.timestamp)
-                            .and_hms(0, 0, 0),
+                        date: Utc.from_utc_date(&split.timestamp).and_hms(0, 0, 0),
                         balance: 0.0,
                         balance_shares: 0.0,
                         memo: split.memo.unwrap_or("".to_string()),
-                        check_number: split.check_number
-                            .unwrap_or("".to_string()),
+                        check_number: split.check_number.unwrap_or("".to_string()),
                         is_recurring: split.scheduled.unwrap_or(false),
                         splits: vec![],
                     });
@@ -201,17 +203,13 @@ pub fn ledger(
                 let mut r = result.last_mut().unwrap();
 
                 if split.account_id == ref_id {
-                    r.balance_shares +=
-                        split.scaled_qty_balance / split.commodity_scu;
-                    r.balance =
-                        r.balance_shares
-                        * split.computed_price.unwrap_or(std::f32::NAN);
+                    r.balance_shares += split.scaled_qty_balance / split.commodity_scu;
+                    r.balance = r.balance_shares * split.computed_price.unwrap_or(std::f32::NAN);
                 }
 
                 r.splits.push(SplitDescr {
                     account_id: split.account_id,
-                    post_date: Utc.from_utc_date(&split.post_date)
-                        .and_hms(0, 0, 0),
+                    post_date: Utc.from_utc_date(&split.post_date).and_hms(0, 0, 0),
                     amount: split.value,
                     currency: split.value_commodity_id,
                     reconcile: split.reconcile.chars().next().unwrap(),
@@ -221,7 +219,7 @@ pub fn ledger(
                 });
             }
             result
-        },
-        Err(_) => vec![]
+        }
+        Err(_) => vec![],
     }
 }

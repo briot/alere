@@ -1,6 +1,6 @@
 //! Describe a range or set of dates
 
-use chrono::{Utc, TimeZone, Date};
+use chrono::{Date, TimeZone, Utc};
 use serde::Deserialize;
 
 pub const CTE_DATES: &str = "cte_dates";
@@ -25,7 +25,6 @@ pub enum GroupBy {
 /// Describes a set of dates in a range [start, end]
 
 pub trait DateSet {
-
     fn get_earliest(&self) -> Date<Utc>;
     fn get_most_recent(&self) -> Date<Utc>;
 
@@ -35,7 +34,7 @@ pub trait DateSet {
     /// Return a range that starts at the beginning of times and extends till
     /// the end of self
     fn unbounded_start(&self) -> DateValues {
-        DateValues::new(Some(vec!(*MIN_QUERY_DATE, self.get_most_recent())))
+        DateValues::new(Some(vec![*MIN_QUERY_DATE, self.get_most_recent()]))
     }
 
     /// Return the start date, formatted as a string suitable for sql
@@ -47,7 +46,6 @@ pub trait DateSet {
     fn get_end(&self) -> String {
         self.get_most_recent().format("%Y-%m-%d").to_string()
     }
-
 }
 
 /// A special implementation of DateSet, for all dates at regular interval
@@ -60,12 +58,7 @@ pub struct DateRange {
 }
 
 impl DateRange {
-
-    pub fn new(
-        start: Option<Date<Utc>>,
-        end: Option<Date<Utc>>,
-        granularity: GroupBy,
-    ) -> Self {
+    pub fn new(start: Option<Date<Utc>>, end: Option<Date<Utc>>, granularity: GroupBy) -> Self {
         DateRange {
             start: start.unwrap_or(*MIN_QUERY_DATE),
             end: end.unwrap_or(*MAX_QUERY_DATE),
@@ -75,22 +68,24 @@ impl DateRange {
 }
 
 impl DateSet for DateRange {
-
     fn cte(&self) -> String {
         let start_str = self.start.format("%Y-%m-%d");
         let end_str = self.end.format("%Y-%m-%d");
 
         match self.granularity {
-            GroupBy::YEARS => format!("
+            GroupBy::YEARS => format!(
+                "
                 {CTE_DATES} (date) AS (
                 SELECT date('{end_str}', '+1 YEAR', 'start of year', '-1 day')
                 UNION
                    SELECT date(m.date, '-1 YEAR')
                    FROM {CTE_DATES} m
                    WHERE m.date >= '{start_str}'
-                   LIMIT {MAX_DATES})"),
+                   LIMIT {MAX_DATES})"
+            ),
 
-            GroupBy::MONTHS => format!("
+            GroupBy::MONTHS => format!(
+                "
                 {CTE_DATES} (date) AS (
                 SELECT
                    --  end of first month (though no need to go past the oldest
@@ -102,9 +97,11 @@ impl DateSet for DateRange {
                    SELECT date(m.date, 'start of month', '+2 months', '-1 day')
                    FROM {CTE_DATES} m
                    WHERE m.date <= '{end_str}'
-                   LIMIT {MAX_DATES})"),
+                   LIMIT {MAX_DATES})"
+            ),
 
-            GroupBy::DAYS => format!("
+            GroupBy::DAYS => format!(
+                "
                 {CTE_DATES} (date) AS (
                 SELECT '{end_str}'
                 UNION
@@ -112,7 +109,8 @@ impl DateSet for DateRange {
                    FROM {CTE_DATES} m
                    WHERE m.date >= '{start_str}'
                    LIMIT {MAX_DATES}
-                )"),
+                )"
+            ),
         }
     }
 
@@ -132,46 +130,41 @@ pub struct DateValues {
 }
 
 impl DateValues {
-
     pub fn new(dates: Option<Vec<Date<Utc>>>) -> Self {
-        DateValues {
-            dates: dates,
-        }
+        DateValues { dates: dates }
     }
 }
 
 impl DateSet for DateValues {
-
     fn cte(&self) -> String {
         let nested = match self.dates.as_ref() {
-            Some(d) =>
-                format!(
-                    "VALUES {}",
-                    d.iter()
+            Some(d) => format!(
+                "VALUES {}",
+                d.iter()
                     .enumerate()
-                    .map(|(idx, d)|
-                        format!(
-                            "({},{})",
-                            idx + 1,
-                            d.format("'%Y-%m-%d'")
-                        )
-                    )
+                    .map(|(idx, d)| format!("({},{})", idx + 1, d.format("'%Y-%m-%d'")))
                     .collect::<Vec<_>>()
                     .join(",")
-                ),
-            None    => "SELECT 1, NULL WHERE 0".to_string()
+            ),
+            None => "SELECT 1, NULL WHERE 0".to_string(),
         };
 
         format!("{CTE_DATES} (idx, date) AS ({nested})")
     }
 
     fn get_earliest(&self) -> Date<Utc> {
-        *self.dates.as_ref().map_or(None, |d| d.first())
+        *self
+            .dates
+            .as_ref()
+            .map_or(None, |d| d.first())
             .unwrap_or(&MIN_QUERY_DATE)
     }
 
     fn get_most_recent(&self) -> Date<Utc> {
-        *self.dates.as_ref().map_or(None, |d| d.last())
+        *self
+            .dates
+            .as_ref()
+            .map_or(None, |d| d.last())
             .unwrap_or(&MAX_QUERY_DATE)
     }
 }

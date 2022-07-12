@@ -1,7 +1,6 @@
-use super::scenarios::{NO_SCENARIO, Scenario};
-use super::dates::{DateSet};
+use super::dates::DateSet;
 use super::occurrences::Occurrences;
-
+use super::scenarios::{Scenario, NO_SCENARIO};
 
 pub const CTE_SPLITS: &str = "cte_splits";
 pub const CTE_SPLITS_WITH_VALUE: &str = "cte_splits_value";
@@ -18,7 +17,8 @@ pub fn cte_list_splits(
     let dates_end = dates.get_end();
     let maxo = max_scheduled_occurrences.get_max_occurrences();
 
-    let non_recurring_splits = format!("
+    let non_recurring_splits = format!(
+        "
         SELECT
            t.id as transaction_id,
            1 as occurrence,
@@ -43,12 +43,14 @@ pub fn cte_list_splits(
                  OR t.scenario_id = {scenario})
             AND post_date >= '{dates_start}'
             AND post_date <= '{dates_end}'
-    ");
+    "
+    );
 
     if maxo > 0 {
         // overrides the post_date for the splits associated with a
         // recurring transaction
-        return format!("recurring_splits_and_transaction AS (
+        return format!(
+            "recurring_splits_and_transaction AS (
             SELECT
                t.id as transaction_id,
                1 as occurrence,
@@ -106,18 +108,19 @@ pub fn cte_list_splits(
                 --  acknowledged.
                 --   AND post_date >= '{dates_start}'
            UNION {non_recurring_splits}
-        )")
+        )"
+        );
     } else {
-        return format!("{CTE_SPLITS} AS ({non_recurring_splits})")
+        return format!("{CTE_SPLITS} AS ({non_recurring_splits})");
     }
 }
-
 
 /// Returns all splits and their associated value, scaled as needed.
 /// Requires cte_list_splits
 
 pub fn cte_splits_with_values() -> String {
-    format!("
+    format!(
+        "
         {CTE_SPLITS_WITH_VALUE} AS (
            SELECT
               s.*,
@@ -130,7 +133,6 @@ pub fn cte_splits_with_values() -> String {
               JOIN alr_accounts ON (s.account_id = alr_accounts.id)
               JOIN alr_commodities c ON (s.value_commodity_id=c.id)
         )
-    ")
+    "
+    )
 }
-
-
