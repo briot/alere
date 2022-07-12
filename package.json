@@ -7,6 +7,8 @@
 
     "tauri": "tauri",
     "fmt": "cd src-tauri && cargo fmt",
+    "clippy": "cd src-tauri && cargo clippy",
+    "clippyfix": "cd src-tauri && cargo clippy --fix",
     "build": "tsc && vite build && tauri build"
   },
   "dependencies": {

@@ -104,8 +104,8 @@ pub fn ledger(
     accountids: Vec<AccountId>,
     occurrences: u16,
 ) -> Vec<TransactionDescr> {
-    print!(
-        "ledger {mindate} {maxdate} {:?} {:?}\n",
+    println!(
+        "ledger {mindate} {maxdate} {:?} {:?}",
         accountids, occurrences
     );
     let occ = Occurrences::new(occurrences);
@@ -178,12 +178,12 @@ pub fn ledger(
        "
     );
 
-    let rows = super::connections::execute_and_log::<SplitRow>(&"ledger", &query);
+    let rows = super::connections::execute_and_log::<SplitRow>("ledger", &query);
     match rows {
         Ok(r) => {
             let mut result: Vec<TransactionDescr> = vec![];
             for split in r {
-                let need_new = result.len() == 0
+                let need_new = result.is_empty()
                     || result.last().unwrap().id != split.transaction_id
                     || result.last().unwrap().occurrence != split.occurrence;
                 if need_new {

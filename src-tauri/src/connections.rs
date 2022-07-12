@@ -23,7 +23,7 @@ fn parse_ruleset(start: NaiveDateTime, rule: String) -> Result<RRuleSet, RRuleEr
     let s = UTC.timestamp(start.timestamp(), 0);
     let raw: RRule<Unvalidated> = rule.parse()?;
     let r = raw.build(s)?;
-    return Ok(r);
+    Ok(r)
 }
 
 fn next_event(
@@ -74,7 +74,7 @@ fn create_pool() -> SqlitePool {
         }
         None => String::from("/tmp/alere_db.sqlite3"),
     };
-    print!("Database is {:?}\n", &db);
+    println!("Database is {:?}", &db);
     let pool = SqlitePool::builder()
         .max_size(8)
         .build(ConnectionManager::new(db))

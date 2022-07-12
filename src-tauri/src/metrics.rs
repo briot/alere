@@ -80,7 +80,7 @@ pub fn networth(
     "
     );
 
-    let result = super::connections::execute_and_log::<NetworthRow>(&"networth", &query);
+    let result = super::connections::execute_and_log::<NetworthRow>("networth", &query);
     match result {
         Ok(rows) => {
             let mut per_account: HashMap<AccountId, PerAccount> = HashMap::new();
@@ -163,8 +163,8 @@ fn query_networth_history(
         "
     );
 
-    let result = super::connections::execute_and_log::<NWPoint>(&"query_networth_history", &query);
-    result.unwrap_or(vec![])
+    let result = super::connections::execute_and_log::<NWPoint>("query_networth_history", &query);
+    result.unwrap_or_default()
 }
 
 #[derive(QueryableByName)]
@@ -215,7 +215,7 @@ pub fn networth_history(
         strftime('%Y-%m-%d', max(post_date)) AS maxdate
         FROM {CTE_SPLITS} "
     );
-    let result = super::connections::execute_and_log::<SplitsRange>(&"networth_history", &query);
+    let result = super::connections::execute_and_log::<SplitsRange>("networth_history", &query);
     let adjusted = match result {
         Ok(rows) => match rows.first() {
             Some(r) => DateRange::new(
@@ -280,7 +280,7 @@ fn sum_splits_per_account(
         "
     );
     let rows =
-        super::connections::execute_and_log::<SplitsPerAccount>(&"sum_splits_per_account", &query);
+        super::connections::execute_and_log::<SplitsPerAccount>("sum_splits_per_account", &query);
     let mut res: HashMap<AccountId, f32> = HashMap::new();
     if let Ok(r) = rows {
         for row in r.iter() {
@@ -320,7 +320,7 @@ where
 {
     let mut result: f32 = 0.0;
     for (account_id, value) in all_splits {
-        if filter(&account_id) {
+        if filter(account_id) {
             result += value;
         }
     }
@@ -387,7 +387,7 @@ pub fn metrics(mindate: DateTime<Utc>, maxdate: DateTime<Utc>, currency: Commodi
     let expense = super::accounts::AccountKindCategory::EXPENSE as u32;
 
     let account_rows = super::connections::execute_and_log::<AccountIsNWRow>(
-        &"metrics",
+        "metrics",
         &format!(
             "SELECT a.id AS account_id, \
             k.is_networth, \
@@ -462,12 +462,12 @@ pub fn metrics(mindate: DateTime<Utc>, maxdate: DateTime<Utc>, currency: Commodi
     });
 
     Networth {
-        income: income,
-        passive_income: passive_income,
-        work_income: work_income,
+        income,
+        passive_income,
+        work_income,
         expenses: expense,
-        income_taxes: income_taxes,
-        other_taxes: other_taxes,
+        income_taxes,
+        other_taxes,
         networth: networth_at_end.to_f32().unwrap(),
         networth_start: networth_at_start.to_f32().unwrap(),
         liquid_assets: liquid_assets_at_end.to_f32().unwrap(),

@@ -62,7 +62,7 @@ impl DateRange {
         DateRange {
             start: start.unwrap_or(*MIN_QUERY_DATE),
             end: end.unwrap_or(*MAX_QUERY_DATE),
-            granularity: granularity,
+            granularity,
         }
     }
 }
@@ -131,7 +131,7 @@ pub struct DateValues {
 
 impl DateValues {
     pub fn new(dates: Option<Vec<Date<Utc>>>) -> Self {
-        DateValues { dates: dates }
+        DateValues { dates }
     }
 }
 
@@ -155,16 +155,14 @@ impl DateSet for DateValues {
     fn get_earliest(&self) -> Date<Utc> {
         *self
             .dates
-            .as_ref()
-            .map_or(None, |d| d.first())
+            .as_ref().and_then(|d| d.first())
             .unwrap_or(&MIN_QUERY_DATE)
     }
 
     fn get_most_recent(&self) -> Date<Utc> {
         *self
             .dates
-            .as_ref()
-            .map_or(None, |d| d.last())
+            .as_ref().and_then(|d| d.last())
             .unwrap_or(&MAX_QUERY_DATE)
     }
 }
