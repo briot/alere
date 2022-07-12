@@ -101,7 +101,10 @@ pub fn cte_list_splits(
                 --  The last computed occurrence might be later than expected
                 --  date
                 AND post_date <= '{dates_end}'
-                AND post_date >= '{dates_start}'
+
+                --  The next occurrence might be in the past if it was never
+                --  acknowledged.
+                --   AND post_date >= '{dates_start}'
            UNION {non_recurring_splits}
         )")
     } else {

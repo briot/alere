@@ -55,7 +55,7 @@ fn next_event(
         );
         let next = rs.just_after(
             UTC.timestamp(prev.timestamp(), 0),
-            true,  // inclusive
+            false,  // inclusive
         );
         next.ok()?.map(|dt| dt.naive_utc())
     }

@@ -18,7 +18,7 @@ pub struct SplitDescr {
     reconcile: bool,
     shares: f32,
     price: f32,
-    payee: Option<String>,
+    payee: String,
 }
 
 type TransactionId = i32;
@@ -124,7 +124,7 @@ pub fn ledger(
     let list_splits = cte_list_splits(
         &dates.unbounded_start(),   // from start to get balance right
         super::scenarios::NO_SCENARIO,
-        &Occurrences::no_recurrence(),
+        &Occurrences::new(Some(1)),
     );
     let with_values = cte_splits_with_values();
     let dates_start = dates.get_start();
@@ -136,19 +136,19 @@ pub fn ledger(
           SELECT
              s.transaction_id,
              s.occurrence,
-             s.timestamp,
+             strftime('%Y-%m-%d', s.timestamp) AS timestamp,
              s.memo,
              s.check_number,
              s.scaled_qty,
              a.commodity_scu,
              s.computed_price,
              s.account_id,
-             s.post_date,
+             strftime('%Y-%m-%d', s.post_date) AS post_date,
              s.value,
              s.value_commodity_id,
              s.reconcile,
              s.scheduled,
-             p.name,
+             COALESCE(p.name, '') AS payee,
              sum(s.scaled_qty)
                 OVER (PARTITION BY s.account_id
                       ORDER BY s.timestamp, s.transaction_id, s.post_date
@@ -172,7 +172,6 @@ pub fn ledger(
     let rows = super::connections::execute_and_log::<SplitRow>(&query);
     match rows {
         Ok(r) => {
-            dbg!(r.len());  //  MANU
             let mut result: Vec<TransactionDescr> = vec![];
             for split in r {
                 let need_new =
@@ -203,10 +202,9 @@ pub fn ledger(
                     reconcile: split.reconcile,
                     shares: split.scaled_qty / split.commodity_scu,
                     price: split.computed_price,
-                    payee: Some(split.payee),
+                    payee: split.payee,
                 });
             }
-            dbg!(&result); //  MANU
             result
         },
         Err(e) => {

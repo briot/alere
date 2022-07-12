@@ -33,28 +33,22 @@ const useTransactions = (
    React.useEffect(
       () => {
           invokeLedger(range, accountList)
-             .then(resp => setData(resp));
+             .then(resp => {
+                resp.forEach(t =>
+                   t.splits.forEach(s =>
+                      s.account = accounts.getAccount(s.account_id)
+                   )
+                );
+              if (discardIE) {
+                 // remove internal transfers
+                 resp = resp.filter(t => incomeExpenseSplits(t).length > 0);
+              }
+                setData(resp);
+             });
       },
-      [range, accountList]
+      [range, accountList, accounts, discardIE]
    );
-
-//   const { data } = useFetch({
-//      url: `/api/ledger/${idsForQuery}?${rangeToHttp(range, refDate)}`,
-//      placeholder: [],
-//      enabled: !!idsForQuery,
-//      parse: (json: Transaction[]) => {
-//         let trans = json ? [...json ] : [];
-//         trans.forEach(t =>
-//            t.splits.forEach(s => s.account = accounts.getAccount(s.accountId))
-//         );
-//         if (0 && discardIE) {   //  MANU
-//            // remove internal transfers
-//            trans = trans.filter(t => incomeExpenseSplits(t).length > 0);
-//         }
-//         return trans;
-//      },
-//   });
-   return data as Transaction[];
+   return data;
 }
 
 export default useTransactions;

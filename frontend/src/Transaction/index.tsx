@@ -5,7 +5,7 @@ export type TransactionId = string;
 type ReconcileId = string;
 
 export interface Split {
-   accountId: AccountId;
+   account_id: AccountId;
    reconcile?: ReconcileId;
    date: string;     // date the split was completed
    amount: number;
