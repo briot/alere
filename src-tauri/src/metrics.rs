@@ -176,7 +176,7 @@ struct SplitsRange {
 }
 
 #[tauri::command]
-pub fn networth_history(
+pub async fn networth_history(
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     currency: CommodityId,
@@ -239,7 +239,10 @@ pub fn networth_history(
 /// account.
 
 #[tauri::command]
-pub fn balance(dates: Vec<DateTime<Utc>>, currency: CommodityId) -> Vec<PerAccount> {
+pub async fn balance(
+    dates: Vec<DateTime<Utc>>,
+    currency: CommodityId,
+) -> Vec<PerAccount> {
     networth(
         // ??? Can we pass directly an iterator instead
         &DateValues::new(Some(dates.iter().map(|d| d.date()).collect())),
@@ -372,7 +375,11 @@ pub struct Networth {
 }
 
 #[tauri::command]
-pub fn metrics(mindate: DateTime<Utc>, maxdate: DateTime<Utc>, currency: CommodityId) -> Networth {
+pub async fn metrics(
+    mindate: DateTime<Utc>,
+    maxdate: DateTime<Utc>,
+    currency: CommodityId,
+) -> Networth {
     let dates = DateValues::new(Some(vec![mindate.date(), maxdate.date()]));
     let all_networth = networth(
         &dates,

@@ -10,7 +10,7 @@ pub struct Accounts {
 }
 
 #[tauri::command]
-pub fn fetch_accounts() -> Accounts {
+pub async fn fetch_accounts() -> Accounts {
     use super::schema::alr_account_kinds::dsl::*;
     use super::schema::alr_accounts::dsl::*;
     use super::schema::alr_commodities::dsl::*;

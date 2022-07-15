@@ -98,7 +98,7 @@ struct SplitRow {
 ///     if 1, only look at the next occurrence of them.
 
 #[tauri::command]
-pub fn ledger(
+pub async fn ledger(
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     accountids: Vec<AccountId>,
