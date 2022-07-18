@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { DateRange, toDates } from '@/Dates';
 import { CommodityId } from '@/services/useAccounts';
-import { invoke } from '@tauri-apps/api'
+import useFetch, { useFetchMultiple } from '@/services/useFetch';
 
 export interface Metric {
    income: number;
@@ -29,46 +29,44 @@ const NULL_METRIC: Metric = {
    other_taxes: NaN,
 };
 
-const invokeMetrics = (
-       mindate: Date, maxdate: Date, currency: CommodityId
-): Promise<Metric> => invoke('metrics', {mindate, maxdate, currency})
-
-const usePL = (range: DateRange, currencyId: CommodityId) => {
-   const [metrics, setMetrics] = React.useState(NULL_METRIC);
-
-   React.useEffect(
+const usePL = (range: DateRange, currencyId: CommodityId): Metric => {
+   const args = React.useMemo(
       () => {
          const r = toDates(range);
-         invokeMetrics(r[0], r[1], currencyId)
-            .then(resp => setMetrics(resp));
+         return {
+            mindate: r[0],
+            maxdate: r[1],
+            currency: currencyId,
+         };
       },
       [range, currencyId]
    );
 
-   return metrics;
+   const { data } = useFetch<Metric, unknown, {}>({cmd: 'metrics', args});
+   return data ?? NULL_METRIC;
 }
 
 export const usePLMultiple = (
    ranges: DateRange[],
    currencyId: CommodityId,
 ): Metric[]  => {
-   const [metrics, setMetrics] = React.useState<Metric[]>(
-      () => Array(ranges.length).fill(NULL_METRIC),
+   const queries = React.useMemo(
+      () => ranges.map(r => {
+         const rg = toDates(r);
+         return {
+            cmd: 'metrics',
+            args: {
+               mindate: rg[0],
+               maxdate: rg[1],
+               currency: currencyId,
+            },
+         };
+      }),
+      [ranges, currencyId]
    );
 
-   React.useEffect(
-      () => {
-         const promises = ranges.map(r => {
-             const dates = toDates(r);
-             return invokeMetrics(dates[0], dates[1], currencyId);
-         });
-         Promise.all(promises).then(values => {
-            setMetrics(values);
-         });
-      },
-      [ranges, currencyId],
-   );
-   return metrics;
+   const result = useFetchMultiple<Metric, unknown, {}>(queries);
+   return result.map(r => r.data ?? NULL_METRIC);
 }
 
 export default usePL;

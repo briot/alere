@@ -1,7 +1,7 @@
 import * as React from 'react';
 import usePost from '@/services/usePost';
 import { useQueryClient } from 'react-query';
-import { invoke } from '@tauri-apps/api'
+import useFetch from '@/services/useFetch';
 
 export type AccountId = number;
 export type CommodityId = number;
@@ -335,26 +335,14 @@ interface AccountsProviderProps {
    children?: React.ReactNode;
 }
 
-const invokeFetchAccounts = (): Promise<ServerJSON> =>
-   invoke('fetch_accounts');
-
+const parse = (json: ServerJSON): IAccountsContext => ({
+   accounts: new AccountList(json, true /* loaded */),
+});
 
 export const AccountsProvider = (p: AccountsProviderProps) => {
-   const [data, setData] = React.useState(noContext);
-
-   React.useEffect(
-      () => {
-         invokeFetchAccounts().then(json => {
-            setData({
-               accounts: new AccountList(json, true /* loaded */),
-            });
-         });
-      },
-      []
-   );
-
+   const { data } = useFetch({cmd: 'fetch_accounts', parse });
    return (
-      <AccountsContext.Provider value={data}>
+      <AccountsContext.Provider value={data ?? noContext}>
          {p.children}
       </AccountsContext.Provider>
    );

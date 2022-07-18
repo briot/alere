@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { THRESHOLD, Ticker } from '@/Ticker/types';
 import { ClosePrice } from '@/PriceGraph';
-import { DateRange, rangeToHttp } from '@/Dates';
+import { DateRange, toDates } from '@/Dates';
 import useAccounts, { AccountId, CommodityId } from '@/services/useAccounts';
 import useAccountIds, { AccountIdSet } from '@/services/useAccountIds';
 import useFetch from '@/services/useFetch';
@@ -38,8 +38,6 @@ interface TickerJSON {
    }[];
 }
 
-const No_Tickers: Ticker[] = [];
-
 const useTickers = (
    currencyId: CommodityId,  // what currency should prices be given in
    accountIds: AccountIdSet, // restrict to a specific set of accounts
@@ -52,13 +50,17 @@ const useTickers = (
    const accs = useAccountIds(accountIds);
    const ids = accs.accounts.map(a => a.id).sort().join(',');
    const nan_dec = (n: number|null) => n === null ? NaN : n;
-   const tickers = useFetch<Ticker[], TickerJSON[]>({
-      url: `/api/quotes?currency=${currencyId}`
-         + (commodity ? `&commodities=${commodity}` : '')
-         + (ids ? `&accounts=${ids}` : '')
-         + `&${rangeToHttp(range)}`,
+   const r = toDates(range);
+   const tickers = useFetch({
+      cmd: 'quotes',
+      args: {
+         currency: currencyId,
+         commodities: commodity,
+         accounts: ids,
+         mindate: r[0],
+         maxdate: r[1],
+      },
       enabled: !skip,
-      placeholder: No_Tickers,
       options: {
          keepPreviousData: true,
       },

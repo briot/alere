@@ -7,7 +7,7 @@ pub const CTE_TRANSACTIONS_FOR_ACCOUNTS: &str = "cte_tr_account";
 /// the accounts.
 /// Requires CTE_SPLITS
 
-pub fn cte_transactions_for_accounts(account_ids: &Vec<AccountId>) -> String {
+pub fn cte_transactions_for_accounts(account_ids: &[AccountId]) -> String {
     let s: Vec<String> = account_ids.iter().map(|&id| id.to_string()).collect();
     let ids = s.join(",");
     format!(

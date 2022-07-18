@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useHistory } from 'react-router-dom';
-import { DateRange, endOfMonth, rangeToHttp } from '@/Dates';
+import { DateRange, endOfMonth, toDates } from '@/Dates';
 import { ComposedChart, XAxis, YAxis, CartesianGrid, Bar, ReferenceLine,
          Line, Tooltip, TooltipProps, Label } from 'recharts';
 import { CommodityId } from '@/services/useAccounts';
@@ -30,6 +30,8 @@ interface Point {
    avg_exp?: number;            // computed on client
 }
 
+const NO_HISTORY: Point[] = [];
+
 const useMeanHistory = (
    range: DateRange,
    prior: number,
@@ -37,16 +39,22 @@ const useMeanHistory = (
    unrealized: boolean|undefined,
    negateExpenses: boolean|undefined,
    currencyId: CommodityId,
-) => {
+): Point[] => {
    // Round the dates so that we always start and end on month boundaries.
    // Otherwise, the graph will only show a subset of all the splits for the
    // start and end bars, which is confusing for users.
-   const dates = rangeToHttp(range, undefined, true);
+   const dates = toDates(range, undefined, true);
 
-   const { data } = useFetch<Point[], Point[]>({
-      url: `/api/mean?${dates}&prior=${prior}&after=${after}`
-         + `&unrealized=${unrealized}&currency=${currencyId}`,
-      placeholder: [],
+   const { data } = useFetch({
+      cmd: 'mean',
+      args: {
+         mindate: dates[0],
+         maxdate: dates[1],
+         prior,
+         after,
+         unrealized,
+         currency: currencyId,
+      },
       parse: (data: Point[]) => {
          data.forEach(p => {
             if (unrealized) {
@@ -71,7 +79,7 @@ const useMeanHistory = (
       },
    });
 
-   return data;
+   return data ?? NO_HISTORY;
 }
 
 export interface MeanProps {

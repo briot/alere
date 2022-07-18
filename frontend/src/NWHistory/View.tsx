@@ -7,7 +7,7 @@ import { ComposedChart, XAxis, YAxis, CartesianGrid, Bar,
 import { CommodityId } from '@/services/useAccounts';
 import Numeric from '@/Numeric';
 import usePrefs from '@/services/usePrefs';
-import { invoke } from '@tauri-apps/api'
+import useFetch from '@/services/useFetch';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { Option } from '@/Form';
 import './NetworthHistory.scss';
@@ -33,29 +33,14 @@ const noPoint: Point = {date: "", networth: NaN, parsedDate: new Date()};
 
 const bisectDate = d3Array.bisector((p: Point) => p.parsedDate);
 
-const invokeNWHistory = (
-   range: DateRange,
-   group_by: GroupBy,
-   currency: CommodityId,
-   include_scheduled?: boolean,
-): Promise<Point[]> => {
-   const r = toDates(range);
-   return invoke<PointJSON[] | undefined>('networth_history', {
-      mindate: r[0],
-      maxdate: r[1],
-      currency,
-      // include_scheduled: !!include_scheduled,
-      // group_by,
-   }).then(data =>
-      data
-         ? data.map(d => ({
-            date: d.date,
-            networth: d.value,
-            parsedDate: new Date(d.date),
-         }))
-         : [],
-   );
-}
+const parse = (data: PointJSON[]): Point[] =>
+   data.map(d => ({
+      date: d.date,
+      networth: d.value,
+      parsedDate: new Date(d.date),
+   }));
+
+const NO_POINTS: Point[] = [];
 
 const useNetworthHistory = (
    range: DateRange,
@@ -63,15 +48,19 @@ const useNetworthHistory = (
    currencyId: CommodityId,
    includeScheduled?: boolean,
 ) => {
-   const [data, setData] = React.useState<Point[]>([]);
-   React.useEffect(
-      () => {
-         invokeNWHistory(range, groupBy, currencyId, includeScheduled)
-            .then(d => setData(d));
+   const r = toDates(range);
+   const { data } = useFetch({
+      cmd: 'networth_history',
+      args: {
+         mindate: r[0],
+         maxdate: r[1],
+         currency: currencyId,
+         //  group_by: groupBy,
+         //  include_scheduled: includeScheduled,
       },
-      [range, groupBy, currencyId, includeScheduled],
-   );
-   return data;
+      parse,
+   });
+   return data ?? NO_POINTS;
 }
 
 export interface NetworthHistoryProps {

@@ -232,35 +232,24 @@ export const dateToString = (
 const rangeToDate = (name: DateRange): [RelativeDate, RelativeDate] =>
    dateRanges[name]?.range ?? ['today', 'today'];
 
-export const toDates = (name: DateRange): [Date, Date] => {
+export const toDates = (
+   name: DateRange,
+   relativeTo?: Date|undefined,
+   roundToMonth?: boolean,
+): [Date, Date] => {
    const r = rangeToDate(name);
-   return [dateToDate(r[0]), dateToDate(r[1])];
+
+   const exact_min = dateToDate(r[0], relativeTo);
+   const min = roundToMonth ? startOfMonth(0, exact_min) : exact_min;
+
+   const exact_max = dateToDate(r[1], relativeTo);
+   const max = roundToMonth ? endOfMonth(0, exact_max) : exact_max;
+
+   return [min, max];
 }
 
 export const parseRange = (s: string | undefined): DateRange|undefined =>
   s !== undefined && dateRanges[s as DateRange] ? s as DateRange : undefined;
-
-export const rangeToHttp = (
-   name: DateRange|undefined,
-   relativeTo?: Date|undefined,
-   roundToMonth?: boolean,
-): string => {
-   if (!name) {
-      return '';
-   }
-   const r = rangeToDate(name);
-   const exact_min = dateToDate(r[0], relativeTo);
-   const min = roundToMonth
-       ? startOfMonth(0, exact_min)
-       : exact_min;
-
-   const exact_max = dateToDate(r[1], relativeTo);
-   const max = roundToMonth
-       ? endOfMonth(0, exact_max)
-       : exact_max;
-
-   return `mindate=${formatDate(min)}&maxdate=${formatDate(max)}`;
-}
 
 interface RangeDisplay {
    as_dates: string;   // 'from x to y'

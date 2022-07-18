@@ -3,8 +3,8 @@
  */
 
 import * as React from 'react';
-import { DateRange, rangeToHttp } from '@/Dates';
-import useFetch, { useFetchMultiple, FetchProps } from '@/services/useFetch';
+import { DateRange, toDates } from '@/Dates';
+import useFetch, { useFetchMultiple } from '@/services/useFetch';
 import usePrefs from '@/services/usePrefs';
 import useAccounts, {
    AccountId, CommodityId, Account, AccountList
@@ -37,34 +37,40 @@ const toFetchProps = (
    p: QueryProps,
    accounts: AccountList,
    currency: CommodityId,
-): FetchProps<IncomeExpenseInPeriod, IncomeExpenseInPeriod> => ({
-   url: `/api/incomeexpense?income=${p.include_income === true}`
-      + `&expense=${p.include_expenses === true}`
-      + `&currency=${currency}`
-      + `&${rangeToHttp(p.range)}`,
-   parse: (json: IncomeExpenseInPeriod) => {
-      const d = {
-         items: json.items,
-         mindate: json.mindate,
-         maxdate: json.maxdate,
-         total: json.items.reduce((tot, v) => tot + v.value, 0),
+) => {
+   const r = toDates(p.range);
+   return {
+      cmd: 'income_expense',
+      args: {
+         income: p.include_income === true,
+         expense: p.include_expenses === true,
          currency,
-      };
-      d.items.forEach(a => {
-         a.account = accounts.getAccount(a.accountId);
-         a.name = a.account?.name;
-      });
-      return d;
-   },
-   placeholder: noData,
-});
+         mindate: r[0],
+         maxdate: r[1],
+      },
+      parse: (json: IncomeExpenseInPeriod) => {
+         const d = {
+            items: json.items,
+            mindate: json.mindate,
+            maxdate: json.maxdate,
+            total: json.items.reduce((tot, v) => tot + v.value, 0),
+            currency,
+         };
+         d.items.forEach(a => {
+            a.account = accounts.getAccount(a.accountId);
+            a.name = a.account?.name;
+         });
+         return d;
+      },
+   };
+};
 
 
-const useFetchIE = (p: QueryProps): IncomeExpenseInPeriod|undefined => {
+const useFetchIE = (p: QueryProps): IncomeExpenseInPeriod=> {
    const { accounts } = useAccounts();
    const { prefs } = usePrefs();
    const { data }  = useFetch(toFetchProps(p, accounts, prefs.currencyId));
-   return data;
+   return data ?? noData;
 }
 export default useFetchIE;
 
@@ -73,12 +79,12 @@ export default useFetchIE;
  */
 export const useFetchIEMulti = (
    p: QueryProps[]
-): (IncomeExpenseInPeriod|undefined)[] => {
+): (IncomeExpenseInPeriod)[] => {
    const { accounts } = useAccounts();
    const { prefs } = usePrefs();
    const result = useFetchMultiple(
       p.map(q => toFetchProps(q, accounts, prefs.currencyId)));
-   return result.map(d => d.data);
+   return result.map(d => d.data ?? noData);
 }
 
 /**

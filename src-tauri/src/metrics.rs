@@ -181,6 +181,8 @@ pub async fn networth_history(
     maxdate: DateTime<Utc>,
     currency: CommodityId,
 ) -> Vec<NWPoint> {
+    println!("networth_history {:?} {:?}", &mindate, &maxdate);
+
     let group_by: GroupBy = GroupBy::MONTHS;
     let include_scheduled: bool = false;
     let prior: u8 = 0;
@@ -243,6 +245,7 @@ pub async fn balance(
     dates: Vec<DateTime<Utc>>,
     currency: CommodityId,
 ) -> Vec<PerAccount> {
+    println!("balance {:?}", &dates);
     networth(
         // ??? Can we pass directly an iterator instead
         &DateValues::new(Some(dates.iter().map(|d| d.date()).collect())),
@@ -380,6 +383,7 @@ pub async fn metrics(
     maxdate: DateTime<Utc>,
     currency: CommodityId,
 ) -> Networth {
+    println!("metrics {:?} {:?}", &mindate, &maxdate);
     let dates = DateValues::new(Some(vec![mindate.date(), maxdate.date()]));
     let all_networth = networth(
         &dates,

@@ -82,12 +82,12 @@ fn create_pool() -> SqlitePool {
 
     let connection = pool.get().unwrap();
 
-    // Run the migrations (and create the schema if needed)
-    //    embedded_migrations::run(&connection);
-
-    // By default the output is thrown out. If you want to redirect it to stdout, you
-    // should call embedded_migrations::run_with_output.
-    embedded_migrations::run_with_output(&connection, &mut std::io::stdout());
+    let migrated = embedded_migrations::run_with_output(
+        &connection, &mut std::io::stdout());
+    match migrated {
+        Ok(_) => (),
+        Err(e) => println!("{}", e),
+    };
 
     pool
 }
@@ -109,9 +109,9 @@ pub fn execute_and_log<U: diesel::query_source::QueryableByName<Sqlite>>(
     query: &str,
 ) -> QueryResult<Vec<U>> {
     let connection = super::connections::get_connection();
-    let query = RE_REMOVE_COMMENTS.replace_all(query, "");
-    let query = RE_COLLAPSE_SPACES.replace_all(&query, " ");
-    dbg!((&msg, &query));
+//    let query = RE_REMOVE_COMMENTS.replace_all(query, "");
+//    let query = RE_COLLAPSE_SPACES.replace_all(&query, " ");
+//    dbg!((&msg, &query));
     let res = sql_query(query).load(&connection);
     if let Err(ref r) = res {
         print!("{:?}: Error in query {:?}", msg, r);

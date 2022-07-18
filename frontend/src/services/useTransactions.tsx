@@ -2,21 +2,9 @@ import * as React from 'react';
 import useAccounts, { Account } from '@/services/useAccounts';
 import { DateRange, toDates } from '@/Dates';
 import { Transaction, incomeExpenseSplits } from '@/Transaction';
-import { invoke } from '@tauri-apps/api'
+import useFetch from '@/services/useFetch';
 
-const invokeLedger = (
-   range: DateRange | undefined,
-   accounts: Account[],
-   include_scheduled: boolean | undefined,
-): Promise<Transaction[]> => {
-   const r = toDates(range ?? "all");
-   return invoke('ledger', {
-      mindate: r[0],
-      maxdate: r[1],
-      accountids: accounts.map(a => a.id),
-      occurrences: include_scheduled ? 1 : 0,
-   });
-}
+const NO_TRANSACTIONS: Transaction[] = [];
 
 /**
  * Fetch a ledger from the server
@@ -25,32 +13,42 @@ const invokeLedger = (
 const useTransactions = (
    accountList: Account[],
    range: DateRange|undefined,   // undefined, to see forever
-   refDate: Date,                // starting point of the date range
+   refDate: Date|undefined,      // starting point of the date range
    includeScheduled?: boolean,
 ): Transaction[] => {
    const { accounts } = useAccounts();
    const discardIE = accountList.length > 1;
-   const [data, setData] = React.useState<Transaction[]>([]);
-
-   React.useEffect(
-      () => {
-          invokeLedger(range, accountList, includeScheduled)
-             .then(resp => {
-                resp.forEach(t =>
-                   t.splits.forEach(s =>
-                      s.account = accounts.getAccount(s.account_id)
-                   )
-                );
-              if (discardIE) {
-                 // remove internal transfers
-                 resp = resp.filter(t => incomeExpenseSplits(t).length > 0);
-              }
-                setData(resp);
-             });
+   const parse = React.useCallback(
+      (resp: Transaction[]): Transaction[] => {
+         resp.forEach(t =>
+            t.splits.forEach(s =>
+               s.account = accounts.getAccount(s.account_id)
+            )
+         );
+         if (discardIE) {
+            // remove internal transfers
+            resp = resp.filter(t => incomeExpenseSplits(t).length > 0);
+         }
+         return resp;
       },
-      [range, accountList, accounts, discardIE, includeScheduled]
+      [accounts, discardIE]
    );
-   return data;
+   const args = React.useMemo(
+      () => {
+         const r = toDates(range ?? "all", refDate ?? new Date());
+         return {
+            mindate: r[0],
+            maxdate: r[1],
+            accountids: accountList.map(a => a.id),
+            occurrences: includeScheduled ? 1 : 0,
+         };
+      },
+      [range, accountList, includeScheduled, refDate],
+   );
+
+   window.console.log('MANU invoke ledger');
+   const { data } = useFetch({cmd: 'ledger', args, parse });
+   return data ?? NO_TRANSACTIONS;
 }
 
 export default useTransactions;

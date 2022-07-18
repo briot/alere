@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { AccountId, CommodityId } from '@/services/useAccounts';
 import { RelativeDate, dateToDate } from '@/Dates';
-import { invoke } from '@tauri-apps/api'
+import useFetch from '@/services/useFetch';
 
 /**
  * The balance for a specific account, at a specific date.
@@ -54,19 +54,6 @@ interface JSONBalance {
 }
 
 /**
- * Low-level invocation of Tauri
- */
-
-const invokeBalance = (
-   dates: RelativeDate[],
-   currency: CommodityId
-): Promise<JSONBalance[]> =>
-   invoke('balance', {
-      dates: dates.map(d => dateToDate(d)),
-      currency,
-   });
-
-/**
  * For each date specified in `dates`, fetch the current price and number of
  * shares for each account (for now we only fetch for Asset accounts)
  * We also compute the total owned by the user. For this, we need to convert
@@ -78,36 +65,42 @@ const useBalance = (p: {
    currencyId: CommodityId;
    dates: RelativeDate[];
 }): BalanceList => {
-   const [data, setData] = React.useState(NO_BALANCE);
-   React.useEffect(
-      () => {
-         invokeBalance(p.dates, p.currencyId).then(json => {
-            const floating = json.map(a => ({
-               account_id: a.account_id,
-               shares: a.shares.map(s => s === undefined ? NaN : parseFloat(s)),
-               price: a.price.map(s => s === undefined ? NaN : parseFloat(s)),
-            }));
-            const d: BalanceList = {
-               dates: p.dates,
-               currencyId: p.currencyId,
-               list: floating.map(a => ({
-                  accountId: a.account_id,
-                  atDate: p.dates.map((_, idx) => ({
-                     shares: a.shares[idx],
-                     price: a.price[idx],
-                  })),
+   const parse = React.useCallback(
+      (json: JSONBalance[]): BalanceList => {
+         const floating = json.map(a => ({
+            account_id: a.account_id,
+            shares: a.shares.map(s => s === undefined ? NaN : parseFloat(s)),
+            price: a.price.map(s => s === undefined ? NaN : parseFloat(s)),
+         }));
+         return {
+            dates: p.dates,
+            currencyId: p.currencyId,
+            list: floating.map(a => ({
+               accountId: a.account_id,
+               atDate: p.dates.map((_, idx) => ({
+                  shares: a.shares[idx],
+                  price: a.price[idx],
                })),
-               totalValue: p.dates.map((_, idx) =>
-                  floating
-                  .filter(d => d.price[idx] && d.shares[idx])  // remove undefined
-                  .reduce((t, d) => t + d.price[idx] * d.shares[idx], 0)),
-            };
-            setData(d);
-         });
+            })),
+            totalValue: p.dates.map((_, idx) =>
+               floating
+               .filter(d => d.price[idx] && d.shares[idx])  // remove undefined
+               .reduce((t, d) => t + d.price[idx] * d.shares[idx], 0)),
+         };
       },
-      [p.currencyId, p.dates]
+      [p.dates, p.currencyId]
    );
-   return data;
+
+   const args = React.useMemo(
+      () => ({
+         dates: p.dates.map(d => dateToDate(d)),
+         currency: p.currencyId,
+      }),
+      [p.dates, p.currencyId]
+   );
+
+   const { data } = useFetch({cmd: 'balance', args, parse});
+   return data ?? NO_BALANCE;
 }
 
 export default useBalance;
