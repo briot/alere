@@ -9,9 +9,6 @@ extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
 
-#[macro_use]
-extern crate lazy_static;
-
 pub mod accounts;
 pub mod connections;
 pub mod cte_accounts;
@@ -26,7 +23,14 @@ pub mod occurrences;
 pub mod scenarios;
 pub mod schema;
 
+use env_logger::Env;
+
 fn main() {
+    // Configure logging, with a default to show all traces
+    env_logger::Builder::from_env(
+        Env::default().default_filter_or("trace")
+        ).init();
+
     let context = tauri::generate_context!();
     tauri::Builder::default()
         .menu(tauri::Menu::os_default(&context.package_info().name))

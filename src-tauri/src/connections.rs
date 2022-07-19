@@ -8,8 +8,9 @@ use memoize::memoize;
 use regex::Regex;
 use rrule::{RRule, RRuleError, RRuleSet, Unvalidated};
 use tauri::api::path::document_dir;
+use lazy_static::lazy_static;
 
-embed_migrations!(); //  creates embedded_migrations
+diesel_migrations::embed_migrations!(); //  creates embedded_migrations
 
 sql_function!(
     fn alr_next_event(

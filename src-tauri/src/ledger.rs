@@ -6,6 +6,7 @@ use super::occurrences::Occurrences;
 use chrono::{DateTime, NaiveDate, TimeZone, Utc};
 use diesel::sql_types::{Bool, Date, Float, Integer, Nullable, Text};
 use serde::Serialize;
+use log::info;
 
 #[derive(Serialize, Clone, Debug)]
 pub struct SplitDescr {
@@ -104,7 +105,7 @@ pub async fn ledger(
     accountids: Vec<AccountId>,
     occurrences: u16,
 ) -> Vec<TransactionDescr> {
-    println!(
+    info!(
         "ledger {mindate} {maxdate} {:?} {:?}",
         accountids, occurrences
     );
