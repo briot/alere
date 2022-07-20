@@ -46,7 +46,6 @@ const useTransactions = (
       [range, accountList, includeScheduled, refDate],
    );
 
-   window.console.log('MANU invoke ledger');
    const { data } = useFetch({cmd: 'ledger', args, parse });
    return data ?? NO_TRANSACTIONS;
 }

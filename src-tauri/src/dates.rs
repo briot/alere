@@ -1,8 +1,10 @@
 //! Describe a range or set of dates
 
-use chrono::{Date, TimeZone, Utc};
+use super::cte_list_splits::{cte_list_splits, CTE_SPLITS};
+use chrono::{NaiveDate, Date, TimeZone, Utc, Duration};
 use serde::Deserialize;
 use lazy_static::lazy_static;
+use core::cmp::{max, min};
 
 pub const CTE_DATES: &str = "cte_dates";
 pub const SQL_ARMAGEDDON: &str = "'2999-12-31'";
@@ -16,12 +18,21 @@ lazy_static! {
     static ref MAX_QUERY_DATE: Date<Utc> = Utc.ymd(2200, 1, 1);
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub enum GroupBy {
     MONTHS,
     DAYS,
     YEARS,
 }
+
+#[derive(QueryableByName)]
+struct SplitsRange {
+    #[sql_type = "diesel::sql_types::Date"]
+    mindate: NaiveDate,
+    #[sql_type = "diesel::sql_types::Date"]
+    maxdate: NaiveDate,
+}
+
 
 /// Describes a set of dates in a range [start, end]
 
@@ -65,6 +76,72 @@ impl DateRange {
             end: end.unwrap_or(*MAX_QUERY_DATE),
             granularity,
         }
+    }
+
+    /// Restrict self to the range actually containing splits (or recurring
+    /// occurrences of splits)
+
+    pub fn restrict_to_splits(
+        &self,
+        scenario: super::scenarios::Scenario,
+        max_scheduled_occurrences: &super::occurrences::Occurrences,
+    ) -> Self {
+        let list_splits = cte_list_splits(
+            self, scenario, &max_scheduled_occurrences);
+        let query = format!(
+            "
+            WITH RECURSIVE {list_splits}
+            SELECT strftime('%Y-%m-%d', min(post_date)) AS mindate,
+            strftime('%Y-%m-%d', max(post_date)) AS maxdate
+            FROM {CTE_SPLITS} "
+        );
+        let result = super::connections::execute_and_log::<SplitsRange>(
+            "restrict_to_splits", &query);
+        match result {
+            Ok(rows) => match rows.first() {
+                Some(r) => DateRange::new(
+                    Some(max(
+                        Utc.from_utc_date(&r.mindate),
+                        self.get_earliest())),
+                    Some(min(
+                        Utc.from_utc_date(&r.maxdate),
+                        self.get_most_recent())),
+                    self.granularity.clone(),
+                ),
+                None => DateRange::new(
+                    Some(self.get_earliest()),
+                    Some(self.get_most_recent()),
+                    self.granularity.clone(),
+                ),
+            },
+            Err(_) => DateRange::new(
+                Some(self.get_earliest()),
+                Some(self.get_most_recent()),
+                self.granularity.clone(),
+            ),
+        }
+    }
+
+    /// Return a duration for a number of granularity
+
+    fn granularities(&self, count: u8) -> Duration {
+        match self.granularity {
+            GroupBy::MONTHS => Duration::days(count as i64 * 30),
+            GroupBy::DAYS => Duration::days(count as i64),
+            GroupBy::YEARS => Duration::days(count as i64 * 365),
+        }
+    }
+
+    /// Extend the range of dates by a number of granularity
+
+    pub fn extend(&self, prior: u8, after: u8) -> Self {
+        let prior_granularity = self.granularities(prior);
+        let after_granularity = self.granularities(after);
+        DateRange::new(
+            Some(self.start - prior_granularity),
+            Some(self.end + after_granularity),
+            self.granularity.clone(),
+        )
     }
 }
 

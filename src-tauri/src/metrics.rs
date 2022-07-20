@@ -1,14 +1,13 @@
 use super::cte_list_splits::{
-    cte_list_splits, cte_splits_with_values, CTE_SPLITS, CTE_SPLITS_WITH_VALUE,
-};
-use super::cte_query_balance::{cte_balances, cte_balances_currency, CTE_BALANCES_CURRENCY};
+    cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
+use super::cte_query_balance::{
+    cte_balances, cte_balances_currency, CTE_BALANCES_CURRENCY};
 use super::cte_query_networth::{cte_query_networth, CTE_QUERY_NETWORTH};
 use super::dates::{DateRange, DateSet, DateValues, GroupBy, CTE_DATES};
 use super::models::{AccountId, CommodityId};
 use super::occurrences::Occurrences;
 use super::scenarios::Scenario;
-use chrono::{DateTime, Duration, NaiveDate, TimeZone, Utc};
-use core::cmp::{max, min};
+use chrono::{DateTime, NaiveDate, Utc};
 use diesel::sql_types::{Bool, Date, Float, Integer};
 use rust_decimal::prelude::*; //  to_f32
 use rust_decimal::Decimal;
@@ -122,7 +121,7 @@ pub struct NWPoint {
 /// after. It also includes the diff between the current row and the
 /// previous one, and the mean of those diffs.
 
-fn query_networth_history(
+pub fn query_networth_history(
     dates: &dyn DateSet,
     currency: CommodityId,
     scenario: Scenario,
@@ -168,14 +167,6 @@ fn query_networth_history(
     result.unwrap_or_default()
 }
 
-#[derive(QueryableByName)]
-struct SplitsRange {
-    #[sql_type = "Date"]
-    mindate: NaiveDate,
-    #[sql_type = "Date"]
-    maxdate: NaiveDate,
-}
-
 #[tauri::command]
 pub async fn networth_history(
     mindate: DateTime<Utc>,
@@ -188,54 +179,22 @@ pub async fn networth_history(
     let include_scheduled: bool = false;
     let prior: u8 = 0;
     let after: u8 = 0;
-    let prior_granularity = match group_by {
-        GroupBy::MONTHS => Duration::days(prior as i64 * 30),
-        GroupBy::DAYS => Duration::days(prior as i64),
-        GroupBy::YEARS => Duration::days(prior as i64 * 365),
-    };
-    let after_granularity = match group_by {
-        GroupBy::MONTHS => Duration::days(after as i64 * 30),
-        GroupBy::DAYS => Duration::days(after as i64),
-        GroupBy::YEARS => Duration::days(after as i64 * 365),
-    };
-
+    let dates = DateRange::new(
+            Some(mindate.date()),
+            Some(maxdate.date()),
+            group_by)
+        .extend(prior, after)
+        .restrict_to_splits(
+           super::scenarios::NO_SCENARIO,
+           &Occurrences::no_recurrence());
     let scenario = super::scenarios::NO_SCENARIO;
     let occurrences = match include_scheduled {
         true => Occurrences::unlimited(),
         false => Occurrences::no_recurrence(),
     };
 
-    // Restrict the range of dates to those with actual splits
-    let dates = DateValues::new(Some(vec![
-        mindate.date() - prior_granularity,
-        maxdate.date() + after_granularity,
-    ]));
-    let list_splits = cte_list_splits(&dates, scenario, &occurrences);
-    let query = format!(
-        "
-        WITH RECURSIVE {list_splits}
-        SELECT strftime('%Y-%m-%d', min(post_date)) AS mindate,
-        strftime('%Y-%m-%d', max(post_date)) AS maxdate
-        FROM {CTE_SPLITS} "
-    );
-    let result = super::connections::execute_and_log::<SplitsRange>("networth_history", &query);
-    let adjusted = match result {
-        Ok(rows) => match rows.first() {
-            Some(r) => DateRange::new(
-                Some(max(Utc.from_utc_date(&r.mindate), dates.get_earliest())),
-                Some(min(Utc.from_utc_date(&r.maxdate), dates.get_most_recent())),
-                group_by,
-            ),
-            None => DateRange::new(
-                Some(dates.get_earliest()),
-                Some(dates.get_most_recent()),
-                group_by,
-            ),
-        },
-        Err(_) => return vec![],
-    };
-
-    query_networth_history(&adjusted, currency, scenario, &occurrences, prior, after)
+    query_networth_history(
+        &dates, currency, scenario, &occurrences, prior, after)
 }
 
 /// For each date, compute the current price and number of shares for each
@@ -257,18 +216,18 @@ pub async fn balance(
 }
 
 #[derive(Debug, QueryableByName)]
-struct SplitsPerAccount {
+pub struct SplitsPerAccount {
     #[sql_type = "Integer"]
-    account_id: AccountId,
+    pub account_id: AccountId,
 
     #[sql_type = "Float"]
-    value: f32,
+    pub value: f32,
 }
 
 /// For each account, computes the total of splits that apply to it in the
 /// given time range.
 
-fn sum_splits_per_account(
+pub fn sum_splits_per_account(
     dates: &dyn DateSet,
     currency: CommodityId,
     scenario: Scenario,

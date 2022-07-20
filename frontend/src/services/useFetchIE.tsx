@@ -10,10 +10,20 @@ import useAccounts, {
    AccountId, CommodityId, Account, AccountList
 } from '@/services/useAccounts';
 
+interface OneIEJSON {
+   accountid: AccountId;
+   value: number;         // total for this account in the time range
+}
+interface IncomeExpenseInPeriodJSON {
+   items:   OneIEJSON[];
+   mindate: string;
+   maxdate: string;
+}
+
+
 export interface OneIE {
    accountId: AccountId;
-   account: Account | undefined;
-   name: string;          // name to display for the account
+   account: Account,
    value: number;         // total for this account in the time range
 }
 export interface IncomeExpenseInPeriod {
@@ -38,30 +48,37 @@ const toFetchProps = (
    accounts: AccountList,
    currency: CommodityId,
 ) => {
-   const r = toDates(p.range);
+   const args = React.useMemo(
+      () => {
+         // Need to compute this in useMemo, since a range of "up to now"
+         // would have a different actual end date everytime.
+         // ??? Perhaps we should pass p.range directly to the backend.
+         const r = toDates(p.range);
+         return {
+            income: p.include_income === true,
+            expense: p.include_expenses === true,
+            currency,
+            mindate: r[0],
+            maxdate: r[1],
+         };
+      },
+      [p.range, p.include_income, p.include_expenses, currency]
+   );
+
    return {
       cmd: 'income_expense',
-      args: {
-         income: p.include_income === true,
-         expense: p.include_expenses === true,
+      args,
+      parse: (json: IncomeExpenseInPeriodJSON) => ({
+         items: json.items.map(it => ({
+            accountId: it.accountid,
+            account: accounts.getAccount(it.accountid),
+            value: it.value,
+         })),
+         mindate: json.mindate,
+         maxdate: json.maxdate,
+         total: json.items.reduce((tot, v) => tot + v.value, 0),
          currency,
-         mindate: r[0],
-         maxdate: r[1],
-      },
-      parse: (json: IncomeExpenseInPeriod) => {
-         const d = {
-            items: json.items,
-            mindate: json.mindate,
-            maxdate: json.maxdate,
-            total: json.items.reduce((tot, v) => tot + v.value, 0),
-            currency,
-         };
-         d.items.forEach(a => {
-            a.account = accounts.getAccount(a.accountId);
-            a.name = a.account?.name;
-         });
-         return d;
-      },
+      }),
    };
 };
 
@@ -122,7 +139,7 @@ export const useFetchIERanges = (
                         account: it.account,
                         accountId: it.accountId,
                         values: new Array(ranges.length).fill(NaN),
-                        name: it.name,
+                        name: it.account.name,
                         currency: d.currency,
                      };
                   }

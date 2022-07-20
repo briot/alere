@@ -48,18 +48,21 @@ const useNetworthHistory = (
    currencyId: CommodityId,
    includeScheduled?: boolean,
 ) => {
-   const r = toDates(range);
-   const { data } = useFetch({
-      cmd: 'networth_history',
-      args: {
-         mindate: r[0],
-         maxdate: r[1],
-         currency: currencyId,
-         //  group_by: groupBy,
-         //  include_scheduled: includeScheduled,
+   const args = React.useMemo(
+      () => {
+         const r = toDates(range);
+         return {
+            mindate: r[0],
+            maxdate: r[1],
+            currency: currencyId,
+            //  group_by: groupBy,
+            //  include_scheduled: includeScheduled,
+         };
       },
-      parse,
-   });
+      [range, currencyId]
+   );
+
+   const { data } = useFetch({cmd: 'networth_history', args, parse});
    return data ?? NO_POINTS;
 }
 

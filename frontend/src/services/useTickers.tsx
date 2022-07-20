@@ -50,16 +50,24 @@ const useTickers = (
    const accs = useAccountIds(accountIds);
    const ids = accs.accounts.map(a => a.id).sort().join(',');
    const nan_dec = (n: number|null) => n === null ? NaN : n;
-   const r = toDates(range);
+
+   const args = React.useMemo(
+      () => {
+         const r = toDates(range);
+         return {
+            currency: currencyId,
+            commodities: commodity,
+            accounts: ids,
+            mindate: r[0],
+            maxdate: r[1],
+         };
+      },
+      [currencyId, range, commodity, ids]
+   );
+
    const tickers = useFetch({
       cmd: 'quotes',
-      args: {
-         currency: currencyId,
-         commodities: commodity,
-         accounts: ids,
-         mindate: r[0],
-         maxdate: r[1],
-      },
+      args,
       enabled: !skip,
       options: {
          keepPreviousData: true,

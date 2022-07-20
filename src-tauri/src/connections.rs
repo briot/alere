@@ -9,6 +9,7 @@ use regex::Regex;
 use rrule::{RRule, RRuleError, RRuleSet, Unvalidated};
 use tauri::api::path::document_dir;
 use lazy_static::lazy_static;
+use log::{debug, log_enabled, Level::Debug};
 
 diesel_migrations::embed_migrations!(); //  creates embedded_migrations
 
@@ -105,17 +106,23 @@ pub fn get_connection() -> PooledConnection<ConnectionManager<SqliteConnection>>
     connection
 }
 
+pub fn log_cleanup_query(msg: &str, query: &str) {
+    if log_enabled!(Debug) {
+       let query = RE_REMOVE_COMMENTS.replace_all(query, "");
+       let query = RE_COLLAPSE_SPACES.replace_all(&query, " ");
+       debug!("{} {}", &msg, &query);
+    }
+}
+
 pub fn execute_and_log<U: diesel::query_source::QueryableByName<Sqlite>>(
     msg: &str,
     query: &str,
 ) -> QueryResult<Vec<U>> {
     let connection = super::connections::get_connection();
-//    let query = RE_REMOVE_COMMENTS.replace_all(query, "");
-//    let query = RE_COLLAPSE_SPACES.replace_all(&query, " ");
-//    dbg!((&msg, &query));
     let res = sql_query(query).load(&connection);
     if let Err(ref r) = res {
-        print!("{:?}: Error in query {:?}", msg, r);
+        log_cleanup_query(&msg, &query);
+        log::error!("{:?}: Error in query {:?}", msg, r);
     }
     res
 }

@@ -90,6 +90,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
          }
          const items = data.items.map(it => ({
             ...it,
+            name: it.account.name,   // needed for bars legend
             value: p.expenses ? -it.value : it.value,
          }));
          items.sort((a, b) => b.value - a.value);
@@ -131,7 +132,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
          const cx = a.viewBox.cx ?? 0;
          const title = (
             activeIndex !== -1
-            ? normalized.items[activeIndex]?.name
+            ? normalized.items[activeIndex]?.account.name
             : p.expenses
             ? 'Expenses'
             : 'Income'

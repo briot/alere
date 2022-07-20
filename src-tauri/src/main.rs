@@ -10,13 +10,16 @@ extern crate diesel;
 extern crate diesel_migrations;
 
 pub mod accounts;
+pub mod cashflow;
 pub mod connections;
 pub mod cte_accounts;
 pub mod cte_list_splits;
 pub mod cte_query_balance;
 pub mod cte_query_networth;
 pub mod dates;
+pub mod income_expense;
 pub mod ledger;
+pub mod means;
 pub mod metrics;
 pub mod models;
 pub mod occurrences;
@@ -35,11 +38,13 @@ fn main() {
     tauri::Builder::default()
         .menu(tauri::Menu::os_default(&context.package_info().name))
         .invoke_handler(tauri::generate_handler![
-            metrics::metrics,
-            metrics::balance,
-            metrics::networth_history,
             accounts::fetch_accounts,
+            income_expense::income_expense,
             ledger::ledger,
+            means::mean,
+            metrics::balance,
+            metrics::metrics,
+            metrics::networth_history,
         ])
         .run(context)
         .expect("error while running tauri application");

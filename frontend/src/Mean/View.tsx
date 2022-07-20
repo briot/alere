@@ -12,22 +12,22 @@ import useFetch from '@/services/useFetch';
 import useColors from '@/services/useColors';
 import './Mean.scss';
 
-interface Point {
+interface PointJSON {
    date: string;
    value_expenses: number;
    average_expenses: number;
-
    value_realized: number;
-   average_realized: number;
-
    value_networth_delta: number; // how much the networth changed that month
    average_networth_delta: number;
+}
 
-   value_unrealized?: number;    // computed on client
-   average_unrealized?: number;  // computed on client
+interface Point extends PointJSON {
+   average_realized: number;
+   value_unrealized?: number;
+   average_unrealized?: number;
    average_income?: number;
-   value_exp?: number;          // computed on client
-   avg_exp?: number;            // computed on client
+   value_exp: number;
+   avg_exp: number;
 }
 
 const NO_HISTORY: Point[] = [];
@@ -40,43 +40,46 @@ const useMeanHistory = (
    negateExpenses: boolean|undefined,
    currencyId: CommodityId,
 ): Point[] => {
-   // Round the dates so that we always start and end on month boundaries.
-   // Otherwise, the graph will only show a subset of all the splits for the
-   // start and end bars, which is confusing for users.
-   const dates = toDates(range, undefined, true);
+   const args = React.useMemo(
+      () => {
+         // Round the dates so that we always start and end on month
+         // boundaries. Otherwise, the graph will only show a subset of all the
+         // splits for the start and end bars, which is confusing for users.
+         const dates = toDates(range, undefined, true);
+         return {
+            mindate: dates[0],
+            maxdate: dates[1],
+            prior,
+            after,
+            unrealized,
+            currency: currencyId,
+         };
+      },
+      [range, prior, after, unrealized, currencyId]
+   );
 
    const { data } = useFetch({
       cmd: 'mean',
-      args: {
-         mindate: dates[0],
-         maxdate: dates[1],
-         prior,
-         after,
-         unrealized,
-         currency: currencyId,
-      },
-      parse: (data: Point[]) => {
-         data.forEach(p => {
-            if (unrealized) {
-               p.value_unrealized = (p.value_networth_delta || 0)
-                  - (p.value_realized || 0)
-                  - (p.value_expenses || 0)
-               p.average_income = (p.average_networth_delta || 0)
-                  - (p.average_expenses || 0);
-            } else {
-               p.average_income = (p.average_realized || 0);
-            }
-
-            if (negateExpenses) {
-               p.value_exp = -(p.value_expenses || 0);
-               p.avg_exp = -(p.average_expenses || 0);
-            } else {
-               p.value_exp = p.value_expenses || 0;
-               p.avg_exp = p.average_expenses || 0;
-            }
-         });
-         return data;
-      },
+      args,
+      parse: (data: PointJSON[]): Point[] => data.map(p => {
+         const average_realized = 0;
+         return {
+            ...p,
+            average_realized,
+            value_unrealized:
+               unrealized
+               ? p.value_networth_delta
+                 - p.value_realized - p.value_expenses
+               : 0,
+            average_unrealized: undefined,
+            average_income:
+               unrealized
+               ? p.average_networth_delta - p.average_expenses
+               : average_realized,
+            value_exp: negateExpenses ? -p.value_expenses : p.value_expenses,
+            avg_exp: negateExpenses ? -p.average_expenses : p.average_expenses,
+         };
+      }),
    });
 
    return data ?? NO_HISTORY;

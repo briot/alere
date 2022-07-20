@@ -26,6 +26,7 @@ pub async fn fetch_accounts() -> Accounts {
     }
 }
 
+#[derive(Clone, Copy)]
 pub enum AccountKindCategory {
     EXPENSE = 0,
     INCOME = 1,
