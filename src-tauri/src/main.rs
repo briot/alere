@@ -23,6 +23,7 @@ pub mod means;
 pub mod metrics;
 pub mod models;
 pub mod occurrences;
+pub mod quotes;
 pub mod scenarios;
 pub mod schema;
 
@@ -45,6 +46,7 @@ fn main() {
             metrics::balance,
             metrics::metrics,
             metrics::networth_history,
+            quotes::quotes,
         ])
         .run(context)
         .expect("error while running tauri application");

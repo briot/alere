@@ -70,7 +70,6 @@ pub async fn mean(
 
     let mut result = Vec::new();
     for c in cashflow.iter() {
-        log::info!("MANU got one row");
         let u = unreal.get(&c.month).unwrap_or(&(0.0, 0.0));
         result.push(Point {
             date: c.month,
@@ -81,6 +80,5 @@ pub async fn mean(
             average_networth_delta: u.1,
         });
     }
-    log::info!("MANU total rows {:?}", result.len());
     result
 }
