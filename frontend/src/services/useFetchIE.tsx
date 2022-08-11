@@ -7,7 +7,7 @@ import { DateRange, toDates } from '@/Dates';
 import useFetch, { useFetchMultiple } from '@/services/useFetch';
 import usePrefs from '@/services/usePrefs';
 import useAccounts, {
-   AccountId, CommodityId, Account, AccountList
+   AccountId, CommodityId, Account
 } from '@/services/useAccounts';
 
 interface OneIEJSON {
@@ -43,11 +43,9 @@ interface QueryProps {
    range: DateRange;
 }
 
-const toFetchProps = (
-   p: QueryProps,
-   accounts: AccountList,
-   currency: CommodityId,
-) => {
+const useFetchIE = (p: QueryProps): IncomeExpenseInPeriod=> {
+   const { accounts } = useAccounts();
+   const { prefs } = usePrefs();
    const args = React.useMemo(
       () => {
          // Need to compute this in useMemo, since a range of "up to now"
@@ -55,38 +53,31 @@ const toFetchProps = (
          // ??? Perhaps we should pass p.range directly to the backend.
          const r = toDates(p.range);
          return {
-            income: p.include_income === true,
-            expense: p.include_expenses === true,
-            currency,
-            mindate: r[0],
-            maxdate: r[1],
+            cmd: 'income_expense',
+            args: {
+               income: p.include_income === true,
+               expense: p.include_expenses === true,
+               currency: prefs.currencyId,
+               mindate: r[0],
+               maxdate: r[1],
+            },
+            parse: (json: IncomeExpenseInPeriodJSON) => ({
+               items: json.items.map(it => ({
+                  accountId: it.accountid,
+                  account: accounts.getAccount(it.accountid),
+                  value: it.value,
+               })),
+               mindate: json.mindate,
+               maxdate: json.maxdate,
+               total: json.items.reduce((tot, v) => tot + v.value, 0),
+               currency: prefs.currencyId,
+            }),
          };
       },
-      [p.range, p.include_income, p.include_expenses, currency]
+      [p.range, p.include_income, p.include_expenses, prefs.currencyId,
+       accounts]
    );
-
-   return {
-      cmd: 'income_expense',
-      args,
-      parse: (json: IncomeExpenseInPeriodJSON) => ({
-         items: json.items.map(it => ({
-            accountId: it.accountid,
-            account: accounts.getAccount(it.accountid),
-            value: it.value,
-         })),
-         mindate: json.mindate,
-         maxdate: json.maxdate,
-         total: json.items.reduce((tot, v) => tot + v.value, 0),
-         currency,
-      }),
-   };
-};
-
-
-const useFetchIE = (p: QueryProps): IncomeExpenseInPeriod=> {
-   const { accounts } = useAccounts();
-   const { prefs } = usePrefs();
-   const { data }  = useFetch(toFetchProps(p, accounts, prefs.currencyId));
+   const { data }  = useFetch(args);
    return data ?? noData;
 }
 export default useFetchIE;
@@ -99,8 +90,37 @@ export const useFetchIEMulti = (
 ): (IncomeExpenseInPeriod)[] => {
    const { accounts } = useAccounts();
    const { prefs } = usePrefs();
-   const result = useFetchMultiple(
-      p.map(q => toFetchProps(q, accounts, prefs.currencyId)));
+   const args = React.useMemo(
+      () => p.map(q => {
+         // Need to compute this in useMemo, since a range of "up to now"
+         // would have a different actual end date everytime.
+         // ??? Perhaps we should pass p.range directly to the backend.
+         const r = toDates(q.range);
+         return {
+            cmd: 'income_expense',
+            args: {
+               income: q.include_income === true,
+               expense: q.include_expenses === true,
+               currency: prefs.currencyId,
+               mindate: r[0],
+               maxdate: r[1],
+            },
+            parse: (json: IncomeExpenseInPeriodJSON) => ({
+               items: json.items.map(it => ({
+                  accountId: it.accountid,
+                  account: accounts.getAccount(it.accountid),
+                  value: it.value,
+               })),
+               mindate: json.mindate,
+               maxdate: json.maxdate,
+               total: json.items.reduce((tot, v) => tot + v.value, 0),
+               currency: prefs.currencyId,
+            }),
+         };
+      }),
+      [p, accounts, prefs.currencyId],
+   );
+   const result = useFetchMultiple(args);
    return result.map(d => d.data ?? noData);
 }
 
