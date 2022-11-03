@@ -1,4 +1,4 @@
-use super::models::{Account, AccountKind, Commodity, Institution};
+use alere_lib::models::{Account, AccountKind, Commodity, Institution};
 use diesel::prelude::*;
 
 #[derive(serde::Serialize)]
@@ -11,10 +11,10 @@ pub struct Accounts {
 
 #[tauri::command]
 pub async fn fetch_accounts() -> Accounts {
-    use super::schema::alr_account_kinds::dsl::*;
-    use super::schema::alr_accounts::dsl::*;
-    use super::schema::alr_commodities::dsl::*;
-    use super::schema::alr_institutions::dsl::*;
+    use alere_lib::schema::alr_account_kinds::dsl::*;
+    use alere_lib::schema::alr_accounts::dsl::*;
+    use alere_lib::schema::alr_commodities::dsl::*;
+    use alere_lib::schema::alr_institutions::dsl::*;
 
     let c = &super::connections::get_connection();
 

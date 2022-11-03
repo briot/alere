@@ -38,6 +38,7 @@ dependencies = [
 name = "alere"
 version = "0.1.0"
 dependencies = [
+ "alere_lib",
  "chrono",
  "chrono-tz",
  "diesel",
@@ -55,6 +56,27 @@ dependencies = [
  "serde_json",
  "tauri",
  "tauri-build",
+]
+
+[[package]]
+name = "alere_lib"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "chrono-tz",
+ "diesel",
+ "diesel_migrations",
+ "env_logger",
+ "lazy_static",
+ "libsqlite3-sys",
+ "log",
+ "memoize",
+ "regex",
+ "rrule",
+ "rust_decimal",
+ "rust_decimal_macros",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

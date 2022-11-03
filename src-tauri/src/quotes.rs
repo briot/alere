@@ -1,11 +1,13 @@
-use diesel::prelude::*;
+use alere_lib::connections::execute_and_log;
+use alere_lib::models::{AccountId, CommodityId, Commodity, Roi};
 use chrono::{DateTime, Utc, TimeZone};
+use crate::connections::get_connection;
+use diesel::prelude::*;
+use diesel::sql_types::Integer;
 use log::info;
 use serde::Serialize;
 use std::collections::HashMap;
-use diesel::sql_types::Integer;
 use super::accounts::{commodity_kinds, price_sources};
-use super::models::{AccountId, CommodityId, Commodity, Roi};
 
 #[derive(Serialize)]
 pub struct Position {
@@ -119,11 +121,12 @@ pub async fn quotes(
     accounts: Option<Vec<AccountId>>
 ) -> (Vec<Symbol>, HashMap<AccountId, ForAccount>) {
     info!("quotes {:?} {:?} {}", &mindate, &maxdate, currency);
+    let connection = get_connection();
 
     // Find all commodities
 
     let mut all_commodities: Vec<Commodity> = {
-       use super::schema::alr_commodities::dsl::*;
+       use alere_lib::schema::alr_commodities::dsl::*;
        let c = &super::connections::get_connection();
        alr_commodities.load::<Commodity>(c).expect("Error reading commodities")
     };
@@ -169,8 +172,8 @@ pub async fn quotes(
         WHERE k.is_trading {filter_account}
         "
     );
-    let result = super::connections::execute_and_log::<AccountIdAndCommodity>(
-        "quotes,acc", &query);
+    let result = execute_and_log::<AccountIdAndCommodity>(
+        &connection, "quotes,acc", &query);
     let mut accs = HashMap::new();
     if let Ok(accounts) = result {
         accounts
@@ -203,8 +206,7 @@ pub async fn quotes(
         "
     );
 
-    let result = super::connections::execute_and_log::<Roi>(
-        "quotes,roi", &query);
+    let result = execute_and_log::<Roi>(&connection, "quotes,roi", &query);
     match result {
         Ok(rois) => {
             rois

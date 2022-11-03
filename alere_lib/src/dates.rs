@@ -1,6 +1,7 @@
 //! Describe a range or set of dates
 
-use super::cte_list_splits::{cte_list_splits, CTE_SPLITS};
+use crate::cte_list_splits::{cte_list_splits, CTE_SPLITS};
+use crate::connections::SqliteConnect;
 use chrono::{NaiveDate, Date, TimeZone, Utc, Duration};
 use serde::Deserialize;
 use lazy_static::lazy_static;
@@ -83,6 +84,7 @@ impl DateRange {
 
     pub fn restrict_to_splits(
         &self,
+        connection: &SqliteConnect,
         scenario: super::scenarios::Scenario,
         max_scheduled_occurrences: &super::occurrences::Occurrences,
     ) -> Self {
@@ -95,8 +97,10 @@ impl DateRange {
             strftime('%Y-%m-%d', max(post_date)) AS maxdate
             FROM {CTE_SPLITS} "
         );
-        let result = super::connections::execute_and_log::<SplitsRange>(
-            "restrict_to_splits", &query);
+        let result = crate::connections::execute_and_log::<SplitsRange>(
+            connection,
+            "restrict_to_splits",
+            &query);
         match result {
             Ok(rows) => match rows.first() {
                 Some(r) => DateRange::new(

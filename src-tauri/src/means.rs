@@ -1,7 +1,11 @@
-use super::models::{CommodityId};
+use alere_lib::dates::{DateRange, GroupBy};
+use alere_lib::models::CommodityId;
+use alere_lib::occurrences::Occurrences;
+use alere_lib::scenarios::NO_SCENARIO;
 use chrono::{NaiveDate, DateTime, Utc, Datelike};
-use serde::Serialize;
+use crate::connections::get_connection;
 use log::info;
+use serde::Serialize;
 use std::collections::HashMap;
 
 #[derive(Serialize)]
@@ -27,13 +31,16 @@ pub async fn mean(
     info!("mean {:?} {:?} prior={} after={} unrealized={} {}",
           &mindate, &maxdate, prior, after, unrealized, currency);
 
-    let dates = super::dates::DateRange::new(
+    let connection = get_connection();
+
+    let dates = DateRange::new(
         Some(mindate.date()),
         Some(maxdate.date()),
-        super::dates::GroupBy::MONTHS,
+        GroupBy::MONTHS,
     ).restrict_to_splits(
-        super::scenarios::NO_SCENARIO,
-        &super::occurrences::Occurrences::no_recurrence(),
+        &connection,
+        NO_SCENARIO,
+        &Occurrences::no_recurrence(),
     );
 
     // The "unrealized" part must be computed from variations in the
@@ -44,10 +51,11 @@ pub async fn mean(
     let mut unreal = HashMap::new();
     if unrealized {
         let points = super::metrics::query_networth_history(
+            &connection,
             &dates,
             currency,
-            super::scenarios::NO_SCENARIO,
-            &super::occurrences::Occurrences::no_recurrence(),
+            NO_SCENARIO,
+            &Occurrences::no_recurrence(),
             prior,
             after,
         );
@@ -60,10 +68,11 @@ pub async fn mean(
     }
 
     let cashflow = super::cashflow::monthly_cashflow(
+        &connection,
         &dates,
         currency,
-        super::scenarios::NO_SCENARIO,
-        &super::occurrences::Occurrences::no_recurrence(),
+        NO_SCENARIO,
+        &Occurrences::no_recurrence(),
         prior,
         after,
     );

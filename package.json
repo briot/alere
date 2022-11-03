@@ -9,7 +9,8 @@
     "fmt": "cd src-tauri && cargo fmt",
     "clippy": "cd src-tauri && cargo clippy",
     "clippyfix": "cd src-tauri && cargo clippy --fix",
-    "build": "tsc && vite build && tauri build"
+    "build": "tsc && vite build && tauri build",
+    "migrate": "diesel migration run --migration-dir=alere_lib/migrations"
   },
   "dependencies": {
     "@tauri-apps/api": "^1.0.1",

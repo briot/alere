@@ -1,11 +1,14 @@
-use super::cte_list_splits::{
+use alere_lib::cte_list_splits::{
     cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
-use super::dates::{DateValues};
-use super::models::{AccountId, CommodityId};
-use super::occurrences::Occurrences;
+use alere_lib::dates::DateValues;
+use alere_lib::models::{AccountId, CommodityId};
+use alere_lib::occurrences::Occurrences;
+use alere_lib::connections::execute_and_log;
+use alere_lib::scenarios::NO_SCENARIO;
+use crate::accounts::AccountKindCategory;
+use crate::connections::get_connection;
 use chrono::{DateTime, Utc};
 use serde::Serialize;
-use super::accounts::AccountKindCategory;
 use log::info;
 
 #[derive(Serialize)]
@@ -33,6 +36,7 @@ pub async fn income_expense(
     info!("income_expense {:?} {:?} income={} expense={}",
           &mindate, &maxdate, income, expense);
 
+    let connection = get_connection();
     let mut categories = vec![];
     if expense {
         categories.push(AccountKindCategory::EXPENSE);
@@ -50,7 +54,7 @@ pub async fn income_expense(
 
     let list_splits = cte_list_splits(
         &DateValues::new(Some(vec![mindate.date(), maxdate.date()])),
-        super::scenarios::NO_SCENARIO,
+        NO_SCENARIO,
         &Occurrences::no_recurrence());
     let with_values = cte_splits_with_values();
     let cats = categories.iter()
@@ -71,14 +75,13 @@ pub async fn income_expense(
         GROUP BY s.account_id
         "
     );
-    let rows =
-        super::connections::execute_and_log
-            ::<super::metrics::SplitsPerAccount>("income_expense", &query);
+    let rows = execute_and_log::<super::metrics::SplitsPerAccount>(
+        &connection, "income_expense", &query);
     match rows {
         Ok(r) => {
             IncomeExpenseInPeriod {
-                mindate: mindate,
-                maxdate: maxdate,
+                mindate,
+                maxdate,
                 items: r.iter()
                     .map(|acc| OneIncomeExpense {
                         accountid: acc.account_id,

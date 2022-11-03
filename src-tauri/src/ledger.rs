@@ -1,8 +1,13 @@
-use super::cte_accounts::{cte_transactions_for_accounts, CTE_TRANSACTIONS_FOR_ACCOUNTS};
-use super::cte_list_splits::{cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
-use super::dates::{DateSet, DateValues};
-use super::models::{AccountId, CommodityId};
-use super::occurrences::Occurrences;
+use alere_lib::cte_accounts::{
+    cte_transactions_for_accounts, CTE_TRANSACTIONS_FOR_ACCOUNTS};
+use alere_lib::cte_list_splits::{
+    cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
+use alere_lib::dates::{DateSet, DateValues};
+use alere_lib::models::{AccountId, CommodityId};
+use alere_lib::occurrences::Occurrences;
+use alere_lib::connections::execute_and_log;
+use alere_lib::scenarios::NO_SCENARIO;
+use crate::connections::get_connection;
 use chrono::{DateTime, NaiveDate, TimeZone, Utc};
 use diesel::sql_types::{Bool, Date, Float, Integer, Nullable, Text};
 use serde::Serialize;
@@ -109,6 +114,7 @@ pub async fn ledger(
         "ledger {mindate} {maxdate} {:?} {:?}",
         accountids, occurrences
     );
+    let connection = get_connection();
     let occ = Occurrences::new(occurrences);
     let dates = DateValues::new(Some(vec![mindate.date(), maxdate.date()]));
     let (filter_acct_cte, filter_acct_from) = match accountids.len() {
@@ -131,7 +137,7 @@ pub async fn ledger(
 
     let list_splits = cte_list_splits(
         &dates.unbounded_start(), // from start to get balance right
-        super::scenarios::NO_SCENARIO,
+        NO_SCENARIO,
         &occ,
     );
     let with_values = cte_splits_with_values();
@@ -179,8 +185,8 @@ pub async fn ledger(
        "
     );
 
-    let rows = super::connections::execute_and_log::<SplitRow>(
-        "ledger", &query);
+    let rows = execute_and_log::<SplitRow>(
+        &connection, "ledger", &query);
     match rows {
         Ok(r) => {
             let mut result: Vec<TransactionDescr> = vec![];

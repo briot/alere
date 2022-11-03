@@ -1,12 +1,14 @@
-use super::cte_list_splits::{
+use alere_lib::cte_list_splits::{
     cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
-use super::cte_query_balance::{
+use alere_lib::cte_query_balance::{
     cte_balances, cte_balances_currency, CTE_BALANCES_CURRENCY};
-use super::cte_query_networth::{cte_query_networth, CTE_QUERY_NETWORTH};
-use super::dates::{DateRange, DateSet, DateValues, GroupBy, CTE_DATES};
-use super::models::{AccountId, CommodityId};
-use super::occurrences::Occurrences;
-use super::scenarios::Scenario;
+use alere_lib::cte_query_networth::{cte_query_networth, CTE_QUERY_NETWORTH};
+use alere_lib::dates::{DateRange, DateSet, DateValues, GroupBy, CTE_DATES};
+use alere_lib::models::{AccountId, CommodityId};
+use alere_lib::occurrences::Occurrences;
+use alere_lib::scenarios::{Scenario, NO_SCENARIO};
+use alere_lib::connections::{SqliteConnect, execute_and_log};
+use crate::connections::get_connection;
 use chrono::{DateTime, NaiveDate, Utc};
 use diesel::sql_types::{Bool, Date, Float, Integer};
 use rust_decimal::prelude::*; //  to_f32
@@ -43,6 +45,7 @@ struct NetworthRow {
 /// be the exchange rate between that currency and currency_id).
 
 pub fn networth(
+    connection: &SqliteConnect,
     dates: &dyn DateSet,
     currency: CommodityId,
     scenario: Scenario,
@@ -80,7 +83,8 @@ pub fn networth(
     "
     );
 
-    let result = super::connections::execute_and_log::<NetworthRow>("networth", &query);
+    let result = execute_and_log::<NetworthRow>(
+        connection, "networth", &query);
     match result {
         Ok(rows) => {
             let mut per_account: HashMap<AccountId, PerAccount> = HashMap::new();
@@ -122,6 +126,7 @@ pub struct NWPoint {
 /// previous one, and the mean of those diffs.
 
 pub fn query_networth_history(
+    connection: &SqliteConnect,
     dates: &dyn DateSet,
     currency: CommodityId,
     scenario: Scenario,
@@ -163,7 +168,8 @@ pub fn query_networth_history(
         "
     );
 
-    let result = super::connections::execute_and_log::<NWPoint>("query_networth_history", &query);
+    let result = execute_and_log::<NWPoint>(
+        connection, "query_networth_history", &query);
     result.unwrap_or_default()
 }
 
@@ -175,6 +181,7 @@ pub async fn networth_history(
 ) -> Vec<NWPoint> {
     info!("networth_history {:?} {:?}", &mindate, &maxdate);
 
+    let connection = get_connection();
     let group_by: GroupBy = GroupBy::MONTHS;
     let include_scheduled: bool = false;
     let prior: u8 = 0;
@@ -185,16 +192,17 @@ pub async fn networth_history(
             group_by)
         .extend(prior, after)
         .restrict_to_splits(
-           super::scenarios::NO_SCENARIO,
+           &connection,
+           NO_SCENARIO,
            &Occurrences::no_recurrence());
-    let scenario = super::scenarios::NO_SCENARIO;
+    let scenario = NO_SCENARIO;
     let occurrences = match include_scheduled {
         true => Occurrences::unlimited(),
         false => Occurrences::no_recurrence(),
     };
 
     query_networth_history(
-        &dates, currency, scenario, &occurrences, prior, after)
+        &connection, &dates, currency, scenario, &occurrences, prior, after)
 }
 
 /// For each date, compute the current price and number of shares for each
@@ -206,11 +214,14 @@ pub async fn balance(
     currency: CommodityId,
 ) -> Vec<PerAccount> {
     info!("balance {:?}", &dates);
+    let connection = get_connection();
     networth(
+        &connection,
+
         // ??? Can we pass directly an iterator instead
         &DateValues::new(Some(dates.iter().map(|d| d.date()).collect())),
         currency,
-        super::scenarios::NO_SCENARIO,
+        NO_SCENARIO,
         &Occurrences::no_recurrence(),
     )
 }
@@ -228,6 +239,7 @@ pub struct SplitsPerAccount {
 /// given time range.
 
 pub fn sum_splits_per_account(
+    connection: &SqliteConnect,
     dates: &dyn DateSet,
     currency: CommodityId,
     scenario: Scenario,
@@ -245,8 +257,8 @@ pub fn sum_splits_per_account(
         GROUP BY s.account_id
         "
     );
-    let rows =
-        super::connections::execute_and_log::<SplitsPerAccount>("sum_splits_per_account", &query);
+    let rows = execute_and_log::<SplitsPerAccount>(
+        connection, "sum_splits_per_account", &query);
     let mut res: HashMap<AccountId, f32> = HashMap::new();
     if let Ok(r) = rows {
         for row in r.iter() {
@@ -344,11 +356,13 @@ pub async fn metrics(
     currency: CommodityId,
 ) -> Networth {
     info!("metrics {:?} {:?}", &mindate, &maxdate);
+    let connection = get_connection();
     let dates = DateValues::new(Some(vec![mindate.date(), maxdate.date()]));
     let all_networth = networth(
+        &connection,
         &dates,
         currency,
-        super::scenarios::NO_SCENARIO,
+        NO_SCENARIO,
         &Occurrences::no_recurrence(),
     );
 
@@ -357,7 +371,8 @@ pub async fn metrics(
     let income = super::accounts::AccountKindCategory::INCOME as u32;
     let expense = super::accounts::AccountKindCategory::EXPENSE as u32;
 
-    let account_rows = super::connections::execute_and_log::<AccountIsNWRow>(
+    let account_rows = execute_and_log::<AccountIsNWRow>(
+        &connection,
         "metrics",
         &format!(
             "SELECT a.id AS account_id, \
@@ -401,9 +416,10 @@ pub async fn metrics(
     );
 
     let over_period = sum_splits_per_account(
+        &connection,
         &dates,
         currency,
-        super::scenarios::NO_SCENARIO,
+        NO_SCENARIO,
         &Occurrences::no_recurrence(),
     );
 

@@ -1,5 +1,5 @@
-use super::cte_list_splits::CTE_SPLITS;
-use super::models::AccountId;
+use crate::cte_list_splits::CTE_SPLITS;
+use crate::models::AccountId;
 
 pub const CTE_TRANSACTIONS_FOR_ACCOUNTS: &str = "cte_tr_account";
 

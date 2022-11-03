@@ -1,11 +1,12 @@
-use super::cte_list_splits::{
+use alere_lib::cte_list_splits::{
     cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
+use alere_lib::dates::{DateRange, DateSet, CTE_DATES};
+use alere_lib::models::CommodityId;
+use alere_lib::occurrences::Occurrences;
+use alere_lib::scenarios::Scenario;
+use alere_lib::connections::{SqliteConnect, execute_and_log};
 use chrono::NaiveDate;
-use super::dates::{DateRange, DateSet, CTE_DATES};
-use super::occurrences::Occurrences;
-use super::scenarios::Scenario;
-use super::accounts::AccountKindCategory;
-use super::models::CommodityId;
+use crate::accounts::AccountKindCategory;
 use diesel::sql_types::{Date, Float, Nullable};
 
 
@@ -35,6 +36,7 @@ pub struct CashFlow {
 }
 
 pub fn monthly_cashflow(
+    connection: &SqliteConnect,
     dates: &DateRange,
     currency: CommodityId,
     scenario: Scenario,
@@ -99,7 +101,7 @@ pub fn monthly_cashflow(
         "
     );
 
-    let result = super::connections::execute_and_log::<CashFlow>(
-        "monthly_cashflow", &query);
+    let result = execute_and_log::<CashFlow>(
+        &connection, "monthly_cashflow", &query);
     result.unwrap_or_default()
 }
