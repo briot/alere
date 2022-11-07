@@ -79,7 +79,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
    const { prefs } = usePrefs();
    const [ activeIndex, setActiveIndex ] = React.useState(-1);
    const data = useFetchIE({
-      ...p,
+      range: p.range,
       include_expenses: p.expenses,
       include_income: !p.expenses,
    });
