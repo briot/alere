@@ -1,5 +1,5 @@
 import { useQuery, UseQueryOptions, useQueries,
-   UseQueryResult } from 'react-query';
+   UseQueryResult } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api'
 
 export interface FetchProps<T, RAW_T, TArgs extends Record<string, any>> {
@@ -45,7 +45,9 @@ const useFetch = <T, RAW_T, TArgs extends Record<string, any>> (
 export const useFetchMultiple = <T, RAW_T, TArgs extends Record<string, any>> (
    p: FetchProps<T | undefined, RAW_T, TArgs>[],
 ): UseQueryResult<T | undefined, string>[] => {
-   return useQueries(p.map(toQueryProps));
+   return useQueries({
+      queries: p.map(toQueryProps),
+   });
 }
 
 export default useFetch;

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import usePost from '@/services/usePost';
-import { useQueryClient } from 'react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import useFetch from '@/services/useFetch';
 
 export type AccountId = number;

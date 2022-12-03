@@ -1,7 +1,7 @@
 import React from 'react';
 import RoundButton from '@/RoundButton';
 import usePost from '@/services/usePost';
-import { useQueryClient } from 'react-query';
+import { useQueryClient } from '@tanstack/react-query';
 
 
 const OnlineUpdate: React.FC<{}> = () => {

@@ -1,4 +1,4 @@
-import { useMutation } from 'react-query';
+import { useMutation } from '@tanstack/react-query';
 import useCsrf from '@/services/useCsrf';
 
 /**

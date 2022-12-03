@@ -14,7 +14,7 @@ import { HistProvider } from '@/services/useHistory';
 import { Page } from '@/Page';
 import { PagesProvider } from '@/services/usePages';
 import { PrefProvider } from '@/services/usePrefs';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TooltipProvider } from '@/Tooltip';
 
 import './App.scss';

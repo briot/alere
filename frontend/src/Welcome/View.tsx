@@ -2,7 +2,7 @@ import * as React from 'react';
 import Upload from '@/Form/Upload';
 import usePost from '@/services/usePost';
 import useAccounts from '@/services/useAccounts';
-import { useQueryClient } from 'react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import './Welcome.scss';
 
 enum Mode {
