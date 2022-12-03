@@ -5,9 +5,10 @@ import Numeric from '@/Numeric';
 import { DateDisplay } from '@/Dates';
 import { DAY_MS } from '@/services/utils';
 
-const PastHeader: React.FC<PastValue> = p => <th>{p.header}</th>;
+const PastHeader = (p: {value: PastValue}) => <th>{p.value.header}</th>;
 
-const Past: React.FC<PastValue> = p => {
+const Past = (v: {value: PastValue}) => {
+   const p = v.value;
    const perf = (p.toPrice / p.fromPrice - 1) * 100;
    return (
       !isNaN(perf)
@@ -67,9 +68,9 @@ interface PerfProps {
    showACLine?: boolean;
 }
 
-const Perfs: React.FC<PerfProps> = p => {
+const Perfs = (p: PerfProps) => {
    const intv = (p.dateRange[1].getTime() - p.dateRange[0].getTime()) / DAY_MS;
-   const perf = [
+   const perf: (PastValue|false)[] = [
       intv >= 365 * 5 &&
          pastValue(p.ticker, p.acc, DAY_MS * 365 * 5),   // 5 year perf
       intv >= 365 &&
@@ -94,12 +95,16 @@ const Perfs: React.FC<PerfProps> = p => {
       <table>
          <thead>
             <tr>
-               {perf.map(p => p && <PastHeader {...p} key={p.header} />)}
+               {
+                  perf.map(v => v && <PastHeader value={v} key={v.header} />)
+               }
             </tr>
          </thead>
          <tbody>
             <tr>
-               {perf.map(p => p && <Past {...p} key={p.header} />)}
+               {
+                  perf.map(v => v && <Past value={v} key={v.header} />)
+               }
             </tr>
          </tbody>
       </table>

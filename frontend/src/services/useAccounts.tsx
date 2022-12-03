@@ -1,7 +1,7 @@
 import * as React from 'react';
-import useFetch from '@/services/useFetch';
 import usePost from '@/services/usePost';
 import { useQueryClient } from 'react-query';
+import useFetch from '@/services/useFetch';
 
 export type AccountId = number;
 export type CommodityId = number;
@@ -103,15 +103,15 @@ interface AccountJSON {
    description: string;
    account_num: string;
    favorite: boolean;
-   commodityId: CommodityId;
+   commodity_id: CommodityId;
    commodity_scu: number;
-   kindId: AccountKindId;
+   kind_id: AccountKindId;
    closed: boolean;
    iban: string;
-   parent: AccountId | undefined;
+   parent_id: AccountId | undefined;
    opening_date: string;
-   lastReconciled: string;
-   institution: InstitutionId | undefined;
+   last_reconciled: string;
+   institution_id: InstitutionId | undefined;
 }
 const nullAccountJSON: AccountJSON = {
    id: -1,
@@ -119,20 +119,23 @@ const nullAccountJSON: AccountJSON = {
    description: "",
    account_num: "",
    favorite: false,
-   commodityId: nullCommodity.id,
+   commodity_id: nullCommodity.id,
    commodity_scu: 1,
-   kindId: nullAccountKind.id,
+   kind_id: nullAccountKind.id,
    closed: true,
    iban: "",
-   parent: undefined,
-   lastReconciled: "",
+   parent_id: undefined,
+   last_reconciled: "",
    opening_date: "",
-   institution: undefined,
+   institution_id: undefined,
 }
 
-type ServerJSON = [
-   AccountJSON[], Commodity[], AccountKindJSON[], InstitutionJSON[]
-];
+type ServerJSON = {
+   accounts: AccountJSON[],
+   commodities: Commodity[],
+   kinds: AccountKindJSON[],
+   institutions: InstitutionJSON[],
+};
 
 export class Account {
    readonly id: AccountId;
@@ -145,7 +148,7 @@ export class Account {
    readonly iban: string;
    readonly lastReconciled: string;
    readonly opening_date: string;
-   readonly parentId: AccountId | undefined;
+   readonly parent_id: AccountId | undefined;
    readonly description: string;
    readonly account_num: string;
    parentAccount: Account | undefined;
@@ -158,18 +161,18 @@ export class Account {
       this.id = Number(d.id);
       this.name = d.name;
       this.favorite = d.favorite;
-      this.commodity = list.allCommodities[d.commodityId] ?? nullCommodity;
+      this.commodity = list.allCommodities[d.commodity_id] ?? nullCommodity;
       this.commodity_scu = d.commodity_scu
-      this.kind = list.allAccountKinds[d.kindId] ?? nullAccountKind;
+      this.kind = list.allAccountKinds[d.kind_id] ?? nullAccountKind;
       this.closed = d.closed;
       this.iban = d.iban;
-      this.lastReconciled = d.lastReconciled;
+      this.lastReconciled = d.last_reconciled;
       this.opening_date = d.opening_date;
-      this.parentId = d.parent;
+      this.parent_id = d.parent_id;
       this.description = d.description;
       this.account_num = d.account_num;
-      this.institution = d.institution === undefined
-         ? undefined : list.allInstitutions[d.institution];
+      this.institution = d.institution_id === undefined
+         ? undefined : list.allInstitutions[d.institution_id];
    }
 
    /**
@@ -198,15 +201,15 @@ export class Account {
          description: this.description,
          account_num: this.account_num,
          favorite: this.favorite,
-         commodityId: this.commodity.id,
+         commodity_id: this.commodity.id,
          commodity_scu: this.commodity_scu,
-         kindId: this.kind.id,
+         kind_id: this.kind.id,
          closed: this.closed,
          iban: this.iban,
-         parent: this.parentId,
+         parent_id: this.parent_id,
          opening_date: this.opening_date,
-         lastReconciled: this.lastReconciled,
-         institution: this.getInstitution()?.id,
+         last_reconciled: this.lastReconciled,
+         institution_id: this.getInstitution()?.id,
       };
    }
 }
@@ -220,21 +223,21 @@ export class AccountList {
 
    constructor(json: ServerJSON, public loaded: boolean) {
       this.allCommodities = {};
-      json[1].forEach(c => this.allCommodities[c.id] = c);
+      json.commodities.forEach(c => this.allCommodities[c.id] = c);
 
       this.allAccountKinds = {};
-      json[2].forEach(c => this.allAccountKinds[c.id] = c);
+      json.kinds.forEach(c => this.allAccountKinds[c.id] = c);
 
       this.allInstitutions = {};
-      json[3].forEach(c => this.allInstitutions[c.id] = c);
+      json.institutions.forEach(c => this.allInstitutions[c.id] = c);
 
       this.accounts = new Map();
-      json[0].forEach(a =>
+      json.accounts.forEach(a =>
          this.accounts.set(Number(a.id), this.buildAccount(a)));
       this.accounts.forEach(a =>
-         a.parentAccount = a.parentId === undefined
+         a.parentAccount = a.parent_id === undefined
             ? undefined
-            : this.accounts.get(a.parentId)
+            : this.accounts.get(a.parent_id)
       );
    }
 
@@ -294,13 +297,19 @@ interface IAccountsContext {
 }
 
 const noContext: IAccountsContext = {
-   accounts: new AccountList([[], [], [], []], false /* loaded */),
+   accounts: new AccountList(
+      {
+         accounts: [],
+         commodities: [],
+         kinds: [],
+         institutions: [],
+      },
+      false /* loaded */
+   ),
 }
 
 
 const AccountsContext = React.createContext(noContext);
-
-const ACCOUNT_LIST_URL = '/api/account/list';
 
 /**
  * Provide a addOrEdit function used to save accounts in the database.
@@ -322,18 +331,18 @@ export const useAddOrEditAccount = () => {
    return mutation;
 }
 
-export const AccountsProvider: React.FC<{}> = p => {
-   const { data } = useFetch<IAccountsContext, ServerJSON>({
-      url: ACCOUNT_LIST_URL,
-      parse: (json: ServerJSON) => {
-         return {
-            accounts: new AccountList(json, true /* loaded */),
-         };
-      },
-   });
+interface AccountsProviderProps {
+   children?: React.ReactNode;
+}
 
+const parse = (json: ServerJSON): IAccountsContext => ({
+   accounts: new AccountList(json, true /* loaded */),
+});
+
+export const AccountsProvider = (p: AccountsProviderProps) => {
+   const { data } = useFetch({cmd: 'fetch_accounts', parse });
    return (
-      <AccountsContext.Provider value={data || noContext}>
+      <AccountsContext.Provider value={data ?? noContext}>
          {p.children}
       </AccountsContext.Provider>
    );

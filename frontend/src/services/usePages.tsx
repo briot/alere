@@ -117,6 +117,7 @@ const defaultPages: PageDescr[] = [
             valueColumn: true,
             hideBalance: true,
             hideReconcile: true,
+            includeScheduled: true,
             rowspan: 1,
             colspan: 2,
          } as LedgerPanelProps,
@@ -390,7 +391,11 @@ const noContext: PagesContext = {
 }
 const ReactPagesContext = React.createContext(noContext);
 
-export const PagesProvider: React.FC<{}> = p => {
+interface PagesProviderProps {
+   children?: React.ReactNode;
+}
+
+export const PagesProvider = (p: PagesProviderProps) => {
    const { val, setVal } = useSettings<PageDescr[]>(
       'Pages', defaultPages, hideTmp /* loader */ );
    const dict: Record<string, PageDescr> = React.useMemo(

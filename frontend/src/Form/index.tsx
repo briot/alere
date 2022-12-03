@@ -7,6 +7,7 @@ import classes from '@/services/classes';
 import "./Form.scss";
 
 export interface SharedInputProps<T> {
+   children?: React.ReactNode;
    disabled?: boolean;
    text?: string;
    style?: React.CSSProperties;
@@ -14,9 +15,9 @@ export interface SharedInputProps<T> {
    tooltip?: TooltipFunc<T>;
 }
 
-export const SharedInput: React.FC<
-   SharedInputProps<any> & {textAfter?: boolean, className?: string}
-> = (p) => {
+export const SharedInput =
+   (p: SharedInputProps<any> & {textAfter?: boolean, className?: string}) =>
+{
    const c = classes(
       p.className,
       p.disabled && 'disabled',
@@ -122,7 +123,11 @@ export const Button: React.FC<ButtonProps> = p => {
    );
 }
 
-export const ButtonBar: React.FC<{}> = p => {
+interface ButtonBarProps {
+   children?: React.ReactNode;
+}
+
+export const ButtonBar = (p: ButtonBarProps) => {
    return (
       <div className='button-bar'>
          {p.children}
@@ -146,9 +151,9 @@ export const Checkbox: React.FC<CheckboxProps> = p => {
       [onChange]
    );
    const indetSetter = React.useCallback(
-      el => {
+      (el: HTMLInputElement) => {
          if (el) {
-           el.indeterminate = p.indeterminate;
+           el.indeterminate = !!p.indeterminate;
          }
       },
       [p.indeterminate]
@@ -258,7 +263,7 @@ export const Select = <T extends { toString: () => string }> (p: SelectProps<T>)
                            && selected.value !== "divider"
                            && p.format?.(selected.value))
                         ?? selected?.text
-                        ?? selected?.value
+                        ?? selected?.value.toString()
                         ?? ''}
                   </div>
                   {

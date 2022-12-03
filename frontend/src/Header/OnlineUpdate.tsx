@@ -14,11 +14,10 @@ const OnlineUpdate: React.FC<{}> = () => {
          window.console.log('invalidate queries');
          client.invalidateQueries();
       },
-      onError: () => window.console.log('MANU updating failed'),
+      onError: () => window.console.log('updating failed'),
    });
    const update = React.useCallback(
       () => {
-         window.console.log('MANU update');
          mutation.mutate('');
       },
       [mutation]

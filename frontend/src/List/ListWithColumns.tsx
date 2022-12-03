@@ -210,6 +210,8 @@ const usePhysicalRows = <T extends unknown, SHARED> (
  */
 
 interface ListWithColumnsProps<T, SHARED> extends TablePrefs {
+   children?: React.ReactNode;
+
    columns: (undefined | Column<T, SHARED>) [];
    rows: LogicalRow<T, SHARED> [];
    className?: string;

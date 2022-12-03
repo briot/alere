@@ -1,7 +1,11 @@
 @import "../shared";
 
 .header {
-   grid-area: header;
+   &.pageheader {
+      grid-area: header;
+      padding-left: var(--side-margin);
+      padding-right: var(--side-margin);
+   }
 
    display: flex;
    flex-flow: row nowrap;

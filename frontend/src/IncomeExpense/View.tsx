@@ -79,7 +79,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
    const { prefs } = usePrefs();
    const [ activeIndex, setActiveIndex ] = React.useState(-1);
    const data = useFetchIE({
-      ...p,
+      range: p.range,
       include_expenses: p.expenses,
       include_income: !p.expenses,
    });
@@ -90,6 +90,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
          }
          const items = data.items.map(it => ({
             ...it,
+            name: it.account.name,   // needed for bars legend
             value: p.expenses ? -it.value : it.value,
          }));
          items.sort((a, b) => b.value - a.value);
@@ -114,11 +115,11 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
    });
 
    const onEnter = React.useCallback(
-      (_, index) => setActiveIndex(index),
+      (_: unknown, index: number) => setActiveIndex(index),
       []
    );
    const onLeave = React.useCallback(
-      (_, index) => setActiveIndex(-1),
+      (_: unknown, index: number) => setActiveIndex(-1),
       []
    );
 
@@ -131,7 +132,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
          const cx = a.viewBox.cx ?? 0;
          const title = (
             activeIndex !== -1
-            ? normalized.items[activeIndex]?.name
+            ? normalized.items[activeIndex]?.account.name
             : p.expenses
             ? 'Expenses'
             : 'Income'

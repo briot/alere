@@ -32,7 +32,7 @@
       grid-template-columns: auto 1fr minmax(auto, 220px);
       grid-template-rows: auto 1fr auto;
       grid-template-areas:
-         "lheader header rheader"
+         "header header header"
          "lsidebar main rsidebar"
          "footer footer footer";
    }

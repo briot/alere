@@ -37,6 +37,7 @@ const nullState: State = {
 }
 
 export interface PriceGraphProps {
+   children?: React.ReactNode;
    commodity_id: CommodityId;  //  commodity for shares
    prices: ClosePrice[];
    dateRange: [Date, Date];
@@ -51,7 +52,7 @@ export interface PriceGraphProps {
    showLegend?: boolean;
 }
 
-const PriceGraph: React.FC<PriceGraphProps> = p => {
+const PriceGraph = (p: PriceGraphProps) => {
    const [state, setState] = React.useState(nullState);
 
    const CustomTooltip: React.FC<TooltipProps<any, number>> = d => {
@@ -127,12 +128,18 @@ const PriceGraph: React.FC<PriceGraphProps> = p => {
    }
 
    const onMouseDown = React.useCallback(
-      (e) => setState(old => ({...old, refAreaLeft: e.activeLabel })),
+      (e: {activeLabel?: string}) =>
+         setState(old => ({
+            ...old,
+            refAreaLeft: parseInt(e.activeLabel ?? '')
+         })),
       []
    );
    const onMouseMove = React.useCallback(
-      (e) => setState(old =>
-         old.refAreaLeft ? { ...old, refAreaRight: e.activeLabel } : old
+      (e: {activeLabel?: string}) => setState(old =>
+         old.refAreaLeft
+         ? { ...old, refAreaRight: parseInt(e.activeLabel ?? '') }
+         : old
       ),
       []
    );

@@ -48,6 +48,7 @@ export interface BaseLedgerProps extends TablePrefs {
    hideReconcile?: boolean;
    restrictExpandArrow?: boolean; // if true, only show arrow if more than 2 splits
    sortOn?: string;  // +colid  or -colid
+   includeScheduled?: boolean;
 }
 
 interface Totals {
@@ -136,7 +137,7 @@ const columnSummary: Column<TableRowData, ComputedBaseLedgerProps> = {
                         />
                         &nbsp;(
                            <AccountName
-                               id={s.accountId}
+                               id={s.account_id}
                                account={s.account}
                            />
                         )
@@ -182,16 +183,16 @@ const columnFromTo: Column<TableRowData, ComputedBaseLedgerProps> = {
          b.firstRowSplit.account?.name ?? ''),
    cell: (d: TableRowData) =>
       d.split === MAIN
-      ? (d.firstRowSplit.accountId === SPLIT_ID
+      ? (d.firstRowSplit.account_id === SPLIT_ID
          ? (d.transaction.memo || SPLIT)
          : <AccountName
-             id={d.firstRowSplit.accountId}
+             id={d.firstRowSplit.account_id}
              account={d.firstRowSplit.account}
              noLinkIf={d.accounts.accounts}
            />
       ) : (
         <AccountName
-           id={d.split.accountId}
+           id={d.split.account_id}
            account={d.split.account}
            noLinkIf={d.accounts.accounts}
         />
@@ -283,7 +284,7 @@ const columnShares: Column<TableRowData, ComputedBaseLedgerProps> = {
             hideCommodity={true}
             scale={Math.log10(d.account?.commodity_scu ?? 100)}
          />
-      ) : d.account?.id === d.split.accountId ? (
+      ) : d.account?.id === d.split.account_id ? (
          <Numeric
             amount={d.split.shares}
             commodity={d.account?.commodity}  //  the account's commodity
@@ -307,7 +308,7 @@ const columnPrice: Column<TableRowData, ComputedBaseLedgerProps> = {
             commodity={d.firstRowSplit.currency}
             hideCommodity={hideCommodity(d.firstRowSplit, settings)}
          />
-      ) : d.account?.id === d.split.accountId ? (
+      ) : d.account?.id === d.split.account_id ? (
          <Numeric
             amount={d.split.price}
             commodity={d.split.currency}
@@ -427,7 +428,7 @@ const computeFirstSplit = (
 ) => {
    const sa = splitsForAccounts(t, accounts.accounts);
    let s: Split = {
-      accountId: SPLIT_ID,
+      account_id: SPLIT_ID,
 
       // Set the account so that we display the currency in the first --split--
       // line.
@@ -487,7 +488,7 @@ const computeFirstSplit = (
                for (const s3 of t.splits) {
                   if (s3.account && !accounts.accounts.includes(s3.account)) {
                      s.account = s3.account;
-                     s.accountId = s3.accountId;
+                     s.account_id = s3.account_id;
                      break;
                   }
                }
@@ -495,7 +496,7 @@ const computeFirstSplit = (
                for (const s3 of t.splits) {
                   if (s3.account && accounts.accounts.includes(s3.account)) {
                      s.account = s3.account;
-                     s.accountId = s3.accountId;
+                     s.account_id = s3.account_id;
                      break;
                   }
                }
@@ -688,7 +689,8 @@ const Ledger: React.FC<BaseLedgerProps & ExtraProps> = p => {
       () => p.date ?? new Date(),
       [p.date]
    );
-   const transactions = useTransactions(accounts.accounts, p.range, date);
+   const transactions = useTransactions(
+      accounts.accounts, p.range, date, p.includeScheduled);
    const singleAccount =
       accounts.accounts.length === 1 ? accounts.accounts[0] : undefined;
    const total = React.useMemo(

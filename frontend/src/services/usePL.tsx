@@ -1,4 +1,5 @@
-import { DateRange, rangeToHttp } from '@/Dates';
+import * as React from 'react';
+import { DateRange, toDates } from '@/Dates';
 import { CommodityId } from '@/services/useAccounts';
 import useFetch, { useFetchMultiple } from '@/services/useFetch';
 
@@ -28,10 +29,20 @@ const NULL_METRIC: Metric = {
    other_taxes: NaN,
 };
 
-const usePL = (range: DateRange, currencyId: CommodityId) => {
-   const { data } = useFetch<Metric, any>({
-      url: `/api/metrics?${rangeToHttp(range)}&currency=${currencyId}`,
-   });
+const usePL = (range: DateRange, currencyId: CommodityId): Metric => {
+   const args = React.useMemo(
+      () => {
+         const r = toDates(range);
+         return {
+            mindate: r[0],
+            maxdate: r[1],
+            currency: currencyId,
+         };
+      },
+      [range, currencyId]
+   );
+
+   const { data } = useFetch<Metric, unknown, {}>({cmd: 'metrics', args});
    return data ?? NULL_METRIC;
 }
 
@@ -39,11 +50,22 @@ export const usePLMultiple = (
    ranges: DateRange[],
    currencyId: CommodityId,
 ): Metric[]  => {
-   const result = useFetchMultiple<Metric, any>(
-      ranges.map(r => ({
-         url: `/api/metrics?${rangeToHttp(r)}&currency=${currencyId}`,
-      }))
+   const queries = React.useMemo(
+      () => ranges.map(r => {
+         const rg = toDates(r);
+         return {
+            cmd: 'metrics',
+            args: {
+               mindate: rg[0],
+               maxdate: rg[1],
+               currency: currencyId,
+            },
+         };
+      }),
+      [ranges, currencyId]
    );
+
+   const result = useFetchMultiple<Metric, unknown, {}>(queries);
    return result.map(r => r.data ?? NULL_METRIC);
 }
 

@@ -6,13 +6,20 @@ interface Price {
    price: number;
 }
 
+const NO_PRICES: Price[] = [];
+
 const useFetchPrices = (
    accountId: AccountId,
    currencyId: CommodityId,
 ) => {
-   return useFetch<Price[], any>({
-      url: `/api/prices/${accountId}?currency=${currencyId}`,
-      placeholder: [],
-   }).data as Price[];
+   const { data } = useFetch<Price[], unknown, {}>({
+      cmd: 'prices',
+      args: {
+         account: accountId,
+         currency: currencyId,
+      },
+   });
+
+   return data ?? NO_PRICES;
 }
 export default useFetchPrices;

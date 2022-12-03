@@ -8,6 +8,8 @@ export type ButtonSizes = 'tiny'|'small'|'normal'|'large';
 export type ButtonAspect = 'morph' | 'flat' | 'noborder';
 
 interface RoundButtonProps {
+   children?: React.ReactNode;
+
    fa?: string;     // font-awesome icon name
    img?: string;    // or image url
 
@@ -25,7 +27,7 @@ interface RoundButtonProps {
    // or a custom callback
 }
 
-const RoundButton: React.FC<RoundButtonProps> = p => {
+const RoundButton = (p: RoundButtonProps) => {
    const children_class = classes(
       p.aspect ?? "morph",
       p.fa && 'fa',

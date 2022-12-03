@@ -14,7 +14,7 @@ import useAccounts, { Account } from '@/services/useAccounts';
 const toLogicalRows = <T extends DataWithAccount> (list: TreeNode<T>[]) =>
    list
    .map((n, idx) => ({
-      key: n.data.account?.id || -idx,
+      key: n.data.account?.id ?? -idx,
       data: n.data,
       getChildren: () => toLogicalRows(n.children),
    }));

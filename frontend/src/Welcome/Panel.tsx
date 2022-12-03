@@ -6,7 +6,7 @@ export interface WelcomePanelProps extends PanelBaseProps, WelcomeProps {
    type: 'welcome';
 }
 
-const WelcomePanel: React.FC<PanelProps<WelcomePanelProps>> = p => {
+const WelcomePanel = (p: PanelProps<WelcomePanelProps>) => {
    return (
       <Panel
          {...p}

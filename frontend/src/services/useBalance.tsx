@@ -1,5 +1,6 @@
+import * as React from 'react';
 import { AccountId, CommodityId } from '@/services/useAccounts';
-import { RelativeDate, dateToString } from '@/Dates';
+import { RelativeDate, dateToDate } from '@/Dates';
 import useFetch from '@/services/useFetch';
 
 /**
@@ -35,14 +36,21 @@ export interface BalanceList {
    totalValue: number[];  // indexed on date
 }
 
+const NO_BALANCE: BalanceList = {
+   currencyId: -1,
+   dates: [],
+   list: [],
+   totalValue: [],
+};
+
 /**
  * As fetched from the server
  */
 
 interface JSONBalance {
-   accountId: AccountId;
-   shares: (number|undefined)[];  //  one entry per date
-   price: (number|undefined)[];  //  one entry per date
+   account_id: AccountId;
+   shares: (string|undefined)[];  //  one entry per date
+   price: (string|undefined)[];  //  one entry per date
 }
 
 /**
@@ -57,31 +65,42 @@ const useBalance = (p: {
    currencyId: CommodityId;
    dates: RelativeDate[];
 }): BalanceList => {
-   const dates_str = p.dates.map(d => dateToString(d));
-
-   const { data } = useFetch<BalanceList, JSONBalance[]>({
-      url: `/api/plots/networth`
-         + `?currency=${p.currencyId}`
-         + `&dates=${dates_str.join(',')}`,
-      parse: (json: JSONBalance[]) => ({
-         dates: p.dates,
-         currencyId: p.currencyId,
-         list: json.map(a => ({
-            accountId: a.accountId,
-            atDate: p.dates.map((_, idx) => ({
-               shares: a.shares[idx] ?? NaN,
-               price: a.price[idx] ?? NaN,
+   const parse = React.useCallback(
+      (json: JSONBalance[]): BalanceList => {
+         const floating = json.map(a => ({
+            account_id: a.account_id,
+            shares: a.shares.map(s => s === undefined ? NaN : parseFloat(s)),
+            price: a.price.map(s => s === undefined ? NaN : parseFloat(s)),
+         }));
+         return {
+            dates: p.dates,
+            currencyId: p.currencyId,
+            list: floating.map(a => ({
+               accountId: a.account_id,
+               atDate: p.dates.map((_, idx) => ({
+                  shares: a.shares[idx],
+                  price: a.price[idx],
+               })),
             })),
-         })),
-         totalValue: p.dates.map((_, idx) =>
-            json
-            .filter(d => d.price[idx] && d.shares[idx])  // remove undefined
-            .reduce((t, d) => t + d.price[idx]! * d.shares[idx]!, 0)),
-      }),
-      placeholder: {currencyId: p.currencyId, dates: [], list: [], totalValue: []},
-   });
+            totalValue: p.dates.map((_, idx) =>
+               floating
+               .filter(d => d.price[idx] && d.shares[idx])  // remove undefined
+               .reduce((t, d) => t + d.price[idx] * d.shares[idx], 0)),
+         };
+      },
+      [p.dates, p.currencyId]
+   );
 
-   return data as BalanceList;
+   const args = React.useMemo(
+      () => ({
+         dates: p.dates.map(d => dateToDate(d)),
+         currency: p.currencyId,
+      }),
+      [p.dates, p.currencyId]
+   );
+
+   const { data } = useFetch({cmd: 'balance', args, parse});
+   return data ?? NO_BALANCE;
 }
 
 export default useBalance;

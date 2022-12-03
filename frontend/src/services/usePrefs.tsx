@@ -24,10 +24,14 @@ const noContext: PrefContext = {
    updatePrefs: () => {},
 };
 
+interface PrefProviderProps {
+   children?: React.ReactNode;
+}
+
 const ReactPrefContext = React.createContext(noContext);
 const KEY = "alerePrefs";
 
-export const PrefProvider: React.FC<{}> = p => {
+export const PrefProvider = (p: PrefProviderProps) => {
    const [prefs, setPrefs] = React.useState(defaultPref);
    const updatePrefs = React.useCallback(
       (p: Partial<Preferences>) => {

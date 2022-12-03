@@ -23,7 +23,7 @@ export const computeTree = <T extends DataWithAccount> (
       mode === TreeMode.FLAT
       ? (a: Account) => undefined
       : mode === TreeMode.USER_DEFINED
-      ? (a: Account) => a.parentId
+      ? (a: Account) => a.parent_id
       : mode === TreeMode.INSTITUTION
       ? (a: Account) => a.getInstitution()?.name ?? 'Unknown'
       : (a: Account) => a.kind.name;

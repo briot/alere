@@ -1,35 +1,31 @@
-import { useQuery, QueryKey, UseQueryOptions, useQueries,
+import { useQuery, UseQueryOptions, useQueries,
    UseQueryResult } from 'react-query';
+import { invoke } from '@tauri-apps/api'
 
-export interface FetchProps<T, RAW_T> {
-   url: string;
-   init?: RequestInit;  // To override the method, for instance
+export interface FetchProps<T, RAW_T, TArgs extends Record<string, any>> {
+   cmd: string,
+   args?: TArgs,
    parse?: (json: RAW_T) => T;  // parse the server's response
-   placeholder?: T;
    enabled?: boolean;
    options?: UseQueryOptions<T, string /* error */, T /* TData */>;
-   key?: QueryKey;
 }
 
-const toQueryProps = <T, RAW_T> (p: FetchProps<T, RAW_T>) => ({
-   queryKey: p.key ?? p.url,
-   queryFn: async ({ signal }: {signal?: AbortSignal}) => {
-      const promise = window.fetch(
-         p.url,
-         {...p.init, signal},
-      ).then(r => {
-         if (!r.ok) {
-            throw new Error(`Failed to fetch ${p.url}`);
-         }
-         return r.json();
-      }).then(json => {
-         return (!p.parse) ? json as T : p.parse(json);
-      });
-//      (promise as unknown).cancel = () => controller.abort();  //  for react-query
-      return promise;
+const toQueryProps = <T, RAW_T, TArgs extends Record<string, any>>
+(p: FetchProps<T, RAW_T, TArgs>) => ({
+   queryKey: [p.cmd, p.args],
+   queryFn: async () => {
+      try {
+         const json: T | RAW_T = await invoke(p.cmd, p.args);
+         window.console.log(p.cmd, "=>", json);
+         return (p.parse === undefined)
+            ? json as T
+            : p.parse(json as RAW_T);
+      } catch (err) {
+         window.console.error(err);
+         return undefined;
+      };
    },
    ...p.options,
-   placeholderData: p.placeholder,
    enabled: p.enabled === undefined ? true : p.enabled,
 });
 
@@ -37,21 +33,19 @@ const toQueryProps = <T, RAW_T> (p: FetchProps<T, RAW_T>) => ({
  * Wrapper around react-query, to use window.fetch and setup cancellable
  * queries.
  */
-const useFetch = <T, RAW_T> (
-   p: FetchProps<T, RAW_T>
-): UseQueryResult<T, string> => {
-   const resp = useQuery(toQueryProps(p));
-   return resp;
+const useFetch = <T, RAW_T, TArgs extends Record<string, any>> (
+   p: FetchProps<T | undefined, RAW_T, TArgs>
+): UseQueryResult<T | undefined, string> => {
+   return useQuery(toQueryProps(p));
 };
 
 /**
  * Perform multiple queries in parallel
  */
-export const useFetchMultiple = <T, RAW_T> (
-   p: FetchProps<T, RAW_T>[],
-): UseQueryResult<T, string>[] => {
-   const resp = useQueries(p.map(toQueryProps));
-   return resp;
+export const useFetchMultiple = <T, RAW_T, TArgs extends Record<string, any>> (
+   p: FetchProps<T | undefined, RAW_T, TArgs>[],
+): UseQueryResult<T | undefined, string>[] => {
+   return useQueries(p.map(toQueryProps));
 }
 
 export default useFetch;

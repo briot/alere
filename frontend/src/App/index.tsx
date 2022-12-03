@@ -46,18 +46,23 @@ const Main: React.FC<{}> = () => {
          <Route>
             <div className={prefs.dark_mode ? 'darkpalette' : 'lightpalette'}>
                <div id="app" className={c} >
-                  <Header {...header} >
+                  <Header {...header} forpage={true} >
                      <OnlineUpdate />
                      <Settings />
                   </Header>
                   <LeftSideBar />
-                  {
-                     !accounts.loaded
-                     ? <div className="dashboard main"><Spinner /></div>
-                     : !accounts.has_accounts()
-                     ? <Redirect to="/welcome" />
-                     : <Page setHeader={setHeader} url={location.pathname} />
-                  }
+                  <Route path="/welcome">
+                      <Page setHeader={setHeader} url={location.pathname} />
+                  </Route>
+                  <Route>
+                     {
+                        !accounts.loaded
+                        ? <div className="dashboard main"><Spinner /></div>
+                        : !accounts.has_accounts()
+                        ? <Redirect to="/welcome" />
+                        : <Page setHeader={setHeader} url={location.pathname} />
+                     }
+                  </Route>
                </div>
             </div>
          </Route>

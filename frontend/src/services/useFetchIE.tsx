@@ -3,17 +3,27 @@
  */
 
 import * as React from 'react';
-import { DateRange, rangeToHttp } from '@/Dates';
-import useFetch, { useFetchMultiple, FetchProps } from '@/services/useFetch';
+import { DateRange, toDates } from '@/Dates';
+import useFetch, { useFetchMultiple } from '@/services/useFetch';
 import usePrefs from '@/services/usePrefs';
 import useAccounts, {
-   AccountId, CommodityId, Account, AccountList
+   AccountId, CommodityId, Account, AccountList,
 } from '@/services/useAccounts';
+
+interface OneIEJSON {
+   accountid: AccountId;
+   value: number;         // total for this account in the time range
+}
+interface IncomeExpenseInPeriodJSON {
+   items:   OneIEJSON[];
+   mindate: string;
+   maxdate: string;
+}
+
 
 export interface OneIE {
    accountId: AccountId;
-   account: Account | undefined;
-   name: string;          // name to display for the account
+   account: Account,
    value: number;         // total for this account in the time range
 }
 export interface IncomeExpenseInPeriod {
@@ -28,58 +38,62 @@ const noData: IncomeExpenseInPeriod = {
 
 // The details for one query
 interface QueryProps {
-   include_expenses?: boolean;
-   include_income?: boolean;
+   include_expenses: boolean;
+   include_income: boolean;
    range: DateRange;
 }
 
-const toFetchProps = (
-   p: QueryProps,
-   accounts: AccountList,
-   currency: CommodityId,
-): FetchProps<IncomeExpenseInPeriod, IncomeExpenseInPeriod> => ({
-   url: `/api/incomeexpense?income=${p.include_income === true}`
-      + `&expense=${p.include_expenses === true}`
-      + `&currency=${currency}`
-      + `&${rangeToHttp(p.range)}`,
-   parse: (json: IncomeExpenseInPeriod) => {
-      const d = {
-         items: json.items,
+const computeArgs = (
+      include_income: boolean,
+      include_expenses: boolean,
+      range: DateRange,
+      currencyId: CommodityId,
+      accounts: AccountList,
+) => {
+   const r = toDates(range);
+   return {
+      cmd: 'income_expense',
+      args: {
+         income: include_income === true,
+         expense: include_expenses === true,
+         currency: currencyId,
+         mindate: r[0],
+         maxdate: r[1],
+      },
+      parse: (json: IncomeExpenseInPeriodJSON) => ({
+         items: json.items.map(it => ({
+            accountId: it.accountid,
+            account: accounts.getAccount(it.accountid),
+            value: it.value,
+         })),
          mindate: json.mindate,
          maxdate: json.maxdate,
          total: json.items.reduce((tot, v) => tot + v.value, 0),
-         currency,
-      };
-      d.items.forEach(a => {
-         a.account = accounts.getAccount(a.accountId);
-         a.name = a.account?.name;
-      });
-      return d;
-   },
-   placeholder: noData,
-});
+         currency: currencyId,
+      }),
+   };
+}
 
-
-const useFetchIE = (p: QueryProps): IncomeExpenseInPeriod|undefined => {
+const useFetchIE = (p: QueryProps): IncomeExpenseInPeriod=> {
    const { accounts } = useAccounts();
    const { prefs } = usePrefs();
-   const { data }  = useFetch(toFetchProps(p, accounts, prefs.currencyId));
-   return data;
+
+   // Need to compute this in useMemo, since a range of "up to now"
+   // would have a different actual end date every time.
+   // ??? Perhaps we should pass p.range directly to the backend.
+   const args = React.useMemo(
+      () => computeArgs(
+         p.include_income,
+         p.include_expenses,
+         p.range,
+         prefs.currencyId, accounts),
+      [p.include_income, p.include_expenses, p.range,
+       prefs.currencyId, accounts],
+   );
+   const { data }  = useFetch(args);
+   return data ?? noData;
 }
 export default useFetchIE;
-
-/**
- * Perform one or more queries to retrieve Income/Expense
- */
-export const useFetchIEMulti = (
-   p: QueryProps[]
-): (IncomeExpenseInPeriod|undefined)[] => {
-   const { accounts } = useAccounts();
-   const { prefs } = usePrefs();
-   const result = useFetchMultiple(
-      p.map(q => toFetchProps(q, accounts, prefs.currencyId)));
-   return result.map(d => d.data);
-}
 
 /**
  * Retrieve Income/Expense for multiple periods of times. For each account,
@@ -97,13 +111,20 @@ export interface IERanges {
 export const useFetchIERanges = (
    ranges: DateRange[],
 ): Record<AccountId, IERanges> => {
-   const data = useFetchIEMulti(
-      ranges.map(r => ({
-         include_income: true,
-         include_expenses: true,
-         range: r,
-      }))
+   const { accounts } = useAccounts();
+   const { prefs } = usePrefs();
+   const args = React.useMemo(
+      () => ranges.map(r => computeArgs(
+         true,  // include_income
+         true,  // include_expenses
+         r,
+         prefs.currencyId,
+         accounts,
+      )),
+      [ranges, accounts, prefs.currencyId],
    );
+   const result = useFetchMultiple(args);
+   const data = result.map(d => d.data ?? noData);
    const account_to_data = React.useMemo(
       () => {
          const perAccount: Record<AccountId, IERanges> = {};
@@ -116,7 +137,7 @@ export const useFetchIERanges = (
                         account: it.account,
                         accountId: it.accountId,
                         values: new Array(ranges.length).fill(NaN),
-                        name: it.name,
+                        name: it.account.name,
                         currency: d.currency,
                      };
                   }

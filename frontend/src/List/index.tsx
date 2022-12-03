@@ -13,13 +13,14 @@ const ROW_HEIGHT = 25;  // pixels
  */
 
 interface THProps<TOOLTIP_DATA> extends TooltipProps<TOOLTIP_DATA> {
+   children?: React.ReactNode;
    sortable?: boolean;
    asc?: boolean; // if sorted (not undefined), whether ascending or descending
    className?: string;
    style?: React.CSSProperties;
    onClick?: () => void;
 }
-const TH: React.FC<THProps<any>> = p => {
+const TH = (p: THProps<any>) => {
    const n = classes(
       'th',
       p.className,
@@ -44,10 +45,11 @@ const TH: React.FC<THProps<any>> = p => {
  */
 
 interface TDProps<TOOLTIP_DATA> extends TooltipProps<TOOLTIP_DATA> {
+   children?: React.ReactNode;
    className?: string;
    style?: React.CSSProperties;
 }
-const TD: React.FC<TDProps<any>> = p => {
+const TD = (p: TDProps<any>) => {
    const n = classes(
       'td',
       p.className,
@@ -66,6 +68,7 @@ const TD: React.FC<TDProps<any>> = p => {
  */
 
 interface TRProps<TOOLTIP_DATA> extends TooltipProps<TOOLTIP_DATA> {
+   children?: React.ReactNode;
    editable?: boolean;
    nestingLevel?: number;
    style?: React.CSSProperties;
@@ -78,7 +81,7 @@ interface TRProps<TOOLTIP_DATA> extends TooltipProps<TOOLTIP_DATA> {
    // undefined if not expandable. This only has an effect if the Table itself
    // had an expandableRows property set to True.
 }
-const TR: React.FC<TRProps<any>> = p => {
+const TR = (p: TRProps<any>) => {
    const n = classes(
       'tr',
       p.className,

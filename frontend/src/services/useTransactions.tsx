@@ -1,7 +1,10 @@
+import * as React from 'react';
 import useAccounts, { Account } from '@/services/useAccounts';
-import { DateRange, rangeToHttp } from '@/Dates';
+import { DateRange, toDates } from '@/Dates';
 import { Transaction, incomeExpenseSplits } from '@/Transaction';
 import useFetch from '@/services/useFetch';
+
+const NO_TRANSACTIONS: Transaction[] = [];
 
 /**
  * Fetch a ledger from the server
@@ -10,28 +13,41 @@ import useFetch from '@/services/useFetch';
 const useTransactions = (
    accountList: Account[],
    range: DateRange|undefined,   // undefined, to see forever
-   refDate: Date,                // starting point of the date range
+   refDate: Date|undefined,      // starting point of the date range
+   includeScheduled?: boolean,
 ): Transaction[] => {
    const { accounts } = useAccounts();
-   const idsForQuery = accountList.map(a => a.id).sort().join(',');
    const discardIE = accountList.length > 1;
-   const { data } = useFetch({
-      url: `/api/ledger/${idsForQuery}?${rangeToHttp(range, refDate)}`,
-      placeholder: [],
-      enabled: !!idsForQuery,
-      parse: (json: Transaction[]) => {
-         let trans = json ? [...json ] : [];
-         trans.forEach(t =>
-            t.splits.forEach(s => s.account = accounts.getAccount(s.accountId))
+   const parse = React.useCallback(
+      (resp: Transaction[]): Transaction[] => {
+         resp.forEach(t =>
+            t.splits.forEach(s =>
+               s.account = accounts.getAccount(s.account_id)
+            )
          );
-         if (0 && discardIE) {   //  MANU
+         if (discardIE) {
             // remove internal transfers
-            trans = trans.filter(t => incomeExpenseSplits(t).length > 0);
+            resp = resp.filter(t => incomeExpenseSplits(t).length > 0);
          }
-         return trans;
+         return resp;
       },
-   });
-   return data as Transaction[];
+      [accounts, discardIE]
+   );
+   const args = React.useMemo(
+      () => {
+         const r = toDates(range ?? "all", refDate ?? new Date());
+         return {
+            mindate: r[0],
+            maxdate: r[1],
+            accountids: accountList.map(a => a.id),
+            occurrences: includeScheduled ? 1 : 0,
+         };
+      },
+      [range, accountList, includeScheduled, refDate],
+   );
+
+   const { data } = useFetch({cmd: 'ledger', args, parse });
+   return data ?? NO_TRANSACTIONS;
 }
 
 export default useTransactions;
