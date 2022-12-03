@@ -1,0 +1,50 @@
+Icon sets
+=========
+
+https://www.iconfinder.com/icon-sets/popular
+
+Fonts
+=====
+
+https://fontjoy.com/
+
+Components
+==========
+
+date pickers:
+https://blog.bitsrc.io/13-react-time-and-date-pickers-for-2020-d52d88d1ca0b
+
+https://headlessui.dev
+
+Django
+=======
+
+Async:
+https://testdriven.io/blog/django-async-views/
+
+CSS
+====
+
+neuomorphism:
+https://github.com/AKAspanion/ui-neumorphism
+
+styled components:
+https://www.joshwcomeau.com/css/styled-components/
+
+Accessibility
+=============
+
+https://html5accessibility.com/stuff/2020/11/07/not-so-short-note-on-aria-label-usage-big-table-edition/
+https://react-spectrum.adobe.com/react-aria/
+
+API
+====
+
+Cryptocurrencies:
+   https://github.com/ccxt/ccxt
+
+Javascript
+==========
+
+streams:
+   https://web.dev/streams/
