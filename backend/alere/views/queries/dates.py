@@ -1,7 +1,7 @@
 import datetime
 from dateutil.relativedelta import relativedelta
 import django.db   # type: ignore
-from typing import Union, Literal, TypeVar, Type, Sequence, Optional
+from typing import Union, Literal, Sequence, Optional
 import alere.models
 import alere.views.queries as queries
 import logging

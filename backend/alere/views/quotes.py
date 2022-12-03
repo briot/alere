@@ -104,7 +104,7 @@ class Symbol:
         self.id = commodity_id
         self.source = source
         self.ticker = ticker
-        self.accounts: List[alere.models.Accounts] = []   # array of Account
+        self.accounts: List[Account] = []   # array of Account
         self.oldest = None
         self.is_currency = is_currency
         self.price_scale = price_scale
