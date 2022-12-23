@@ -390,7 +390,11 @@ const noContext: PagesContext = {
 }
 const ReactPagesContext = React.createContext(noContext);
 
-export const PagesProvider: React.FC<{}> = p => {
+interface PagesProviderProps {
+   children?: React.ReactNode;
+}
+
+export const PagesProvider: React.FC<PagesProviderProps> = p => {
    const { val, setVal } = useSettings<PageDescr[]>(
       'Pages', defaultPages, hideTmp /* loader */ );
    const dict: Record<string, PageDescr> = React.useMemo(

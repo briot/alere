@@ -322,7 +322,11 @@ export const useAddOrEditAccount = () => {
    return mutation;
 }
 
-export const AccountsProvider: React.FC<{}> = p => {
+interface AccountsProviderProps {
+   children?: React.ReactNode;
+}
+
+export const AccountsProvider: React.FC<AccountsProviderProps> = p => {
    const { data } = useFetch<IAccountsContext, ServerJSON>({
       url: ACCOUNT_LIST_URL,
       parse: (json: ServerJSON) => {

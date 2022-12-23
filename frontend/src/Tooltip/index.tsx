@@ -137,7 +137,11 @@ const noTooltipData: TooltipData = {
    visible: false,
 };
 
-export const TooltipProvider: React.FC<{}> = p => {
+interface TooltipProviderProps {
+   children?: React.ReactNode;
+}
+
+export const TooltipProvider: React.FC<TooltipProviderProps> = p => {
    const [data, setData] = React.useState(noTooltipData);
    const tooltipRef = React.useRef<Element|null>();
    const timeout = React.useRef(-1);

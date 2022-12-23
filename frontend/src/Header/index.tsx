@@ -7,6 +7,7 @@ import Tooltip from '@/Tooltip';
 import './Header.scss';
 
 export interface HeaderProps {
+   children?: React.ReactNode;
    name?: string;
    node?: React.ReactNode;
    range?: DateRange;  // timestamp used to compute values

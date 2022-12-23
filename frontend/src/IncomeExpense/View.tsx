@@ -114,11 +114,11 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
    });
 
    const onEnter = React.useCallback(
-      (_, index) => setActiveIndex(index),
+      (_: unknown, index: number) => setActiveIndex(index),
       []
    );
    const onLeave = React.useCallback(
-      (_, index) => setActiveIndex(-1),
+      (_: unknown, index: number) => setActiveIndex(-1),
       []
    );
 

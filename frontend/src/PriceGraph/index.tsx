@@ -127,12 +127,15 @@ const PriceGraph: React.FC<PriceGraphProps> = p => {
    }
 
    const onMouseDown = React.useCallback(
-      (e) => setState(old => ({...old, refAreaLeft: e.activeLabel })),
+      (e: {activeLabel?: string}) => setState(old =>
+         ({...old, refAreaLeft: parseInt(e.activeLabel ?? '')})),
       []
    );
    const onMouseMove = React.useCallback(
-      (e) => setState(old =>
-         old.refAreaLeft ? { ...old, refAreaRight: e.activeLabel } : old
+      (e: {activeLabel?: string}) => setState(old =>
+         old.refAreaLeft
+         ? { ...old, refAreaRight: parseInt(e.activeLabel ?? '') }
+         : old
       ),
       []
    );

@@ -13,6 +13,7 @@ const ROW_HEIGHT = 25;  // pixels
  */
 
 interface THProps<TOOLTIP_DATA> extends TooltipProps<TOOLTIP_DATA> {
+   children?: React.ReactNode;
    sortable?: boolean;
    asc?: boolean; // if sorted (not undefined), whether ascending or descending
    className?: string;
@@ -44,6 +45,7 @@ const TH: React.FC<THProps<any>> = p => {
  */
 
 interface TDProps<TOOLTIP_DATA> extends TooltipProps<TOOLTIP_DATA> {
+   children?: React.ReactNode;
    className?: string;
    style?: React.CSSProperties;
 }
@@ -66,6 +68,7 @@ const TD: React.FC<TDProps<any>> = p => {
  */
 
 interface TRProps<TOOLTIP_DATA> extends TooltipProps<TOOLTIP_DATA> {
+   children?: React.ReactNode;
    editable?: boolean;
    nestingLevel?: number;
    style?: React.CSSProperties;

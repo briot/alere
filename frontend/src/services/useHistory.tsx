@@ -22,7 +22,11 @@ const ReactHistContext = React.createContext(noContext);
 const KEY = "alereHist";
 const MAX_ENTRIES = 10;
 
-export const HistProvider: React.FC<{}> = p => {
+interface HistProviderProps {
+   children?: React.ReactNode;
+}
+
+export const HistProvider: React.FC<HistProviderProps> = p => {
    const [hist, setHist] = React.useState<History>(
       () => {
          // On startup, load preferences from local storage

@@ -8,6 +8,7 @@ export type ButtonSizes = 'tiny'|'small'|'normal'|'large';
 export type ButtonAspect = 'morph' | 'flat' | 'noborder';
 
 interface RoundButtonProps {
+   children?: React.ReactNode;
    fa?: string;     // font-awesome icon name
    img?: string;    // or image url
 
