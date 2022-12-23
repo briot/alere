@@ -264,7 +264,8 @@ export const Select = <T extends { toString: () => string }> (p: SelectProps<T>)
                            && p.format?.(selected.value))
                         ?? selected?.text
                         ?? selected?.value.toString()
-                        ?? ''}
+                        ?? ''
+                     }
                   </div>
                   {
                      !p.hideArrow &&

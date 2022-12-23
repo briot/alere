@@ -7,6 +7,10 @@ module.exports = {
    moduleNameMapper : {
       "\\.scss$": "<rootDir>/frontend/styleMock.js",
       "^@/(.*)$": ["<rootDir>/frontend/src/$1"]
-   }
+   },
+   collectCoverageFrom: [
+      '**/*.{js,jsx}',
+      '!**/node_modules/**',
+   ],
 };
 
