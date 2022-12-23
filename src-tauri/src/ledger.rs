@@ -2,13 +2,13 @@ use alere_lib::cte_accounts::{
     cte_transactions_for_accounts, CTE_TRANSACTIONS_FOR_ACCOUNTS};
 use alere_lib::cte_list_splits::{
     cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
-use alere_lib::dates::{DateSet, DateValues};
+use alere_lib::dates::{DateSet, DateValues, MIDNIGHT};
 use alere_lib::models::{AccountId, CommodityId};
 use alere_lib::occurrences::Occurrences;
 use alere_lib::connections::execute_and_log;
 use alere_lib::scenarios::NO_SCENARIO;
 use crate::connections::get_connection;
-use chrono::{DateTime, NaiveDate, TimeZone, Utc};
+use chrono::{DateTime, NaiveDate, TimeZone, Utc, NaiveDateTime};
 use diesel::sql_types::{Bool, Date, Float, Integer, Nullable, Text};
 use serde::Serialize;
 use log::info;
@@ -116,7 +116,10 @@ pub async fn ledger(
     );
     let connection = get_connection();
     let occ = Occurrences::new(occurrences);
-    let dates = DateValues::new(Some(vec![mindate.date(), maxdate.date()]));
+    let dates = DateValues::new(Some(vec![
+        mindate.date_naive(),
+        maxdate.date_naive()
+    ]));
     let (filter_acct_cte, filter_acct_from) = match accountids.len() {
         0 => ("".to_string(), "".to_string()),
         _ => {
@@ -198,7 +201,14 @@ pub async fn ledger(
                     result.push(TransactionDescr {
                         id: split.transaction_id,
                         occurrence: split.occurrence,
-                        date: Utc.from_utc_date(&split.timestamp).and_hms(0, 0, 0),
+                        date:
+                            Utc
+                            .from_utc_datetime(
+                                &NaiveDateTime::new(
+                                    split.timestamp,
+                                    *MIDNIGHT
+                                )
+                            ),
                         balance: 0.0,
                         balance_shares: 0.0,
                         memo: split.memo.unwrap_or_else(|| "".to_string()),
@@ -218,7 +228,14 @@ pub async fn ledger(
 
                 r.splits.push(SplitDescr {
                     account_id: split.account_id,
-                    post_date: Utc.from_utc_date(&split.post_date).and_hms(0, 0, 0),
+                    post_date:
+                        Utc
+                        .from_utc_datetime(
+                            &NaiveDateTime::new(
+                                split.post_date,
+                                *MIDNIGHT
+                            )
+                        ),
                     amount: split.value,
                     currency: split.value_commodity_id,
                     reconcile: split.reconcile.chars().next().unwrap(),

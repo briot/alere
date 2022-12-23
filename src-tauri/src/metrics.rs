@@ -187,8 +187,8 @@ pub async fn networth_history(
     let prior: u8 = 0;
     let after: u8 = 0;
     let dates = DateRange::new(
-            Some(mindate.date()),
-            Some(maxdate.date()),
+            Some(mindate.date_naive()),
+            Some(maxdate.date_naive()),
             group_by)
         .extend(prior, after)
         .restrict_to_splits(
@@ -219,7 +219,7 @@ pub async fn balance(
         &connection,
 
         // ??? Can we pass directly an iterator instead
-        &DateValues::new(Some(dates.iter().map(|d| d.date()).collect())),
+        &DateValues::new(Some(dates.iter().map(|d| d.date_naive()).collect())),
         currency,
         NO_SCENARIO,
         &Occurrences::no_recurrence(),
@@ -357,7 +357,10 @@ pub async fn metrics(
 ) -> Networth {
     info!("metrics {:?} {:?}", &mindate, &maxdate);
     let connection = get_connection();
-    let dates = DateValues::new(Some(vec![mindate.date(), maxdate.date()]));
+    let dates = DateValues::new(Some(vec![
+        mindate.date_naive(),
+        maxdate.date_naive()
+    ]));
     let all_networth = networth(
         &connection,
         &dates,

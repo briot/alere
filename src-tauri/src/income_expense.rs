@@ -53,7 +53,10 @@ pub async fn income_expense(
     }
 
     let list_splits = cte_list_splits(
-        &DateValues::new(Some(vec![mindate.date(), maxdate.date()])),
+        &DateValues::new(Some(vec![
+            mindate.date_naive(),
+            maxdate.date_naive()
+        ])),
         NO_SCENARIO,
         &Occurrences::no_recurrence());
     let with_values = cte_splits_with_values();

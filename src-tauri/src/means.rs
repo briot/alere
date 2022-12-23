@@ -34,8 +34,8 @@ pub async fn mean(
     let connection = get_connection();
 
     let dates = DateRange::new(
-        Some(mindate.date()),
-        Some(maxdate.date()),
+        Some(mindate.date_naive()),
+        Some(maxdate.date_naive()),
         GroupBy::MONTHS,
     ).restrict_to_splits(
         &connection,
@@ -61,7 +61,8 @@ pub async fn mean(
         );
         for p in &points {
             unreal.insert(
-                NaiveDate::from_ymd(p.date.year(), p.date.month(), 1),
+                NaiveDate::from_ymd_opt(
+                    p.date.year(), p.date.month(), 1).unwrap(),
                 (p.diff, p.average)
             );
         }

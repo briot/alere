@@ -25,7 +25,7 @@ sql_function!(
 
 #[memoize(Capacity: 120)] // thread-local
 fn parse_ruleset(start: NaiveDateTime, rule: String) -> Result<RRuleSet, RRuleError> {
-    let s = UTC.timestamp(start.timestamp(), 0);
+    let s = UTC.timestamp_opt(start.timestamp(), 0).unwrap();
     let raw: RRule<Unvalidated> = rule.parse()?;
     let r = raw.build(s)?;
     Ok(r)
@@ -50,9 +50,11 @@ fn next_event(
                 return None;
             }
         };
-        let prev = UTC.timestamp(previous.map(|p| p.timestamp()).unwrap_or(0), 0);
+        let prev = UTC.timestamp_opt(
+            previous.map(|p| p.timestamp()).unwrap_or(0), 0)
+            .unwrap();
         let next = rs.just_after(
-            UTC.timestamp(prev.timestamp(), 0),
+            UTC.timestamp_opt(prev.timestamp(), 0).unwrap(),
             false, // inclusive
         );
         next.ok()?.map(|dt| dt.naive_utc())

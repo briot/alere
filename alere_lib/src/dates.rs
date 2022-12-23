@@ -2,7 +2,7 @@
 
 use crate::cte_list_splits::{cte_list_splits, CTE_SPLITS};
 use crate::connections::SqliteConnect;
-use chrono::{NaiveDate, Date, TimeZone, Utc, Duration};
+use chrono::{NaiveDate, Duration, NaiveTime};
 use serde::Deserialize;
 use lazy_static::lazy_static;
 use core::cmp::{max, min};
@@ -15,8 +15,12 @@ const MAX_DATES: u16 = 366;
 // scope of queries.
 
 lazy_static! {
-    static ref MIN_QUERY_DATE: Date<Utc> = Utc.ymd(2000, 1, 1);
-    static ref MAX_QUERY_DATE: Date<Utc> = Utc.ymd(2200, 1, 1);
+    static ref MIN_QUERY_DATE: NaiveDate =
+       NaiveDate::from_ymd_opt(2000, 1, 1).unwrap();
+    static ref MAX_QUERY_DATE: NaiveDate =
+       NaiveDate::from_ymd_opt(2200, 1, 1).unwrap();
+    pub static ref MIDNIGHT: NaiveTime =
+       NaiveTime::from_hms_opt(0, 0, 0).unwrap();
 }
 
 #[derive(Deserialize, Clone)]
@@ -38,8 +42,8 @@ struct SplitsRange {
 /// Describes a set of dates in a range [start, end]
 
 pub trait DateSet {
-    fn get_earliest(&self) -> Date<Utc>;
-    fn get_most_recent(&self) -> Date<Utc>;
+    fn get_earliest(&self) -> NaiveDate;
+    fn get_most_recent(&self) -> NaiveDate;
 
     /// Returns the query for a common table expression named CTE_DATES,
     fn cte(&self) -> String;
@@ -65,13 +69,17 @@ pub trait DateSet {
 /// in the range
 
 pub struct DateRange {
-    start: Date<Utc>,
-    end: Date<Utc>,
+    start: NaiveDate,
+    end: NaiveDate,
     granularity: GroupBy,
 }
 
 impl DateRange {
-    pub fn new(start: Option<Date<Utc>>, end: Option<Date<Utc>>, granularity: GroupBy) -> Self {
+    pub fn new(
+        start: Option<NaiveDate>,
+        end: Option<NaiveDate>,
+        granularity: GroupBy
+    ) -> Self {
         DateRange {
             start: start.unwrap_or(*MIN_QUERY_DATE),
             end: end.unwrap_or(*MAX_QUERY_DATE),
@@ -89,7 +97,7 @@ impl DateRange {
         max_scheduled_occurrences: &super::occurrences::Occurrences,
     ) -> Self {
         let list_splits = cte_list_splits(
-            self, scenario, &max_scheduled_occurrences);
+            self, scenario, max_scheduled_occurrences);
         let query = format!(
             "
             WITH RECURSIVE {list_splits}
@@ -105,10 +113,10 @@ impl DateRange {
             Ok(rows) => match rows.first() {
                 Some(r) => DateRange::new(
                     Some(max(
-                        Utc.from_utc_date(&r.mindate),
+                        r.mindate,
                         self.get_earliest())),
                     Some(min(
-                        Utc.from_utc_date(&r.maxdate),
+                        r.maxdate,
                         self.get_most_recent())),
                     self.granularity.clone(),
                 ),
@@ -196,11 +204,11 @@ impl DateSet for DateRange {
         }
     }
 
-    fn get_earliest(&self) -> Date<Utc> {
+    fn get_earliest(&self) -> NaiveDate {
         self.start
     }
 
-    fn get_most_recent(&self) -> Date<Utc> {
+    fn get_most_recent(&self) -> NaiveDate {
         self.end
     }
 }
@@ -208,11 +216,11 @@ impl DateSet for DateRange {
 /// A special implementation of DateSet, for a specific set of dates
 
 pub struct DateValues {
-    dates: Option<Vec<Date<Utc>>>,
+    dates: Option<Vec<NaiveDate>>,
 }
 
 impl DateValues {
-    pub fn new(dates: Option<Vec<Date<Utc>>>) -> Self {
+    pub fn new(dates: Option<Vec<NaiveDate>>) -> Self {
         DateValues { dates }
     }
 }
@@ -234,14 +242,14 @@ impl DateSet for DateValues {
         format!("{CTE_DATES} (idx, date) AS ({nested})")
     }
 
-    fn get_earliest(&self) -> Date<Utc> {
+    fn get_earliest(&self) -> NaiveDate {
         *self
             .dates
             .as_ref().and_then(|d| d.first())
             .unwrap_or(&MIN_QUERY_DATE)
     }
 
-    fn get_most_recent(&self) -> Date<Utc> {
+    fn get_most_recent(&self) -> NaiveDate {
         *self
             .dates
             .as_ref().and_then(|d| d.last())
