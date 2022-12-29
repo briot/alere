@@ -13,6 +13,9 @@ Alere):
 
    > npm create tauri-app
 
+Install Visual Studio Build Tools for C++ (which includes the linker that
+Rust needs).
+
 Also install the diesel command line tools:
 
    > cargo install diesel_cli --no-default-features --features "sqlite-bundled"

@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "start": "concurrently --kill-others-on-fail -c=\"white,green,blue,red,cyan\" -n=\"vite,rust,tsc ,ftes,lint\" \"vite --clearScreen false\" \"tauri dev\" \"tsc -w --preserveWatchOutput\" \"jest --coverage --watch\" \"esw -w --changed --ext .ts,.tsx frontend/src\"",
+    "start": "concurrently --kill-others-on-fail -c=\"white,green,blue,red,cyan\" -n=\"vite,rust,tsc ,ftes,lint\" \"vite --clearScreen false\" \"tauri dev\" \"tsc -w --preserveWatchOutput\" \"jest --coverage --watchAll\" \"esw -w --changed --ext .ts,.tsx frontend/src\"",
     "tauri": "tauri",
     "fmt": "cd src-tauri && cargo fmt",
     "clippy": "cd src-tauri && cargo clippy",
@@ -14,7 +14,6 @@
   "dependencies": {
     "@tanstack/react-query": "^4.19.0",
     "@tauri-apps/api": "^1.0.1",
-    "n": "^9.0.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-router-dom": "^5.2.0",

@@ -11,12 +11,26 @@
   },
   "tauri": {
     "allowlist": {
-      "all": true
+      "all": false,
+      "fs": {
+         "createDir": true,
+         "readDir": true,
+         "readFile": true,
+         "writeFile": true,
+         "scope": ["$APPCONFIG", "$APPCONFIG/*"]
+      },
+      "dialog": {
+        "open": true,
+        "save": true
+      },
+      "path": {
+        "all": true
+      }
     },
     "bundle": {
       "active": true,
-      "category": "DeveloperTool",
-      "copyright": "",
+      "category": "Finance",
+      "copyright": "E. Briot",
       "deb": {
         "depends": []
       },
@@ -28,8 +42,8 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.briot.alere",
-      "longDescription": "",
+      "identifier": "com.alere",
+      "longDescription": "Personal Finance Management",
       "macOS": {
         "entitlements": null,
         "exceptionDomain": "",
@@ -38,7 +52,7 @@
         "signingIdentity": null
       },
       "resources": [],
-      "shortDescription": "",
+      "shortDescription": "Personal Finance Management",
       "targets": "all",
       "windows": {
         "certificateThumbprint": null,
@@ -57,7 +71,9 @@
         "fullscreen": false,
         "height": 1024,
         "resizable": true,
-        "title": "alere",
+        "maximized": false,
+        "title": "Alere",
+        "center": false,
         "width": 1700
       }
     ]

@@ -68,7 +68,7 @@ pub fn add_functions(connection: &SqliteConnection) {
 
 pub fn create_pool(document_dir: PathBuf) -> SqlitePool {
     let db = {
-       let mut doc = document_dir.clone();
+       let mut doc = document_dir;
        doc.push("alere");
        _ = std::fs::create_dir(doc.as_path()); //  Create the directory if needed
        doc.push("alere_db.sqlite3");
