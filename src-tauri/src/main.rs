@@ -34,6 +34,11 @@ fn create_menu() -> Menu {
         .add_native_item(MenuItem::Copy)
         .add_native_item(MenuItem::Paste)
     )).add_submenu(Submenu::new(
+        "Tools",
+        Menu::new()
+        .add_item(CustomMenuItem::new("update_prices", "Update Prices"))
+        .add_item(CustomMenuItem::new("settings", "Settings"))
+    )).add_submenu(Submenu::new(
         "Window",
         Menu::new()
         .add_native_item(MenuItem::Minimize)
@@ -58,12 +63,11 @@ fn main() {
 
     tauri::Builder::default()
         .menu(create_menu())
-        .on_menu_event(|event| match event.menu_item_id() {
-            "open" => {
-                //  Send the even to the front-end
-                let _ = event.window().emit("menu-event", "open").unwrap();
-            },
-            _ => {}
+        .on_menu_event(|event| {
+            //  Send the event to the front-end
+            let _ = event.window()
+                .emit("menu-event", event.menu_item_id())
+                .unwrap();
         })
         .invoke_handler(tauri::generate_handler![
             accounts::fetch_accounts,

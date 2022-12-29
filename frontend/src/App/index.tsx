@@ -1,14 +1,13 @@
 import * as React from 'react';
 import { useHistory, useLocation, BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
-import Header, { HeaderProps } from '@/Header';
 import LeftSideBar from '@/LeftSideBar';
-import OnlineUpdate from '@/Header/OnlineUpdate';
-import Settings from '@/Settings';
+import useOnlineUpdate from '@/Header/OnlineUpdate';
 import Spinner from '@/Spinner';
 import StyleGuide from '@/StyleGuide';
 import classes from '@/services/classes';
 import useAccounts from '@/services/useAccounts';
 import usePrefs from '@/services/usePrefs';
+import Settings from '@/Settings';
 import { AccountsProvider } from '@/services/useAccounts';
 import { HistProvider } from '@/services/useHistory';
 import { Page } from '@/Page';
@@ -17,8 +16,8 @@ import { PrefProvider } from '@/services/usePrefs';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TooltipProvider } from '@/Tooltip';
 import { listen, Event } from '@tauri-apps/api/event';
-import { save, open } from "@tauri-apps/api/dialog";
-import { readTextFile } from "@tauri-apps/api/fs";
+// import { save, open } from "@tauri-apps/api/dialog";
+// import { readTextFile } from "@tauri-apps/api/fs";
 
 import './App.scss';
 import "font-awesome/css/font-awesome.min.css";
@@ -34,12 +33,18 @@ const queryClient = new QueryClient({
 const Main: React.FC<{}> = () => {
    const location = useLocation();
    const { prefs } = usePrefs();
-   const [ header, setHeader ] = React.useState<HeaderProps>({});
    const { accounts } = useAccounts();
    const history = useHistory();
+   const { update } = useOnlineUpdate();
    const c = classes(
       'page',
       prefs.neumorph_mode ? 'neumorph_mode' : 'not_neumorph_mode',
+   );
+   const [showSettings, setShowSettings] = React.useState(false);
+
+   const on_dialog_close = React.useCallback(
+      () => setShowSettings(false),
+      [setShowSettings]
    );
 
    const open_file = React.useCallback(
@@ -47,16 +52,16 @@ const Main: React.FC<{}> = () => {
          history.push('/welcome');
          return;
 
-         try {
-            let filepath = await save();
-            if (typeof filepath == 'string') {
-               let content = await readTextFile(filepath);
-               window.console.log('MANU read text',
-                  content.length, ' bytes from ', filepath);
-            }
-         } catch (e) {
-            console.log(e);
-         }
+//         try {
+//            let filepath = await save();
+//            if (typeof filepath == 'string') {
+//               let content = await readTextFile(filepath);
+//               window.console.log('MANU read text',
+//                  content.length, ' bytes from ', filepath);
+//            }
+//         } catch (e) {
+//            console.log(e);
+//         }
       },
       [history]
    );
@@ -68,6 +73,12 @@ const Main: React.FC<{}> = () => {
                case 'open':
                   open_file();
                   break;
+               case 'update_prices':
+                  update();
+                  break;
+               case 'settings':
+                  setShowSettings(true);
+                  break;
                default:
                   window.console.log('ignored menu-event', e.payload);
             }
@@ -76,7 +87,7 @@ const Main: React.FC<{}> = () => {
             unlisten.then(f => f());
          };
       },
-      [open_file]
+      [open_file, update]
    );
 
    return (
@@ -87,13 +98,9 @@ const Main: React.FC<{}> = () => {
          <Route>
             <div className={prefs.dark_mode ? 'darkpalette' : 'lightpalette'}>
                <div id="app" className={c} >
-                  <Header {...header} forpage={true} >
-                     <OnlineUpdate />
-                     <Settings />
-                  </Header>
                   <LeftSideBar />
                   <Route path="/welcome">
-                      <Page setHeader={setHeader} url={location.pathname} />
+                      <Page url={location.pathname} />
                   </Route>
                   <Route>
                      {
@@ -101,10 +108,15 @@ const Main: React.FC<{}> = () => {
                         ? <div className="dashboard main"><Spinner /></div>
                         : !accounts.has_accounts()
                         ? <Redirect to="/welcome" />
-                        : <Page setHeader={setHeader} url={location.pathname} />
+                        : <Page url={location.pathname} />
                      }
                   </Route>
                </div>
+
+               {
+                   showSettings &&
+                   <Settings onclose={on_dialog_close} />
+               }
             </div>
          </Route>
       </Switch>

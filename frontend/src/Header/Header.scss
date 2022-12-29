@@ -40,14 +40,5 @@
       line-height: 1em;
       margin: 10px 0 0 0;
 
-      .select {
-         .dropdownButton {
-            @include set-colors(page);
-            border: none;
-         }
-         .selector .menu {
-            font-size: 1rem;
-         }
-      }
    }
 }

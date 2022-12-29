@@ -4,7 +4,7 @@ import { Account } from '@/services/useAccounts';
 import { SelectAccount } from '@/Account/SelectAccount';
 import useSearch from '@/services/useSearch';
 
-export const LedgerPageTitle: React.FC<{}> = () => {
+const LedgerPageTitle: React.FC<{}> = () => {
    const query = useSearch();
    const history = useRouterHistory();
    const onAccountChange = React.useCallback(
@@ -24,3 +24,4 @@ export const LedgerPageTitle: React.FC<{}> = () => {
          <span>{query.accounts.title}</span>
       );
 }
+export default LedgerPageTitle;

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import Ledger, { BaseLedgerProps } from '@/Ledger/View';
+import LedgerPageTitle from '@/LedgerPage';
 import Panel, { PanelProps, PanelBaseProps } from '@/Dashboard/Panel';
 import Settings from '@/Ledger/Settings';
 import useSearch from '@/services/useSearch';
@@ -24,7 +25,13 @@ const LedgerPanel: React.FC<
    return (
       <Panel
          {...p}
-         header={{name: query.accounts.title, range: query.range}}
+         header={{
+            node: (
+               <LedgerPageTitle />
+            ),
+            name: '',
+            range: query.range,
+         }}
          Settings={() =>
             <Settings
                props={{...p.props,

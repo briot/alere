@@ -16,6 +16,7 @@
       justify-content: space-between; // arrow to the right
       align-items: center;            // center vertically
       min-height: var(--input-height);
+      white-space: nowrap;
    }
 
    .select & {
@@ -39,6 +40,7 @@
 
    & > .menu {
       @include set-colors(panel);
+      font-variant: none;
       font-size: 0.8rem;
 //      overflow: hidden;
 
@@ -49,7 +51,7 @@
 
       left: 0;
 
-      cursor: auto;
+      cursor: pointer;
       position: absolute;
       outline: 0;
       width: 100%;             // use same width as the selector itself

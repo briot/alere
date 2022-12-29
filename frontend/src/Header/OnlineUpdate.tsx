@@ -1,10 +1,8 @@
 import React from 'react';
-import RoundButton from '@/RoundButton';
 import usePost from '@/services/usePost';
 import { useQueryClient } from '@tanstack/react-query';
 
-
-const OnlineUpdate: React.FC<{}> = () => {
+const useOnlineUpdate = () => {
    const client = useQueryClient();
    const mutation = usePost<{}, string>({
       url: '/api/online',
@@ -17,20 +15,11 @@ const OnlineUpdate: React.FC<{}> = () => {
       onError: () => window.console.log('updating failed'),
    });
    const update = React.useCallback(
-      () => {
-         mutation.mutate('');
-      },
+      () => mutation.mutate(''),
       [mutation]
    );
 
-   return (
-      <RoundButton
-         fa='fa-refresh'
-         size='small'
-         tooltip='update prices from online sources. This includes closing prices from the previous day, not necessarily the current price.'
-         onClick={update}
-         disabled={mutation.isLoading}
-      />
-   );
+   return { update };
 }
-export default OnlineUpdate;
+
+export default useOnlineUpdate;

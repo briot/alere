@@ -31,7 +31,7 @@
       /* when nested, like Investments page */
       margin-top: 5px;
 
-      .header h5 {
+      > .header > h5 {
          @include set-colors(pane); // override h5 color below for Ticker
       }
    }
@@ -52,6 +52,17 @@
          }
          .neumorph_mode & {
             color: var(--panel-title-fg);
+         }
+         .select {
+            .dropdownButton {
+               @include set-colors(panel);
+               color: var(--panel-title-fg);
+               border: none;
+               flex: 0;
+            }
+            .selector .menu {
+               font-size: 1rem;
+            }
          }
       }
       .group {

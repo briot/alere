@@ -11,7 +11,6 @@ import { IEHistoryPanelProps } from '@/IEHistory/Panel';
 import { IEHistoryBarsPanelProps } from '@/IEHistoryBars/Panel';
 import { InvestmentsPanelProps } from '@/Investments/Panel';
 import { LedgerPanelProps } from '@/Ledger/Panel';
-import { LedgerPageTitle } from '@/LedgerPage';
 import { MeanPanelProps }  from '@/Mean/Panel';
 import { MetricsPanelProps } from '@/Metrics/Panel';
 import { NetworthHistoryPanelProps } from '@/NWHistory/Panel';
@@ -33,7 +32,6 @@ export type Disabled = undefined | boolean | (() => boolean) | 'need_accounts';
 
 interface PageDescr {
    panels: PanelBaseProps[];  // in the central area
-   headerNode?: () => React.ReactNode;
 
    right?: PanelBaseProps[] | null;
    // in the right area. If null then no right area is displayed.
@@ -403,11 +401,6 @@ export const PagesProvider = (p: PagesProviderProps) => {
          const r: Record<string, PageDescr> = {}
          defaultPages.forEach(p => r[p.url] = p);
          val.forEach(p => r[p.url] = p);  // override if needed
-
-         // Special case for the header of some pages
-         // ??? Should be part of the description
-         r['/ledger'].headerNode = () => <LedgerPageTitle />;
-
          return r;
       },
       [val]
@@ -420,7 +413,7 @@ export const PagesProvider = (p: PagesProviderProps) => {
          }
 
          return new Promise<string>(
-            (resolve, reject) => {
+            (resolve, _) => {
                setVal(old => {
                   const doesNotExists = (id: string) =>
                       old.find(p => p.url === id) === undefined;

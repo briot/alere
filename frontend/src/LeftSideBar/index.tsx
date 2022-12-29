@@ -13,7 +13,8 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
    const location = useLocation();
    const { accounts } = useAccounts();
    const { prefs } = usePrefs();
-   const { allVisiblePages } = usePages();
+   const { allVisiblePages, getPage } = usePages();
+   const page = getPage(location.pathname);
 
    const isDisabled = (disabled: Disabled): boolean =>
       (disabled === undefined)           ? false
@@ -23,6 +24,10 @@ const LeftSideBar: React.FC<LeftSideBarProps> = p => {
 
    return (
       <div id='lsidebar'>
+         {
+             prefs.text_on_left &&
+             <h3>{page.name}</h3>
+         }
          {
             allVisiblePages().map(p => (
                <RoundButton

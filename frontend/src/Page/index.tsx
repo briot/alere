@@ -3,7 +3,6 @@
  */
 import * as React from 'react';
 import { Redirect } from 'react-router-dom';
-import { SetHeader } from '@/Header';
 import { DashboardFromPanels } from '@/Dashboard';
 import { PanelBaseProps } from '@/Dashboard/Panel';
 import { usePages } from '@/services/usePages';
@@ -12,11 +11,9 @@ import './Page.scss';
 interface PageProps {
    url: string;
 }
-export const Page: React.FC<PageProps & SetHeader> = React.memo(p => {
-   const { setHeader } = p;
+export const Page: React.FC<PageProps> = React.memo(p => {
    const { getPage, getPanels, deletePage, updatePage } = usePages();
    const page = getPage(p.url);
-   const { headerNode } = page;
    const centralPanels = getPanels(page, "central");
    const rightPanels = React.useMemo(
       () => getPanels(page, "right").map(p => ({...p, allowCollapse: true})),
@@ -42,13 +39,6 @@ export const Page: React.FC<PageProps & SetHeader> = React.memo(p => {
          }
       },
       [page?.tmp, page, deletePage]
-   );
-
-   React.useEffect(
-      () => setHeader(headerNode
-         ? {node: headerNode()}
-         : {name: page.name}),
-      [setHeader, page.name, headerNode]
    );
 
    if (!page) {

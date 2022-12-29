@@ -1,0 +1,21 @@
+@import "../shared";
+
+#grayout {
+   position: fixed;
+   left: 0;
+   right: 0;
+   top: 0;
+   bottom: 0;
+   background: rgba(0,0,0,.2);
+}
+.settings {
+   @include set-colors(panel);
+   border: 1px solid var(--panel-border);
+   box-shadow: 3px 3px 4px 0 var(--shadow-color);
+   padding: 10px;
+   position: fixed;
+   left: 50%;
+   top: 50%;
+   transform:translate(-50%, -50%);
+   z-index: var(--zindex-dropdown);
+}
