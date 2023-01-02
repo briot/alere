@@ -171,6 +171,12 @@ interface DateRangeType {
    range: [RelativeDate, RelativeDate];
    text?: string;  // for select box, defaults to the key
    group: number;
+
+   months: undefined | number;
+   // Number of months elapsed (to compute means).
+   // If NaN, no mean will be computed.
+   // If undefined, an approximate number of months will be computed using
+   // the actual dates, see monthCount.
 }
 
 export type DateRange = '1 day' | '1 month' | '2 months' | '3 months'
@@ -180,35 +186,112 @@ export type DateRange = '1 day' | '1 month' | '2 months' | '3 months'
    | '5 years ago' | 'all' | 'upcoming';
 
 const dateRanges: Record<DateRange, DateRangeType> = {
-   '1 day':    { range: ['yesterday', 'today'],                      group: 0},
-   '1 month':       { range: ['1 month ago', 'today'],               group: 1},
-   '2 months':      { range: ['2 months ago', 'today'],              group: 1},
-   '3 months':      { range: ['3 months ago', 'today'],              group: 1},
-   'current month': { range: ['start of month', 'end of month'],     group: 1},
-   'month so far':  { range: ['start of month', 'today'],            group: 1},
+   '1 day':    {
+      range: ['yesterday', 'today'],
+      group: 0,
+      months: NaN,
+   },
+   '1 month':       {
+      range: ['1 month ago', 'today'],
+      group: 1,
+      months: 1,
+   },
+   '2 months':      {
+      range: ['2 months ago', 'today'],
+      group: 1,
+      months: 2,
+   },
+   '3 months':      {
+      range: ['3 months ago', 'today'],
+      group: 1,
+      months: 3,
+   },
+   'current month': {
+      range: ['start of month', 'end of month'],
+      group: 1,
+      months: 1,
+   },
+   'month so far':  {
+      range: ['start of month', 'today'],
+      group: 1,
+      months: 1,
+   },
    'last month': {
-      range: ['start of last month', 'end of last month'],           group: 1},
-   '1 year':              { range: ['1 year ago', 'today'],          group: 2},
-   '2 years':             { range: ['2 years ago', 'today'],         group: 2},
-   '3 years':             { range: ['3 years ago', 'today'],         group: 2},
-   '4 years':             { range: ['4 years ago', 'today'],         group: 2},
-   '5 years':             { range: ['5 years ago', 'today'],         group: 2},
-   'current year so far': { range: ['start of year', 'today'],       group: 3},
-   'current year':        { range: ['start of year', 'end of year'], group: 3},
-   'last year': { range: ['start of last year', 'end of last year'], group: 3},
+      range: ['start of last month', 'end of last month'],
+      group: 1,
+      months: 1,
+   },
+   '1 year': {
+      range: ['1 year ago', 'today'],
+      group: 2,
+      months: 12,
+   },
+   '2 years': {
+      range: ['2 years ago', 'today'],
+      group: 2,
+      months: 24,
+   },
+   '3 years': {
+      range: ['3 years ago', 'today'],
+      group: 2,
+      months: 36,
+   },
+   '4 years': {
+      range: ['4 years ago', 'today'],
+      group: 2,
+      months: 48,
+   },
+   '5 years': {
+      range: ['5 years ago', 'today'],
+      group: 2,
+      months: 60,
+   },
+   'current year so far': {
+      range: ['start of year', 'today'],
+      group: 3,
+      months: undefined,
+   },
+   'current year': {
+      range: ['start of year', 'end of year'],
+      group: 3,
+      months: 12,
+   },
+   'last year': {
+      range: ['start of last year', 'end of last year'],
+      group: 3,
+      months: 12,
+   },
    '2 years ago': {
-      range: ['start of 2 years ago', 'end of 2 years ago'],         group: 3},
+      range: ['start of 2 years ago', 'end of 2 years ago'],
+      group: 3,
+      months: 12,
+   },
    '3 years ago': {
-      range: ['start of 3 years ago', 'end of 3 years ago'],         group: 3},
+      range: ['start of 3 years ago', 'end of 3 years ago'],
+      group: 3,
+      months: 12,
+   },
    '4 years ago': {
-      range: ['start of 4 years ago', 'end of 4 years ago'],         group: 3},
+      range: ['start of 4 years ago', 'end of 4 years ago'],
+      group: 3,
+      months: 12,
+   },
    '5 years ago': {
-      range: ['start of 5 years ago', 'end of 5 years ago'],         group: 3},
-   'all': { range: ['epoch', 'armageddon'], text: "All dates",       group: 4},
+      range: ['start of 5 years ago', 'end of 5 years ago'],
+      group: 3,
+      months: 12,
+   },
+   'all': {
+      range: ['epoch', 'armageddon'],
+      text: "All dates",
+      group: 4,
+      months: NaN,
+   },
    'upcoming': {
       range: ['tomorrow', 'armageddon'],
       text: "In the future",
       group: 4,
+      months: NaN,
    },
 }
 
@@ -273,17 +356,20 @@ export const rangeDisplay = (name: DateRange): RangeDisplay => {
    }
 }
 
-export const monthCount = (name: DateRange): number => {
-   if (name === 'upcoming' || name === 'all') {
-      return NaN;
+export const monthCount = (name: DateRange, relativeTo?: Date): number => {
+   const r = dateRanges[name];
+   if (r.months !== undefined) {
+       return r.months;
    }
 
-   const d = toDates(name);
-   const ydiff = d[1].getFullYear() - d[0].getFullYear();
-   const mdiff = d[1].getMonth() - d[0].getMonth();
-   const ddiff = d[1].getDate() - d[0].getDate();
-   const correction = ddiff > 0 ? 1 : 0;
-   return ydiff * 12 + mdiff + correction;
+   const d = toDates(name, relativeTo);
+
+   // Compute the number of days between the two dates, then the percentage
+   // of a year this represents, and compute approximate number of months
+   // since we have 12 in a year.
+   const days = (d[1].getTime() - d[0].getTime()) / 1000 / 86400;
+   const months = Math.round(days * 12 / 365);
+   return (months === 0) ? 1 : months;
 }
 
 interface DateRangePickerProps {

@@ -28,7 +28,14 @@ test('adding months', () => {
 
 test('monthCount', () => {
    const now = new Date();
-   expect(monthCount('1 day')).toStrictEqual(1);
+   expect(monthCount('1 day')).toBeNaN();
+   expect(
+      monthCount('1 month', new Date(2022, 12, 31))
+      ).toStrictEqual(1);
+   expect(
+      monthCount('1 month', new Date(2023, 1, 2))
+      ).toStrictEqual(1);
+
    expect(monthCount('1 month')).toStrictEqual(1);
    expect(monthCount('3 months')).toStrictEqual(3);
    expect(monthCount('month so far')).toStrictEqual(1);
