@@ -85,7 +85,10 @@ form {
    fieldset + fieldset {
       margin-top: 20px;
    }
-
+   input,
+   button {
+      height: var(--input-height);
+   }
    legend {
       font-weight: bold;
       margin: 0;   // use 0 0 0 -10px  when showing no border

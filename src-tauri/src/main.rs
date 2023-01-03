@@ -23,9 +23,14 @@ fn create_menu() -> Menu {
     .add_submenu(Submenu::new(
         "File",
         Menu::new()
-        .add_item(
-            CustomMenuItem::new("open", "Open/New File")
-            .accelerator("cmdOrControl+O"))
+        .add_item(CustomMenuItem::new("new_file", "New..."))
+//        .add_submenu(Submenu::new(
+//            "New",
+//            Menu::new()
+//            .add_item(CustomMenuItem::new("new_empty",    "From Scratch"))
+//            .add_item(CustomMenuItem::new("new_kmymoney", "From KmyMoney"))
+//        ))
+        .add_item(CustomMenuItem::new("open_file", "Open..."))
         .add_native_item(MenuItem::Quit)
     )).add_submenu(Submenu::new(
         "Edit",
@@ -37,7 +42,7 @@ fn create_menu() -> Menu {
         "Tools",
         Menu::new()
         .add_item(CustomMenuItem::new("update_prices", "Update Prices"))
-        .add_item(CustomMenuItem::new("settings", "Settings"))
+        .add_item(CustomMenuItem::new("settings", "Settings..."))
     )).add_submenu(Submenu::new(
         "Window",
         Menu::new()
@@ -57,15 +62,15 @@ fn main() {
 
     let config = context.config();
     println!("App: log={:?} data={:?} config={:?}",
-        tauri::api::path::app_log_dir(&config).unwrap(),
-        tauri::api::path::app_data_dir(&config).unwrap(),
-        tauri::api::path::app_config_dir(&config).unwrap());
+        tauri::api::path::app_log_dir(config).unwrap(),
+        tauri::api::path::app_data_dir(config).unwrap(),
+        tauri::api::path::app_config_dir(config).unwrap());
 
     tauri::Builder::default()
         .menu(create_menu())
         .on_menu_event(|event| {
             //  Send the event to the front-end
-            let _ = event.window()
+            event.window()
                 .emit("menu-event", event.menu_item_id())
                 .unwrap();
         })

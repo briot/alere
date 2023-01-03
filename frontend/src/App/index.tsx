@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { useHistory, useLocation, BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
+import { useLocation, BrowserRouter, Redirect,
+   Route, Switch } from "react-router-dom";
 import LeftSideBar from '@/LeftSideBar';
 import useOnlineUpdate from '@/Header/OnlineUpdate';
 import Spinner from '@/Spinner';
@@ -15,9 +16,9 @@ import { PagesProvider } from '@/services/usePages';
 import { PrefProvider } from '@/services/usePrefs';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TooltipProvider } from '@/Tooltip';
+import OpenFile from '@/App/OpenFile';
+import ImportFile from '@/App/ImportFile';
 import { listen, Event } from '@tauri-apps/api/event';
-// import { save, open } from "@tauri-apps/api/dialog";
-// import { readTextFile } from "@tauri-apps/api/fs";
 
 import './App.scss';
 import "font-awesome/css/font-awesome.min.css";
@@ -30,54 +31,41 @@ const queryClient = new QueryClient({
    },
 });
 
+type DialogType = undefined | 'settings' | 'open_file' | 'new_file';
+
 const Main: React.FC<{}> = () => {
    const location = useLocation();
    const { prefs } = usePrefs();
    const { accounts } = useAccounts();
-   const history = useHistory();
    const { update } = useOnlineUpdate();
    const c = classes(
       'page',
       prefs.neumorph_mode ? 'neumorph_mode' : 'not_neumorph_mode',
    );
-   const [showSettings, setShowSettings] = React.useState(false);
+   const [dialogType, setDialogType] = React.useState<DialogType>();
 
    const on_dialog_close = React.useCallback(
-      () => setShowSettings(false),
-      [setShowSettings]
+      () => setDialogType(undefined),
+      [setDialogType]
    );
 
-   const open_file = React.useCallback(
-      async () => {
-         history.push('/welcome');
-         return;
-
-//         try {
-//            let filepath = await save();
-//            if (typeof filepath == 'string') {
-//               let content = await readTextFile(filepath);
-//               window.console.log('MANU read text',
-//                  content.length, ' bytes from ', filepath);
-//            }
-//         } catch (e) {
-//            console.log(e);
-//         }
-      },
-      [history]
-   );
+//   const history = useHistory();
+//   const open_file = React.useCallback(
+//      async () => history.push('/open_new'),
+//      [history]
+//   );
 
    React.useEffect(
       () => {
          const unlisten = listen("menu-event", (e: Event<string>) => {
             switch (e.payload) {
-               case 'open':
-                  open_file();
-                  break;
                case 'update_prices':
                   update();
                   break;
                case 'settings':
-                  setShowSettings(true);
+               case 'open_file':
+               case 'new_file':
+                  setDialogType(e.payload);
                   break;
                default:
                   window.console.log('ignored menu-event', e.payload);
@@ -87,7 +75,7 @@ const Main: React.FC<{}> = () => {
             unlisten.then(f => f());
          };
       },
-      [open_file, update]
+      [update]
    );
 
    return (
@@ -114,8 +102,16 @@ const Main: React.FC<{}> = () => {
                </div>
 
                {
-                   showSettings &&
+                   dialogType === 'settings' &&
                    <Settings onclose={on_dialog_close} />
+               }
+               {
+                   dialogType === 'open_file' &&
+                   <OpenFile onclose={on_dialog_close} />
+               }
+               {
+                   dialogType === 'new_file' &&
+                   <ImportFile onclose={on_dialog_close} />
                }
             </div>
          </Route>

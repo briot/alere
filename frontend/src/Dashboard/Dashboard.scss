@@ -22,7 +22,7 @@
    }
    &.main {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, var(--cw)));
+      grid-template-columns: repeat(4, 1fr); // repeat(auto-fit, minmax(200px, var(--cw)));
       grid-template-rows: repeat(auto-fit, minmax(var(--panel-height), auto));
       grid-auto-flow: row;  /* dense */
       column-gap: var(--col-gap);
