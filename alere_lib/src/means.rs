@@ -1,9 +1,9 @@
-use alere_lib::dates::{DateRange, GroupBy};
-use alere_lib::models::CommodityId;
-use alere_lib::occurrences::Occurrences;
-use alere_lib::scenarios::NO_SCENARIO;
+use crate::connections::SqliteConnect;
+use crate::dates::{DateRange, GroupBy};
+use crate::models::CommodityId;
+use crate::occurrences::Occurrences;
+use crate::scenarios::NO_SCENARIO;
 use chrono::{NaiveDate, DateTime, Utc, Datelike};
-use crate::connections::get_connection;
 use log::info;
 use serde::Serialize;
 use std::collections::HashMap;
@@ -19,8 +19,8 @@ pub struct Point {
 }
 
 
-#[tauri::command]
 pub async fn mean(
+    connection: SqliteConnect,
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     currency: CommodityId,
@@ -30,8 +30,6 @@ pub async fn mean(
 ) -> Vec<Point> {
     info!("mean {:?} {:?} prior={} after={} unrealized={} {}",
           &mindate, &maxdate, prior, after, unrealized, currency);
-
-    let connection = get_connection();
 
     let dates = DateRange::new(
         Some(mindate.date_naive()),
@@ -50,7 +48,7 @@ pub async fn mean(
     // month => (delta, average)
     let mut unreal = HashMap::new();
     if unrealized {
-        let points = super::metrics::query_networth_history(
+        let points = crate::metrics::query_networth_history(
             &connection,
             &dates,
             currency,
@@ -68,7 +66,7 @@ pub async fn mean(
         }
     }
 
-    let cashflow = super::cashflow::monthly_cashflow(
+    let cashflow = crate::cashflow::monthly_cashflow(
         &connection,
         &dates,
         currency,

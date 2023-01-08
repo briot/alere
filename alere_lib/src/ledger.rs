@@ -1,13 +1,12 @@
-use alere_lib::cte_accounts::{
+use crate::cte_accounts::{
     cte_transactions_for_accounts, CTE_TRANSACTIONS_FOR_ACCOUNTS};
-use alere_lib::cte_list_splits::{
+use crate::cte_list_splits::{
     cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
-use alere_lib::dates::{DateSet, DateValues, MIDNIGHT};
-use alere_lib::models::{AccountId, CommodityId};
-use alere_lib::occurrences::Occurrences;
-use alere_lib::connections::execute_and_log;
-use alere_lib::scenarios::NO_SCENARIO;
-use crate::connections::get_connection;
+use crate::dates::{DateSet, DateValues, MIDNIGHT};
+use crate::models::{AccountId, CommodityId};
+use crate::occurrences::Occurrences;
+use crate::connections::{SqliteConnect, execute_and_log};
+use crate::scenarios::NO_SCENARIO;
 use chrono::{DateTime, NaiveDate, TimeZone, Utc, NaiveDateTime};
 use diesel::sql_types::{Bool, Date, Float, Integer, Nullable, Text};
 use serde::Serialize;
@@ -103,8 +102,8 @@ struct SplitRow {
 ///     if 0, ignore all scheduled transactions.
 ///     if 1, only look at the next occurrence of them.
 
-#[tauri::command]
 pub async fn ledger(
+    connection: SqliteConnect,
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     accountids: Vec<AccountId>,
@@ -114,7 +113,6 @@ pub async fn ledger(
         "ledger {mindate} {maxdate} {:?} {:?}",
         accountids, occurrences
     );
-    let connection = get_connection();
     let occ = Occurrences::new(occurrences);
     let dates = DateValues::new(Some(vec![
         mindate.date_naive(),

@@ -1,12 +1,11 @@
-use alere_lib::cte_list_splits::{
+use crate::cte_list_splits::{
     cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
-use alere_lib::dates::DateValues;
-use alere_lib::models::{AccountId, CommodityId};
-use alere_lib::occurrences::Occurrences;
-use alere_lib::connections::execute_and_log;
-use alere_lib::scenarios::NO_SCENARIO;
+use crate::dates::DateValues;
+use crate::models::{AccountId, CommodityId};
+use crate::occurrences::Occurrences;
+use crate::scenarios::NO_SCENARIO;
 use crate::accounts::AccountKindCategory;
-use crate::connections::get_connection;
+use crate::connections::{SqliteConnect, execute_and_log};
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use log::info;
@@ -25,8 +24,8 @@ pub struct IncomeExpenseInPeriod {
 }
 
 
-#[tauri::command]
 pub async fn income_expense(
+    connection: SqliteConnect,
     income: bool,
     expense: bool,
     mindate: DateTime<Utc>,
@@ -36,7 +35,6 @@ pub async fn income_expense(
     info!("income_expense {:?} {:?} income={} expense={}",
           &mindate, &maxdate, income, expense);
 
-    let connection = get_connection();
     let mut categories = vec![];
     if expense {
         categories.push(AccountKindCategory::EXPENSE);
@@ -78,7 +76,7 @@ pub async fn income_expense(
         GROUP BY s.account_id
         "
     );
-    let rows = execute_and_log::<super::metrics::SplitsPerAccount>(
+    let rows = execute_and_log::<crate::metrics::SplitsPerAccount>(
         &connection, "income_expense", &query);
     match rows {
         Ok(r) => {

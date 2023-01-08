@@ -1,14 +1,13 @@
-use alere_lib::cte_list_splits::{
+use crate::cte_list_splits::{
     cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
-use alere_lib::cte_query_balance::{
+use crate::cte_query_balance::{
     cte_balances, cte_balances_currency, CTE_BALANCES_CURRENCY};
-use alere_lib::cte_query_networth::{cte_query_networth, CTE_QUERY_NETWORTH};
-use alere_lib::dates::{DateRange, DateSet, DateValues, GroupBy, CTE_DATES};
-use alere_lib::models::{AccountId, CommodityId};
-use alere_lib::occurrences::Occurrences;
-use alere_lib::scenarios::{Scenario, NO_SCENARIO};
-use alere_lib::connections::{SqliteConnect, execute_and_log};
-use crate::connections::get_connection;
+use crate::cte_query_networth::{cte_query_networth, CTE_QUERY_NETWORTH};
+use crate::dates::{DateRange, DateSet, DateValues, GroupBy, CTE_DATES};
+use crate::models::{AccountId, CommodityId};
+use crate::occurrences::Occurrences;
+use crate::scenarios::{Scenario, NO_SCENARIO};
+use crate::connections::{SqliteConnect, execute_and_log};
 use chrono::{DateTime, NaiveDate, Utc};
 use diesel::sql_types::{Bool, Date, Float, Integer};
 use rust_decimal::prelude::*; //  to_f32
@@ -173,15 +172,14 @@ pub fn query_networth_history(
     result.unwrap_or_default()
 }
 
-#[tauri::command]
 pub async fn networth_history(
+    connection: SqliteConnect,
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     currency: CommodityId,
 ) -> Vec<NWPoint> {
     info!("networth_history {:?} {:?}", &mindate, &maxdate);
 
-    let connection = get_connection();
     let group_by: GroupBy = GroupBy::MONTHS;
     let include_scheduled: bool = false;
     let prior: u8 = 0;
@@ -208,13 +206,12 @@ pub async fn networth_history(
 /// For each date, compute the current price and number of shares for each
 /// account.
 
-#[tauri::command]
 pub async fn balance(
+    connection: SqliteConnect,
     dates: Vec<DateTime<Utc>>,
     currency: CommodityId,
 ) -> Vec<PerAccount> {
     info!("balance {:?}", &dates);
-    let connection = get_connection();
     networth(
         &connection,
 
@@ -349,14 +346,13 @@ pub struct Networth {
     liquid_assets_at_start: f32,
 }
 
-#[tauri::command]
 pub async fn metrics(
+    connection: SqliteConnect,
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     currency: CommodityId,
 ) -> Networth {
     info!("metrics {:?} {:?}", &mindate, &maxdate);
-    let connection = get_connection();
     let dates = DateValues::new(Some(vec![
         mindate.date_naive(),
         maxdate.date_naive()
@@ -370,9 +366,9 @@ pub async fn metrics(
     );
 
     let mut accounts: HashMap<AccountId, AccountIsNWRow> = HashMap::new();
-    let equity = super::accounts::AccountKindCategory::EQUITY as u32;
-    let income = super::accounts::AccountKindCategory::INCOME as u32;
-    let expense = super::accounts::AccountKindCategory::EXPENSE as u32;
+    let equity = crate::accounts::AccountKindCategory::EQUITY as u32;
+    let income = crate::accounts::AccountKindCategory::INCOME as u32;
+    let expense = crate::accounts::AccountKindCategory::EXPENSE as u32;
 
     let account_rows = execute_and_log::<AccountIsNWRow>(
         &connection,

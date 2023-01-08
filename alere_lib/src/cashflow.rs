@@ -1,10 +1,10 @@
-use alere_lib::cte_list_splits::{
+use crate::cte_list_splits::{
     cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
-use alere_lib::dates::{DateRange, DateSet, CTE_DATES};
-use alere_lib::models::CommodityId;
-use alere_lib::occurrences::Occurrences;
-use alere_lib::scenarios::Scenario;
-use alere_lib::connections::{SqliteConnect, execute_and_log};
+use crate::dates::{DateRange, DateSet, CTE_DATES};
+use crate::models::CommodityId;
+use crate::occurrences::Occurrences;
+use crate::scenarios::Scenario;
+use crate::connections::{SqliteConnect, execute_and_log};
 use chrono::NaiveDate;
 use crate::accounts::AccountKindCategory;
 use diesel::sql_types::{Date, Float, Nullable};

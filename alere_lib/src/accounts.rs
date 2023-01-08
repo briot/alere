@@ -1,4 +1,5 @@
-use alere_lib::models::{Account, AccountKind, Commodity, Institution};
+use crate::models::{Account, AccountKind, Commodity, Institution};
+use crate::connections::SqliteConnect;
 use diesel::prelude::*;
 
 #[derive(serde::Serialize)]
@@ -9,20 +10,21 @@ pub struct Accounts {
     institutions: Vec<Institution>,
 }
 
-#[tauri::command]
-pub async fn fetch_accounts() -> Accounts {
-    use alere_lib::schema::alr_account_kinds::dsl::*;
-    use alere_lib::schema::alr_accounts::dsl::*;
-    use alere_lib::schema::alr_commodities::dsl::*;
-    use alere_lib::schema::alr_institutions::dsl::*;
-
-    let c = &super::connections::get_connection();
+pub async fn fetch_accounts(connection: SqliteConnect) -> Accounts {
+    use crate::schema::alr_account_kinds::dsl::*;
+    use crate::schema::alr_accounts::dsl::*;
+    use crate::schema::alr_commodities::dsl::*;
+    use crate::schema::alr_institutions::dsl::*;
 
     Accounts {
-        accounts: alr_accounts.load(c).expect("Error for accounts"),
-        commodities: alr_commodities.load(c).expect("Error for commodities"),
-        kinds: alr_account_kinds.load(c).expect("Error for kinds"),
-        institutions: alr_institutions.load(c).expect("Error in institution"),
+        accounts: alr_accounts.load(&connection)
+            .expect("Error for accounts"),
+        commodities: alr_commodities.load(&connection)
+            .expect("Error for commodities"),
+        kinds: alr_account_kinds.load(&connection)
+            .expect("Error for kinds"),
+        institutions: alr_institutions.load(&connection)
+            .expect("Error in institution"),
     }
 }
 

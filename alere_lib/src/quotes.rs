@@ -1,13 +1,12 @@
-use alere_lib::connections::execute_and_log;
-use alere_lib::models::{AccountId, CommodityId, Commodity, Roi};
+use crate::connections::{execute_and_log, SqliteConnect};
+use crate::models::{AccountId, CommodityId, Commodity, Roi};
 use chrono::{DateTime, Utc, TimeZone};
-use crate::connections::get_connection;
 use diesel::prelude::*;
 use diesel::sql_types::Integer;
 use log::info;
 use serde::Serialize;
 use std::collections::HashMap;
-use super::accounts::{commodity_kinds, price_sources};
+use crate::accounts::{commodity_kinds, price_sources};
 
 #[derive(Serialize)]
 pub struct Position {
@@ -112,8 +111,8 @@ struct AccountIdAndCommodity {
     commodity_id: CommodityId,
 }
 
-#[tauri::command]
 pub async fn quotes(
+    connection: SqliteConnect,
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     currency: CommodityId,
@@ -121,14 +120,13 @@ pub async fn quotes(
     accounts: Option<Vec<AccountId>>
 ) -> (Vec<Symbol>, HashMap<AccountId, ForAccount>) {
     info!("quotes {:?} {:?} {}", &mindate, &maxdate, currency);
-    let connection = get_connection();
 
     // Find all commodities
 
     let mut all_commodities: Vec<Commodity> = {
-       use alere_lib::schema::alr_commodities::dsl::*;
-       let c = &super::connections::get_connection();
-       alr_commodities.load::<Commodity>(c).expect("Error reading commodities")
+       use crate::schema::alr_commodities::dsl::*;
+       alr_commodities.load::<Commodity>(&connection)
+            .expect("Error reading commodities")
     };
 
     if let Some(commodities) = commodities {

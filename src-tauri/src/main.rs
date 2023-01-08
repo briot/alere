@@ -3,19 +3,13 @@
     windows_subsystem = "windows"
 )]
 
-#[macro_use]
-extern crate diesel;
-
-pub mod accounts;
-pub mod cashflow;
 pub mod connections;
-pub mod income_expense;
-pub mod ledger;
-pub mod means;
-pub mod metrics;
-pub mod quotes;
 
+use alere_lib::models::{AccountId, CommodityId};
+use alere_lib::quotes::{ForAccount, Symbol};
+use chrono::{DateTime, Utc};
 use env_logger::Env;
+use std::collections::HashMap;
 use tauri::{Menu, CustomMenuItem, MenuItem, Submenu};
 
 fn create_menu() -> Menu {
@@ -51,8 +45,99 @@ fn create_menu() -> Menu {
     ))
 }
 
-fn main() {
+#[tauri::command]
+async fn fetch_accounts() -> alere_lib::accounts::Accounts {
+    let connection = crate::connections::get_connection();
+    alere_lib::accounts::fetch_accounts(connection).await
+}
 
+#[tauri::command]
+async fn quotes(
+    mindate: DateTime<Utc>,
+    maxdate: DateTime<Utc>,
+    currency: CommodityId,
+    commodities: Option<Vec<CommodityId>>,
+    accounts: Option<Vec<AccountId>>
+) -> (Vec<Symbol>, HashMap<AccountId, ForAccount>) {
+    let connection = crate::connections::get_connection();
+    alere_lib::quotes::quotes(
+        connection, mindate, maxdate, currency, commodities,
+        accounts).await
+}
+
+#[tauri::command]
+async fn income_expense(
+    income: bool,
+    expense: bool,
+    mindate: DateTime<Utc>,
+    maxdate: DateTime<Utc>,
+    currency: CommodityId,
+) -> alere_lib::income_expense::IncomeExpenseInPeriod {
+    let connection = crate::connections::get_connection();
+    alere_lib::income_expense::income_expense(
+        connection, income, expense, mindate, maxdate, currency
+    ).await
+}
+
+#[tauri::command]
+async fn balance(
+    dates: Vec<DateTime<Utc>>,
+    currency: CommodityId,
+) -> Vec<alere_lib::metrics::PerAccount> {
+    let connection = crate::connections::get_connection();
+    alere_lib::metrics::balance(connection, dates, currency).await
+}
+
+#[tauri::command]
+async fn metrics(
+    mindate: DateTime<Utc>,
+    maxdate: DateTime<Utc>,
+    currency: CommodityId,
+) -> alere_lib::metrics::Networth {
+    let connection = crate::connections::get_connection();
+    alere_lib::metrics::metrics(
+        connection, mindate, maxdate, currency).await
+}
+
+#[tauri::command]
+async fn networth_history(
+    mindate: DateTime<Utc>,
+    maxdate: DateTime<Utc>,
+    currency: CommodityId,
+) -> Vec<alere_lib::metrics::NWPoint> {
+    let connection = crate::connections::get_connection();
+    alere_lib::metrics::networth_history(
+       connection, mindate, maxdate, currency).await
+}
+
+#[tauri::command]
+async fn mean(
+    mindate: DateTime<Utc>,
+    maxdate: DateTime<Utc>,
+    currency: CommodityId,
+    prior: u8,
+    after: u8,
+    unrealized: bool,
+) -> Vec<alere_lib::means::Point> {
+    let connection = crate::connections::get_connection();
+    alere_lib::means::mean(
+        connection, mindate, maxdate, currency, prior, after,
+        unrealized).await
+}
+
+#[tauri::command]
+async fn ledger(
+    mindate: DateTime<Utc>,
+    maxdate: DateTime<Utc>,
+    accountids: Vec<AccountId>,
+    occurrences: u16,
+) -> Vec<alere_lib::ledger::TransactionDescr> {
+    let connection = crate::connections::get_connection();
+    alere_lib::ledger::ledger(
+       connection, mindate, maxdate, accountids, occurrences).await
+}
+
+fn main() {
     // Configure logging, with a default to show all traces
     env_logger::Builder::from_env(
         Env::default().default_filter_or("trace")
@@ -75,14 +160,14 @@ fn main() {
                 .unwrap();
         })
         .invoke_handler(tauri::generate_handler![
-            accounts::fetch_accounts,
-            income_expense::income_expense,
-            ledger::ledger,
-            means::mean,
-            metrics::balance,
-            metrics::metrics,
-            metrics::networth_history,
-            quotes::quotes,
+            fetch_accounts,
+            income_expense,
+            ledger,
+            mean,
+            balance,
+            metrics,
+            networth_history,
+            quotes,
         ])
         .run(context)
         .expect("error while running tauri application");
