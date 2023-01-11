@@ -9,6 +9,7 @@ use alere_lib::models::{AccountId, CommodityId};
 use alere_lib::quotes::{ForAccount, Symbol};
 use chrono::{DateTime, Utc};
 use env_logger::Env;
+use log::info;
 use std::collections::HashMap;
 use tauri::{Menu, CustomMenuItem, MenuItem, Submenu};
 
@@ -137,6 +138,16 @@ async fn ledger(
        connection, mindate, maxdate, accountids, occurrences).await
 }
 
+#[tauri::command]
+async fn new_file(
+    name: String,
+    kind: String,
+    source: String,
+) -> bool {
+    info!("new_file {} {} {}", name, kind, source);
+    true
+}
+
 fn main() {
     // Configure logging, with a default to show all traces
     env_logger::Builder::from_env(
@@ -160,6 +171,7 @@ fn main() {
                 .unwrap();
         })
         .invoke_handler(tauri::generate_handler![
+            new_file,
             fetch_accounts,
             income_expense,
             ledger,

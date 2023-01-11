@@ -4,8 +4,8 @@ import { useQueryClient } from '@tanstack/react-query';
 
 const useOnlineUpdate = () => {
    const client = useQueryClient();
-   const mutation = usePost<{}, string>({
-      url: '/api/online',
+   const mutation = usePost<{}, {}>({
+      cmd: 'onlineUpdate',
       onSuccess: () => {
          // Invalidate queries. This automatically forces an update of all
          // useFetch, no need to do anything else.
@@ -15,7 +15,7 @@ const useOnlineUpdate = () => {
       onError: () => window.console.log('updating failed'),
    });
    const update = React.useCallback(
-      () => mutation.mutate(''),
+      () => mutation.mutate({}),
       [mutation]
    );
 

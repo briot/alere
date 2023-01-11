@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
-import useCsrf from '@/services/useCsrf';
+import { invoke } from '@tauri-apps/api'
+// import type { InvokeArgs } from '@tauri-apps/api/tauri';
 
 /**
  * Returns a mutation object that can be used to perform POST queries to
@@ -15,37 +16,18 @@ import useCsrf from '@/services/useCsrf';
  */
 
 interface PostProps<RESULT, VARS> {
-   url: string;
+   cmd: string;
    onSuccess?: (data: RESULT, vars: VARS) => void,
    onError?: () => void,
 }
 
-const usePost = <RESULT, VARS extends FormData|{}|string|undefined> (
+const usePost = <RESULT, VARS extends {}|undefined> (
    p: PostProps<RESULT, VARS>,
 ) => {
-   const csrf = useCsrf();
    const mutation = useMutation<RESULT, unknown, VARS, unknown>(
       async (body: VARS) => {
-         const isFormData = body instanceof FormData;
-         const r = await window.fetch(
-            p.url,
-            {
-               method: "POST",
-               headers: new Headers({
-                  "X-CSRFToken": csrf,
-                  "Content-Type":
-                      isFormData ? "multipart/form-data" : "application/json",
-
-               }),
-               credentials: "same-origin", //  Send cookies from same origin
-               body: isFormData ? body : JSON.stringify(body),
-            }
-         );
-         if (!r.ok) {
-            window.console.error(r);
-            throw new Error(`Failed to post ${p.url}`);
-         }
-         return r.json() as Promise<RESULT>;
+         const json: RESULT = await invoke(p.cmd, body);
+         return json;
       },
       {
          onSuccess: p.onSuccess,

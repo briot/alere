@@ -322,7 +322,7 @@ const AccountsContext = React.createContext(noContext);
 export const useAddOrEditAccount = () => {
    const queries = useQueryClient();
    const mutation = usePost<void, AccountJSON>({
-      url: '/api/account/edit',
+      cmd: 'account/edit',
 
       // On success, invalidate all caches, since the kind of accounts might
       // impact a lot of queries, for instance.
