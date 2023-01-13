@@ -102,7 +102,7 @@ struct SplitRow {
 ///     if 0, ignore all scheduled transactions.
 ///     if 1, only look at the next occurrence of them.
 
-pub async fn ledger(
+pub fn ledger(
     connection: SqliteConnect,
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,

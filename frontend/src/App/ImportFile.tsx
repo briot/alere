@@ -9,6 +9,7 @@ interface NewFileParams {
    kind: string,     // importer to use
    source: string,   // name of file to import
 }
+const useNewFile = () => usePost<void, NewFileParams>('new_file');
 
 interface ImportFileProps {
    onclose: () => void;
@@ -19,12 +20,7 @@ const ImportFile: React.FC<ImportFileProps> = p => {
    const [fileName, setFileName] = React.useState('');
    const [importKind, setImportKind] = React.useState('none');
    const [importFrom, setImportFrom] = React.useState('');
-
-   const post = usePost<boolean, NewFileParams>({
-      cmd: 'new_file',
-      // onSuccess:
-      onError: () => alert('Failed to import'),
-   });
+   const post = useNewFile();
 
    const on_import = React.useCallback(
       () => {

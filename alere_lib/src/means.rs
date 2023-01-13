@@ -19,7 +19,7 @@ pub struct Point {
 }
 
 
-pub async fn mean(
+pub fn mean(
     connection: SqliteConnect,
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,

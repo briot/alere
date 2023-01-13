@@ -111,7 +111,7 @@ struct AccountIdAndCommodity {
     commodity_id: CommodityId,
 }
 
-pub async fn quotes(
+pub fn quotes(
     connection: SqliteConnect,
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,

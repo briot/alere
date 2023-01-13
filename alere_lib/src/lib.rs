@@ -7,6 +7,7 @@ pub mod cte_query_balance;
 pub mod cte_query_networth;
 pub mod dates;
 pub mod income_expense;
+pub mod kmymoney_import;
 pub mod ledger;
 pub mod means;
 pub mod metrics;

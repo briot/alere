@@ -3,15 +3,17 @@
     windows_subsystem = "windows"
 )]
 
-pub mod connections;
-
 use alere_lib::models::{AccountId, CommodityId};
 use alere_lib::quotes::{ForAccount, Symbol};
+use alere_lib::connections::Database;
 use chrono::{DateTime, Utc};
 use env_logger::Env;
-use log::info;
 use std::collections::HashMap;
+use std::path::PathBuf;
+use std::sync::RwLock;
 use tauri::{Menu, CustomMenuItem, MenuItem, Submenu};
+
+struct LockedPool (pub RwLock<Database>);
 
 fn create_menu() -> Menu {
     Menu::new()
@@ -47,105 +49,134 @@ fn create_menu() -> Menu {
 }
 
 #[tauri::command]
-async fn fetch_accounts() -> alere_lib::accounts::Accounts {
-    let connection = crate::connections::get_connection();
-    alere_lib::accounts::fetch_accounts(connection).await
+async fn fetch_accounts(
+    pool: tauri::State<'_, LockedPool>,
+) -> Result<alere_lib::accounts::Accounts, ()> {
+    let p = pool.0.read().unwrap();
+    let connection = p.get();
+    Ok(alere_lib::accounts::fetch_accounts(connection))
 }
 
 #[tauri::command]
 async fn quotes(
+    pool: tauri::State<'_, LockedPool>,
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     currency: CommodityId,
     commodities: Option<Vec<CommodityId>>,
     accounts: Option<Vec<AccountId>>
-) -> (Vec<Symbol>, HashMap<AccountId, ForAccount>) {
-    let connection = crate::connections::get_connection();
-    alere_lib::quotes::quotes(
+) -> Result<(Vec<Symbol>, HashMap<AccountId, ForAccount>), ()> {
+    let p = pool.0.read().unwrap();
+    let connection = p.get();
+    Ok(alere_lib::quotes::quotes(
         connection, mindate, maxdate, currency, commodities,
-        accounts).await
+        accounts))
 }
 
 #[tauri::command]
 async fn income_expense(
+    pool: tauri::State<'_, LockedPool>,
     income: bool,
     expense: bool,
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     currency: CommodityId,
-) -> alere_lib::income_expense::IncomeExpenseInPeriod {
-    let connection = crate::connections::get_connection();
-    alere_lib::income_expense::income_expense(
+) -> Result<alere_lib::income_expense::IncomeExpenseInPeriod, ()> {
+    let p = pool.0.read().unwrap();
+    let connection = p.get();
+    Ok(alere_lib::income_expense::income_expense(
         connection, income, expense, mindate, maxdate, currency
-    ).await
+    ))
 }
 
 #[tauri::command]
 async fn balance(
+    pool: tauri::State<'_, LockedPool>,
     dates: Vec<DateTime<Utc>>,
     currency: CommodityId,
-) -> Vec<alere_lib::metrics::PerAccount> {
-    let connection = crate::connections::get_connection();
-    alere_lib::metrics::balance(connection, dates, currency).await
+) -> Result<Vec<alere_lib::metrics::PerAccount>, ()> {
+    let p = pool.0.read().unwrap();
+    let connection = p.get();
+    Ok(alere_lib::metrics::balance(connection, dates, currency))
 }
 
 #[tauri::command]
 async fn metrics(
+    pool: tauri::State<'_, LockedPool>,
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     currency: CommodityId,
-) -> alere_lib::metrics::Networth {
-    let connection = crate::connections::get_connection();
-    alere_lib::metrics::metrics(
-        connection, mindate, maxdate, currency).await
+) -> Result<alere_lib::metrics::Networth, ()> {
+    let p = pool.0.read().unwrap();
+    let connection = p.get();
+    Ok(alere_lib::metrics::metrics(
+        connection, mindate, maxdate, currency))
 }
 
 #[tauri::command]
 async fn networth_history(
+    pool: tauri::State<'_, LockedPool>,
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     currency: CommodityId,
-) -> Vec<alere_lib::metrics::NWPoint> {
-    let connection = crate::connections::get_connection();
-    alere_lib::metrics::networth_history(
-       connection, mindate, maxdate, currency).await
+) -> Result<Vec<alere_lib::metrics::NWPoint>, ()> {
+    let p = pool.0.read().unwrap();
+    let connection = p.get();
+    Ok(alere_lib::metrics::networth_history(
+       connection, mindate, maxdate, currency))
 }
 
 #[tauri::command]
 async fn mean(
+    pool: tauri::State<'_, LockedPool>,
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     currency: CommodityId,
     prior: u8,
     after: u8,
     unrealized: bool,
-) -> Vec<alere_lib::means::Point> {
-    let connection = crate::connections::get_connection();
-    alere_lib::means::mean(
-        connection, mindate, maxdate, currency, prior, after,
-        unrealized).await
+) -> Result<Vec<alere_lib::means::Point>, ()> {
+    let p = pool.0.read().unwrap();
+    let connection = p.get();
+    Ok(alere_lib::means::mean(
+        connection, mindate, maxdate, currency, prior, after, unrealized))
 }
 
 #[tauri::command]
 async fn ledger(
+    pool: tauri::State<'_, LockedPool>,
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     accountids: Vec<AccountId>,
     occurrences: u16,
-) -> Vec<alere_lib::ledger::TransactionDescr> {
-    let connection = crate::connections::get_connection();
-    alere_lib::ledger::ledger(
-       connection, mindate, maxdate, accountids, occurrences).await
+) -> Result<Vec<alere_lib::ledger::TransactionDescr>, ()> {
+    let p = pool.0.read().unwrap();
+    let connection = p.get();
+    Ok(alere_lib::ledger::ledger(
+       connection, mindate, maxdate, accountids, occurrences))
 }
 
 #[tauri::command]
-async fn new_file(
+fn open_file(
+    pool: tauri::State<'_, LockedPool>,
+    name: String,
+) -> Result<(), &'static str> {
+    let mut p = pool.0.write().unwrap();
+    p.set_file(PathBuf::from(name));
+    Ok(())
+}
+
+#[tauri::command]
+fn new_file(
     name: String,
     kind: String,
     source: String,
-) -> bool {
-    info!("new_file {} {} {}", name, kind, source);
-    true
+) -> Result<(), &'static str> {
+    return match kind.as_str() {
+        "none"     => Ok(()),
+        "kmymoney" => alere_lib::kmymoney_import::import(name, source),
+        _          => Err("Invalid import kind"),
+    }
 }
 
 fn main() {
@@ -163,6 +194,9 @@ fn main() {
         tauri::api::path::app_config_dir(config).unwrap());
 
     tauri::Builder::default()
+        .manage(LockedPool(RwLock::new(
+            Database::new(tauri::api::path::document_dir()))
+        ))
         .menu(create_menu())
         .on_menu_event(|event| {
             //  Send the event to the front-end
@@ -171,6 +205,7 @@ fn main() {
                 .unwrap();
         })
         .invoke_handler(tauri::generate_handler![
+            open_file,
             new_file,
             fetch_accounts,
             income_expense,

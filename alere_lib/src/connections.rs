@@ -13,7 +13,6 @@ use std::path::PathBuf;
 
 diesel_migrations::embed_migrations!(); //  creates embedded_migrations
 
-pub type SqlitePool = Pool<ConnectionManager<SqliteConnection>>;
 pub type SqliteConnect = PooledConnection<ConnectionManager<SqliteConnection>>;
  
 sql_function!(
@@ -66,32 +65,6 @@ pub fn add_functions(connection: &SqliteConnection) {
         .expect("Could not register alr_next_event");
 }
 
-pub fn create_pool(document_dir: PathBuf) -> SqlitePool {
-    let db = {
-       let mut doc = document_dir;
-       doc.push("alere");
-       _ = std::fs::create_dir(doc.as_path()); //  Create the directory if needed
-       doc.push("alere_db.sqlite3");
-       String::from(doc.to_str().unwrap())
-    };
-    println!("Database is {:?}", &db);
-    let pool = SqlitePool::builder()
-        .max_size(8)
-        .build(ConnectionManager::new(db))
-        .expect("Failed to create connection pool");
-
-    let connection = pool.get().unwrap();
-
-    let migrated = embedded_migrations::run_with_output(
-        &connection, &mut std::io::stdout());
-    match migrated {
-        Ok(_) => (),
-        Err(e) => println!("{}", e),
-    };
-
-    pool
-}
-
 lazy_static! {
     static ref RE_REMOVE_COMMENTS: Regex = Regex::new(r"--.*").unwrap();
     static ref RE_COLLAPSE_SPACES: Regex = Regex::new(r"\s+").unwrap();
@@ -116,4 +89,63 @@ pub fn execute_and_log<U: diesel::query_source::QueryableByName<Sqlite>>(
         log::error!("{:?}: Error in query {:?}", msg, r);
     }
     res
+}
+
+type SqlitePool = Pool<ConnectionManager<SqliteConnection>>;
+
+/// A pool of connections.
+/// Compared to a straight r2d2 pool, this wrapper can be modified to point to
+/// a new database when the user opens a new file.
+pub struct Database {
+    low: SqlitePool,
+}
+
+impl Database {
+
+    pub fn new(document_dir: Option<PathBuf>) -> Self {
+        let mut doc = match document_dir {
+            Some(d) => d,
+            None    => PathBuf::from("/tmp/"),
+        };
+        doc.push("alere");
+        _ = std::fs::create_dir(doc.as_path()); //  Create directory if needed
+
+        doc.push("alere_db.sqlite3");
+
+        Database {
+            low: Database::create_pool(doc),
+        }
+    }
+
+    /// Change the active database file
+    pub fn set_file(&mut self, name: PathBuf) {
+        self.low = Database::create_pool(name);
+    }
+
+    /// Get a connection from the pool
+    pub fn get(&self) -> SqliteConnect {
+        let connection = self.low.get().unwrap();
+        add_functions(&connection);
+        connection
+    }
+
+    fn create_pool(database_path: PathBuf) -> SqlitePool {
+        let db = String::from(database_path.to_str().unwrap());
+        println!("Database is {:?}", &db);
+        let pool = Pool::builder()
+            .max_size(8)
+            .build(ConnectionManager::new(db))
+            .expect("Failed to create connection pool");
+
+        let connection = pool.get().unwrap();
+
+        let migrated = embedded_migrations::run_with_output(
+            &connection, &mut std::io::stdout());
+        match migrated {
+            Ok(_) => (),
+            Err(e) => println!("{}", e),
+        };
+
+        pool
+    }
 }

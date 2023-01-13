@@ -1,6 +1,5 @@
 import * as React from 'react';
 import usePost from '@/services/usePost';
-import { useQueryClient } from '@tanstack/react-query';
 import useFetch from '@/services/useFetch';
 
 export type AccountId = number;
@@ -319,17 +318,8 @@ const AccountsContext = React.createContext(noContext);
  * indicate the current status of the transaction. On success, the list of
  * accounts is automatically fully reloaded from the server.
  */
-export const useAddOrEditAccount = () => {
-   const queries = useQueryClient();
-   const mutation = usePost<void, AccountJSON>({
-      cmd: 'account/edit',
-
-      // On success, invalidate all caches, since the kind of accounts might
-      // impact a lot of queries, for instance.
-      onSuccess: () => queries.invalidateQueries(),
-   });
-   return mutation;
-}
+export const useAddOrEditAccount = () =>
+   usePost<void, AccountJSON>('account/edit');
 
 interface AccountsProviderProps {
    children?: React.ReactNode;

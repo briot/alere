@@ -24,7 +24,7 @@ pub struct IncomeExpenseInPeriod {
 }
 
 
-pub async fn income_expense(
+pub fn income_expense(
     connection: SqliteConnect,
     income: bool,
     expense: bool,

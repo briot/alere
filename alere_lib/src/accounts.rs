@@ -10,7 +10,7 @@ pub struct Accounts {
     institutions: Vec<Institution>,
 }
 
-pub async fn fetch_accounts(connection: SqliteConnect) -> Accounts {
+pub fn fetch_accounts(connection: SqliteConnect) -> Accounts {
     use crate::schema::alr_account_kinds::dsl::*;
     use crate::schema::alr_accounts::dsl::*;
     use crate::schema::alr_commodities::dsl::*;

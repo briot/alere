@@ -172,7 +172,7 @@ pub fn query_networth_history(
     result.unwrap_or_default()
 }
 
-pub async fn networth_history(
+pub fn networth_history(
     connection: SqliteConnect,
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
@@ -206,7 +206,7 @@ pub async fn networth_history(
 /// For each date, compute the current price and number of shares for each
 /// account.
 
-pub async fn balance(
+pub fn balance(
     connection: SqliteConnect,
     dates: Vec<DateTime<Utc>>,
     currency: CommodityId,
@@ -346,7 +346,7 @@ pub struct Networth {
     liquid_assets_at_start: f32,
 }
 
-pub async fn metrics(
+pub fn metrics(
     connection: SqliteConnect,
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
