@@ -11,6 +11,7 @@ use alere_lib::connections::Database;
 use crate::settings::Settings;
 use chrono::{DateTime, Utc};
 use env_logger::Env;
+use log::debug;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::RwLock;
@@ -202,7 +203,7 @@ fn main() {
 
     let config = context.config();
     let app_config_dir = tauri::api::path::app_config_dir(config);
-    println!("App: log={:?} data={:?} config={:?}",
+    debug!("App: log={:?} data={:?} config={:?}",
         tauri::api::path::app_log_dir(config).unwrap(),
         tauri::api::path::app_data_dir(config).unwrap(),
         app_config_dir);

@@ -1,9 +1,10 @@
 use log::info;
+use std::path::PathBuf;
 
 pub fn import(
-    target: String,
-    source: String,
+    target: &PathBuf,
+    source: &PathBuf,
 ) -> Result<(), &'static str> {
-    info!("new_file {} {}", target, source);
+    info!("import Kmymon {} into {}", source.display(), target.display());
     Err("not implemented")
 }

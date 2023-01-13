@@ -172,5 +172,4 @@ impl<'a> Query for SplitsList<'a> {
 //        .join(",");
 //    let sql = q.sql;
 //    let full = format!("WITH {ctes_str} {sql}");
-//    println!("{}", full);
 //}

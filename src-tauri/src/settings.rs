@@ -1,6 +1,7 @@
 use serde::{Serialize, Deserialize};
 use std::path::PathBuf;
 use std::error;
+use log::{info, error};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct SavedSettings {
@@ -31,7 +32,7 @@ impl Settings {
         return match std::fs::File::open(&filename) {
             Ok(f)  => {
                 let saved = serde_yaml::from_reader::<_, SavedSettings>(f)?;
-                println!("{:?}", saved);
+                info!("Loaded settings {}", filename.display());
                 Ok(Settings {
                     saved,
                     filename,
@@ -58,11 +59,11 @@ impl Settings {
         match f {
             Ok(f) => {
                 match serde_yaml::to_writer(f, &self.saved) {
-                    Ok(_) => println!("Saved settings"),
-                    Err(e) => println!("Failed to save settings: {:?}", e),
+                    Ok(_) => info!("Saved settings {}", self.filename.display()),
+                    Err(e) => error!("Failed to save settings: {}", e),
                 };
             },
-            Err(e) => println!("Failed to save settings: {:?}", e),
+            Err(e) => error!("Failed to save settings: {:?}", e),
         };
     }
 

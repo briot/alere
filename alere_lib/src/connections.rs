@@ -5,7 +5,7 @@ use diesel::sql_types::{Nullable, Text, Timestamp};
 use diesel::sqlite::{Sqlite, SqliteConnection};
 use diesel::{sql_query, QueryResult, RunQueryDsl};
 use lazy_static::lazy_static;
-use log::{debug, log_enabled, Level::Debug};
+use log::{debug, log_enabled, Level::Debug, error, info};
 use memoize::memoize;
 use regex::Regex;
 use rrule::{RRule, RRuleError, RRuleSet, Unvalidated};
@@ -45,7 +45,7 @@ fn next_event(
         let rs = match parse_ruleset(timestamp, rule) {
             Ok(r) => r,
             Err(e) => {
-                print!("Error parsing rrule {:?}", e);
+                error!("Error parsing rrule {:?}", e);
                 return None;
             }
         };
@@ -122,9 +122,9 @@ impl Database {
 
     fn create_pool(database_path: &PathBuf) -> SqlitePool {
         let db = String::from(database_path.to_str().unwrap());
-        println!("Database is {:?}", &db);
+        info!("Open database {:?}", &db);
         let pool = Pool::builder()
-            .max_size(8)
+            .max_size(20)
             .build(ConnectionManager::new(db))
             .expect("Failed to create connection pool");
 
@@ -134,7 +134,7 @@ impl Database {
             &connection, &mut std::io::stdout());
         match migrated {
             Ok(_) => (),
-            Err(e) => println!("{}", e),
+            Err(e) => error!("{}", e),
         };
 
         pool
