@@ -89,7 +89,6 @@ impl Settings {
         _ = std::fs::create_dir(doc.as_path()); //  Create directory if needed
 
         doc.push("alere_db.sqlite3");
-        self.add_recent_file(&doc);
         doc
     }
 }

@@ -60,11 +60,6 @@ fn next_event(
     }
 }
 
-pub fn add_functions(connection: &SqliteConnection) {
-    alr_next_event::register_impl(connection, next_event)
-        .expect("Could not register alr_next_event");
-}
-
 lazy_static! {
     static ref RE_REMOVE_COMMENTS: Regex = Regex::new(r"--.*").unwrap();
     static ref RE_COLLAPSE_SPACES: Regex = Regex::new(r"\s+").unwrap();
@@ -97,49 +92,61 @@ type SqlitePool = Pool<ConnectionManager<SqliteConnection>>;
 /// Compared to a straight r2d2 pool, this wrapper can be modified to point to
 /// a new database when the user opens a new file.
 pub struct Database {
-    low: SqlitePool,
+    low: Option<SqlitePool>,
 }
 
 impl Database {
 
-    pub fn new(filename: &PathBuf) -> Self {
+    pub fn new() -> Self {
         Database {
-            low: Database::create_pool(filename, false),
+            low: None,
         }
     }
 
-    /// Change the active database file
-    pub fn set_file(
-            &mut self, name: &PathBuf, reset_to_empty: bool,
-    ) {
-        self.low = Database::create_pool(name, reset_to_empty);
-    }
+    /// Change the active database file.
+    /// It tries to apply any migration to bring the schema to the version
+    /// expected by alere.
+    /// If the file cannot be opened, self.low is set to None.
 
-    /// Get a connection from the pool
-    pub fn get(&self) -> SqliteConnect {
-        let connection = self.low.get().unwrap();
-        add_functions(&connection);
-        connection
-    }
-
-    fn create_pool(
-        database_path: &PathBuf,
-        reset_to_empty: bool,
-    ) -> SqlitePool {
-        let db = String::from(database_path.to_str().unwrap());
-
-        if reset_to_empty {
-            _ = std::fs::remove_file(&db);
-        }
-
+    pub fn open_file(
+        &mut self,
+        path: &PathBuf,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let db = String::from(path.to_str().unwrap());
         info!("Open database {:?}", &db);
+
+        let _check_if_exists = std::fs::File::open(&db)?;
+        self.internal_open(&db)
+    }
+
+    /// Create a new empty database.
+    /// Any existing file is first deleted so we start the database from
+    /// scratch, and only create the schema and initial data in it.
+    /// If the file cannot be opened, self.low is set to None.
+
+    pub fn create_file(
+        &mut self,
+        path: &PathBuf,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let db = String::from(path.to_str().unwrap());
+        info!("Create database {:?}", &db);
+        _ = std::fs::remove_file(&db);
+        self.internal_open(&db)
+    }
+
+    /// Internal implementation for open/create
+
+    fn internal_open(
+        &mut self,
+        dburl: &str
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        self.low = None;
+
         let pool = Pool::builder()
             .max_size(20)
-            .build(ConnectionManager::new(db))
+            .build(ConnectionManager::new(dburl))
             .expect("Failed to create connection pool");
-
         let connection = pool.get().unwrap();
-
         let migrated = embedded_migrations::run_with_output(
             &connection, &mut std::io::stdout());
         match migrated {
@@ -147,6 +154,24 @@ impl Database {
             Err(e) => error!("{}", e),
         };
 
-        pool
+        self.low = Some(pool);
+        Ok(())
+    }
+
+    /// Get a connection to the database
+    /// It panics if the database was not initialized via a call to open_file.
+    pub fn get(&self) -> Result<SqliteConnect, &'static str> {
+        return match &self.low {
+            None => Err("No database was selected"),
+            Some(db) => {
+               let connection = db.get().unwrap();
+
+               // Register custom functions, has to be done per connection
+               alr_next_event::register_impl(&connection, next_event)
+                   .expect("Could not register custom functions with sqlite");
+
+               Ok(connection)
+            }
+        }
     }
 }

@@ -56,9 +56,12 @@ fn create_menu() -> Menu {
 #[tauri::command]
 async fn fetch_accounts(
     pool: tauri::State<'_, LockedPool>,
-) -> Result<alere_lib::accounts::Accounts, ()> {
+) -> Result<
+    alere_lib::accounts::Accounts,
+    &'static str
+> {
     let p = pool.0.read().unwrap();
-    let connection = p.get();
+    let connection = p.get()?;
     Ok(alere_lib::accounts::fetch_accounts(connection))
 }
 
@@ -70,9 +73,12 @@ async fn quotes(
     currency: CommodityId,
     commodities: Option<Vec<CommodityId>>,
     accounts: Option<Vec<AccountId>>
-) -> Result<(Vec<Symbol>, HashMap<AccountId, ForAccount>), ()> {
+) -> Result<
+    (Vec<Symbol>, HashMap<AccountId, ForAccount>),
+    &'static str
+> {
     let p = pool.0.read().unwrap();
-    let connection = p.get();
+    let connection = p.get()?;
     Ok(alere_lib::quotes::quotes(
         connection, mindate, maxdate, currency, commodities,
         accounts))
@@ -86,9 +92,12 @@ async fn income_expense(
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     currency: CommodityId,
-) -> Result<alere_lib::income_expense::IncomeExpenseInPeriod, ()> {
+) -> Result<
+    alere_lib::income_expense::IncomeExpenseInPeriod,
+    &'static str
+> {
     let p = pool.0.read().unwrap();
-    let connection = p.get();
+    let connection = p.get()?;
     Ok(alere_lib::income_expense::income_expense(
         connection, income, expense, mindate, maxdate, currency
     ))
@@ -99,9 +108,12 @@ async fn balance(
     pool: tauri::State<'_, LockedPool>,
     dates: Vec<DateTime<Utc>>,
     currency: CommodityId,
-) -> Result<Vec<alere_lib::metrics::PerAccount>, ()> {
+) -> Result<
+    Vec<alere_lib::metrics::PerAccount>,
+    &'static str
+> {
     let p = pool.0.read().unwrap();
-    let connection = p.get();
+    let connection = p.get()?;
     Ok(alere_lib::metrics::balance(connection, dates, currency))
 }
 
@@ -111,9 +123,12 @@ async fn metrics(
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     currency: CommodityId,
-) -> Result<alere_lib::metrics::Networth, ()> {
+) -> Result<
+    alere_lib::metrics::Networth,
+    &'static str
+> {
     let p = pool.0.read().unwrap();
-    let connection = p.get();
+    let connection = p.get()?;
     Ok(alere_lib::metrics::metrics(
         connection, mindate, maxdate, currency))
 }
@@ -124,9 +139,12 @@ async fn networth_history(
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     currency: CommodityId,
-) -> Result<Vec<alere_lib::metrics::NWPoint>, ()> {
+) -> Result<
+    Vec<alere_lib::metrics::NWPoint>,
+    &'static str
+> {
     let p = pool.0.read().unwrap();
-    let connection = p.get();
+    let connection = p.get()?;
     Ok(alere_lib::metrics::networth_history(
        connection, mindate, maxdate, currency))
 }
@@ -140,9 +158,12 @@ async fn mean(
     prior: u8,
     after: u8,
     unrealized: bool,
-) -> Result<Vec<alere_lib::means::Point>, ()> {
+) -> Result<
+    Vec<alere_lib::means::Point>,
+    &'static str
+> {
     let p = pool.0.read().unwrap();
-    let connection = p.get();
+    let connection = p.get()?;
     Ok(alere_lib::means::mean(
         connection, mindate, maxdate, currency, prior, after, unrealized))
 }
@@ -154,9 +175,12 @@ async fn ledger(
     maxdate: DateTime<Utc>,
     accountids: Vec<AccountId>,
     occurrences: u16,
-) -> Result<Vec<alere_lib::ledger::TransactionDescr>, ()> {
+) -> Result<
+    Vec<alere_lib::ledger::TransactionDescr>,
+    &'static str
+> {
     let p = pool.0.read().unwrap();
-    let connection = p.get();
+    let connection = p.get()?;
     Ok(alere_lib::ledger::ledger(
        connection, mindate, maxdate, accountids, occurrences))
 }
@@ -166,18 +190,17 @@ fn open_file(
     pool: tauri::State<'_, LockedPool>,
     settings: tauri::State<'_, LockedSettings>,
     name: String,
-) -> Result<(), &'static str> {
+) -> Result<(), String> {
     let path = PathBuf::from(name);
-
-    {
-       let mut p = pool.0.write().unwrap();
-       p.set_file(&path, false);  //  do not reset the file
+    let mut p = pool.0.write().unwrap();
+    match p.open_file(&path) {
+        Ok(()) => {
+            let mut s = settings.0.write().unwrap();
+            s.add_recent_file(&path);
+            Ok(())
+        },
+        Err(e) => Err(format!("{}", e)),
     }
-    {
-       let mut s = settings.0.write().unwrap();
-       s.add_recent_file(&path);
-    }
-    Ok(())
 }
 
 #[tauri::command]
@@ -187,29 +210,28 @@ fn new_file(
     name: String,
     kind: String,
     source: String,
-) -> Result<(), &'static str> {
-
+) -> Result<(), String> {
     let path = PathBuf::from(name);
     match kind.as_str() {
         "none"     => {},
         "kmymoney" => {
             let s = PathBuf::from(source);
             if let Err(e) = alere_lib::kmymoney_import::import(&path, &s) {
-                return Err(e);
+                return Err(format!("{}", e));
             }
         },
-        _  => return Err("Invalid import kind"),
+        _  => return Err("Invalid import kind".into()),
     };
 
-    {
-       let mut p = pool.0.write().unwrap();
-       p.set_file(&path, true);  //  reset the file if it exists
+    let mut p = pool.0.write().unwrap();
+    match p.create_file(&path) {
+        Ok(()) => {
+            let mut s = settings.0.write().unwrap();
+            s.add_recent_file(&path);
+            Ok(())
+        },
+        Err(e) => Err(format!("{}", e)),
     }
-    {
-       let mut s = settings.0.write().unwrap();
-       s.add_recent_file(&path);
-    }
-    Ok(())
 }
 
 fn main() {
@@ -228,11 +250,18 @@ fn main() {
         app_config_dir);
 
     let mut settings = Settings::load(&app_config_dir).unwrap();
+    let mut db = Database::new();
+
+    // Might fail to open the database
+    {
+        let f = settings.default_file();
+        if let Ok(_) = db.open_file(&f) {
+             settings.add_recent_file(&f);
+        }
+    }
 
     tauri::Builder::default()
-        .manage(LockedPool(RwLock::new(
-            Database::new(&settings.default_file())
-        )))
+        .manage(LockedPool(RwLock::new(db)))
         .manage(LockedSettings(RwLock::new(settings)))
         .menu(create_menu())
         .on_menu_event(|event| {
