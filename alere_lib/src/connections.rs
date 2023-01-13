@@ -102,23 +102,14 @@ pub struct Database {
 
 impl Database {
 
-    pub fn new(document_dir: Option<PathBuf>) -> Self {
-        let mut doc = match document_dir {
-            Some(d) => d,
-            None    => PathBuf::from("/tmp/"),
-        };
-        doc.push("alere");
-        _ = std::fs::create_dir(doc.as_path()); //  Create directory if needed
-
-        doc.push("alere_db.sqlite3");
-
+    pub fn new(filename: &PathBuf) -> Self {
         Database {
-            low: Database::create_pool(doc),
+            low: Database::create_pool(filename),
         }
     }
 
     /// Change the active database file
-    pub fn set_file(&mut self, name: PathBuf) {
+    pub fn set_file(&mut self, name: &PathBuf) {
         self.low = Database::create_pool(name);
     }
 
@@ -129,7 +120,7 @@ impl Database {
         connection
     }
 
-    fn create_pool(database_path: PathBuf) -> SqlitePool {
+    fn create_pool(database_path: &PathBuf) -> SqlitePool {
         let db = String::from(database_path.to_str().unwrap());
         println!("Database is {:?}", &db);
         let pool = Pool::builder()

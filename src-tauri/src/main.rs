@@ -3,9 +3,12 @@
     windows_subsystem = "windows"
 )]
 
+pub mod settings;
+
 use alere_lib::models::{AccountId, CommodityId};
 use alere_lib::quotes::{ForAccount, Symbol};
 use alere_lib::connections::Database;
+use crate::settings::Settings;
 use chrono::{DateTime, Utc};
 use env_logger::Env;
 use std::collections::HashMap;
@@ -14,6 +17,7 @@ use std::sync::RwLock;
 use tauri::{Menu, CustomMenuItem, MenuItem, Submenu};
 
 struct LockedPool (pub RwLock<Database>);
+struct LockedSettings (pub RwLock<Settings>);
 
 fn create_menu() -> Menu {
     Menu::new()
@@ -159,10 +163,19 @@ async fn ledger(
 #[tauri::command]
 fn open_file(
     pool: tauri::State<'_, LockedPool>,
+    settings: tauri::State<'_, LockedSettings>,
     name: String,
 ) -> Result<(), &'static str> {
-    let mut p = pool.0.write().unwrap();
-    p.set_file(PathBuf::from(name));
+    let path = PathBuf::from(name);
+
+    {
+       let mut p = pool.0.write().unwrap();
+       p.set_file(&path);
+    }
+    {
+       let mut s = settings.0.write().unwrap();
+       s.add_recent_file(&path);
+    }
     Ok(())
 }
 
@@ -188,15 +201,19 @@ fn main() {
     let context = tauri::generate_context!();
 
     let config = context.config();
+    let app_config_dir = tauri::api::path::app_config_dir(config);
     println!("App: log={:?} data={:?} config={:?}",
         tauri::api::path::app_log_dir(config).unwrap(),
         tauri::api::path::app_data_dir(config).unwrap(),
-        tauri::api::path::app_config_dir(config).unwrap());
+        app_config_dir);
+
+    let mut settings = Settings::load(&app_config_dir).unwrap();
 
     tauri::Builder::default()
         .manage(LockedPool(RwLock::new(
-            Database::new(tauri::api::path::document_dir()))
-        ))
+            Database::new(&settings.default_file())
+        )))
+        .manage(LockedSettings(RwLock::new(settings)))
         .menu(create_menu())
         .on_menu_event(|event| {
             //  Send the event to the front-end
