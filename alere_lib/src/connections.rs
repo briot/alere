@@ -104,13 +104,15 @@ impl Database {
 
     pub fn new(filename: &PathBuf) -> Self {
         Database {
-            low: Database::create_pool(filename),
+            low: Database::create_pool(filename, false),
         }
     }
 
     /// Change the active database file
-    pub fn set_file(&mut self, name: &PathBuf) {
-        self.low = Database::create_pool(name);
+    pub fn set_file(
+            &mut self, name: &PathBuf, reset_to_empty: bool,
+    ) {
+        self.low = Database::create_pool(name, reset_to_empty);
     }
 
     /// Get a connection from the pool
@@ -120,8 +122,16 @@ impl Database {
         connection
     }
 
-    fn create_pool(database_path: &PathBuf) -> SqlitePool {
+    fn create_pool(
+        database_path: &PathBuf,
+        reset_to_empty: bool,
+    ) -> SqlitePool {
         let db = String::from(database_path.to_str().unwrap());
+
+        if reset_to_empty {
+            _ = std::fs::remove_file(&db);
+        }
+
         info!("Open database {:?}", &db);
         let pool = Pool::builder()
             .max_size(20)

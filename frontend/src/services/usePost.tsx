@@ -29,7 +29,6 @@ const usePost = <RESULT, VARS extends {}|undefined> (
    const mutation = useMutation<RESULT, unknown, VARS, unknown>(
       async (body: VARS) => {
          const json: RESULT = await invoke(cmd, body);
-         window.console.log('MANU success for invoke', json);
          return json;
       },
       {
@@ -42,7 +41,6 @@ const usePost = <RESULT, VARS extends {}|undefined> (
             p?.onSuccess?.(data, vars);
          },
          onError: () => {
-            window.console.error('MANU got error');
             p?.onError?.();
          },
       }

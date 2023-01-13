@@ -171,7 +171,7 @@ fn open_file(
 
     {
        let mut p = pool.0.write().unwrap();
-       p.set_file(&path);
+       p.set_file(&path, false);  //  do not reset the file
     }
     {
        let mut s = settings.0.write().unwrap();
@@ -182,15 +182,34 @@ fn open_file(
 
 #[tauri::command]
 fn new_file(
+    pool: tauri::State<'_, LockedPool>,
+    settings: tauri::State<'_, LockedSettings>,
     name: String,
     kind: String,
     source: String,
 ) -> Result<(), &'static str> {
-    return match kind.as_str() {
-        "none"     => Ok(()),
-        "kmymoney" => alere_lib::kmymoney_import::import(name, source),
-        _          => Err("Invalid import kind"),
+
+    let path = PathBuf::from(name);
+    match kind.as_str() {
+        "none"     => {},
+        "kmymoney" => {
+            let s = PathBuf::from(source);
+            if let Err(e) = alere_lib::kmymoney_import::import(&path, &s) {
+                return Err(e);
+            }
+        },
+        _  => return Err("Invalid import kind"),
+    };
+
+    {
+       let mut p = pool.0.write().unwrap();
+       p.set_file(&path, true);  //  reset the file if it exists
     }
+    {
+       let mut s = settings.0.write().unwrap();
+       s.add_recent_file(&path);
+    }
+    Ok(())
 }
 
 fn main() {
