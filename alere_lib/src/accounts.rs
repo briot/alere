@@ -17,13 +17,13 @@ pub fn fetch_accounts(connection: SqliteConnect) -> Accounts {
     use crate::schema::alr_institutions::dsl::*;
 
     Accounts {
-        accounts: alr_accounts.load(&connection)
+        accounts: alr_accounts.load(&connection.0)
             .expect("Error for accounts"),
-        commodities: alr_commodities.load(&connection)
+        commodities: alr_commodities.load(&connection.0)
             .expect("Error for commodities"),
-        kinds: alr_account_kinds.load(&connection)
+        kinds: alr_account_kinds.load(&connection.0)
             .expect("Error for kinds"),
-        institutions: alr_institutions.load(&connection)
+        institutions: alr_institutions.load(&connection.0)
             .expect("Error in institution"),
     }
 }

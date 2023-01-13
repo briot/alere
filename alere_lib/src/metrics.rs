@@ -7,7 +7,7 @@ use crate::dates::{DateRange, DateSet, DateValues, GroupBy, CTE_DATES};
 use crate::models::{AccountId, CommodityId};
 use crate::occurrences::Occurrences;
 use crate::scenarios::{Scenario, NO_SCENARIO};
-use crate::connections::{SqliteConnect, execute_and_log};
+use crate::connections::SqliteConnect;
 use chrono::{DateTime, NaiveDate, Utc};
 use diesel::sql_types::{Bool, Date, Float, Integer};
 use rust_decimal::prelude::*; //  to_f32
@@ -82,8 +82,7 @@ pub fn networth(
     "
     );
 
-    let result = execute_and_log::<NetworthRow>(
-        connection, "networth", &query);
+    let result = connection.exec::<NetworthRow>("networth", &query);
     match result {
         Ok(rows) => {
             let mut per_account: HashMap<AccountId, PerAccount> = HashMap::new();
@@ -167,8 +166,7 @@ pub fn query_networth_history(
         "
     );
 
-    let result = execute_and_log::<NWPoint>(
-        connection, "query_networth_history", &query);
+    let result = connection.exec::<NWPoint>("networth_hist", &query);
     result.unwrap_or_default()
 }
 
@@ -254,8 +252,7 @@ pub fn sum_splits_per_account(
         GROUP BY s.account_id
         "
     );
-    let rows = execute_and_log::<SplitsPerAccount>(
-        connection, "sum_splits_per_account", &query);
+    let rows = connection.exec::<SplitsPerAccount>("sum_splits", &query);
     let mut res: HashMap<AccountId, f32> = HashMap::new();
     if let Ok(r) = rows {
         for row in r.iter() {
@@ -370,8 +367,7 @@ pub fn metrics(
     let income = crate::accounts::AccountKindCategory::INCOME as u32;
     let expense = crate::accounts::AccountKindCategory::EXPENSE as u32;
 
-    let account_rows = execute_and_log::<AccountIsNWRow>(
-        &connection,
+    let account_rows = connection.exec::<AccountIsNWRow>(
         "metrics",
         &format!(
             "SELECT a.id AS account_id, \

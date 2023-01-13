@@ -1,4 +1,4 @@
-use crate::connections::{execute_and_log, SqliteConnect};
+use crate::connections::SqliteConnect;
 use crate::models::{AccountId, CommodityId, Commodity, Roi};
 use chrono::{DateTime, Utc, TimeZone};
 use diesel::prelude::*;
@@ -125,7 +125,7 @@ pub fn quotes(
 
     let mut all_commodities: Vec<Commodity> = {
        use crate::schema::alr_commodities::dsl::*;
-       alr_commodities.load::<Commodity>(&connection)
+       alr_commodities.load::<Commodity>(&connection.0)
             .expect("Error reading commodities")
     };
 
@@ -170,8 +170,7 @@ pub fn quotes(
         WHERE k.is_trading {filter_account}
         "
     );
-    let result = execute_and_log::<AccountIdAndCommodity>(
-        &connection, "quotes,acc", &query);
+    let result = connection.exec::<AccountIdAndCommodity>("quotes", &query);
     let mut accs = HashMap::new();
     if let Ok(accounts) = result {
         accounts
@@ -204,7 +203,7 @@ pub fn quotes(
         "
     );
 
-    let result = execute_and_log::<Roi>(&connection, "quotes,roi", &query);
+    let result = connection.exec::<Roi>("roi", &query);
     match result {
         Ok(rois) => {
             rois

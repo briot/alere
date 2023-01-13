@@ -5,7 +5,7 @@ use crate::models::{AccountId, CommodityId};
 use crate::occurrences::Occurrences;
 use crate::scenarios::NO_SCENARIO;
 use crate::accounts::AccountKindCategory;
-use crate::connections::{SqliteConnect, execute_and_log};
+use crate::connections::SqliteConnect;
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use log::info;
@@ -76,8 +76,8 @@ pub fn income_expense(
         GROUP BY s.account_id
         "
     );
-    let rows = execute_and_log::<crate::metrics::SplitsPerAccount>(
-        &connection, "income_expense", &query);
+    let rows = connection.exec::<crate::metrics::SplitsPerAccount>(
+        "inc_exp", &query);
     match rows {
         Ok(r) => {
             IncomeExpenseInPeriod {

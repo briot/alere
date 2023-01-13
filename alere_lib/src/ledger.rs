@@ -5,7 +5,7 @@ use crate::cte_list_splits::{
 use crate::dates::{DateSet, DateValues, MIDNIGHT};
 use crate::models::{AccountId, CommodityId};
 use crate::occurrences::Occurrences;
-use crate::connections::{SqliteConnect, execute_and_log};
+use crate::connections::SqliteConnect;
 use crate::scenarios::NO_SCENARIO;
 use chrono::{DateTime, NaiveDate, TimeZone, Utc, NaiveDateTime};
 use diesel::sql_types::{Bool, Date, Float, Integer, Nullable, Text};
@@ -186,8 +186,7 @@ pub fn ledger(
        "
     );
 
-    let rows = execute_and_log::<SplitRow>(
-        &connection, "ledger", &query);
+    let rows = connection.exec::<SplitRow>("ledger", &query);
     match rows {
         Ok(r) => {
             let mut result: Vec<TransactionDescr> = vec![];

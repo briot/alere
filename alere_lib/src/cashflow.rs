@@ -4,7 +4,7 @@ use crate::dates::{DateRange, DateSet, CTE_DATES};
 use crate::models::CommodityId;
 use crate::occurrences::Occurrences;
 use crate::scenarios::Scenario;
-use crate::connections::{SqliteConnect, execute_and_log};
+use crate::connections::SqliteConnect;
 use chrono::NaiveDate;
 use crate::accounts::AccountKindCategory;
 use diesel::sql_types::{Date, Float, Nullable};
@@ -101,7 +101,6 @@ pub fn monthly_cashflow(
         "
     );
 
-    let result = execute_and_log::<CashFlow>(
-        &connection, "monthly_cashflow", &query);
+    let result = connection.exec::<CashFlow>("monthly_cashflow", &query);
     result.unwrap_or_default()
 }

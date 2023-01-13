@@ -105,10 +105,7 @@ impl DateRange {
             strftime('%Y-%m-%d', max(post_date)) AS maxdate
             FROM {CTE_SPLITS} "
         );
-        let result = crate::connections::execute_and_log::<SplitsRange>(
-            connection,
-            "restrict_to_splits",
-            &query);
+        let result = connection.exec::<SplitsRange>("restrict", &query);
         match result {
             Ok(rows) => match rows.first() {
                 Some(r) => DateRange::new(
