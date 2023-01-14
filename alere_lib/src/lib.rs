@@ -20,10 +20,7 @@ pub mod schema;
 pub mod splits;
 
 #[macro_use]
-extern crate diesel;
-
-#[macro_use]
-extern crate diesel_migrations;
+extern crate sqlx;
 
 #[cfg(test)]
 mod tests {

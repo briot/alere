@@ -1,14 +1,16 @@
 use chrono::{NaiveDateTime, TimeZone};
 use chrono_tz::UTC;
-use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
-use diesel::sql_types::{Nullable, Text, Timestamp};
-use diesel::sqlite::{Sqlite, SqliteConnection};
-use diesel::{sql_query, QueryResult, RunQueryDsl};
+//use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
+//use diesel::sql_types::{Nullable, Text, Timestamp};
+//use diesel::sqlite::{Sqlite, SqliteConnection};
+//use diesel::{sql_query, QueryResult, RunQueryDsl};
 use lazy_static::lazy_static;
-use log::{log_enabled, Level::{Debug, Error}};
+use log::{log_enabled, Level::Error};
 use memoize::memoize;
 use regex::Regex;
 use rrule::{RRule, RRuleError, RRuleSet, Unvalidated};
+use sqlx::Pool;
+use sqlx::sqlite::{Sqlite, SqlitePoolOptions};
 use std::path::PathBuf;
 
 diesel_migrations::embed_migrations!(); //  creates embedded_migrations
@@ -50,7 +52,7 @@ impl SqliteConnect {
 /// Compared to a straight r2d2 pool, this wrapper can be modified to point to
 /// a new database when the user opens a new file.
 pub struct Database {
-    low: Option<Pool<ConnectionManager<SqliteConnection>>>,
+    low: Option<Pool<Sqlite>>,
 }
 
 impl Database {
@@ -94,16 +96,20 @@ impl Database {
 
     /// Internal implementation for open/create
 
-    fn internal_open(
+    async fn internal_open(
         &mut self,
         dburl: &str
     ) -> Result<(), Box<dyn std::error::Error>> {
         self.low = None;
 
-        let pool = Pool::builder()
-            .max_size(20)
-            .build(ConnectionManager::new(dburl))
-            .expect("Failed to create connection pool");
+        let pool = SqlitePoolOptions::new()
+            .max_connections(20)
+            .connect(dburl).await?;
+
+//        let pool = Pool::builder()
+//            .max_size(20)
+//            .build(ConnectionManager::new(dburl))
+//            .expect("Failed to create connection pool");
         let connection = pool.get().unwrap();
         let migrated = embedded_migrations::run_with_output(
             &connection, &mut std::io::stdout());
