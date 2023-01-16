@@ -54,8 +54,8 @@ impl Settings {
         let f = std::fs::OpenOptions::new()
             .write(true)
             .create(true)
+            .truncate(true)
             .open(&self.filename);
-
         match f {
             Ok(f) => {
                 match serde_yaml::to_writer(f, &self.saved) {
@@ -68,6 +68,10 @@ impl Settings {
     }
 
     pub fn add_recent_file(&mut self, filename: &PathBuf) {
+        self.saved.recent_files = self.saved.recent_files
+            .drain(..)
+            .filter(|n| n != filename)
+            .collect();
         self.saved.recent_files.push(filename.clone());
         self.save();
     }
