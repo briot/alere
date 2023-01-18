@@ -1,3 +1,4 @@
+use crate::commodity_kinds::CommodityKind;
 use crate::cte_list_splits::CTE_SPLITS;
 use crate::dates::SQL_ARMAGEDDON;
 
@@ -45,6 +46,8 @@ pub fn cte_balances() -> String {
 /// Requires cte_balances
 
 pub fn cte_balances_currency() -> String {
+    let currency = CommodityKind::Currency as i32;
+
     format!(
         "
     {CTE_BALANCES_CURRENCY} AS (
@@ -76,7 +79,7 @@ pub fn cte_balances_currency() -> String {
            AND p.mindate < b.maxdate
 
            --  target commodities can only be currencies
-           AND alr_commodities.kind = 'C'
+           AND alr_commodities.kind = {currency}
     )"
     )
 }

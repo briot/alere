@@ -4,10 +4,12 @@ use crate::cte_query_balance::{
     cte_balances, cte_balances_currency, CTE_BALANCES_CURRENCY};
 use crate::cte_query_networth::{cte_query_networth, CTE_QUERY_NETWORTH};
 use crate::dates::{DateRange, DateSet, DateValues, GroupBy, CTE_DATES};
+use crate::errors::Result;
 use crate::models::{AccountId, CommodityId};
 use crate::occurrences::Occurrences;
 use crate::scenarios::{Scenario, NO_SCENARIO};
 use crate::connections::SqliteConnect;
+use crate::account_kinds::AccountKindCategory;
 use chrono::{DateTime, NaiveDate, Utc};
 use diesel::sql_types::{Bool, Date, Float, Integer};
 use rust_decimal::prelude::*; //  to_f32
@@ -38,10 +40,10 @@ struct NetworthRow {
     computed_price: f32,
 }
 
-/// Compute the networth as of certain dates.
-/// The number of "shares" as returned might actually be monetary value, when
-/// the account's commodity is a currency (in which case, the price will
-/// be the exchange rate between that currency and currency_id).
+/// Compute the networth as of certain dates. The number of "shares" as returned
+/// might actually be monetary value, when the account's commodity is a currency
+/// (in which case, the price will be the exchange rate between that currency
+/// and currency_id).
 
 pub fn networth(
     connection: &SqliteConnect,
@@ -49,7 +51,7 @@ pub fn networth(
     currency: CommodityId,
     scenario: Scenario,
     max_scheduled_occurrences: &Occurrences,
-) -> Vec<PerAccount> {
+) -> Result<Vec<PerAccount>> {
     let list_splits = cte_list_splits(
         &dates.unbounded_start(),
         scenario,
@@ -82,24 +84,19 @@ pub fn networth(
     "
     );
 
-    let result = connection.exec::<NetworthRow>("networth", &query);
-    match result {
-        Ok(rows) => {
-            let mut per_account: HashMap<AccountId, PerAccount> = HashMap::new();
-            for row in rows.iter() {
-                let e = per_account.entry(row.account).or_insert(PerAccount {
-                    account_id: row.account,
-                    shares: vec![Decimal::ZERO; 3], // ???
-                    price: vec![Decimal::ZERO; 3],
-                });
-                e.shares[row.idx as usize - 1] = Decimal::new((row.shares * 100.0) as i64, 2);
-                e.price[row.idx as usize - 1] =
-                    Decimal::new((row.computed_price * 100.0) as i64, 2);
-            }
-            per_account.values().cloned().collect()
-        }
-        Err(_) => vec![],
+    let rows = connection.exec::<NetworthRow>("networth", &query)?;
+    let mut per_account: HashMap<AccountId, PerAccount> = HashMap::new();
+    for row in rows.iter() {
+        let e = per_account.entry(row.account).or_insert(PerAccount {
+            account_id: row.account,
+            shares: vec![Decimal::ZERO; 3], // ???
+            price: vec![Decimal::ZERO; 3],
+        });
+        e.shares[row.idx as usize - 1] = Decimal::new((row.shares * 100.0) as i64, 2);
+        e.price[row.idx as usize - 1] =
+            Decimal::new((row.computed_price * 100.0) as i64, 2);
     }
+    Ok(per_account.values().cloned().collect())
 }
 
 #[derive(QueryableByName, Serialize)]
@@ -131,7 +128,7 @@ pub fn query_networth_history(
     max_scheduled_occurrences: &Occurrences,
     prior: u8, // number of rows preceding to compute rolling average
     after: u8, // number of rows following
-) -> Vec<NWPoint> {
+) -> Result<Vec<NWPoint>> {
     let q_networth = cte_query_networth(currency);
     let list_splits = cte_list_splits(
         &dates.unbounded_start(), //  from the start to get balances right
@@ -166,8 +163,8 @@ pub fn query_networth_history(
         "
     );
 
-    let result = connection.exec::<NWPoint>("networth_hist", &query);
-    result.unwrap_or_default()
+    connection.exec::<NWPoint>("networth_hist", &query)
+       .map_err(|e| e.into())
 }
 
 pub fn networth_history(
@@ -175,7 +172,7 @@ pub fn networth_history(
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     currency: CommodityId,
-) -> Vec<NWPoint> {
+) -> Result<Vec<NWPoint>> {
     info!("networth_history {:?} {:?}", &mindate, &maxdate);
 
     let group_by: GroupBy = GroupBy::MONTHS;
@@ -198,7 +195,8 @@ pub fn networth_history(
     };
 
     query_networth_history(
-        &connection, &dates, currency, scenario, &occurrences, prior, after)
+        &connection, &dates, currency, scenario, &occurrences,
+        prior, after)
 }
 
 /// For each date, compute the current price and number of shares for each
@@ -208,13 +206,14 @@ pub fn balance(
     connection: SqliteConnect,
     dates: Vec<DateTime<Utc>>,
     currency: CommodityId,
-) -> Vec<PerAccount> {
-    info!("balance {:?}", &dates);
+) -> Result<Vec<PerAccount>> {
+    info!("balance {:?} currency={}", &dates, currency);
+    let d = &DateValues::new(
+        Some(dates.iter().map(|d| d.date_naive()).collect())
+    );
     networth(
         &connection,
-
-        // ??? Can we pass directly an iterator instead
-        &DateValues::new(Some(dates.iter().map(|d| d.date_naive()).collect())),
+        d, // ??? Can we pass directly an iterator instead
         currency,
         NO_SCENARIO,
         &Occurrences::no_recurrence(),
@@ -348,7 +347,7 @@ pub fn metrics(
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     currency: CommodityId,
-) -> Networth {
+) -> Result<Networth> {
     info!("metrics {:?} {:?}", &mindate, &maxdate);
     let dates = DateValues::new(Some(vec![
         mindate.date_naive(),
@@ -360,12 +359,12 @@ pub fn metrics(
         currency,
         NO_SCENARIO,
         &Occurrences::no_recurrence(),
-    );
+    )?;
 
     let mut accounts: HashMap<AccountId, AccountIsNWRow> = HashMap::new();
-    let equity = crate::accounts::AccountKindCategory::EQUITY as u32;
-    let income = crate::accounts::AccountKindCategory::INCOME as u32;
-    let expense = crate::accounts::AccountKindCategory::EXPENSE as u32;
+    let equity = AccountKindCategory::EQUITY as u32;
+    let income = AccountKindCategory::INCOME as u32;
+    let expense = AccountKindCategory::EXPENSE as u32;
 
     let account_rows = connection.exec::<AccountIsNWRow>(
         "metrics",
@@ -443,7 +442,7 @@ pub fn metrics(
         accounts.get(a).map(|ac| ac.is_income_tax).unwrap_or(false)
     });
 
-    Networth {
+    Ok(Networth {
         income,
         passive_income,
         work_income,
@@ -454,5 +453,5 @@ pub fn metrics(
         networth_start: networth_at_start.to_f32().unwrap(),
         liquid_assets: liquid_assets_at_end.to_f32().unwrap(),
         liquid_assets_at_start: liquid_assets_at_start.to_f32().unwrap(),
-    }
+    })
 }

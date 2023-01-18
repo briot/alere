@@ -24,7 +24,7 @@ VALUES
    --                 |  |  |  |  |  |  |  |  is_misc_tax
    ('Passive income', 1, 0, 1, 0, 0, 0, 0, 0, 0, 'Expense',  'Income'),
    ('Work income',    1, 1, 0, 0, 0, 0, 0, 0, 0, 'Expense',  'Income'),
-   ('Misc income',    1, 0, 0, 0, 0, 0, 0, 0, 0, 'Expense',  'Income'),
+   ('income',         1, 0, 0, 0, 0, 0, 0, 0, 0, 'Expense',  'Income'),
    ('Unrealized gain',1, 0, 0, 1, 0, 0, 0, 0, 0, 'Expense',  'Income'),
 
    ('Expense',        0, 0, 0, 0, 0, 0, 0, 0, 0, 'Expense',  'Income'),
@@ -33,9 +33,12 @@ VALUES
 
    ('Liability',      4, 0, 0, 0, 1, 0, 0, 0, 0, 'Deposit',  'Paiement'),
 
+   --  equity/checking/saving = bank account
+   ('Equity',         2, 0, 0, 0, 1, 0, 0, 0, 0, 'Deposit',  'Paiement'),
+   ('Checking',       2, 0, 0, 0, 1, 0, 0, 0, 0, 'Deposit',  'Paiement'),
+   ('Savings',        2, 0, 0, 0, 1, 0, 0, 0, 0, 'Deposit',  'Paiement'),
+
    ('Stock',          2, 0, 0, 0, 1, 1, 1, 0, 0, 'Add',      'Remove'),
-   ('Bank account',   2, 0, 0, 0, 1, 0, 0, 0, 0, 'Deposit',  'Paiement'),
-   ('Equity',         2, 0, 0, 0, 1, 0, 0, 0, 0, 'Increase', 'Decrease'),
    ('Investment',     2, 0, 0, 0, 1, 1, 0, 0, 0, 'Deposit',  'Paiement'), 
 
    ('Asset',          3, 0, 0, 0, 1, 0, 0, 0, 0, 'Increase', 'Decrease'), 

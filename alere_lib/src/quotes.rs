@@ -1,12 +1,14 @@
 use crate::connections::SqliteConnect;
-use crate::models::{AccountId, CommodityId, Commodity, Roi};
+use crate::commodities::Commodity;
+use crate::errors::Result;
+use crate::models::{AccountId, CommodityId, Roi};
 use chrono::{DateTime, Utc, TimeZone};
 use diesel::prelude::*;
 use diesel::sql_types::Integer;
 use log::info;
 use serde::Serialize;
 use std::collections::HashMap;
-use crate::accounts::{commodity_kinds, price_sources};
+use crate::account_lists::price_sources;
 
 #[derive(Serialize)]
 pub struct Position {
@@ -118,15 +120,14 @@ pub fn quotes(
     currency: CommodityId,
     commodities: Option<Vec<CommodityId>>,
     accounts: Option<Vec<AccountId>>
-) -> (Vec<Symbol>, HashMap<AccountId, ForAccount>) {
+) -> Result<(Vec<Symbol>, HashMap<AccountId, ForAccount>)> {
     info!("quotes {:?} {:?} {}", &mindate, &maxdate, currency);
 
     // Find all commodities
 
     let mut all_commodities: Vec<Commodity> = {
        use crate::schema::alr_commodities::dsl::*;
-       alr_commodities.load::<Commodity>(&connection.0)
-            .expect("Error reading commodities")
+       alr_commodities.load::<Commodity>(&connection.0)?
     };
 
     if let Some(commodities) = commodities {
@@ -142,7 +143,7 @@ pub fn quotes(
                     .cloned()
                     .unwrap_or_else(|| "".to_string()),
                 source: comm.quote_source_id.unwrap_or(price_sources::USER),
-                is_currency: comm.kind == commodity_kinds::CURRENCY,
+                is_currency: comm.is_currency(),
                 price_scale: comm.price_scale,
                 accounts: vec![],
             });
@@ -170,17 +171,16 @@ pub fn quotes(
         WHERE k.is_trading {filter_account}
         "
     );
-    let result = connection.exec::<AccountIdAndCommodity>("quotes", &query);
+    let accounts = connection.exec::<AccountIdAndCommodity>(
+        "quotes", &query)?;
     let mut accs = HashMap::new();
-    if let Ok(accounts) = result {
-        accounts
+    accounts
         .iter()
         .for_each(|a| {
             let acc = ForAccount::new(a.id);
             accs.insert(a.id, acc);
             symbols.get_mut(&a.commodity_id).unwrap().accounts.push(a.id);
         });
-    }
 
     // Remove all symbols for which we have zero account, to limit the scope
     // of the following query.
@@ -203,68 +203,55 @@ pub fn quotes(
         "
     );
 
-    let result = connection.exec::<Roi>("roi", &query);
-    match result {
-        Ok(rois) => {
-            rois
-            .iter()
-            .for_each(|r| {
-                let a_in_map = accs.get_mut(&r.account_id);
-                let mut a = a_in_map.unwrap();
-                let mi = Utc.from_utc_datetime(&r.mindate);
-                let ma = Utc.from_utc_datetime(&r.maxdate);
+    let rois = connection.exec::<Roi>("roi", &query)?;
+    rois
+        .iter()
+        .for_each(|r| {
+            let a_in_map = accs.get_mut(&r.account_id);
+            let mut a = a_in_map.unwrap();
+            let mi = Utc.from_utc_datetime(&r.mindate);
+            let ma = Utc.from_utc_datetime(&r.maxdate);
 
-                if a.oldest.is_none() {
-                    a.oldest = Some(mi);
-                }
-                a.most_recent = Some(mi);
+            if a.oldest.is_none() {
+                a.oldest = Some(mi);
+            }
+            a.most_recent = Some(mi);
 
-                if mi <= mindate && mindate < ma {
-                    a.start = Position::new(r);
-                }
-                if mi <= maxdate && maxdate < ma {
-                    a.end = Position::new(r);
-                }
-
-                a.prices.push(Price {
-                    t: mi.timestamp_millis(),
-                    price: r.computed_price,
-                    roi: match r.roi {
-                        Some(val) => (val - 1.0) * 100.0,
-                        None      => f32::NAN,
-                    },
-                    shares: r.shares,
-                });
-            });
-
-            for (_, a) in accs.iter_mut() {
-                let now = Utc::now();
-
-                // Annualized total return on investment
-                if let Some(old) = a.oldest {
-                    let d = (now - old).num_days() as f32;
-                    a.annualized_roi = f32::powf(a.end.roi, 365.0 / d);
-                }
-
-                // Return over the period [mindata, maxdate]
-                let d2 = a.start.equity + a.end.invested - a.start.invested;
-                if f32::abs(d2) >= 1E-6 {
-                    a.period_roi =
-                        (a.end.equity + a.end.gains - a.start.gains)
-                        / d2;
-                }
+            if mi <= mindate && mindate < ma {
+                a.start = Position::new(r);
+            }
+            if mi <= maxdate && maxdate < ma {
+                a.end = Position::new(r);
             }
 
-            (
-                symbols.into_values().collect::<Vec<_>>(),
-                accs,
-            )
-        },
-        Err(_) => {
-            (
-                vec![],
-                HashMap::new(),
-            )
+            a.prices.push(Price {
+                t: mi.timestamp_millis(),
+                price: r.computed_price,
+                roi: match r.roi {
+                    Some(val) => (val - 1.0) * 100.0,
+                    None      => f32::NAN,
+                },
+                shares: r.shares,
+            });
+        });
+
+    for (_, a) in accs.iter_mut() {
+        let now = Utc::now();
+
+        // Annualized total return on investment
+        if let Some(old) = a.oldest {
+            let d = (now - old).num_days() as f32;
+            a.annualized_roi = f32::powf(a.end.roi, 365.0 / d);
+        }
+
+        // Return over the period [mindata, maxdate]
+        let d2 = a.start.equity + a.end.invested - a.start.invested;
+        if f32::abs(d2) >= 1E-6 {
+            a.period_roi =
+                (a.end.equity + a.end.gains - a.start.gains)
+                / d2;
         }
     }
+
+    Ok((symbols.into_values().collect::<Vec<_>>(), accs))
 }

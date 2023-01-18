@@ -4,7 +4,7 @@ use crate::dates::DateValues;
 use crate::models::{AccountId, CommodityId};
 use crate::occurrences::Occurrences;
 use crate::scenarios::NO_SCENARIO;
-use crate::accounts::AccountKindCategory;
+use crate::account_kinds::AccountKindCategory;
 use crate::connections::SqliteConnect;
 use chrono::{DateTime, Utc};
 use serde::Serialize;

@@ -3,6 +3,7 @@ use crate::cte_accounts::{
 use crate::cte_list_splits::{
     cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
 use crate::dates::{DateSet, DateValues, MIDNIGHT};
+use crate::errors::Result;
 use crate::models::{AccountId, CommodityId};
 use crate::occurrences::Occurrences;
 use crate::connections::SqliteConnect;
@@ -108,7 +109,7 @@ pub fn ledger(
     maxdate: DateTime<Utc>,
     accountids: Vec<AccountId>,
     occurrences: u16,
-) -> Vec<TransactionDescr> {
+) -> Result<Vec<TransactionDescr>> {
     info!(
         "ledger {mindate} {maxdate} {:?} {:?}",
         accountids, occurrences
@@ -186,63 +187,58 @@ pub fn ledger(
        "
     );
 
-    let rows = connection.exec::<SplitRow>("ledger", &query);
-    match rows {
-        Ok(r) => {
-            let mut result: Vec<TransactionDescr> = vec![];
-            for split in r {
-                let need_new = result.is_empty()
-                    || result.last().unwrap().id != split.transaction_id
-                    || result.last().unwrap().occurrence != split.occurrence;
-                if need_new {
-                    result.push(TransactionDescr {
-                        id: split.transaction_id,
-                        occurrence: split.occurrence,
-                        date:
-                            Utc
-                            .from_utc_datetime(
-                                &NaiveDateTime::new(
-                                    split.timestamp,
-                                    *MIDNIGHT
-                                )
-                            ),
-                        balance: 0.0,
-                        balance_shares: 0.0,
-                        memo: split.memo.unwrap_or_else(|| "".to_string()),
-                        check_number: split.check_number
-                            .unwrap_or_else(|| "".to_string()),
-                        is_recurring: split.scheduled.unwrap_or(false),
-                        splits: vec![],
-                    });
-                }
-
-                let mut r = result.last_mut().unwrap();
-
-                if split.account_id == ref_id {
-                    r.balance_shares += split.scaled_qty_balance / split.commodity_scu;
-                    r.balance = r.balance_shares * split.computed_price.unwrap_or(std::f32::NAN);
-                }
-
-                r.splits.push(SplitDescr {
-                    account_id: split.account_id,
-                    post_date:
-                        Utc
-                        .from_utc_datetime(
-                            &NaiveDateTime::new(
-                                split.post_date,
-                                *MIDNIGHT
-                            )
-                        ),
-                    amount: split.value,
-                    currency: split.value_commodity_id,
-                    reconcile: split.reconcile.chars().next().unwrap(),
-                    shares: split.scaled_qty / split.commodity_scu,
-                    price: split.computed_price.unwrap_or(std::f32::NAN),
-                    payee: split.payee.unwrap_or_else(|| "".to_string()),
-                });
-            }
-            result
+    let r = connection.exec::<SplitRow>("ledger", &query)?;
+    let mut result: Vec<TransactionDescr> = vec![];
+    for split in r {
+        let need_new = result.is_empty()
+            || result.last().unwrap().id != split.transaction_id
+            || result.last().unwrap().occurrence != split.occurrence;
+        if need_new {
+            result.push(TransactionDescr {
+                id: split.transaction_id,
+                occurrence: split.occurrence,
+                date:
+                    Utc
+                    .from_utc_datetime(
+                        &NaiveDateTime::new(
+                            split.timestamp,
+                            *MIDNIGHT
+                        )
+                    ),
+                balance: 0.0,
+                balance_shares: 0.0,
+                memo: split.memo.unwrap_or_else(|| "".to_string()),
+                check_number: split.check_number
+                    .unwrap_or_else(|| "".to_string()),
+                is_recurring: split.scheduled.unwrap_or(false),
+                splits: vec![],
+            });
         }
-        Err(_) => vec![],
+
+        let mut r = result.last_mut().unwrap();
+
+        if split.account_id == ref_id {
+            r.balance_shares += split.scaled_qty_balance / split.commodity_scu;
+            r.balance = r.balance_shares * split.computed_price.unwrap_or(std::f32::NAN);
+        }
+
+        r.splits.push(SplitDescr {
+            account_id: split.account_id,
+            post_date:
+                Utc
+                .from_utc_datetime(
+                    &NaiveDateTime::new(
+                        split.post_date,
+                        *MIDNIGHT
+                    )
+                ),
+            amount: split.value,
+            currency: split.value_commodity_id,
+            reconcile: split.reconcile.chars().next().unwrap(),
+            shares: split.scaled_qty / split.commodity_scu,
+            price: split.computed_price.unwrap_or(std::f32::NAN),
+            payee: split.payee.unwrap_or_else(|| "".to_string()),
+        });
     }
+    Ok(result)
 }

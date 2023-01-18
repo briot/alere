@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "start": "concurrently --kill-others-on-fail -c=\"white,green,blue,red,cyan\" -n=\"vite,rust,tsc ,ftes,lint\" \"vite --clearScreen false\" \"tauri dev\" \"tsc -w --preserveWatchOutput\" \"jest --coverage --watchAll\" \"esw -w --changed --ext .ts,.tsx frontend/src\"",
+    "start": "concurrently --kill-others-on-fail -c=\"white,green,blue,red,cyan\" -n=\"vite,rust,tsc ,ftes,lint\" \"vite --clearScreen false\" \"RUST_BACKTRACE=1 tauri dev\" \"tsc -w --preserveWatchOutput\" \"jest --coverage --watchAll\" \"esw -w --changed --ext .ts,.tsx frontend/src\"",
     "tauri": "tauri",
     "fmt": "cd src-tauri && cargo fmt",
     "clippy": "cd src-tauri && cargo clippy",

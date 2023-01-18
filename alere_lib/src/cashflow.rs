@@ -6,7 +6,7 @@ use crate::occurrences::Occurrences;
 use crate::scenarios::Scenario;
 use crate::connections::SqliteConnect;
 use chrono::NaiveDate;
-use crate::accounts::AccountKindCategory;
+use crate::account_kinds::AccountKindCategory;
 use diesel::sql_types::{Date, Float, Nullable};
 
 

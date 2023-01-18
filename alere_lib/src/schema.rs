@@ -41,7 +41,7 @@ table! {
         symbol_before -> Text,
         symbol_after -> Text,
         iso_code -> Nullable<Text>,
-        kind -> Text,
+        kind -> Integer,
         price_scale -> Integer,
         quote_symbol -> Nullable<Text>,
         quote_source_id -> Nullable<Integer>,
@@ -79,7 +79,7 @@ table! {
     alr_prices (id) {
         id -> Integer,
         date -> Timestamp,
-        scaled_price -> Integer,
+        scaled_price -> Bigint,
         origin_id -> Integer,
         source_id -> Integer,
         target_id -> Integer,
@@ -100,8 +100,8 @@ table! {
         scaled_qty -> Integer,
         scaled_value -> Integer,
         reconcile -> Text,
-        reconcile_date -> Nullable<Timestamp>,
-        post_date -> Timestamp,
+        reconcile_date -> Nullable<Date>,
+        post_date -> Date,
         account_id -> Integer,
         payee_id -> Nullable<Integer>,
         transaction_id -> Integer,
@@ -112,11 +112,11 @@ table! {
 table! {
     alr_transactions (id) {
         id -> Integer,
-        timestamp -> Timestamp,
+        timestamp -> Date,
         memo -> Nullable<Text>,
         check_number -> Nullable<Text>,
         scheduled -> Nullable<Text>,
-        last_occurrence -> Nullable<Timestamp>,
+        last_occurrence -> Nullable<Date>,
         scenario_id -> Integer,
     }
 }

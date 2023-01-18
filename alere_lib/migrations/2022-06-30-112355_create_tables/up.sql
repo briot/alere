@@ -35,8 +35,8 @@ CREATE TABLE IF NOT EXISTS alr_splits (
    scaled_qty         integer    NOT NULL,
    scaled_value       integer    NOT NULL,
    reconcile          varchar(1) NOT NULL,
-   reconcile_date     datetime,
-   post_date          datetime   NOT NULL,
+   reconcile_date     date,
+   post_date          date   NOT NULL,
    account_id         integer    NOT NULL
       REFERENCES alr_accounts(id) DEFERRABLE INITIALLY DEFERRED,
    payee_id           integer
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS alr_splits (
 CREATE TABLE IF NOT EXISTS alr_prices (
    id           integer  NOT NULL PRIMARY KEY AUTOINCREMENT,
    date         datetime NOT NULL,
-   scaled_price integer  NOT NULL,
+   scaled_price bigint  NOT NULL,
    origin_id    integer  NOT NULL
       REFERENCES alr_commodities (id) DEFERRABLE INITIALLY DEFERRED,
    source_id    integer  NOT NULL
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS alr_commodities (
    symbol_before     text       NOT NULL,
    symbol_after      text       NOT NULL,
    iso_code          text,
-   kind              varchar(1) NOT NULL,
+   kind              integer    NOT NULL,
    price_scale       integer    NOT NULL,
    quote_symbol      text,
    quote_source_id   integer
@@ -149,7 +149,7 @@ CREATE VIEW alr_raw_prices AS
    SELECT origin_id, target_id, scaled_price, date, source_id
       FROM alr_prices p2
          JOIN alr_commodities t ON (p2.target_id=t.id)
-      WHERE t.kind = 'C'
+      WHERE t.kind = 0
 
    --  consider exchange rates in both directions
    UNION ALL
@@ -164,7 +164,7 @@ CREATE VIEW alr_raw_prices AS
             ON (alr_prices.origin_id=origin.id)
          JOIN alr_commodities target
             ON (alr_prices.target_id=target.id)
-      WHERE origin.kind='C'
+      WHERE origin.kind = 0
 
    --  extract prices from transactions.
    UNION ALL
@@ -182,7 +182,7 @@ CREATE VIEW alr_raw_prices AS
          JOIN alr_commodities t ON (s.value_commodity_id=t.id)
          JOIN alr_accounts a ON (s.account_id=a.id)
          JOIN alr_commodities curr ON (a.commodity_id=curr.id)
-      WHERE t.kind='C'
+      WHERE t.kind = 0
          AND a.commodity_id <> s.value_commodity_id
 
    --  extract prices from transactions  (reverse direction)
@@ -197,7 +197,7 @@ CREATE VIEW alr_raw_prices AS
          JOIN alr_commodities t ON (s.value_commodity_id=t.id)
          JOIN alr_accounts a ON (s.account_id=a.id)
          JOIN alr_commodities curr ON (a.commodity_id=curr.id)
-      WHERE curr.kind='C'
+      WHERE curr.kind = 0
          AND a.commodity_id <> s.value_commodity_id
 
    --  A currency always has a 1.0 exchange rate with itself. This simplifies
@@ -209,7 +209,7 @@ CREATE VIEW alr_raw_prices AS
       '1900-01-01 00:00:00' as date,
       3 as source_id
       FROM alr_commodities c
-      WHERE c.kind='C'
+      WHERE c.kind = 0
 ;
 
 

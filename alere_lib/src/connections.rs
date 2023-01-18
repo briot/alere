@@ -5,13 +5,62 @@ use diesel::sql_types::{Nullable, Text, Timestamp};
 use diesel::sqlite::{Sqlite, SqliteConnection};
 use diesel::{sql_query, QueryResult, RunQueryDsl};
 use lazy_static::lazy_static;
-use log::{log_enabled, Level::{Debug, Error}};
+use log::{log_enabled, Level::Error};
 use memoize::memoize;
 use regex::Regex;
 use rrule::{RRule, RRuleError, RRuleSet, Unvalidated};
+use std::ops::Deref;
 use std::path::PathBuf;
 
 diesel_migrations::embed_migrations!(); //  creates embedded_migrations
+
+/// A named query
+
+pub struct Query <U: diesel::query_source::QueryableByName<Sqlite>> {
+    pub name: &'static str,
+    pub sql: String,
+    _marker: std::marker::PhantomData<U>,
+}
+
+impl<U: diesel::query_source::QueryableByName<Sqlite>> Query<U> {
+
+    /// Build a new named query. When it is executed, the name is showed in
+    /// the log file instead of the query itself.
+
+    pub fn new(
+        name: &'static str,
+        sql: &'static str,
+    ) -> Self {
+        let s = RE_REMOVE_COMMENTS.replace_all(sql, "");
+        let s = RE_COLLAPSE_SPACES.replace_all(&s, " ");
+        Query {
+            name,
+            sql: s.into(),
+            _marker: Default::default(),
+        }
+    }
+
+    /// Execute the query
+
+    pub fn exec(&self, connection: &SqliteConnect) -> QueryResult<Vec<U>> {
+        let res = sql_query(&self.sql).load(&connection.0);
+        match res {
+            Err(ref r) => {
+                log::error!(
+                    "{}: Error in query {}: {:?}", self.name, r, self.sql);
+            }
+            Ok(_) => {
+                log::debug!("{}", self.name);
+            }
+        };
+        res
+    }
+
+    // Bind a parameter to the query
+
+//    pub fn bind<ST, Value>(self, value: Value) -> UncheckedBind<Self, Value, ST>
+}
+
 
 /// A connection to the database
 
@@ -43,6 +92,20 @@ impl SqliteConnect {
             }
         };
         res
+    }
+}
+
+// ??? So that the following works. Not clear that it is better than
+// "&db.0" though.
+//    fn func(db: &sqliteConnect) {
+//        sql_query("...").load(&**db);
+//    }
+impl Deref for SqliteConnect {
+    // type Target = SqliteConnection;
+    type Target = PooledConnection<ConnectionManager<SqliteConnection>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 

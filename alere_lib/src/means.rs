@@ -1,5 +1,6 @@
 use crate::connections::SqliteConnect;
 use crate::dates::{DateRange, GroupBy};
+use crate::errors::Result;
 use crate::models::CommodityId;
 use crate::occurrences::Occurrences;
 use crate::scenarios::NO_SCENARIO;
@@ -27,7 +28,7 @@ pub fn mean(
     prior: u8,
     after: u8,
     unrealized: bool,
-) -> Vec<Point> {
+) -> Result<Vec<Point>> {
     info!("mean {:?} {:?} prior={} after={} unrealized={} {}",
           &mindate, &maxdate, prior, after, unrealized, currency);
 
@@ -56,7 +57,7 @@ pub fn mean(
             &Occurrences::no_recurrence(),
             prior,
             after,
-        );
+        )?;
         for p in &points {
             unreal.insert(
                 NaiveDate::from_ymd_opt(
@@ -88,5 +89,5 @@ pub fn mean(
             average_networth_delta: u.1,
         });
     }
-    result
+    Ok(result)
 }
