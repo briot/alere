@@ -20,15 +20,15 @@ pub fn cte_balances() -> String {
            SELECT
               a.id AS account_id,
               a.commodity_id,
-              s.post_date as mindate,
+              s.post_ts as min_ts,
               COALESCE(
-                 LEAD(s.post_date)
-                    OVER (PARTITION BY s.account_id ORDER by s.post_date),
+                 LEAD(s.post_ts)
+                    OVER (PARTITION BY s.account_id ORDER by s.post_ts),
                  {SQL_ARMAGEDDON}
-                ) AS maxdate,
+                ) AS max_ts,
               CAST( sum(s.scaled_qty)
                  OVER (PARTITION BY s.account_id
-                       ORDER BY s.post_date
+                       ORDER BY s.post_ts
                        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
                  AS FLOAT
                 ) / a.commodity_scu AS shares
@@ -54,8 +54,8 @@ pub fn cte_balances_currency() -> String {
         SELECT
            b.account_id,
            alr_commodities.id as currency_id,
-           max(b.mindate, p.mindate) as mindate,
-           min(b.maxdate, p.maxdate) as maxdate,
+           max(b.min_ts, p.min_ts) as min_ts,
+           min(b.max_ts, p.max_ts) as max_ts,
            CAST(b.shares * p.scaled_price AS FLOAT)
               / source.price_scale as balance,
            b.shares,
@@ -75,8 +75,8 @@ pub fn cte_balances_currency() -> String {
            AND p.target_id=alr_commodities.id
 
            --  intervals intersect
-           AND b.mindate < p.maxdate
-           AND p.mindate < b.maxdate
+           AND b.min_ts < p.max_ts
+           AND p.min_ts < b.max_ts
 
            --  target commodities can only be currencies
            AND alr_commodities.kind = {currency}

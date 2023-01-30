@@ -35,8 +35,8 @@ CREATE TABLE IF NOT EXISTS alr_splits (
    scaled_qty         integer    NOT NULL,
    scaled_value       integer    NOT NULL,
    reconcile          varchar(1) NOT NULL,
-   reconcile_date     date,
-   post_date          date   NOT NULL,
+   reconcile_ts       datetime,
+   post_ts            datetime   NOT NULL,
    account_id         integer    NOT NULL
       REFERENCES alr_accounts(id) DEFERRABLE INITIALLY DEFERRED,
    payee_id           integer
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS alr_splits (
 );
 CREATE TABLE IF NOT EXISTS alr_prices (
    id           integer  NOT NULL PRIMARY KEY AUTOINCREMENT,
-   date         datetime NOT NULL,
+   ts           datetime NOT NULL,
    scaled_price bigint  NOT NULL,
    origin_id    integer  NOT NULL
       REFERENCES alr_commodities (id) DEFERRABLE INITIALLY DEFERRED,
@@ -146,7 +146,7 @@ CREATE TABLE IF NOT EXISTS alr_account_kinds (
 --  scaled_price are scaled by origin's price_scale as in alr_prices
 
 CREATE VIEW alr_raw_prices AS
-   SELECT origin_id, target_id, scaled_price, date, source_id
+   SELECT origin_id, target_id, scaled_price, ts, source_id
       FROM alr_prices p2
          JOIN alr_commodities t ON (p2.target_id=t.id)
       WHERE t.kind = 0
@@ -157,7 +157,7 @@ CREATE VIEW alr_raw_prices AS
        CAST(target.price_scale AS FLOAT)
           * origin.price_scale
           / alr_prices.scaled_price,
-       date,
+       ts,
        source_id
       FROM alr_prices
          JOIN alr_commodities origin
@@ -176,7 +176,7 @@ CREATE VIEW alr_raw_prices AS
            AS FLOAT)
          / (s.scaled_qty
             * t.price_scale),  --  scale for s.scaled_qty
-      s.post_date AS date,
+      s.post_ts AS ts,
       3 as source_id
       FROM alr_splits s
          JOIN alr_commodities t ON (s.value_commodity_id=t.id)
@@ -191,7 +191,7 @@ CREATE VIEW alr_raw_prices AS
       a.commodity_id AS target_id,
       CAST(s.scaled_qty * t.price_scale * t.price_scale   AS FLOAT)
          / (s.scaled_value * a.commodity_scu),
-      s.post_date AS date,
+      s.post_ts AS ts,
       3 as source_id
       FROM alr_splits s
          JOIN alr_commodities t ON (s.value_commodity_id=t.id)
@@ -206,7 +206,7 @@ CREATE VIEW alr_raw_prices AS
    SELECT c.id AS origin_id,
       c.id AS target_id,
       c.price_scale AS scaled_price,
-      '1900-01-01 00:00:00' as date,
+      '1900-01-01 00:00:00' as ts,
       3 as source_id
       FROM alr_commodities c
       WHERE c.kind = 0
@@ -226,15 +226,15 @@ CREATE VIEW alr_raw_prices_with_turnkey AS
        CAST(a.scaled_price AS FLOAT) * p.scaled_price
           / c.price_scale AS scaled_price,
        o.price_scale,
-       a.date,
+       a.ts,
        a.source_id
    FROM alr_raw_prices a
         JOIN alr_commodities o ON (a.origin_id=o.id)
         JOIN alr_price_history p ON (a.target_id=p.origin_id)
         JOIN alr_commodities c ON (p.origin_id=c.id)
    WHERE
-     p.mindate<=a.date
-     AND a.date<p.maxdate
+     p.min_ts <= a.ts
+     AND a.ts < p.max_ts
      AND (a.origin_id != p.target_id OR a.origin_id = a.target_id)
 ;
 
@@ -245,13 +245,13 @@ CREATE VIEW alr_price_history AS
    SELECT p.origin_id,             --  Currency or Stock
       p.target_id,                 --  Always a currency
       p.scaled_price,              --  scaled by origin_id's price_scale
-      p.date as mindate,
+      p.ts as min_ts,
       COALESCE(
-         LEAD(p.date)
+         LEAD(p.ts)
             OVER (PARTITION BY p.origin_id, p.target_id
-                  ORDER BY p.date),
+                  ORDER BY p.ts),
          '2999-12-31 00:00:00'
-      ) as maxdate,
+      ) as max_ts,
       p.source_id
    FROM alr_raw_prices p
 ;
@@ -261,13 +261,13 @@ CREATE VIEW alr_price_history_with_turnkey AS
      p.target_id,
      p.scaled_price,
      p.price_scale,
-     p.date as mindate,
+     p.ts as min_ts,
      COALESCE(
-        LEAD(p.date)
+        LEAD(p.ts)
            OVER (PARTITION BY p.origin_id, p.target_id
-                 ORDER BY p.date),
+                 ORDER BY p.ts),
         '2999-12-31 00:00:00'
-     ) as maxdate,
+     ) as max_ts,
      p.source_id
    FROM alr_raw_prices_with_turnkey p
 ;
@@ -310,19 +310,19 @@ CREATE VIEW alr_invested AS
       --  currency
       JOIN alr_price_history_with_turnkey xrate
             ON (s2.value_commodity_id=xrate.origin_id
-                AND s2.post_date >= xrate.mindate
-                AND s2.post_date < xrate.maxdate)
+                AND s2.post_ts >= xrate.min_ts
+                AND s2.post_ts < xrate.max_ts)
    ),
    include_empty_range AS (
       SELECT
          a.id AS account_id,
          a.commodity_id,
          s2.target_id as currency_id,   --  currency for investment,...
-         s.post_date AS mindate,
+         s.post_ts AS min_ts,
          COALESCE(
-            LEAD(s.post_date) OVER win,
+            LEAD(s.post_ts) OVER win,
             '2999-12-31 00:00:00'
-         ) AS maxdate,
+         ) AS max_ts,
          CAST(SUM(CASE WHEN s.account_id = s2.account_id
                        THEN s.scaled_qty ELSE 0 END)
             OVER win
@@ -357,13 +357,13 @@ CREATE VIEW alr_invested AS
         JOIN alr_accounts a ON (s.account_id = a.id)
       WINDOW win AS (
           PARTITION BY s.account_id, s2.target_id
-          ORDER BY s.post_date
+          ORDER BY s.post_ts
           ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
       )
   )
   SELECT *
   FROM include_empty_range
-  WHERE mindate <> maxdate
+  WHERE min_ts <> max_ts
 ;
 
 
@@ -373,8 +373,8 @@ CREATE VIEW alr_invested AS
 
 CREATE VIEW alr_roi AS
    SELECT
-      max(b.mindate, p.mindate) as mindate,
-      min(b.maxdate, p.maxdate) as maxdate,
+      max(b.min_ts, p.min_ts) as min_ts,
+      min(b.max_ts, p.max_ts) as max_ts,
       b.commodity_id,      --  Which stock are we talking about ?
       b.account_id,        --  traded in which account ?
       b.realized_gain,     --  in b.currency_id
@@ -397,6 +397,6 @@ CREATE VIEW alr_roi AS
       JOIN alr_price_history_with_turnkey p
          ON (b.commodity_id = p.origin_id AND b.currency_id = p.target_id)
    WHERE
-      b.mindate < p.maxdate
-      AND p.mindate < b.maxdate
+      b.min_ts < p.max_ts
+      AND p.min_ts < b.max_ts
 ;

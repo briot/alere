@@ -104,6 +104,18 @@ const ImportFile: React.FC<ImportFileProps> = p => {
                   Browse
                </button>
             </SharedInput>
+
+            {
+                importKind === 'kmymoney' &&
+                <div>
+                   Account categories are used to compute various pieces of
+                   information in Alere.  To help when you regularly import the
+                   same KmyMoney file, you can add a line
+                   "alere: &lt;alere_category_to_use&gt;" in the description
+                   of the KmyMoney account.
+                </div>
+            }
+
          </form>
       </Dialog>
    );

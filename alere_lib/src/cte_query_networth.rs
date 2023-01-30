@@ -30,10 +30,10 @@ pub fn cte_query_networth(currency: CommodityId) -> String {
           --  the time. Otherwise, 2020-11-30 is less than
           --  2020-11-30 00:00:00 and we do not get transactions
           --  on the last day of the month
-          strftime('%Y-%m-%d', {CTE_BALANCES_CURRENCY}.mindate) \
+          strftime('%Y-%m-%d', {CTE_BALANCES_CURRENCY}.min_ts) \
              <= strftime('%Y-%m-%d', {CTE_DATES}.date) \
           AND strftime('%Y-%m-%d', {CTE_DATES}.date) \
-             < strftime('%Y-%m-%d', {CTE_BALANCES_CURRENCY}.maxdate) \
+             < strftime('%Y-%m-%d', {CTE_BALANCES_CURRENCY}.max_ts) \
           AND {CTE_BALANCES_CURRENCY}.currency_id = {currency} \
           AND {CTE_BALANCES_CURRENCY}.account_id = alr_accounts.id  \
           AND k.is_networth  \

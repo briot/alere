@@ -22,19 +22,19 @@ pub struct Point {
 
 pub fn mean(
     connection: SqliteConnect,
-    mindate: DateTime<Utc>,
-    maxdate: DateTime<Utc>,
+    min_ts: DateTime<Utc>,
+    max_ts: DateTime<Utc>,
     currency: CommodityId,
     prior: u8,
     after: u8,
     unrealized: bool,
 ) -> Result<Vec<Point>> {
     info!("mean {:?} {:?} prior={} after={} unrealized={} {}",
-          &mindate, &maxdate, prior, after, unrealized, currency);
+          &min_ts, &max_ts, prior, after, unrealized, currency);
 
     let dates = DateRange::new(
-        Some(mindate.date_naive()),
-        Some(maxdate.date_naive()),
+        Some(min_ts.date_naive()),
+        Some(max_ts.date_naive()),
         GroupBy::MONTHS,
     ).restrict_to_splits(
         &connection,

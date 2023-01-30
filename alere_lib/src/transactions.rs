@@ -2,7 +2,7 @@ use crate::connections::SqliteConnect;
 use crate::errors::Result;
 use crate::models::TransactionId;
 use diesel::RunQueryDsl;
-use diesel::sql_types::{Nullable, Text, Date, Integer};
+use diesel::sql_types::{Nullable, Text, Date, Integer, Timestamp};
 use crate::schema::alr_transactions;
 
 /// A transaction is made of one or more splits, the sum of which is zero
@@ -17,7 +17,7 @@ pub struct Transaction {
     // When was the operation performed by the user.  It might be some days
     // before the corresponding splits are effective on their respective
     // accounts.
-    pub timestamp: chrono::NaiveDate,
+    pub timestamp: chrono::NaiveDateTime,
 
     pub memo: Option<String>,
     pub check_number: Option<String>,
@@ -100,7 +100,7 @@ pub struct Transaction {
     //   - bysecond
     //     irrelevant, we only use dates
     pub scheduled: Option<String>,
-    pub last_occurrence: Option<chrono::NaiveDate>,
+    pub last_occurrence: Option<chrono::NaiveDateTime>,
 
     // The scenario this transaction is active in. All past transactions
     // reconciled from bank accounts will in general have a null
@@ -113,7 +113,7 @@ pub struct Transaction {
 impl Transaction {
     pub fn create(
         db: &SqliteConnect,
-        timestamp: chrono::NaiveDate,
+        timestamp: chrono::NaiveDateTime,
         memo: Option<String>,
         check_number: Option<String>,
         scheduled: Option<String>,
@@ -127,7 +127,7 @@ impl Transaction {
              VALUES (?, ?, ?, ?, ?, ?)
              RETURNING *";
         let mut q: Vec<Self> = diesel::sql_query(qstr)
-            .bind::<Date, _>(&timestamp)
+            .bind::<Timestamp, _>(&timestamp)
             .bind::<Nullable<Text>, _>(&memo)
             .bind::<Nullable<Text>, _>(&check_number)
             .bind::<Nullable<Text>, _>(&scheduled)

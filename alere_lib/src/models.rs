@@ -13,9 +13,9 @@ pub type SplitId = i32;
 #[derive(QueryableByName)]
 pub struct Roi {
     #[sql_type = "Timestamp"]
-    pub mindate: NaiveDateTime,
+    pub min_ts: NaiveDateTime,
     #[sql_type = "Timestamp"]
-    pub maxdate: NaiveDateTime,
+    pub max_ts: NaiveDateTime,
     #[sql_type = "Integer"]
     pub commodity_id: CommodityId,
     #[sql_type = "Integer"]
@@ -28,14 +28,14 @@ pub struct Roi {
     pub shares: f32,
     #[sql_type = "Integer"]
     pub currency_id: CommodityId,
-    #[sql_type = "Float"]
-    pub balance: f32,
-    #[sql_type = "Float"]
-    pub computed_price: f32,
+    #[sql_type = "Nullable<Float>"]
+    pub balance: Option<f32>,
+    #[sql_type = "Nullable<Float>"]
+    pub computed_price: Option<f32>,
     #[sql_type = "Nullable<Float>"]
     pub roi: Option<f32>,
-    #[sql_type = "Float"]
-    pub pl: f32,
+    #[sql_type = "Nullable<Float>"]
+    pub pl: Option<f32>,
     #[sql_type = "Nullable<Float>"]
     pub average_cost: Option<f32>,
     #[sql_type = "Nullable<Float>"]

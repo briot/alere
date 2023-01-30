@@ -77,7 +77,7 @@ pub fn monthly_cashflow(
            (
               --  Sum of splits for a given months, organized per category
               SELECT
-                 strftime('%Y-%m-01', s.post_date) as month,
+                 strftime('%Y-%m-01', s.post_ts) as month,
                  SUM(value) FILTER (WHERE
                     k.category = {income}
                     AND NOT k.is_unrealized

@@ -78,7 +78,7 @@ table! {
 table! {
     alr_prices (id) {
         id -> Integer,
-        date -> Timestamp,
+        ts -> Timestamp,
         scaled_price -> Bigint,
         origin_id -> Integer,
         source_id -> Integer,
@@ -100,8 +100,8 @@ table! {
         scaled_qty -> Integer,
         scaled_value -> Integer,
         reconcile -> Text,
-        reconcile_date -> Nullable<Date>,
-        post_date -> Date,
+        reconcile_ts -> Nullable<Timestamp>,
+        post_ts -> Timestamp,
         account_id -> Integer,
         payee_id -> Nullable<Integer>,
         transaction_id -> Integer,
@@ -112,11 +112,11 @@ table! {
 table! {
     alr_transactions (id) {
         id -> Integer,
-        timestamp -> Date,
+        timestamp -> Timestamp,
         memo -> Nullable<Text>,
         check_number -> Nullable<Text>,
         scheduled -> Nullable<Text>,
-        last_occurrence -> Nullable<Date>,
+        last_occurrence -> Nullable<Timestamp>,
         scenario_id -> Integer,
     }
 }

@@ -16,7 +16,7 @@ use log::info;
 #[derive(Serialize, Clone, Debug)]
 pub struct SplitDescr {
     account_id: AccountId,
-    post_date: DateTime<Utc>,
+    post_ts: DateTime<Utc>,
     amount: f32,
     currency: CommodityId,
     reconcile: char,
@@ -70,7 +70,7 @@ struct SplitRow {
     account_id: AccountId,
 
     #[sql_type = "Date"]
-    post_date: NaiveDate,
+    post_ts: NaiveDate,
 
     #[sql_type = "Float"]
     value: f32,
@@ -105,19 +105,19 @@ struct SplitRow {
 
 pub fn ledger(
     connection: SqliteConnect,
-    mindate: DateTime<Utc>,
-    maxdate: DateTime<Utc>,
+    min_ts: DateTime<Utc>,
+    max_ts: DateTime<Utc>,
     accountids: Vec<AccountId>,
     occurrences: u16,
 ) -> Result<Vec<TransactionDescr>> {
     info!(
-        "ledger {mindate} {maxdate} {:?} {:?}",
+        "ledger {min_ts} {max_ts} {:?} {:?}",
         accountids, occurrences
     );
     let occ = Occurrences::new(occurrences);
     let dates = DateValues::new(Some(vec![
-        mindate.date_naive(),
-        maxdate.date_naive()
+        min_ts.date_naive(),
+        max_ts.date_naive()
     ]));
     let (filter_acct_cte, filter_acct_from) = match accountids.len() {
         0 => ("".to_string(), "".to_string()),
@@ -160,7 +160,7 @@ pub fn ledger(
              a.commodity_scu,
              s.computed_price,
              s.account_id,
-             strftime('%Y-%m-%d', s.post_date) AS post_date,
+             strftime('%Y-%m-%d', s.post_ts) AS post_ts,
              s.value,
              s.value_commodity_id,
              s.reconcile,
@@ -168,7 +168,7 @@ pub fn ledger(
              p.name AS payee,
              sum(s.scaled_qty)
                 OVER (PARTITION BY s.account_id
-                      ORDER BY s.timestamp, s.transaction_id, s.post_date
+                      ORDER BY s.timestamp, s.transaction_id, s.post_ts
                       ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
                 AS scaled_qty_balance
           FROM {CTE_SPLITS_WITH_VALUE} s
@@ -178,7 +178,7 @@ pub fn ledger(
        )
        SELECT s.*
        FROM all_splits_since_epoch s
-       WHERE s.post_date >= '{dates_start}'
+       WHERE s.post_ts >= '{dates_start}'
 
          --  Always include non-validated occurrences of recurring
          --  transactions.
@@ -224,11 +224,11 @@ pub fn ledger(
 
         r.splits.push(SplitDescr {
             account_id: split.account_id,
-            post_date:
+            post_ts:
                 Utc
                 .from_utc_datetime(
                     &NaiveDateTime::new(
-                        split.post_date,
+                        split.post_ts,
                         *MIDNIGHT
                     )
                 ),

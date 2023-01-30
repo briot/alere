@@ -33,11 +33,9 @@ VALUES
 
    ('Liability',      4, 0, 0, 0, 1, 0, 0, 0, 0, 'Deposit',  'Paiement'),
 
-   --  equity/checking/saving = bank account
-   ('Equity',         2, 0, 0, 0, 1, 0, 0, 0, 0, 'Deposit',  'Paiement'),
+   ('Equity',         2, 0, 0, 0, 0, 0, 0, 0, 0, 'Deposit',  'Paiement'),
    ('Checking',       2, 0, 0, 0, 1, 0, 0, 0, 0, 'Deposit',  'Paiement'),
    ('Savings',        2, 0, 0, 0, 1, 0, 0, 0, 0, 'Deposit',  'Paiement'),
-
    ('Stock',          2, 0, 0, 0, 1, 1, 1, 0, 0, 'Add',      'Remove'),
    ('Investment',     2, 0, 0, 0, 1, 1, 0, 0, 0, 'Deposit',  'Paiement'), 
 

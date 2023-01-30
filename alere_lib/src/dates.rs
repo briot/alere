@@ -33,9 +33,9 @@ pub enum GroupBy {
 #[derive(QueryableByName)]
 struct SplitsRange {
     #[sql_type = "diesel::sql_types::Date"]
-    mindate: NaiveDate,
+    min_ts: NaiveDate,
     #[sql_type = "diesel::sql_types::Date"]
-    maxdate: NaiveDate,
+    max_ts: NaiveDate,
 }
 
 
@@ -101,8 +101,8 @@ impl DateRange {
         let query = format!(
             "
             WITH RECURSIVE {list_splits}
-            SELECT strftime('%Y-%m-%d', min(post_date)) AS mindate,
-            strftime('%Y-%m-%d', max(post_date)) AS maxdate
+            SELECT strftime('%Y-%m-%d', min(post_ts)) AS min_ts,
+            strftime('%Y-%m-%d', max(post_ts)) AS max_ts
             FROM {CTE_SPLITS} "
         );
         let result = connection.exec::<SplitsRange>("restrict", &query);
@@ -110,10 +110,10 @@ impl DateRange {
             Ok(rows) => match rows.first() {
                 Some(r) => DateRange::new(
                     Some(max(
-                        r.mindate,
+                        r.min_ts,
                         self.get_earliest())),
                     Some(min(
-                        r.maxdate,
+                        r.max_ts,
                         self.get_most_recent())),
                     self.granularity.clone(),
                 ),

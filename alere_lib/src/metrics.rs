@@ -78,8 +78,8 @@ pub fn networth(
           {CTE_DATES}
        WHERE
           b.currency_id = {currency}
-          AND b.mindate <= {CTE_DATES}.date
-          AND {CTE_DATES}.date < b.maxdate
+          AND b.min_ts <= {CTE_DATES}.date
+          AND {CTE_DATES}.date < b.max_ts
           AND k.is_networth
     "
     );
@@ -169,19 +169,19 @@ pub fn query_networth_history(
 
 pub fn networth_history(
     connection: SqliteConnect,
-    mindate: DateTime<Utc>,
-    maxdate: DateTime<Utc>,
+    min_ts: DateTime<Utc>,
+    max_ts: DateTime<Utc>,
     currency: CommodityId,
 ) -> Result<Vec<NWPoint>> {
-    info!("networth_history {:?} {:?}", &mindate, &maxdate);
+    info!("networth_history {:?} {:?}", &min_ts, &max_ts);
 
     let group_by: GroupBy = GroupBy::MONTHS;
     let include_scheduled: bool = false;
     let prior: u8 = 0;
     let after: u8 = 0;
     let dates = DateRange::new(
-            Some(mindate.date_naive()),
-            Some(maxdate.date_naive()),
+            Some(min_ts.date_naive()),
+            Some(max_ts.date_naive()),
             group_by)
         .extend(prior, after)
         .restrict_to_splits(
@@ -344,14 +344,14 @@ pub struct Networth {
 
 pub fn metrics(
     connection: SqliteConnect,
-    mindate: DateTime<Utc>,
-    maxdate: DateTime<Utc>,
+    min_ts: DateTime<Utc>,
+    max_ts: DateTime<Utc>,
     currency: CommodityId,
 ) -> Result<Networth> {
-    info!("metrics {:?} {:?}", &mindate, &maxdate);
+    info!("metrics {:?} {:?}", &min_ts, &max_ts);
     let dates = DateValues::new(Some(vec![
-        mindate.date_naive(),
-        maxdate.date_naive()
+        min_ts.date_naive(),
+        max_ts.date_naive()
     ]));
     let all_networth = networth(
         &connection,

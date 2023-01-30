@@ -19,8 +19,8 @@ pub struct OneIncomeExpense {
 #[derive(Serialize)]
 pub struct IncomeExpenseInPeriod {
     items: Vec<OneIncomeExpense>,
-    mindate: DateTime<Utc>,
-    maxdate: DateTime<Utc>,
+    min_ts: DateTime<Utc>,
+    max_ts: DateTime<Utc>,
 }
 
 
@@ -28,12 +28,12 @@ pub fn income_expense(
     connection: SqliteConnect,
     income: bool,
     expense: bool,
-    mindate: DateTime<Utc>,
-    maxdate: DateTime<Utc>,
+    min_ts: DateTime<Utc>,
+    max_ts: DateTime<Utc>,
     currency: CommodityId,
 ) -> IncomeExpenseInPeriod {
     info!("income_expense {:?} {:?} income={} expense={}",
-          &mindate, &maxdate, income, expense);
+          &min_ts, &max_ts, income, expense);
 
     let mut categories = vec![];
     if expense {
@@ -45,15 +45,15 @@ pub fn income_expense(
     if categories.len() == 0 {
         return IncomeExpenseInPeriod {
             items: vec![],
-            mindate,
-            maxdate,
+            min_ts,
+            max_ts,
         };
     }
 
     let list_splits = cte_list_splits(
         &DateValues::new(Some(vec![
-            mindate.date_naive(),
-            maxdate.date_naive()
+            min_ts.date_naive(),
+            max_ts.date_naive()
         ])),
         NO_SCENARIO,
         &Occurrences::no_recurrence());
@@ -81,8 +81,8 @@ pub fn income_expense(
     match rows {
         Ok(r) => {
             IncomeExpenseInPeriod {
-                mindate,
-                maxdate,
+                min_ts,
+                max_ts,
                 items: r.iter()
                     .map(|acc| OneIncomeExpense {
                         accountid: acc.account_id,
@@ -94,8 +94,8 @@ pub fn income_expense(
         Err(_) => {
             IncomeExpenseInPeriod {
                 items: vec![],
-                mindate,
-                maxdate,
+                min_ts,
+                max_ts,
             }
         }
     }

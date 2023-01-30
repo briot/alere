@@ -26,10 +26,10 @@ impl Position {
     pub fn new(roi: &Roi) -> Self {
         Position {
             avg_cost: roi.average_cost.unwrap_or(f32::NAN),
-            equity: roi.balance,
+            equity: roi.balance.unwrap_or(f32::NAN),
             gains: roi.realized_gain,
             invested: roi.invested,
-            pl: roi.pl,
+            pl: roi.pl.unwrap_or(f32::NAN),
             roi: roi.roi.unwrap_or(f32::NAN),
             shares: roi.shares,
             weighted_avg: roi.weighted_average.unwrap_or(f32::NAN),
@@ -65,8 +65,8 @@ pub struct Price {
 #[derive(Serialize)]
 pub struct ForAccount {
     account: AccountId,
-    start: Position,                    // as of mindate
-    end: Position,                      // as of maxdate
+    start: Position,                    // as of min_ts
+    end: Position,                      // as of max_ts
     oldest: Option<DateTime<Utc>>,      // oldest transaction (for annualized)
     most_recent: Option<DateTime<Utc>>, // most recent transaction
     now_for_annualized: DateTime<Utc>,
@@ -115,13 +115,13 @@ struct AccountIdAndCommodity {
 
 pub fn quotes(
     connection: SqliteConnect,
-    mindate: DateTime<Utc>,
-    maxdate: DateTime<Utc>,
+    min_ts: DateTime<Utc>,
+    max_ts: DateTime<Utc>,
     currency: CommodityId,
     commodities: Option<Vec<CommodityId>>,
     accounts: Option<Vec<AccountId>>
 ) -> Result<(Vec<Symbol>, HashMap<AccountId, ForAccount>)> {
-    info!("quotes {:?} {:?} {}", &mindate, &maxdate, currency);
+    info!("quotes {:?} {:?} {}", &min_ts, &max_ts, currency);
 
     // Find all commodities
 
@@ -199,7 +199,7 @@ pub fn quotes(
         FROM alr_roi r
         WHERE r.account_id IN ({accs_ids})
         AND r.currency_id = {currency}
-        ORDER BY r.mindate
+        ORDER BY r.min_ts
         "
     );
 
@@ -209,24 +209,24 @@ pub fn quotes(
         .for_each(|r| {
             let a_in_map = accs.get_mut(&r.account_id);
             let mut a = a_in_map.unwrap();
-            let mi = Utc.from_utc_datetime(&r.mindate);
-            let ma = Utc.from_utc_datetime(&r.maxdate);
+            let mi = Utc.from_utc_datetime(&r.min_ts);
+            let ma = Utc.from_utc_datetime(&r.max_ts);
 
             if a.oldest.is_none() {
                 a.oldest = Some(mi);
             }
             a.most_recent = Some(mi);
 
-            if mi <= mindate && mindate < ma {
+            if mi <= min_ts && min_ts < ma {
                 a.start = Position::new(r);
             }
-            if mi <= maxdate && maxdate < ma {
+            if mi <= max_ts && max_ts < ma {
                 a.end = Position::new(r);
             }
 
             a.prices.push(Price {
                 t: mi.timestamp_millis(),
-                price: r.computed_price,
+                price: r.computed_price.unwrap_or(f32::NAN),
                 roi: match r.roi {
                     Some(val) => (val - 1.0) * 100.0,
                     None      => f32::NAN,
@@ -244,7 +244,7 @@ pub fn quotes(
             a.annualized_roi = f32::powf(a.end.roi, 365.0 / d);
         }
 
-        // Return over the period [mindata, maxdate]
+        // Return over the period [mindata, max_ts]
         let d2 = a.start.equity + a.end.invested - a.start.invested;
         if f32::abs(d2) >= 1E-6 {
             a.period_roi =

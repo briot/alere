@@ -1,5 +1,4 @@
-use crate::account_kinds::{
-    AccountKind, AccountKindManager, AccountKindCategory};
+use crate::account_kinds::AccountKind;
 use crate::accounts::Account;
 use crate::commodities::Commodity;
 use crate::commodity_kinds::CommodityKind;
@@ -333,7 +332,7 @@ struct KmmTransactionsAndSchedule {
 
     #[sql_type = "Date"]
     #[column_name = "postDate"]
-    post_date: NaiveDate,
+    post_ts: NaiveDate,
 
     #[sql_type = "Nullable<Text>"]
     #[column_name = "memo"]
@@ -444,7 +443,7 @@ struct KmmSplits {
 
     #[sql_type = "Date"]
     #[column_name = "postDate"]
-    post_date: chrono::NaiveDate,
+    post_ts: chrono::NaiveDate,
 
     #[sql_type = "Nullable<Text>"]
     #[column_name = "bankId"]
@@ -834,6 +833,13 @@ impl KmyFile {
             return (Some(0), false);
         }
 
+//        if den == 1 {
+//            return (
+//                (Decimal::new(num, 1) * Decimal::from(scale)).to_i64(),
+//                false
+//            );
+//        }
+
         let d = Decimal::new(num, 1) / Decimal::new(den, 1);
 
         fn round_and_err(
@@ -860,9 +866,17 @@ impl KmyFile {
 
         let (p, err) = best(d, scale);
         let price_tolerance = Decimal::from_f32_retain(0.001).unwrap();
+//        if text == "-25/1" {
+//            println!("MANU text={} num={} den={} d={} scale={} p={} err={}",
+//                text, num, den, d, scale, p, err);
+//        }
 
-        if inverse_scale != 0 {
+        if err != Decimal::ZERO && inverse_scale != 0 {
             let (p2, err2) = best(d.inv(), inverse_scale);
+//            if text == "-25/1" {
+//                println!("MANU    inverse_scale={} p2={} err2={}",
+//                    inverse_scale, p2, err2);
+//            }
             if err2 < err {
                 if err2 > price_tolerance {
                     println!(
@@ -952,8 +966,8 @@ impl KmyFile {
                 (Some(val), true) => {
                     let _: () = Price::create(
                         target,
-                        origin.id,
                         dest.id,
+                        origin.id,
                         date,
                         val as u64,
                         source.id,
@@ -962,8 +976,8 @@ impl KmyFile {
                 (Some(val), false) => {
                     let _: () = Price::create(
                         target,
-                        dest.id,
                         origin.id,
+                        dest.id,
                         date,
                         val as u64,
                         source.id,
@@ -1084,9 +1098,9 @@ impl KmyFile {
                 kmmSchedules.lastPayment
              FROM kmmTransactions LEFT JOIN kmmSchedules USING (id)";
         for tx in sql_query(q).load::<KmmTransactionsAndSchedule>(kmy)? {
-            let post_date = match tx.start_date {
-                None     => tx.post_date,
-                Some(sd) => sd,
+            let post_ts = match tx.start_date {
+                None     => tx.post_ts.and_hms_opt(0, 0, 0).unwrap(),
+                Some(sd) => sd.and_hms_opt(0, 0, 0).unwrap(),
             };
             let scheduled = match tx.occurrence {
                 None     => None,
@@ -1100,7 +1114,7 @@ impl KmyFile {
             };
             let tr = Transaction::create(
                 target,
-                post_date,
+                post_ts,
                 tx.memo,
                 None,
                 scheduled,
@@ -1165,8 +1179,8 @@ impl KmyFile {
                 shares,                       // scaled_qty
                 scaled_value as u64,          // scaled_value
                 reconcile,                    // reconcile
-                sp.reconcile_date,            // reconcile_date
-                sp.post_date,                 // post_date
+                sp.reconcile_date.map(|d| d.and_hms_opt(0, 0, 0).unwrap()),
+                sp.post_ts.and_hms_opt(0, 0, 0).unwrap(),  // post_ts
                 acc.id,                       // account_id
                 sp.payee_id
                     .map(|pi| self.payees.get(&pi)) // payee_id

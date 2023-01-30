@@ -35,19 +35,19 @@ pub fn cte_list_splits(
            s.value_commodity_id,
            s.reconcile,
            s.payee_id,
-           s.post_date
+           s.post_ts
         FROM alr_transactions t
            JOIN alr_splits s ON (s.transaction_id = t.id)
         WHERE t.scheduled IS NULL
             AND (t.scenario_id = {NO_SCENARIO}
                  OR t.scenario_id = {scenario})
-            AND post_date >= '{dates_start}'
-            AND post_date <= '{dates_end}'
+            AND post_ts >= '{dates_start}'
+            AND post_ts <= '{dates_end}'
     "
     );
 
     if maxo > 0 {
-        // overrides the post_date for the splits associated with a
+        // overrides the post_ts for the splits associated with a
         // recurring transaction
         return format!(
             "recurring_splits_and_transaction AS (
@@ -69,7 +69,7 @@ pub fn cte_list_splits(
                s.reconcile,
                s.payee_id,
                alr_next_event(
-                   t.scheduled, t.timestamp, t.last_occurrence) as post_date
+                   t.scheduled, t.timestamp, t.last_occurrence) as post_ts
             FROM alr_transactions t
                JOIN alr_splits s ON (s.transaction_id = t.id)
             WHERE t.scheduled IS NOT NULL
@@ -80,7 +80,7 @@ pub fn cte_list_splits(
                s.transaction_id,
                s.occurrence + 1,
                s.split_id,
-               alr_next_event(s.scheduled, s.initial_timestamp, s.post_date),
+               alr_next_event(s.scheduled, s.initial_timestamp, s.post_ts),
                s.initial_timestamp,
                s.scheduled,
                s.scenario_id,
@@ -92,21 +92,21 @@ pub fn cte_list_splits(
                s.value_commodity_id,
                s.reconcile,
                s.payee_id,
-               alr_next_event(s.scheduled, s.initial_timestamp, s.post_date)
+               alr_next_event(s.scheduled, s.initial_timestamp, s.post_ts)
             FROM recurring_splits_and_transaction s
-            WHERE s.post_date IS NOT NULL
-              AND s.post_date <= '{dates_end}'
+            WHERE s.post_ts IS NOT NULL
+              AND s.post_ts <= '{dates_end}'
               AND s.occurrence < {maxo}
         ), {CTE_SPLITS} AS (
            SELECT * FROM recurring_splits_and_transaction
-              WHERE post_date IS NOT NULL
+              WHERE post_ts IS NOT NULL
                 --  The last computed occurrence might be later than expected
                 --  date
-                AND post_date <= '{dates_end}'
+                AND post_ts <= '{dates_end}'
 
                 --  The next occurrence might be in the past if it was never
                 --  acknowledged.
-                --   AND post_date >= '{dates_start}'
+                --   AND post_ts >= '{dates_start}'
            UNION {non_recurring_splits}
         )"
         );
