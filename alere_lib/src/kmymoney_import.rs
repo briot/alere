@@ -18,7 +18,7 @@ use diesel::sql_types::{Nullable, Text, Date, Float, Integer};
 use log::{error, info};
 use rust_decimal::{Decimal, RoundingStrategy};
 use std::collections::{HashMap, HashSet};
-use num_traits::{Inv, ToPrimitive};
+use num_traits::ToPrimitive;
 use std::path::{Path, PathBuf};
 
 
@@ -831,7 +831,6 @@ impl KmyFile {
             let p = scaled_price(
                 &price.price,
                 origin.price_scale as u32,   //  scale
-                dest.price_scale as u32,     //  inverse scale
             );
             let date = match price.price_date.and_hms_opt(0, 0, 0) {
                 Some(d) => d,
@@ -848,17 +847,7 @@ impl KmyFile {
                     price.price_source))?;
 
             match p {
-                (Some(val), true) => {
-                    Price::create(
-                        target,
-                        dest.id,
-                        origin.id,
-                        date,
-                        val as u64,
-                        source.id,
-                    )?;
-                },
-                (Some(val), false) => {
+                Some(val) => {
                     Price::create(
                         target,
                         origin.id,
@@ -868,7 +857,7 @@ impl KmyFile {
                         source.id,
                     )?;
                 },
-                (None, _) => {
+                None => {
                     return Err(format!(
                         "Could not parse price {} for commodity {}",
                         price.price,
@@ -1021,12 +1010,10 @@ impl KmyFile {
                 _  => ReconcileKind::RECONCILED,
             };
             let acc = &self.accounts[&sp.account_id];
-            let (shares, _)  = scaled_price(
+            let shares  = scaled_price(
                 &sp.shares,
                 acc.commodity_scu as u32,   // scale
-                0,                          // inverse_scale
-            );
-            let shares = shares.unwrap_or(0);
+            ).unwrap_or(0);
             let currency: CommodityId;
             let scaled_value: i64;
 
@@ -1041,15 +1028,14 @@ impl KmyFile {
                     scaled_value = shares;
                 },
                 (_, Some(p)) => {
-                    let (price, _) = scaled_price(
+                    let price = scaled_price(
                         &p,
                         10_000,   // ??? scale for a stock account
-                        0,        // inverse_scale
-                    );
+                    ).unwrap_or(0);
                     let cur = tx_currencies[&sp.transaction_id];
                     currency = cur.id;
                     scaled_value =
-                        shares * price.unwrap()
+                        shares * price
                         * (cur.price_scale as i64)
                         / (
                             10_000                     // scale for price
@@ -1153,52 +1139,22 @@ pub fn import(
 
 /// Convert a price read from kmymoney into a scaled price, where scale
 /// is the currency's scale.
-/// There might be rounding errors because we want to represent things
-/// as integers, with a fixed scaling factor (??? should we change
-/// that), so we try to find the best representation, possibly
-/// storing the inverse of the number.
-/// For instance, with a scale of 100 (so two digits precision):
-///
-///  EUR->E000041    price=247/10000  = 0.0247
-///
-///  Round down | Round up   | Inverse, round down | Inverse round up |
-///  -----------+------------+---------------------+------------------+
-///    2/100    |    3/100   | 4048 / 100          | 4049 / 100       |
-///    0.02     |    0.03    | 0,02470355731       | 0,02469745616    |
-///    -23.5%   |    +17.66% |   +0.0144%          |  -0.0103%  <==== |
-///
-/// But
-///  price = 24712/10000 = 2.4712
-///  Round down | Round up  | Inverse, round down | Inverse round up |
-///  -----------+-----------+---------------------+------------------+
-///  247/100    | 248/100   | 40/100              | 41/100           |
-///   2.47      |   2.48    |   2.5               |  2,4390243902    |
-///  -0.048% <==|  +0.35%   |  +1.152%            | -1.3119%         |
-///
-/// And
-///  USD->EUR   price = 1051/1250 = 0.8408
-///  Round down | Round up  | Inverse, round down | Inverse round up |
-///  -----------+-----------+---------------------+------------------+
-///    84/100   | 85/100    | 118/100             | 119/100          |
-///    0.84     | 0.85      | 0,8474576271        | 0,8403361345     |
-///    -0.0952% | +1.082%   | +0.785%             | -0.0552% <===    |
 
 fn scaled_price(
     text: &str,           //  read in kmyMony
     scale: u32,           //  scale to apply for direct conversion
-    inverse_scale: u32,   //  scale for opposite conversion
-)  -> (Option<i64>, bool) {
+)  -> Option<i64> {
     if text.is_empty() {
-        return (None, false);
+        return None;
     }
 
     let s: Vec<&str> = text.split('/').collect();
-    assert!(s.len() == 2);
+    assert_eq!(s.len(), 2);
 
     let num = s[0].parse::<i64>().unwrap();
     let den = s[1].parse::<i64>().unwrap();
     if num == 0 {
-        return (Some(0), false);
+        return Some(0);
     }
 
     let d = Decimal::new(num, 1) / Decimal::new(den, 1);
@@ -1215,58 +1171,22 @@ fn scaled_price(
         (v, err1)
     }
 
-    fn best(d: Decimal, scale: u32) -> (Option<i64>, Decimal) {
-        let scaled = d * Decimal::from(scale);
-        let (d1, err1) = round_and_err(
-            scaled, 0, RoundingStrategy::MidpointTowardZero);
-        let (d2, err2) = round_and_err(
-            scaled, 0, RoundingStrategy::MidpointAwayFromZero);
-        let p = if err2 < err1 { d2 } else { d1 };
-        let err = Decimal::min(err1, err2);
-        (p.to_i64(), err)
-    }
-
-    let (p, err) = best(d, scale);
-    let price_tolerance = Decimal::from_f32_retain(0.001).unwrap();
-
-//    if inverse_scale != 0 {
-//        let (p2, err2) = best(d.inv(), inverse_scale);
-//        if p.is_none() || err2 < err {
-//            if err2 > price_tolerance {
-//                println!(
-//                    "WARNING: price {} ({}, inv {}) \
-//                        imported with rounding errors: \
-//                        {} ({}%) or {} ({}%), scale={} inverse_scale={}",
-//                    text, d, d.inv(),
-//                    p.unwrap_or(0) / (scale as i64),
-//                    (err * Decimal::ONE_HUNDRED).round_dp(2),
-//                    p2.unwrap_or(0) / (inverse_scale as i64),
-//                    (err2 * Decimal::ONE_HUNDRED).round_dp(2),
-//                    scale, inverse_scale);
-//            }
-//            println!("MANU using inverse scale price {} ({}, inv {}) \
-//                        imported with rounding errors: \
-//                        {} ({}%) or {} ({}%), scale={} inverse_scale={}",
-//                    text, d, d.inv(),
-//                    (p.unwrap_or(0) as f64) / (scale as f64),
-//                    (err * Decimal::ONE_HUNDRED).round_dp(2),
-//                    (p2.unwrap_or(0) as f64) / (inverse_scale as f64),
-//                    (err2 * Decimal::ONE_HUNDRED).round_dp(2),
-//                    scale, inverse_scale);
-//            return (p2, true);
-//        }
-//    }
-
-    if err > price_tolerance {
+    let scaled = d * Decimal::from(scale);
+    let (d1, err1) = round_and_err(
+        scaled, 0, RoundingStrategy::MidpointTowardZero);
+    let (d2, err2) = round_and_err(
+        scaled, 0, RoundingStrategy::MidpointAwayFromZero);
+    let (pdec, err) = if err2 < err1 { (d2, err2) } else { (d1, err1) };
+    if err > Decimal::from_f32_retain(0.001).unwrap() {
         println!(
             "WARNING: price {} ({}) \
                 imported as {} with rounding error {}%, \
-                scale={} inverse_scale={}",
-            text, d, p.unwrap_or(0) / (scale as i64),
+                scale={}",
+            text, d, pdec.to_i64().unwrap_or(0) / (scale as i64),
             (err * Decimal::ONE_HUNDRED).round_dp(2),
-            scale, inverse_scale);
+            scale);
     }
-    (p, false)
+    pdec.to_i64()
 }
 
 #[cfg(test)]
@@ -1275,12 +1195,10 @@ mod tests {
 
     #[test]
     fn it_scales() {
-        let r = scaled_price("1663/2000", 100, 100);
-        assert_eq!(r.0, Some(83));
-        assert!(!r.1);
+        let r = scaled_price("1663/2000", 100);
+        assert_eq!(r, Some(83));
 
-        let r = scaled_price("8319/10000", 100, 100);
-        assert_eq!(r.0, Some(120));
-        assert!(r.1);
+        let r = scaled_price("8319/10000", 100);
+        assert_eq!(r, Some(120));
     }
 }
