@@ -21,7 +21,7 @@ export interface Transaction {
    id: TransactionId;
    date: string;     // date the user initiated the transaction
    balance: number;  // balance after the transaction
-   balanceShares?: number;  //  for stock accounts
+   balance_shares?: number;  //  for stock accounts
    splits: Split[];  // at least one (there are two in the database, but here
                      // we might be seeing a partial view specific to one
                      // account only).

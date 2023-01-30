@@ -324,7 +324,7 @@ const columnSharesBalance: Column<TableRowData, ComputedBaseLedgerProps> = {
    cell: (d: TableRowData) =>
       d.split === MAIN &&
       <Numeric
-         amount={d.transaction?.balanceShares}
+         amount={d.transaction?.balance_shares}
          commodity={d.account?.commodity}  //  the account's commodity
          hideCommodity={true}
          scale={Math.log10(d.account?.commodity_scu ?? 100)}
@@ -697,7 +697,7 @@ const Ledger: React.FC<BaseLedgerProps & ExtraProps> = p => {
       () => {
          const v = {...nullTotal};
          if (singleAccount) {
-            v.future = transactions?.[transactions.length - 1]?.balanceShares;
+            v.future = transactions?.[transactions.length - 1]?.balance_shares;
             if (transactions) {
                const addSplit = (s: Split) => {
                   switch (s.reconcile) {
@@ -710,7 +710,7 @@ const Ledger: React.FC<BaseLedgerProps & ExtraProps> = p => {
                for (let j = transactions.length - 1; j >= 0; j--) {
                   const t = transactions[j];
                   if (v.present === undefined && new Date(t.date) <= date) {
-                     v.present = t.balanceShares;
+                     v.present = t.balance_shares;
                   }
                   splitsForAccounts(t, accounts.accounts).forEach(addSplit);
                }

@@ -207,9 +207,8 @@ pub fn ledger(
                     ),
                 balance: 0.0,
                 balance_shares: 0.0,
-                memo: split.memo.unwrap_or_else(|| "".to_string()),
-                check_number: split.check_number
-                    .unwrap_or_else(|| "".to_string()),
+                memo: split.memo.unwrap_or_default(),
+                check_number: split.check_number.unwrap_or_default(),
                 is_recurring: split.scheduled.unwrap_or(false),
                 splits: vec![],
             });
@@ -237,7 +236,7 @@ pub fn ledger(
             reconcile: split.reconcile.chars().next().unwrap(),
             shares: split.scaled_qty / split.commodity_scu,
             price: split.computed_price.unwrap_or(std::f32::NAN),
-            payee: split.payee.unwrap_or_else(|| "".to_string()),
+            payee: split.payee.unwrap_or_default(),
         });
     }
     Ok(result)
