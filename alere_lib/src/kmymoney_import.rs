@@ -1010,7 +1010,7 @@ impl KmyFile {
                 _  => ReconcileKind::RECONCILED,
             };
             let acc = &self.accounts[&sp.account_id];
-            let shares  = scaled_price(
+            let mut shares  = scaled_price(
                 &sp.shares,
                 acc.commodity_scu as u32,   // scale
             ).unwrap_or(0);
@@ -1026,6 +1026,11 @@ impl KmyFile {
                     // in transactions.
                     currency = acc.commodity_id;
                     scaled_value = shares;
+                },
+                (Some("Split"), _) => {
+                    currency = acc.commodity_id;
+                    scaled_value = 0;
+                    shares = 4 * (acc.commodity_scu as i64);  //  Wrong ???
                 },
                 (_, Some(p)) => {
                     let price = scaled_price(

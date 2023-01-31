@@ -48,7 +48,8 @@ const TickerPanel: React.FC<PanelProps<TickerPanelProps>> = p => {
    );
 
    const tk =
-      p.props.ticker === undefined ? undefined
+      p.props.ticker === undefined
+      ? (tickers.length === 1 ? tickers : undefined)
       : isNumeric(p.props.ticker)  ? tickers
       : [p.props.ticker as Ticker];
 
