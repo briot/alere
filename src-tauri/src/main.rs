@@ -227,13 +227,13 @@ fn main() {
 
     let mut settings = Settings::load(&app_config_dir).unwrap();
 
-    if let Err(e) = alere_lib::kmymoney_import::import(
-        &PathBuf::from("/home/briot/alere/test.sqlite3"),
-        &PathBuf::from("/home/briot/alere/Comptes.kmy"),
-    ) {
-        println!("Error importing file: {}", e);
-        return;
-    }
+//    if let Err(e) = alere_lib::kmymoney_import::import(
+//        &PathBuf::from("/home/briot/alere/test.sqlite3"),
+//        &PathBuf::from("/home/briot/alere/Comptes.kmy"),
+//    ) {
+//        println!("Error importing file: {}", e);
+//        return;
+//    }
 
     let mut db: Database = Default::default();
 
