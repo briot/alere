@@ -5,20 +5,21 @@ use crate::commodity_kinds::CommodityKind;
 use crate::connections::{Database, SqliteConnect};
 use crate::errors::Result;
 use crate::institutions::Institution;
-use crate::models::{AccountId, CommodityId};
+use crate::models::AccountId;
 use crate::prices::Price;
 use crate::price_sources::PriceSource;
 use crate::payees::Payee;
-use crate::splits::{Split, ReconcileKind};
+use crate::scaling::{parse_str, scale_value};
+use crate::splits::Split;
+use crate::reconciliation::ReconcileKind;
 use crate::transactions::Transaction;
 use chrono::NaiveDate;
 use diesel::{sql_query, Connection, RunQueryDsl};
 use diesel::sqlite::SqliteConnection;
 use diesel::sql_types::{Nullable, Text, Date, Float, Integer};
 use log::{error, info};
-use rust_decimal::{Decimal, RoundingStrategy};
+use rust_decimal::Decimal;
 use std::collections::{HashMap, HashSet};
-use num_traits::ToPrimitive;
 use std::path::{Path, PathBuf};
 
 
@@ -403,7 +404,7 @@ struct KmmSplits {
 
     #[sql_type = "Text"]
     #[column_name = "value"]
-    _value: String,
+    value: String,
 
     #[sql_type = "Text"]
     #[column_name = "valueFormatted"]
@@ -828,9 +829,9 @@ impl KmyFile {
                 Some(orig) => orig,
             };
 
-            let p = scaled_price(
-                &price.price,
-                origin.price_scale as u32,   //  scale
+            let p = scale_value(
+                parse_str(&price.price),
+                origin.price_scale,   //  scale
             );
             let date = match price.price_date.and_hms_opt(0, 0, 0) {
                 Some(d) => d,
@@ -1010,77 +1011,97 @@ impl KmyFile {
                 _  => ReconcileKind::RECONCILED,
             };
             let acc = &self.accounts[&sp.account_id];
-            let mut shares  = scaled_price(
-                &sp.shares,
-                acc.commodity_scu as u32,   // scale
-            ).unwrap_or(0);
-            let currency: CommodityId;
-            let scaled_value: i64;
+            let mut qty  = parse_str(&sp.shares)
+                .ok_or("Could not parse qty")?;
+            let currency = tx_currencies[&sp.transaction_id];
+            let price = sp.price.as_ref()
+                .map(|p| parse_str(p).unwrap_or_default());
+            let value = parse_str(&sp.value)
+                .ok_or("Could not parse value")?;
+            let mut extra_msg: String = Default::default();
 
-            match (sp.action.as_deref(), sp.price) {
-                (Some("Dividend") | Some("Add"), _) | (_, None) => {
+            match (sp.action.as_deref(), price) {
+                (Some("Dividend"), _)
+                | (Some("IntIncome"), _) => {
                     // kmymoney sets "1.00" for the price, which does
                     // not reflect the current price of the share at the
                     // time, so better have nothing.
                     // In kmymoney, foreign currencies are not supported
                     // in transactions.
-                    currency = acc.commodity_id;
-                    scaled_value = shares;
+                    assert_eq!(value, qty);
+                    qty = Decimal::ZERO;
+                    extra_msg.push_str("Dividends");
+                },
+                (Some("Add"), _) => {
+                    assert_eq!(value, Decimal::ZERO);
+                    extra_msg.push_str(
+                        if qty.is_sign_positive() { "Add shares" }
+                        else { "Remove shared" }
+                    );
+                },
+                (Some("Buy"), Some(p)) => {
+                    debug_assert!(
+                        (value - qty * p).abs()
+                        < Decimal::ONE / Decimal::from(100),
+                        "{} - {} < {}  (scale={} {}, split={:?})",
+                        value, qty * p,
+                        Decimal::ONE / Decimal::from(acc.commodity_scu),
+                        acc.commodity_scu, currency.price_scale,
+                        sp
+                    );
+                    extra_msg.push_str(
+                       if qty.is_sign_positive() { "Buy shares" }
+                       else { "Sell shares" }
+                    );
                 },
                 (Some("Split"), _) => {
-                    currency = acc.commodity_id;
-                    scaled_value = 0;
-                    shares = 4 * (acc.commodity_scu as i64);  //  Wrong ???
+                    assert_eq!(value, Decimal::ZERO);
+                    qty = Decimal::ZERO;  // ??? wrong
+                    extra_msg.push_str("Split");
                 },
-                (_, Some(p)) => {
-                    let price = scaled_price(
-                        &p,
-                        10_000,   // ??? scale for a stock account
-                    ).unwrap_or(0);
-                    let cur = tx_currencies[&sp.transaction_id];
-                    currency = cur.id;
-                    scaled_value =
-                        shares * price
-                        * (cur.price_scale as i64)
-                        / (
-                            10_000                     // scale for price
-                            * acc.commodity_scu as i64 // scale for shares
-                        );
-
+                (Some("Reinvest"), Some(p)) => {
+                    debug_assert!(
+                        (value - qty * p).abs()
+                        < Decimal::ONE / Decimal::from(100),
+                        "{} - {} < {}  (scale={} {}, split={:?})",
+                        value, qty * p,
+                        Decimal::ONE / Decimal::from(acc.commodity_scu),
+                        acc.commodity_scu, currency.price_scale,
+                        sp
+                    );
+                    extra_msg.push_str("Reinvested dividend");
+                },
+                (None, None) => {  // standard transaction, not for shares
+                },
+                (_, None) => {
+                    return Err(format!("Missing price, {:?}", sp).into());
+                },
+                (_, Some(_)) => {
+                    return Err(format!("Unknown action, {:?}", sp).into());
                 },
             };
 
-            let _: Split = Split::create(
-                target,
-                shares,                       // scaled_qty
-                scaled_value as u64,          // scaled_value
-                reconcile,                    // reconcile
-                sp.reconcile_date.map(|d| d.and_hms_opt(0, 0, 0).unwrap()),
+            let mut s = Split::new(
+                &transactions[&sp.transaction_id],  // transaction
+                acc,                                // account
+                qty,                                // qty
+                value,                              // value
+                currency,                           // value_commodity
                 sp.post_ts.and_hms_opt(0, 0, 0).unwrap(),  // post_ts
-                acc.id,                       // account_id
-                sp.payee_id
-                    .and_then(|pi| self.payees.get(&pi)) // payee_id
-                    .map(|p| p.id),
-                transactions[&sp.transaction_id].id,   // transaction_id
-                currency,                     // value_commodity_id
             )?;
 
+            s.set_payee(
+                sp.payee_id
+                    .and_then(|pi| self.payees.get(&pi)) // payee_id
+            );
+            s.set_reconcile(
+                reconcile,                    // reconcile
+                sp.reconcile_date.map(|d| d.and_hms_opt(0, 0, 0).unwrap()),
+            );
+            s.save(target)?;
+
             let mut m = sp.memo.unwrap_or_else(|| "".into());
-            match sp.action.as_deref() {
-                Some("Add") if shares >= 0 =>
-                    { m.push_str("Add shares"); },
-                Some("Add")                =>
-                    { m.push_str("Remove shares"); },
-                Some("Buy") if shares >= 0 =>
-                    { m.push_str("Buy shares"); },
-                Some("Buy")                =>
-                    { m.push_str("Sell shares"); },
-                Some("Dividend")           =>
-                    { m.push_str("Dividends"); },
-                Some("Reinvest")           =>
-                    { m.push_str("Reinvested dividend"); },
-                _                          => {},
-            };
+            m.push_str(&extra_msg);
             transactions.get_mut(&sp.transaction_id)
                 .unwrap()
                 .add_to_memo(target, &m)?;
@@ -1140,70 +1161,4 @@ pub fn import(
     })?;
 
     Ok(())
-}
-
-/// Convert a price read from kmymoney into a scaled price, where scale
-/// is the currency's scale.
-
-fn scaled_price(
-    text: &str,           //  read in kmyMony
-    scale: u32,           //  scale to apply for direct conversion
-)  -> Option<i64> {
-    if text.is_empty() {
-        return None;
-    }
-
-    let s: Vec<&str> = text.split('/').collect();
-    assert_eq!(s.len(), 2);
-
-    let num = s[0].parse::<i64>().unwrap();
-    let den = s[1].parse::<i64>().unwrap();
-    if num == 0 {
-        return Some(0);
-    }
-
-    let d = Decimal::new(num, 1) / Decimal::new(den, 1);
-
-    fn round_and_err(
-        d: Decimal,
-        scale: u32,
-        strat: RoundingStrategy,
-    ) -> (Decimal, Decimal) {
-        let v = d.round_dp_with_strategy(scale, strat);
-        let err1 = if v.is_zero() {
-            Decimal::MAX
-            } else { d / v - Decimal::ONE };
-        (v, err1)
-    }
-
-    let scaled = d * Decimal::from(scale);
-    let (d1, err1) = round_and_err(
-        scaled, 0, RoundingStrategy::MidpointTowardZero);
-    let (d2, err2) = round_and_err(
-        scaled, 0, RoundingStrategy::MidpointAwayFromZero);
-    let (pdec, err) = if err2 < err1 { (d2, err2) } else { (d1, err1) };
-    if err > Decimal::from_f32_retain(0.001).unwrap() {
-        println!(
-            "WARNING: price {} ({}) \
-                imported as {} with rounding error {}%, \
-                scale={}",
-            text, d, pdec.to_i64().unwrap_or(0) / (scale as i64),
-            (err * Decimal::ONE_HUNDRED).round_dp(2),
-            scale);
-    }
-    pdec.to_i64()
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::kmymoney_import::scaled_price;
-
-    #[test]
-    fn it_scales() {
-        let r = scaled_price("1663/2000", 100);
-        assert_eq!(r, Some(83));
-
-        let r = scaled_price("8319/10000", 100);
-        assert_eq!(r, Some(120));
-    }
 }

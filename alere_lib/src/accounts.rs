@@ -1,7 +1,8 @@
 use chrono::{NaiveDate, NaiveDateTime};
 use crate::connections::SqliteConnect;
 use crate::errors::Result;
-use crate::models::{AccountId, AccountKindId, CommodityId, InstitutionId};
+use crate::models::{
+    AccountId, AccountKindId, CommodityId, InstitutionId, ScalingFactor};
 use diesel::RunQueryDsl;
 use diesel::sql_types::{Integer, Nullable, Text, Date, Bool, Timestamp};
 use crate::schema::alr_accounts;
@@ -36,7 +37,7 @@ pub struct Account {
     // digits precision, so the commodity_scu is "100". But a broker like
     // Kraken, when trading Bitcoin, uses 0.0001 precision or less, so the
     // commodity_scu is set to 10000
-    pub commodity_scu: i32,
+    pub commodity_scu: ScalingFactor,
 
     // When has the user last reconciled this account with the bank statements
     pub last_reconciled: Option<NaiveDateTime>,

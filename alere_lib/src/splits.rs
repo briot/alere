@@ -1,92 +1,201 @@
 /// Compute the list of splits in a given time range, including the
 /// recurrences of scheduled transactions.
 
-use crate::query::{Query, SQL, CTE};
-use crate::dates::DateSet;
-use crate::scenarios::{Scenario, NO_SCENARIO};
-use crate::occurrences::Occurrences;
-use crate::schema::alr_splits;
+use crate::accounts::Account;
+use crate::commodities::Commodity;
 use crate::connections::SqliteConnect;
+use crate::dates::DateSet;
 use crate::errors::Result;
-use crate::models::{
-    AccountId, CommodityId, PayeeId, SplitId, TransactionId};
+use crate::models::{AccountId, CommodityId, PayeeId, SplitId, TransactionId};
+use crate::occurrences::Occurrences;
+use crate::payees::Payee;
+use crate::query::{Query, SQL, CTE};
+use crate::reconciliation::ReconcileKind;
+use crate::scaling::scale_value;
+use crate::scenarios::{Scenario, NO_SCENARIO};
+use crate::schema::alr_splits;
+use crate::transactions::Transaction;
 use diesel::RunQueryDsl;
-use diesel::sql_types::{Nullable, Text, Integer, Timestamp};
+use diesel::sql_types::{Nullable, Integer, Timestamp, SmallInt, BigInt};
+use rust_decimal::Decimal;
 
-pub enum ReconcileKind {
-    NEW = 0,
-    CLEARED = 1,
-    RECONCILED = 2,
+
+/// The various actions that can be performed on stocks.
+/// Non-stock related splits will simply use None.
+
+pub enum SplitStockAction {
+    Buy = 0,
+    Sell = 1,
+    Dividend = 2,    // Also Yield or InterestIncome
+    AddShares = 3,
+    RemoveShares = 4,
+    Split = 5,
+    ReinvestDividend = 6,
 }
 
+impl std::fmt::Display for SplitStockAction {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            SplitStockAction::Buy              => write!(f, "Buy"),
+            SplitStockAction::Sell             => write!(f, "Sell"),
+            SplitStockAction::Dividend         => write!(f, "Dividend"),
+            SplitStockAction::AddShares        => write!(f, "Add Shares"),
+            SplitStockAction::RemoveShares     => write!(f, "Remove Shares"),
+            SplitStockAction::Split            => write!(f, "Split"),
+            SplitStockAction::ReinvestDividend => write!(f, "Reinvest Dividend"),
+        }
+    }
+}
+
+
+
 /// Parts of a transaction.
-/// The sum of qty for all splits in a transaction must be 0.
-///
-/// For instance: withdraw 100 USD abroad, equivalent to 85 EUR,
-/// with 0.1 EUR as a fee.
-///   checking account: commodify=EUR
-///   split1:  accountid=checking account
-///            value= -100  USD
-///            qty=  -85.1
-///   split2:  accountid=expense:cash
-///            value= +85   EUR
-///            qty= +85
-///   split3:  accountid=expense:fees
-///            value= +0.1 EUR
-///            qty= +0.1
+/// The sum for all splits in a balanced transaction must be 0.  However, it
+/// is not possible in general to sum qty directly, since there might be
+/// different commodities/currencies involved (see example of AAPL below).
 
 #[derive(diesel::QueryableByName, diesel::Queryable,
-         Debug, serde::Serialize)]
+         Debug, Default, serde::Serialize)]
 #[table_name = "alr_splits"]
 pub struct Split {
     pub id: SplitId,
-    pub scaled_qty: i32,
-    pub scaled_value: i32,
-    pub reconcile: String,   //  ??? should be ReconcileKind
+
+    // The amount of the transaction, as seen on the bank statement.  This is
+    // given in the account.commodity, scaled by account.commodity_scu.
+    // This could be a number of shares when the account is a Stock account, for
+    // instance, or a number of EUR for a checking account.
+    pub scaled_qty: i64,
+
+    // The amount of the transaction as made originally, expressed in
+    // value_commodity (and scaled by value_commodity.price_scale)
+    // This is potentially given in another currency or commodity.
+    // The goal is to support multiple currencies transactions.
+    // Here are various ways this value can be used:
+    //
+    // * a 1000 EUR transaction for an account in EUR. In this case, value is
+    //   useless and does not provide any additional information.
+    //       qty   = 1000 EUR  (scaled)
+    //       value = 1000 EUR  (scaled)
+    //
+    // * an ATM operation of 100 USD for the same account in EUR while abroad.
+    //   Exchange rate at the time: 0.85 EUR = 1 USD. Also assume there is a
+    //   bank that applies.
+    //      split1:  account=checking account value= -100 USD   qty= -85 EUR
+    //               value_commodity=USD
+    //               qty is as shown on your bank statement.
+    //               value is the amount you actually withdrew.
+    //      split2:  account=expense:cash     value= +84.7 EUR  qty= +84.7 EUR
+    //               value_commodity=EUR
+    //      split3:  account=expense:fees     value= +0.3 EUR   qty= +0.3 EUR
+    //               value_commodity=EUR
+    //   So value is used to show you exactly the amount you manipulated. The
+    //   exchange rate can be computed from qty and value.
+    //
+    // * Buying 10 shares for AAPL at 120 USD. There are several splits here,
+    //   one where we increase the number of shares in the STOCK account:
+    //       split1: account=stock   value=1200 USD   qty=10 AAPL
+    //
+    //   The money came from an investment account in EUR, which has its own
+    //   split for the same transaction:
+    //       split2: account=investment   value=-1200 USD  qty=-1020 EUR
+    pub scaled_value: i64,
+    pub value_commodity_id: CommodityId,
+
+    pub reconcile: ReconcileKind,
     pub reconcile_ts: Option<chrono::NaiveDateTime>,
+
+    // When has the split impacted the account.
+    // For instance, a transfer done on 2020-01-01 between accountA and accountB
+    // could have:
+    //   transaction timestamp:  2020-01-01
+    //   post_date for accountA: 2020-01-01  (-x EUR)
+    //   post_date for accountB: 2020-01-03  (+x EUR)
+    //        (took a few days to be credited)
+    // kmymoney and gnucash seem to have the same flexibility in their database,
+    // but not take advantage of it in the user interface.
     pub post_ts: chrono::NaiveDateTime,
+
     pub account_id: AccountId,
     pub payee_id: Option<PayeeId>,
     pub transaction_id: TransactionId,
-    pub value_commodity_id: CommodityId,
 }
 
 impl Split {
-    pub fn create(
-        db: &SqliteConnect,
-        scaled_qty: i64,  //  could be negative
-        scaled_value: u64,
-        reconcile: ReconcileKind,
-        reconcile_ts: Option<chrono::NaiveDateTime>,
+
+    // Create a new split with default values.
+    // This is only created in memory, not in the database.
+
+    pub fn new(
+        transaction: &Transaction,
+        account: &Account,
+        qty: Decimal, // like on bank statement (e.g. number of shares or money)
+        value: Decimal,  //  original amount of transaction
+        value_commodity: &Commodity,
         post_ts: chrono::NaiveDateTime,
-        account_id: AccountId,
-        payee_id: Option<PayeeId>,
-        transaction_id: TransactionId,
-        value_commodity_id: CommodityId,
     ) -> Result<Self> {
+        let scaled_qty = scale_value(Some(qty), account.commodity_scu)
+            .ok_or_else(|| format!("Could not scale {}", qty))?;
+        let scaled_value = scale_value(Some(value), value_commodity.price_scale)
+            .ok_or_else(|| format!("Could not scale {}", value))?;
+
+        Ok(Self {
+            transaction_id: transaction.id,
+            account_id: account.id,
+            scaled_qty,
+            scaled_value,
+            value_commodity_id: value_commodity.id,
+            post_ts,
+            ..Default::default()
+        })
+    }
+
+    // Set the reconciliation status
+
+    pub fn set_reconcile(
+        &mut self,
+        reconcile: ReconcileKind,
+        ts: Option<chrono::NaiveDateTime>,
+    ) {
+        self.reconcile = reconcile;
+        self.reconcile_ts = ts;
+    }
+
+    // Set the payee
+
+    pub fn set_payee(&mut self, payee: Option<&Payee>) {
+        self.payee_id = payee.map(|p| p.id);
+    }
+
+    // Guess the action, based on various attributes
+
+    pub fn get_action(&self) -> Option<SplitStockAction> {
+        None
+    }
+
+    // Save the split in the database.
+
+    pub fn save(
+        &self,
+        db: &SqliteConnect,
+    ) -> Result<()> {
         let qstr = 
             "INSERT INTO alr_splits
             (scaled_qty, scaled_value, reconcile, reconcile_ts,
              post_ts, account_id, payee_id, transaction_id,
              value_commodity_id)
-             VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
-             RETURNING *";
-        let mut q: Vec<Self> = diesel::sql_query(qstr)
-            .bind::<Integer, _>(scaled_qty as i32)
-            .bind::<Integer, _>(scaled_value as i32)
-            .bind::<Text, _>(match reconcile {
-                ReconcileKind::NEW => "n",
-                ReconcileKind::CLEARED => "c",
-                ReconcileKind::RECONCILED => "r",
-            })
-            .bind::<Nullable<Timestamp>, _>(&reconcile_ts)
-            .bind::<Timestamp, _>(post_ts)
-            .bind::<Integer, _>(account_id)
-            .bind::<Nullable<Integer>, _>(payee_id)
-            .bind::<Integer, _>(transaction_id)
-            .bind::<Integer, _>(value_commodity_id)
-            .load(&db.0)?;
-        q.pop().ok_or("Cannot insert new institution".into())
+             VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        diesel::sql_query(qstr)
+            .bind::<BigInt, _>(self.scaled_qty)
+            .bind::<BigInt, _>(self.scaled_value)
+            .bind::<SmallInt, _>(self.reconcile)
+            .bind::<Nullable<Timestamp>, _>(&self.reconcile_ts)
+            .bind::<Timestamp, _>(self.post_ts)
+            .bind::<Integer, _>(self.account_id)
+            .bind::<Nullable<Integer>, _>(self.payee_id)
+            .bind::<Integer, _>(self.transaction_id)
+            .bind::<Integer, _>(self.value_commodity_id)
+            .execute(&db.0)?;
+        Ok(())
     }
 }
 

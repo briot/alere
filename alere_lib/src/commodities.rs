@@ -1,7 +1,7 @@
 use crate::connections::SqliteConnect;
 use crate::commodity_kinds::CommodityKind;
 use crate::errors::Result;
-use crate::models::{CommodityId, PriceSourceId};
+use crate::models::{CommodityId, PriceSourceId, ScalingFactor};
 use diesel::RunQueryDsl;
 use diesel::sql_types::{Integer, Nullable, Text};
 use crate::schema::alr_commodities;
@@ -33,7 +33,7 @@ pub struct Commodity {
     pub kind: CommodityKind,
 
     /// Scaling used in the alr_prices table.
-    pub price_scale: i32,
+    pub price_scale: ScalingFactor,
 
     /// For online quotes. 
     /// The source refers to one of the plugins available to download

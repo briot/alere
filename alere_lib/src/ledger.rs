@@ -7,9 +7,10 @@ use crate::errors::Result;
 use crate::models::{AccountId, CommodityId};
 use crate::occurrences::Occurrences;
 use crate::connections::SqliteConnect;
+use crate::reconciliation::ReconcileKind;
 use crate::scenarios::NO_SCENARIO;
 use chrono::{DateTime, NaiveDate, TimeZone, Utc, NaiveDateTime};
-use diesel::sql_types::{Bool, Date, Float, Integer, Nullable, Text};
+use diesel::sql_types::{Bool, Date, Float, Integer, Nullable, Text, SmallInt};
 use serde::Serialize;
 use log::info;
 
@@ -19,7 +20,7 @@ pub struct SplitDescr {
     post_ts: DateTime<Utc>,
     amount: f32,
     currency: CommodityId,
-    reconcile: char,
+    reconcile: String,
     shares: f32,
     price: f32,
     payee: String,
@@ -78,8 +79,8 @@ struct SplitRow {
     #[sql_type = "Integer"]
     value_commodity_id: CommodityId,
 
-    #[sql_type = "Text"]
-    reconcile: String,
+    #[sql_type = "SmallInt"]
+    reconcile: ReconcileKind,
 
     #[sql_type = "Nullable<Bool>"]
     scheduled: Option<bool>,
@@ -233,7 +234,7 @@ pub fn ledger(
                 ),
             amount: split.value,
             currency: split.value_commodity_id,
-            reconcile: split.reconcile.chars().next().unwrap(),
+            reconcile: format!("{}", split.reconcile),
             shares: split.scaled_qty / split.commodity_scu,
             price: split.computed_price.unwrap_or(std::f32::NAN),
             payee: split.payee.unwrap_or_default(),

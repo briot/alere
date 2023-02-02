@@ -9,6 +9,7 @@ pub type PriceSourceId = i32;
 pub type PayeeId = i32;
 pub type TransactionId = i32;
 pub type SplitId = i32;
+pub type ScalingFactor = i32;
 
 #[derive(QueryableByName)]
 pub struct Roi {

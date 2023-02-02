@@ -134,13 +134,13 @@ impl Transaction {
             .bind::<Nullable<Date>, _>(&last_occurrence)
             .bind::<Integer, _>(&scenario)
             .load(&db.0)?;
-        q.pop().ok_or("Cannot insert new transaction".into())
+        q.pop().ok_or_else(|| "Cannot insert new transaction".into())
     }
 
     pub fn add_to_memo(
             &mut self, db: &SqliteConnect, memo: &str
     ) -> Result<()> {
-        if memo.len() > 0 {
+        if !memo.is_empty() {
             match &self.memo {
                 Some(m) => {
                     let mut s = String::from(m);

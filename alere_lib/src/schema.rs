@@ -99,13 +99,13 @@ table! {
         id -> Integer,
         scaled_qty -> Integer,
         scaled_value -> Integer,
-        reconcile -> Text,
+        value_commodity_id -> Integer,
+        reconcile -> SmallInt,
         reconcile_ts -> Nullable<Timestamp>,
         post_ts -> Timestamp,
         account_id -> Integer,
         payee_id -> Nullable<Integer>,
         transaction_id -> Integer,
-        value_commodity_id -> Integer,
     }
 }
 

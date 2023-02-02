@@ -185,6 +185,10 @@ CREATE VIEW alr_raw_prices AS
       WHERE t.kind = 0
          AND a.commodity_id <> s.value_commodity_id
 
+         --  Ignore splits (e.g. Dividends) with a null qty, since that
+         --  would also result in a null price
+         AND s.scaled_qty <> 0
+
    --  extract prices from transactions  (reverse direction)
    UNION ALL
    SELECT s.value_commodity_id AS origin_id,
@@ -199,6 +203,10 @@ CREATE VIEW alr_raw_prices AS
          JOIN alr_commodities curr ON (a.commodity_id=curr.id)
       WHERE curr.kind = 0
          AND a.commodity_id <> s.value_commodity_id
+
+         --  Ignore splits (e.g. Dividends) with a null value, since that
+         --  would also result in a null price
+         AND s.scaled_value <> 0
 
    --  A currency always has a 1.0 exchange rate with itself. This simplifies
    --  the computation of balances later on

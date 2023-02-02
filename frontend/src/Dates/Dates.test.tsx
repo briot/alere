@@ -44,6 +44,9 @@ test('monthCount', () => {
    expect(monthCount('5 years')).toStrictEqual(60);
    expect(monthCount('current year')).toStrictEqual(12);
    expect(monthCount('last year')).toStrictEqual(12);
+
+   // ??? On Feb 01, we get "1" instead of "2" (but that seems reasonable since
+   // we did not have a full month yet)
    expect(monthCount('current year so far')).toStrictEqual(now.getMonth() + 1);
    expect(monthCount('all')).toStrictEqual(NaN);
    expect(monthCount('upcoming')).toStrictEqual(NaN);
