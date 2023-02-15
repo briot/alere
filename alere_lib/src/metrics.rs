@@ -8,8 +8,8 @@ use crate::occurrences::Occurrences;
 use crate::scenarios::{Scenario, NO_SCENARIO};
 use crate::connections::SqliteConnect;
 use crate::account_kinds::AccountKindCategory;
-use chrono::{DateTime, NaiveDateTime, Utc};
-use diesel::sql_types::{Bool, Float, Integer, Timestamp};
+use chrono::{DateTime, NaiveDate, Utc};
+use diesel::sql_types::{Bool, Float, Integer, Date};
 use rust_decimal::prelude::*; //  to_f32
 use rust_decimal::Decimal;
 use serde::Serialize;
@@ -95,8 +95,8 @@ pub fn networth(
 
 #[derive(QueryableByName, Serialize)]
 pub struct NWPoint {
-    #[sql_type = "Timestamp"]
-    pub date: NaiveDateTime,
+    #[sql_type = "Date"]
+    pub date: NaiveDate,
 
     #[sql_type = "Float"]
     pub diff: f32,

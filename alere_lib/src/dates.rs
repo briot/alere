@@ -8,7 +8,7 @@ use lazy_static::lazy_static;
 use core::cmp::{max, min};
 
 pub const CTE_DATES: &str = "cte_dates";
-pub const SQL_ARMAGEDDON: &str = "'2999-12-31'";
+pub const SQL_ARMAGEDDON: &str = "'2099-12-31 00:00:00'";
 
 const MAX_DATES: u16 = 366;
 // A limit that controls how many dates we return. This is used to limit the

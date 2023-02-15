@@ -259,7 +259,7 @@ CREATE VIEW alr_price_history AS
          LEAD(p.ts)
             OVER (PARTITION BY p.origin_id, p.target_id
                   ORDER BY p.ts),
-         '2999-12-31 00:00:00'
+         '2099-12-31 00:00:00'
       ) as max_ts,
       p.source_id
    FROM alr_raw_prices p
@@ -275,11 +275,40 @@ CREATE VIEW alr_price_history_with_turnkey AS
         LEAD(p.ts)
            OVER (PARTITION BY p.origin_id, p.target_id
                  ORDER BY p.ts),
-        '2999-12-31 00:00:00'
+        '2099-12-31 00:00:00'
      ) as max_ts,
      p.source_id
-   FROM alr_raw_prices_with_turnkey p
-;
+   FROM alr_raw_prices_with_turnkey p;
+
+-------------------------
+-- alr_numbered_splits --
+-------------------------
+--  Number all splits in ascending order, per account.  This allows us to later
+--  apply changes to qty incrementally.
+--  ??? Should take into account recurrent splits and scenarios, to compute
+--  possible future values.
+
+CREATE VIEW alr_numbered_splits AS
+   SELECT *,
+      1 as occurrence,   --  ??? Needs to be fixed later
+      ROW_NUMBER() OVER win AS rn,
+      COALESCE(LEAD(post_ts) OVER win, '2099-12-31 00:00:00') as next_ts
+   FROM alr_splits
+   WINDOW win AS (PARTITION BY account_id ORDER BY post_ts);
+
+-------------------------
+-- alr_internal_splits --
+-------------------------
+--  List all splits, along with whether they modify the overall networth.
+--  Internal splits that transfer money between the user's accounts do not
+--  contribute to the overall networth.
+
+--  CREATE VIEW alr_internal_splits AS
+--     SELECT s.*,
+--        CASE WHEN k.id IS NULL THEN 't' ELSE 'f' END AS to_networth_account
+--     FROM alr_numbered_splits s
+--        JOIN alr_accounts a ON (s.account_id = a.id)
+--        LEFT JOIN alr_account_kinds k ON (a.kind_id = k.id AND k.is_networth);
 
 ------------------
 -- alr_balances --
@@ -300,41 +329,23 @@ CREATE VIEW alr_price_history_with_turnkey AS
 --     1       2020-09-04     100       1       100                   2020-09-05
 --     1       2020-09-05       0       1       100  (dividends)      2020-10-06
 --     1       2020-10-06       0       5       500  (split)          2020-11-07
---     1       2020-11-07     200       1       700  (buy shares)     2999-12-31
---     2       2020-12-08     300       1       300  (other account)  2999-12-31
---
---  ??? Should take into account recurrent splits and scenarios, to compute
---  possible future values.
+--     1       2020-11-07     200       1       700  (buy shares)     2099-12-31
+--     2       2020-12-08     300       1       300  (other account)  2099-12-31
 
 CREATE VIEW alr_balances AS WITH RECURSIVE
-   --  Number all splits in ascending order, per account.  This allows us to
-   --  later apply changes to qty incrementally.
-   numbered AS (
-      SELECT *,
-         1 as occurrence,   --  ??? Needs to be fixed later
-         ROW_NUMBER() OVER win AS rn,
-         COALESCE(
-            --  timestamp of the split after current one
-            LEAD(post_ts) OVER win,
-            '2999-12-31 00:00:00'
-         ) as next_ts
-      FROM alr_splits
-      WINDOW win AS (PARTITION BY account_id ORDER BY post_ts)
-   ),
    s AS (
       --  Take the first transaction that impacted each account.  This is the
       --  initial balance.
-      SELECT numbered.*, scaled_qty AS scaled_balance FROM numbered WHERE rn=1
+      SELECT *, scaled_qty AS scaled_balance FROM alr_numbered_splits WHERE rn=1
 
       UNION ALL
 
       --  Then each following split either adds to the balance, or even
       --  multiplies it in the case of share splits.  Using scaled quantities
       --  here for better precision in the computation.
-      SELECT numbered.*,
-         s.scaled_balance * numbered.ratio_qty + numbered.scaled_qty
-      FROM numbered JOIN s USING (account_id)
-      WHERE numbered.rn = s.rn + 1
+      SELECT n.*, s.scaled_balance * n.ratio_qty + n.scaled_qty
+      FROM alr_numbered_splits n JOIN s USING (account_id)
+      WHERE n.rn = s.rn + 1
    )
    SELECT * FROM s;
 
