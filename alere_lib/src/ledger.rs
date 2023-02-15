@@ -161,11 +161,12 @@ pub fn ledger(
            LEFT JOIN alr_payees p ON (s.payee_id = p.id) \
        WHERE ( \
             s.post_ts >= '{dates_start}'  \
-            --  Always include non-validated occurrences of recurring transactions
             OR t.scheduled IS NOT NULL  \
            ){filter_acct} \
-       ORDER BY t.timestamp, s.transaction_id  \
-       "
+       ORDER BY t.timestamp, s.transaction_id"
+
+       //  t.scheduled is NOT NULL is to always include non-validated
+       //  occurrences of recurring transactions
     );
 
     let r = connection.exec::<SplitRow>("ledger", &query)?;

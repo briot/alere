@@ -98,8 +98,8 @@ impl DateRange {
             self, scenario, max_scheduled_occurrences);
         let query = format!(
             "
-            WITH RECURSIVE {list_splits}
-            SELECT min(post_ts) AS min_ts, max(post_ts) AS max_ts
+            WITH RECURSIVE {list_splits} \
+            SELECT min(post_ts) AS min_ts, max(post_ts) AS max_ts \
             FROM {CTE_SPLITS} "
         );
         let result = connection.exec::<SplitsRange>("restrict", &query);
@@ -158,42 +158,39 @@ impl DateSet for DateRange {
 
         match self.granularity {
             GroupBy::YEARS => format!(
-                "
-                {CTE_DATES} (date) AS (
-                SELECT date('{end_str}', '+1 YEAR', 'start of year', '-1 day')
-                UNION
-                   SELECT date(m.date, '-1 YEAR')
-                   FROM {CTE_DATES} m
-                   WHERE m.date >= '{start_str}'
+                "{CTE_DATES} (date) AS ( \
+                SELECT date('{end_str}', '+1 YEAR', 'start of year', '-1 day') \
+                UNION \
+                   SELECT date(m.date, '-1 YEAR') \
+                   FROM {CTE_DATES} m \
+                   WHERE m.date >= '{start_str}' \
                    LIMIT {MAX_DATES})"
             ),
 
             GroupBy::MONTHS => format!(
-                "
-                {CTE_DATES} (date) AS (
-                SELECT
-                   --  end of first month (though no need to go past the oldest
-                   --  known date in the data)
-                   date('{start_str}', 'start of month', '+1 month', '-1 day')
-                UNION
-                   --  end of next month, though no need to go past the last known
-                   --  date in the data
-                   SELECT date(m.date, 'start of month', '+2 months', '-1 day')
-                   FROM {CTE_DATES} m
-                   WHERE m.date <= '{end_str}'
+                //  End of first month (though no need to go past the oldest
+                //    known date in the data)
+                //  Union end of next month, though no need to go past the last
+                //    known date in the data
+                "{CTE_DATES} (date) AS ( \
+                SELECT \
+                   date('{start_str}', 'start of month', '+1 month', '-1 day') \
+                UNION \
+                   SELECT date(m.date, 'start of month', '+2 months', '-1 day') \
+                   FROM {CTE_DATES} m \
+                   WHERE m.date <= '{end_str}' \
                    LIMIT {MAX_DATES})"
             ),
 
             GroupBy::DAYS => format!(
                 "
-                {CTE_DATES} (date) AS (
-                SELECT '{end_str}'
-                UNION
-                   SELECT date(m.date, '-1 day')
-                   FROM {CTE_DATES} m
-                   WHERE m.date >= '{start_str}'
-                   LIMIT {MAX_DATES}
-                )"
+                {CTE_DATES} (date) AS ( \
+                SELECT '{end_str}' \
+                UNION \
+                   SELECT date(m.date, '-1 day') \
+                   FROM {CTE_DATES} m \
+                   WHERE m.date >= '{start_str}' \
+                   LIMIT {MAX_DATES})"
             ),
         }
     }

@@ -81,8 +81,8 @@ impl SqliteConnect {
         match res {
             Err(ref r) => {
                 if log_enabled!(Error) {
-                    let query = RE_REMOVE_COMMENTS.replace_all(query, "");
-                    let query = RE_COLLAPSE_SPACES.replace_all(&query, " ");
+                    //let query = RE_REMOVE_COMMENTS.replace_all(query, "");
+                    //let query = RE_COLLAPSE_SPACES.replace_all(&query, " ");
                     log::error!(
                         "{}: Error in query {}: {:?}", queryname, r, query);
                 }

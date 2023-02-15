@@ -15,8 +15,7 @@ pub const CTE_QUERY_NETWORTH: &str = "cte_qn";
 
 pub fn cte_query_networth(currency: CommodityId) -> String {
     format!(
-        "
-       {CTE_QUERY_NETWORTH} AS (  \
+        "{CTE_QUERY_NETWORTH} AS (  \
        SELECT   \
           {CTE_DATES}.date, \
           SUM(b.scaled_balance * b.computed_price / b.commodity_scu) AS value  \
@@ -25,10 +24,6 @@ pub fn cte_query_networth(currency: CommodityId) -> String {
           alr_accounts \
           JOIN alr_account_kinds k ON (alr_accounts.kind_id=k.id) \
        WHERE \
-          --  sqlite compares date as strings, so we need to add
-          --  the time. Otherwise, 2020-11-30 is less than
-          --  2020-11-30 00:00:00 and we do not get transactions
-          --  on the last day of the month
           b.min_ts <= {CTE_DATES}.date \
           AND {CTE_DATES}.date < b.max_ts \
           AND b.currency_id = {currency} \

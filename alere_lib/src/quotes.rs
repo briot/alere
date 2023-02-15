@@ -164,12 +164,10 @@ pub fn quotes(
         None       => "".to_string(),
     };
     let query = format!(
-        "
-        SELECT a.id, a.commodity_id
-        FROM alr_accounts a 
-        JOIN alr_account_kinds k ON (a.kind_id = k.id)
-        WHERE k.is_trading {filter_account}
-        "
+        "SELECT a.id, a.commodity_id \
+        FROM alr_accounts a  \
+        JOIN alr_account_kinds k ON (a.kind_id = k.id) \
+        WHERE k.is_trading {filter_account}"
     );
     let accounts = connection.exec::<AccountIdAndCommodity>(
         "quotes", &query)?;
@@ -194,13 +192,11 @@ pub fn quotes(
         .collect::<Vec<_>>()
         .join(",");
     let query = format!(
-        "
-        SELECT *
-        FROM alr_roi r
-        WHERE r.account_id IN ({accs_ids})
-        AND r.currency_id = {currency}
-        ORDER BY r.min_ts
-        "
+        "SELECT * \
+        FROM alr_roi r \
+        WHERE r.account_id IN ({accs_ids}) \
+        AND r.currency_id = {currency} \
+        ORDER BY r.min_ts"
     );
 
     let rois = connection.exec::<Roi>("roi", &query)?;
