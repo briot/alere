@@ -316,7 +316,7 @@ CREATE VIEW alr_balances AS WITH RECURSIVE
          COALESCE(
             --  timestamp of the split after current one
             LEAD(post_ts) OVER win,
-            '2999-12-31'
+            '2999-12-31 00:00:00'
          ) as next_ts
       FROM alr_splits
       WINDOW win AS (PARTITION BY account_id ORDER BY post_ts)

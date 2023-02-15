@@ -1,11 +1,12 @@
-use crate::dates::{DateSet, DateValues, MIDNIGHT};
+use crate::dates::{DateSet, DateValues};
 use crate::errors::Result;
 use crate::models::{AccountId, CommodityId};
 use crate::occurrences::Occurrences;
 use crate::connections::SqliteConnect;
 use crate::reconciliation::ReconcileKind;
-use chrono::{DateTime, NaiveDate, TimeZone, Utc, NaiveDateTime};
-use diesel::sql_types::{Bool, Date, Float, Integer, Nullable, Text, SmallInt};
+use chrono::{DateTime, TimeZone, Utc, NaiveDateTime};
+use diesel::sql_types::{
+    Bool, Float, Integer, Nullable, Text, SmallInt, Timestamp};
 use serde::Serialize;
 use log::info;
 
@@ -45,8 +46,8 @@ struct SplitRow {
     #[sql_type = "Integer"]
     occurrence: i32,
 
-    #[sql_type = "Date"]
-    timestamp: NaiveDate,
+    #[sql_type = "Timestamp"]
+    timestamp: NaiveDateTime,
 
     #[sql_type = "Nullable<Text>"]
     memo: Option<String>,
@@ -69,8 +70,8 @@ struct SplitRow {
     #[sql_type = "Integer"]
     account_id: AccountId,
 
-    #[sql_type = "Date"]
-    post_ts: NaiveDate,
+    #[sql_type = "Timestamp"]
+    post_ts: NaiveDateTime,
 
     #[sql_type = "Float"]
     value: f32,
@@ -116,8 +117,8 @@ pub fn ledger(
     );
     let _occ = Occurrences::new(occurrences);
     let dates = DateValues::new(Some(vec![
-        min_ts.date_naive(),
-        max_ts.date_naive()
+        min_ts,
+        max_ts,
     ]));
     let filter_acct = match accountids.len() {
         0 => "".to_string(),
@@ -136,7 +137,7 @@ pub fn ledger(
         "SELECT  \
            s.transaction_id, \
            s.occurrence, \
-           strftime('%Y-%m-%d', t.timestamp) AS timestamp, \
+           t.timestamp, \
            t.memo AS memo, \
            t.check_number AS check_number, \
            s.scaled_qty, \
@@ -146,7 +147,7 @@ pub fn ledger(
               / (s.scaled_qty * c.price_scale) \
               AS computed_price, \
            s.account_id, \
-           strftime('%Y-%m-%d', s.post_ts) AS post_ts, \
+           s.post_ts, \
            CAST(s.scaled_value AS FLOAT) / c.price_scale AS value, \
            s.value_commodity_id, \
            s.reconcile, \
@@ -177,14 +178,7 @@ pub fn ledger(
             result.push(TransactionDescr {
                 id: split.transaction_id,
                 occurrence: split.occurrence,
-                date:
-                    Utc
-                    .from_utc_datetime(
-                        &NaiveDateTime::new(
-                            split.timestamp,
-                            *MIDNIGHT
-                        )
-                    ),
+                date: Utc.from_utc_datetime(&split.timestamp),
                 balance: 0.0,
                 balance_shares: 0.0,
                 memo: split.memo.unwrap_or_default(),
@@ -203,14 +197,7 @@ pub fn ledger(
 
         r.splits.push(SplitDescr {
             account_id: split.account_id,
-            post_ts:
-                Utc
-                .from_utc_datetime(
-                    &NaiveDateTime::new(
-                        split.post_ts,
-                        *MIDNIGHT
-                    )
-                ),
+            post_ts: Utc.from_utc_datetime(&split.post_ts),
             amount: split.value,
             currency: split.value_commodity_id,
             reconcile: format!("{}", split.reconcile),

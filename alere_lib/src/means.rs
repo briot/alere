@@ -11,7 +11,7 @@ use std::collections::HashMap;
 
 #[derive(Serialize)]
 pub struct Point {
-    date: NaiveDate,
+    date: NaiveDate,   // one per month
     value_expenses: f32,
     average_expenses: f32,
     value_realized: f32,
@@ -33,8 +33,8 @@ pub fn mean(
           &min_ts, &max_ts, prior, after, unrealized, currency);
 
     let dates = DateRange::new(
-        Some(min_ts.date_naive()),
-        Some(max_ts.date_naive()),
+        Some(min_ts),
+        Some(max_ts),
         GroupBy::MONTHS,
     ).restrict_to_splits(
         &connection,

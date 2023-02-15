@@ -77,7 +77,7 @@ pub fn monthly_cashflow(
            (
               --  Sum of splits for a given months, organized per category
               SELECT
-                 strftime('%Y-%m-01', s.post_ts) as month,
+                 date(s.post_ts, 'start of month') AS month,
                  SUM(value) FILTER (WHERE
                     k.category = {income}
                     AND NOT k.is_unrealized
@@ -97,7 +97,7 @@ pub fn monthly_cashflow(
               GROUP BY month
            ) tmp,
            {CTE_DATES}
-        WHERE tmp.month = strftime('%Y-%m-01', {CTE_DATES}.date);
+        WHERE tmp.month = date({CTE_DATES}.date, 'start of month');
         "
     );
 

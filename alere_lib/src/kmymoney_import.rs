@@ -993,7 +993,7 @@ impl KmyFile {
                 tx.memo,
                 None,
                 scheduled,
-                tx.last_payment,
+                tx.last_payment.map(|d| d.and_hms_opt(0, 0, 0).unwrap()),
                 crate::scenarios::NO_SCENARIO,
             )?;
             transactions.insert(tx.id.clone(), tr);

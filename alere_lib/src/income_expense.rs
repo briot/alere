@@ -52,8 +52,8 @@ pub fn income_expense(
 
     let list_splits = cte_list_splits(
         &DateValues::new(Some(vec![
-            min_ts.date_naive(),
-            max_ts.date_naive()
+            min_ts,
+            max_ts,
         ])),
         NO_SCENARIO,
         &Occurrences::no_recurrence());

@@ -2,7 +2,7 @@ use crate::connections::SqliteConnect;
 use crate::errors::Result;
 use crate::models::TransactionId;
 use diesel::RunQueryDsl;
-use diesel::sql_types::{Nullable, Text, Date, Integer, Timestamp};
+use diesel::sql_types::{Nullable, Text, Integer, Timestamp};
 use crate::schema::alr_transactions;
 
 /// A transaction is made of one or more splits, the sum of which is zero
@@ -117,7 +117,7 @@ impl Transaction {
         memo: Option<String>,
         check_number: Option<String>,
         scheduled: Option<String>,
-        last_occurrence: Option<chrono::NaiveDate>,
+        last_occurrence: Option<chrono::NaiveDateTime>,
         scenario: crate::scenarios::Scenario,
     ) -> Result<Self> {
         let qstr = 
@@ -131,7 +131,7 @@ impl Transaction {
             .bind::<Nullable<Text>, _>(&memo)
             .bind::<Nullable<Text>, _>(&check_number)
             .bind::<Nullable<Text>, _>(&scheduled)
-            .bind::<Nullable<Date>, _>(&last_occurrence)
+            .bind::<Nullable<Timestamp>, _>(&last_occurrence)
             .bind::<Integer, _>(&scenario)
             .load(&db.0)?;
         q.pop().ok_or_else(|| "Cannot insert new transaction".into())

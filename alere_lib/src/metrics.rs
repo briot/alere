@@ -8,8 +8,8 @@ use crate::occurrences::Occurrences;
 use crate::scenarios::{Scenario, NO_SCENARIO};
 use crate::connections::SqliteConnect;
 use crate::account_kinds::AccountKindCategory;
-use chrono::{DateTime, NaiveDate, Utc};
-use diesel::sql_types::{Bool, Date, Float, Integer};
+use chrono::{DateTime, NaiveDateTime, Utc};
+use diesel::sql_types::{Bool, Float, Integer, Timestamp};
 use rust_decimal::prelude::*; //  to_f32
 use rust_decimal::Decimal;
 use serde::Serialize;
@@ -95,8 +95,8 @@ pub fn networth(
 
 #[derive(QueryableByName, Serialize)]
 pub struct NWPoint {
-    #[sql_type = "Date"]
-    pub date: NaiveDate,
+    #[sql_type = "Timestamp"]
+    pub date: NaiveDateTime,
 
     #[sql_type = "Float"]
     pub diff: f32,
@@ -170,8 +170,8 @@ pub fn networth_history(
     let prior: u8 = 0;
     let after: u8 = 0;
     let dates = DateRange::new(
-            Some(min_ts.date_naive()),
-            Some(max_ts.date_naive()),
+            Some(min_ts),
+            Some(max_ts),
             group_by)
         .extend(prior, after)
         .restrict_to_splits(
@@ -199,7 +199,7 @@ pub fn balance(
 ) -> Result<Vec<PerAccount>> {
     info!("balance {:?} currency={}", &dates, currency);
     let d = &DateValues::new(
-        Some(dates.iter().map(|d| d.date_naive()).collect())
+        Some(dates)
     );
     networth(
         &connection,
@@ -340,8 +340,8 @@ pub fn metrics(
 ) -> Result<Networth> {
     info!("metrics {:?} {:?}", &min_ts, &max_ts);
     let dates = DateValues::new(Some(vec![
-        min_ts.date_naive(),
-        max_ts.date_naive()
+        min_ts,
+        max_ts,
     ]));
     let all_networth = networth(
         &connection,

@@ -14,12 +14,12 @@ pub const CTE_QUERY_NETWORTH: &str = "cte_qn";
 ///     if 1, only look at the next occurrence of them.
 
 pub fn cte_query_networth(currency: CommodityId) -> String {
-    return format!(
+    format!(
         "
        {CTE_QUERY_NETWORTH} AS (  \
        SELECT   \
           {CTE_DATES}.date, \
-          SUM(b.balance_value) AS value  \
+          SUM(b.scaled_balance * b.computed_price / b.commodity_scu) AS value  \
        FROM {CTE_DATES}, \
           alr_balances_currency b, \
           alr_accounts \
@@ -29,14 +29,12 @@ pub fn cte_query_networth(currency: CommodityId) -> String {
           --  the time. Otherwise, 2020-11-30 is less than
           --  2020-11-30 00:00:00 and we do not get transactions
           --  on the last day of the month
-          strftime('%Y-%m-%d', b.min_ts) \
-             <= strftime('%Y-%m-%d', {CTE_DATES}.date) \
-          AND strftime('%Y-%m-%d', {CTE_DATES}.date) \
-             < strftime('%Y-%m-%d', b.max_ts) \
+          b.min_ts <= {CTE_DATES}.date \
+          AND {CTE_DATES}.date < b.max_ts \
           AND b.currency_id = {currency} \
           AND b.account_id = alr_accounts.id  \
           AND k.is_networth  \
        GROUP BY {CTE_DATES}.date \
     )"
-    );
+    )
 }
