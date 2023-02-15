@@ -31,6 +31,7 @@ pub fn cte_list_splits(
            t.memo,
            s.account_id,
            s.scaled_qty,
+           s.ratio_qty,
            s.scaled_value,
            s.value_commodity_id,
            s.reconcile,
@@ -49,8 +50,7 @@ pub fn cte_list_splits(
     if maxo > 0 {
         // overrides the post_ts for the splits associated with a
         // recurring transaction
-        return format!(
-            "recurring_splits_and_transaction AS (
+        "recurring_splits_and_transaction AS (
             SELECT
                t.id as transaction_id,
                1 as occurrence,
@@ -64,6 +64,7 @@ pub fn cte_list_splits(
                t.memo,
                s.account_id,
                s.scaled_qty,
+               s.ratio_qty,
                s.scaled_value,
                s.value_commodity_id,
                s.reconcile,
@@ -88,6 +89,7 @@ pub fn cte_list_splits(
                s.memo,
                s.account_id,
                s.scaled_qty,
+               s.ratio_qty,
                s.scaled_value,
                s.value_commodity_id,
                s.reconcile,
@@ -108,10 +110,9 @@ pub fn cte_list_splits(
                 --  acknowledged.
                 --   AND post_ts >= '{dates_start}'
            UNION {non_recurring_splits}
-        )"
-        );
+        )".into()
     } else {
-        return format!("{CTE_SPLITS} AS ({non_recurring_splits})");
+        format!("{CTE_SPLITS} AS ({non_recurring_splits})")
     }
 }
 

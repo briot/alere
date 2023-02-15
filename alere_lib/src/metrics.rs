@@ -1,7 +1,5 @@
 use crate::cte_list_splits::{
     cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
-use crate::cte_query_balance::{
-    cte_balances, cte_balances_currency, CTE_BALANCES_CURRENCY};
 use crate::cte_query_networth::{cte_query_networth, CTE_QUERY_NETWORTH};
 use crate::dates::{DateRange, DateSet, DateValues, GroupBy, CTE_DATES};
 use crate::errors::Result;
@@ -57,22 +55,18 @@ pub fn networth(
         scenario,
         max_scheduled_occurrences,
     );
-    let balances = cte_balances();
-    let balances_cur = cte_balances_currency();
     let dates_cte = dates.cte();
     let query = format!(
         "
        WITH RECURSIVE
           {list_splits},
-          {balances},
-          {balances_cur},
           {dates_cte}
        SELECT
           {CTE_DATES}.idx AS idx,
           b.account_id    AS account,
-          b.shares,
+          b.scaled_balance / a.commodity_scu AS shares,
           b.computed_price
-       FROM {CTE_BALANCES_CURRENCY} b
+       FROM alr_balances_currency b
           JOIN alr_accounts a ON (b.account_id = a.id)
           JOIN alr_account_kinds k ON (a.kind_id = k.id),
           {CTE_DATES}
@@ -135,15 +129,11 @@ pub fn query_networth_history(
         scenario,
         max_scheduled_occurrences,
     );
-    let balances = cte_balances();
-    let balances_currency = cte_balances_currency();
     let dates_cte = dates.cte();
     let query = format!(
         "
         WITH RECURSIVE {dates_cte}, \
            {list_splits}, \
-           {balances}, \
-           {balances_currency}, \
            {q_networth} \
         SELECT \
            tmp2.date, \

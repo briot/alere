@@ -16,8 +16,9 @@ use crate::scenarios::{Scenario, NO_SCENARIO};
 use crate::schema::alr_splits;
 use crate::transactions::Transaction;
 use diesel::RunQueryDsl;
-use diesel::sql_types::{Nullable, Integer, Timestamp, SmallInt, BigInt};
+use diesel::sql_types::{Nullable, Integer, Timestamp, SmallInt, BigInt, Float};
 use rust_decimal::Decimal;
+use num_traits::ToPrimitive;
 
 
 /// The various actions that can be performed on stocks.
@@ -65,6 +66,10 @@ pub struct Split {
     // This could be a number of shares when the account is a Stock account, for
     // instance, or a number of EUR for a checking account.
     pub scaled_qty: i64,
+
+    // In the case of stock splits, the number of shares is multiplied by a
+    // given ratio.
+    pub ratio_qty: f32,
 
     // The amount of the transaction as made originally, expressed in
     // value_commodity (and scaled by value_commodity.price_scale)
@@ -129,6 +134,7 @@ impl Split {
         transaction: &Transaction,
         account: &Account,
         qty: Decimal, // like on bank statement (e.g. number of shares or money)
+        ratio_qty: Decimal,
         value: Decimal,  //  original amount of transaction
         value_commodity: &Commodity,
         post_ts: chrono::NaiveDateTime,
@@ -142,6 +148,7 @@ impl Split {
             transaction_id: transaction.id,
             account_id: account.id,
             scaled_qty,
+            ratio_qty: ratio_qty.to_f32().unwrap_or(1.0),
             scaled_value,
             value_commodity_id: value_commodity.id,
             post_ts,
@@ -180,12 +187,13 @@ impl Split {
     ) -> Result<()> {
         let qstr = 
             "INSERT INTO alr_splits
-            (scaled_qty, scaled_value, reconcile, reconcile_ts,
+            (scaled_qty, ratio_qty, scaled_value, reconcile, reconcile_ts,
              post_ts, account_id, payee_id, transaction_id,
              value_commodity_id)
-             VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+             VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         diesel::sql_query(qstr)
             .bind::<BigInt, _>(self.scaled_qty)
+            .bind::<Float, _>(self.ratio_qty)
             .bind::<BigInt, _>(self.scaled_value)
             .bind::<SmallInt, _>(self.reconcile)
             .bind::<Nullable<Timestamp>, _>(&self.reconcile_ts)
@@ -255,6 +263,7 @@ impl<'a> Query for SplitsList<'a> {
                t.memo,
                s.account_id,
                s.scaled_qty,
+               s.ratio_qty,
                s.scaled_value,
                s.value_commodity_id,
                s.reconcile,
@@ -291,6 +300,7 @@ impl<'a> Query for SplitsList<'a> {
                                t.memo,
                                s.account_id,
                                s.scaled_qty,
+                               s.ratio_qty,
                                s.scaled_value,
                                s.value_commodity_id,
                                s.reconcile,
@@ -317,6 +327,7 @@ impl<'a> Query for SplitsList<'a> {
                              s.memo,
                              s.account_id,
                              s.scaled_qty,
+                             s.ratio_qty,
                              s.scaled_value,
                              s.value_commodity_id,
                              s.reconcile,

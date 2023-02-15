@@ -11,6 +11,7 @@ export interface Split {
    amount: number;
    currency: CommodityId | undefined, // amount is given in that currency
    shares?: number;  //  for stock accounts, in account.commodity
+   ratio?: number;   //  for stock splits
    price?: number;   // in currency
 
    account: Account|undefined;   // not sent via JSON
@@ -64,6 +65,11 @@ export const amountForAccounts = (t: Transaction, accounts: Account[]): number =
 export const sharesForAccounts = (t: Transaction, accounts: Account[]): number =>
    splitsForAccounts(t, accounts).reduce(
       (a, s, idx) => s.shares ? (idx === 0 ? s.shares : a + s.shares) : a,
+      NaN);
+
+export const ratioForAccounts = (t: Transaction, accounts: Account[]): number =>
+   splitsForAccounts(t, accounts).reduce(
+      (a, s, idx) => s.ratio ? (idx === 0 ? s.ratio : a * s.ratio) : a,
       NaN);
 
 export const priceForAccounts = (t: Transaction, accounts: Account[]): number =>

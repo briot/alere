@@ -1,4 +1,3 @@
-use crate::cte_query_balance::CTE_BALANCES_CURRENCY;
 use crate::dates::CTE_DATES;
 use crate::models::CommodityId;
 
@@ -8,7 +7,7 @@ pub const CTE_QUERY_NETWORTH: &str = "cte_qn";
 /// dates. These dates must be found in the "dates(date)" table, which
 /// typically will be provided as a common table expression.
 ///
-/// requires cte_balances_currency() and dates
+/// requires dates()
 ///
 /// :param max_scheduled_occurrences:
 ///     if 0, ignore all scheduled transactions.
@@ -20,9 +19,9 @@ pub fn cte_query_networth(currency: CommodityId) -> String {
        {CTE_QUERY_NETWORTH} AS (  \
        SELECT   \
           {CTE_DATES}.date, \
-          SUM({CTE_BALANCES_CURRENCY}.balance) AS value  \
+          SUM(b.balance_value) AS value  \
        FROM {CTE_DATES}, \
-          {CTE_BALANCES_CURRENCY}, \
+          alr_balances_currency b, \
           alr_accounts \
           JOIN alr_account_kinds k ON (alr_accounts.kind_id=k.id) \
        WHERE \
@@ -30,12 +29,12 @@ pub fn cte_query_networth(currency: CommodityId) -> String {
           --  the time. Otherwise, 2020-11-30 is less than
           --  2020-11-30 00:00:00 and we do not get transactions
           --  on the last day of the month
-          strftime('%Y-%m-%d', {CTE_BALANCES_CURRENCY}.min_ts) \
+          strftime('%Y-%m-%d', b.min_ts) \
              <= strftime('%Y-%m-%d', {CTE_DATES}.date) \
           AND strftime('%Y-%m-%d', {CTE_DATES}.date) \
-             < strftime('%Y-%m-%d', {CTE_BALANCES_CURRENCY}.max_ts) \
-          AND {CTE_BALANCES_CURRENCY}.currency_id = {currency} \
-          AND {CTE_BALANCES_CURRENCY}.account_id = alr_accounts.id  \
+             < strftime('%Y-%m-%d', b.max_ts) \
+          AND b.currency_id = {currency} \
+          AND b.account_id = alr_accounts.id  \
           AND k.is_networth  \
        GROUP BY {CTE_DATES}.date \
     )"

@@ -141,7 +141,7 @@ pub fn quotes(
                 ticker: comm.quote_symbol
                     .as_ref()
                     .cloned()
-                    .unwrap_or_else(|| "".to_string()),
+                    .unwrap_or_default(),
                 source: comm.quote_source_id.unwrap_or(price_sources::USER),
                 is_currency: comm.is_currency(),
                 price_scale: comm.price_scale,

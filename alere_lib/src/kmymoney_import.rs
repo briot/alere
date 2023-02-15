@@ -1019,6 +1019,7 @@ impl KmyFile {
             let value = parse_str(&sp.value)
                 .ok_or("Could not parse value")?;
             let mut extra_msg: String = Default::default();
+            let mut ratio: Decimal = Decimal::ONE;
 
             match (sp.action.as_deref(), price) {
                 (Some("Dividend"), _)
@@ -1032,7 +1033,7 @@ impl KmyFile {
                     qty = Decimal::ZERO;
                     extra_msg.push_str("Dividends");
                 },
-                (Some("Add"), _) => {
+                (Some("Add"), None) => {
                     assert_eq!(value, Decimal::ZERO);
                     extra_msg.push_str(
                         if qty.is_sign_positive() { "Add shares" }
@@ -1054,9 +1055,19 @@ impl KmyFile {
                        else { "Sell shares" }
                     );
                 },
-                (Some("Split"), _) => {
+                (Some("Split"), None) => {
+                    // Split could be represented as:
+                    // - an entry in a separate table. Useful to take them into
+                    //   account when looking at performance.
+                    // - splits with a ratio field (which could also be
+                    //   detected when looking at performance). Perhaps these
+                    //   need to store how many shares we have in the end, so
+                    //   that even if earlier splits are changed we preserve
+                    //   the same values ?
+
                     assert_eq!(value, Decimal::ZERO);
-                    qty = Decimal::ZERO;  // ??? wrong
+                    ratio = qty;
+                    qty = Decimal::ZERO;
                     extra_msg.push_str("Split");
                 },
                 (Some("Reinvest"), Some(p)) => {
@@ -1085,6 +1096,7 @@ impl KmyFile {
                 &transactions[&sp.transaction_id],  // transaction
                 acc,                                // account
                 qty,                                // qty
+                ratio,                              // ratio_qty,
                 value,                              // value
                 currency,                           // value_commodity
                 sp.post_ts.and_hms_opt(0, 0, 0).unwrap(),  // post_ts

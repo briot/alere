@@ -98,6 +98,7 @@ table! {
     alr_splits (id) {
         id -> Integer,
         scaled_qty -> Integer,
+        ratio_qty -> Float,
         scaled_value -> Integer,
         value_commodity_id -> Integer,
         reconcile -> SmallInt,

@@ -5,6 +5,7 @@ import AccountName from '@/Account/AccountName';
 import Table from '@/List';
 import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
          incomeExpenseSplits, sharesForAccounts, priceForAccounts,
+         ratioForAccounts,
          Split, Transaction, reconcileToString } from '@/Transaction';
 import Numeric from '@/Numeric';
 import ListWithColumns, { Column, LogicalRow } from '@/List/ListWithColumns';
@@ -278,19 +279,27 @@ const columnShares: Column<TableRowData, ComputedBaseLedgerProps> = {
    cell: (d: TableRowData) =>
       d.split === MAIN
       ? (
-         <Numeric
-            amount={d.firstRowSplit.shares}
-            commodity={d.firstRowSplit.currency}
-            hideCommodity={true}
-            scale={Math.log10(d.account?.commodity_scu ?? 100)}
-         />
+            d.firstRowSplit.ratio === 1 ? (
+               <Numeric
+                  amount={d.firstRowSplit.shares}
+                  commodity={d.firstRowSplit.currency}
+                  hideCommodity={true}
+                  scale={Math.log10(d.account?.commodity_scu ?? 100)}
+               />
+            ) : (
+               <span>* {d.firstRowSplit.ratio}</span>
+            )
       ) : d.account?.id === d.split.account_id ? (
-         <Numeric
-            amount={d.split.shares}
-            commodity={d.account?.commodity}  //  the account's commodity
-            hideCommodity={true}
-            scale={Math.log10(d.account?.commodity_scu ?? 100)}
-         />
+         d.split.ratio === 1 ? (
+            <Numeric
+               amount={d.split.shares}
+               commodity={d.account?.commodity}  //  the account's commodity
+               hideCommodity={true}
+               scale={Math.log10(d.account?.commodity_scu ?? 100)}
+            />
+         ) : (
+            <span>* {d.split.ratio}</span>
+         )
       ) : undefined
 }
 
@@ -448,6 +457,10 @@ const computeFirstSplit = (
          accounts.accounts.length > 1
          ? undefined
          : sharesForAccounts(t, accounts.accounts) || undefined,
+      ratio:
+         accounts.accounts.length > 1
+         ? undefined
+         : ratioForAccounts(t, accounts.accounts) || undefined,
       amount:
          accounts.accounts.length > 1
          ? amountIncomeExpense(t)

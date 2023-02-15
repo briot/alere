@@ -240,7 +240,7 @@ fn main() {
     // Might fail to open the database
     {
         let f = settings.default_file();
-        if let Ok(_) = db.open_file(&f) {
+        if db.open_file(&f).is_ok() {
              settings.add_recent_file(&f);
         }
     }

@@ -27,6 +27,7 @@ CSS
 
 neuomorphism:
 https://github.com/AKAspanion/ui-neumorphism
+https://gscode.in/css-neumorphism/
 
 styled components:
 https://www.joshwcomeau.com/css/styled-components/

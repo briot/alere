@@ -44,7 +44,8 @@ CREATE TABLE IF NOT EXISTS alr_splits (
    transaction_id     integer    NOT NULL
       REFERENCES alr_transactions(id) DEFERRABLE INITIALLY DEFERRED,
    value_commodity_id integer    NOT NULL
-      REFERENCES alr_commodities(id) DEFERRABLE INITIALLY DEFERRED
+      REFERENCES alr_commodities(id) DEFERRABLE INITIALLY DEFERRED,
+   ratio_qty          float      NOT NULL DEFAULT 1.0
 );
 CREATE TABLE IF NOT EXISTS alr_prices (
    id           integer  NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -280,13 +281,132 @@ CREATE VIEW alr_price_history_with_turnkey AS
    FROM alr_raw_prices_with_turnkey p
 ;
 
+------------------
+-- alr_balances --
+------------------
+--  For all accounts, compute the list of splits and the cumulative qty (i.e.
+--  number of shares for stocks, or balance for bank accounts).
+--  In addition, this returns a time range during which the account's balance
+--  is valid (useful later to know the balance at a specific time).
+--  Each row corresponds to a single split (and each split appears only once).
+--
+--  In the result, scaled_qty and scaled_balance are both scaled
+--  by the account's commodity_scu.
+--  scaled_value is scaled by the value_commodity's price_scale.
+--
+--  Example:
+--  [.... split details .....................] [... extra .....................]
+--  account_id post_ts    scaled_qty ratio_qty scaled_balance         next_ts
+--     1       2020-09-04     100       1       100                   2020-09-05
+--     1       2020-09-05       0       1       100  (dividends)      2020-10-06
+--     1       2020-10-06       0       5       500  (split)          2020-11-07
+--     1       2020-11-07     200       1       700  (buy shares)     2999-12-31
+--     2       2020-12-08     300       1       300  (other account)  2999-12-31
+--
+--  ??? Should take into account recurrent splits and scenarios, to compute
+--  possible future values.
 
+CREATE VIEW alr_balances AS WITH RECURSIVE
+   --  Number all splits in ascending order, per account.  This allows us to
+   --  later apply changes to qty incrementally.
+   numbered AS (
+      SELECT *,
+         1 as occurrence,   --  ??? Needs to be fixed later
+         ROW_NUMBER() OVER win AS rn,
+         COALESCE(
+            --  timestamp of the split after current one
+            LEAD(post_ts) OVER win,
+            '2999-12-31'
+         ) as next_ts
+      FROM alr_splits
+      WINDOW win AS (PARTITION BY account_id ORDER BY post_ts)
+   ),
+   s AS (
+      --  Take the first transaction that impacted each account.  This is the
+      --  initial balance.
+      SELECT numbered.*, scaled_qty AS scaled_balance FROM numbered WHERE rn=1
+
+      UNION ALL
+
+      --  Then each following split either adds to the balance, or even
+      --  multiplies it in the case of share splits.  Using scaled quantities
+      --  here for better precision in the computation.
+      SELECT numbered.*,
+         s.scaled_balance * numbered.ratio_qty + numbered.scaled_qty
+      FROM numbered JOIN s USING (account_id)
+      WHERE numbered.rn = s.rn + 1
+   )
+   SELECT * FROM s;
+
+---------------------------
+-- alr_balances_currency --
+---------------------------
+--  Similar to alr_balances, but also combines with price history to compute
+--  the money value of the shares.  This might result in more time intervals.
+--
+--  In the output, scaled_qty, scaled_balance and scaled_balance_value are
+--  all scaled by the account's commodity_scu.
+--  Note that this will output one row per known currency for each split, so
+--  in general you should filter on the currency too.
+--
+--  Example:
+--  [... split_details ...] [...balance ..............] [... extra .....]
+--  post_ts                 next_ts      scaled_balance computed_price currency
+--  2020-09-04              2020-09-05   100               4.55        EUR
+--  2020-09-04              2020-09-05   100               4.78        USD
+--  2020-09-05              2020-10-06   100               4.85        EUR
+--  2020-09-05              2020-10-06   100               4.99        USD
+--  2020-10-06              2020-11-07   500               4.95        EUR
+--  2020-10-06              2020-11-07   500               5.01        USD
+
+CREATE VIEW alr_balances_currency AS 
+   SELECT
+      b.id,                 --  id of the split
+      b.scaled_value,       --  as seen in the split
+      b.reconcile,          --  as seen in the split
+      b.reconcile_ts,       --  as seen in the split
+      b.post_ts,            --  timestamp of the split
+      b.account_id,         --  what account this applies to
+      b.payee_id,           --  who the paiement was made to/from
+      b.transaction_id,     --  as seen in the split
+      b.value_commodity_id, --  what currency is used for balance_value
+
+      --  Related to number of shares modified: we have the information either
+      --  for the split itself (how many shares it impacted), or the balance in
+      --  the accounts (how many shares after the split).
+      b.scaled_qty,         --  as seen in the split
+      b.ratio_qty,          --  for stock splits
+      b.scaled_balance,     --  the balance, in shares
+      a.commodity_id,       --  commodity for scaled_qty and scaled_balance
+      a.commodity_scu,      --  scale for scaled_qty and scaled_balance
+
+      max(b.post_ts, p.min_ts) as min_ts,  --  time range for balance_value
+      min(b.next_ts, p.max_ts) as max_ts,
+
+      --  Apply prices
+      currency.id AS currency_id,          --  Currency used for prices
+      CAST(p.scaled_price AS FLOAT)        --  price of share on that interval
+         / source.price_scale
+         AS computed_price
+   FROM
+      alr_balances b
+      JOIN alr_accounts a ON (b.account_id = a.id)
+      JOIN alr_commodities source ON (source.id = a.commodity_id)
+      JOIN alr_price_history_with_turnkey p ON (p.origin_id = source.id)
+      JOIN alr_commodities currency
+         ON (currency.kind = 0 --  CommodityKind.Currency
+             AND p.target_id = currency.id)
+   WHERE
+      --  intervals intersect
+      b.post_ts < p.max_ts
+      AND p.min_ts < b.next_ts;
+
+------------------
+-- alr_invested --
+------------------
 --  For all accounts, compute the total amount invested (i.e. money
 --  transferred from other user accounts) and realized gains (i.e.
 --  money transferred to other user accounts).
---
---  For efficiency (to avoid traversing tables multiple times), this
---  duplicates the alr_balances and alr_balances_currency views.
 --
 --  To handle multi-currency, the computation is duplicated in all
 --  possible currencies known in the database, applying the exchange
@@ -294,8 +414,9 @@ CREATE VIEW alr_price_history_with_turnkey AS
 --
 --  All values given in currency_id and unscaled
 
-CREATE VIEW alr_invested AS
-   WITH internal_splits AS (
+CREATE VIEW alr_invested AS WITH
+   --  For each transaction, the impact of splits on the overall networth.
+   internal_splits AS (
       SELECT s2.transaction_id,
          s2.account_id,
          xrate.target_id,
@@ -331,12 +452,10 @@ CREATE VIEW alr_invested AS
             LEAD(s.post_ts) OVER win,
             '2999-12-31 00:00:00'
          ) AS max_ts,
-         CAST(SUM(CASE WHEN s.account_id = s2.account_id
-                       THEN s.scaled_qty ELSE 0 END)
-            OVER win
-            AS FLOAT
-           ) / a.commodity_scu
-           AS shares,
+         (CASE WHEN s.account_id = s2.account_id
+               THEN s.scaled_balance ELSE 0 END)
+            / a.commodity_scu
+            AS shares,
          SUM(CASE WHEN s.account_id <> s2.account_id AND s2.value < 0
                   THEN -s2.value
                   ELSE 0 END)
@@ -354,13 +473,22 @@ CREATE VIEW alr_invested AS
                   ELSE 0 END)
             OVER win
             AS invested_for_shares,
+
+         --  ??? wrong: doesn't take splits into account.
+         --  If we bought 1 share at 5EUR, then there was a split 5/1, this
+         --  correctly compute that we bought only one 1 share.  But in alr_roi
+         --  if the current value is 5 * 8EUR = 40 EUR, it would assume we
+         --  paid an average of 40 EUR per share, when it should be 5.
+
+         --  be using s.scaled_balance either.  Perhaps better computed
+         --  directly in alr_balances.
          CAST(SUM(CASE WHEN s.account_id <> s2.account_id
                     AND s2.value <> 0 AND s.scaled_qty <> 0
                   THEN abs(s.scaled_qty) ELSE 0 END)
                OVER win
               AS FLOAT)
             / a.commodity_scu AS shares_transacted
-      FROM alr_splits s
+      FROM alr_balances s
         JOIN internal_splits s2 USING (transaction_id)
         JOIN alr_accounts a ON (s.account_id = a.id)
       WINDOW win AS (
@@ -368,13 +496,14 @@ CREATE VIEW alr_invested AS
           ORDER BY s.post_ts
           ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
       )
-  )
-  SELECT *
-  FROM include_empty_range
-  WHERE min_ts <> max_ts
-;
+   )
+   SELECT *
+   FROM include_empty_range
+   WHERE min_ts <> max_ts;
 
-
+-------------
+-- alr_roi --
+-------------
 --  For all accounts, compute the return on investment at any point in time, by
 --  combining the balance at that time with the total amount invested that far
 --  and realized gains moved out of the account.
