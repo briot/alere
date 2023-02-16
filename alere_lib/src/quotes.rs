@@ -1,14 +1,47 @@
 use crate::connections::SqliteConnect;
 use crate::commodities::Commodity;
 use crate::errors::Result;
-use crate::models::{AccountId, CommodityId, Roi};
-use chrono::{DateTime, Utc, TimeZone};
+use crate::models::{AccountId, CommodityId};
+use chrono::{DateTime, Utc, TimeZone, NaiveDateTime};
 use diesel::prelude::*;
-use diesel::sql_types::Integer;
+use diesel::sql_types::{Integer, Float, Timestamp, Nullable};
 use log::info;
 use serde::Serialize;
 use std::collections::HashMap;
 use crate::account_lists::price_sources;
+
+
+#[derive(QueryableByName, Debug)]
+pub struct Roi {
+    #[sql_type = "Timestamp"]
+    pub min_ts: NaiveDateTime,
+    #[sql_type = "Timestamp"]
+    pub max_ts: NaiveDateTime,
+    #[sql_type = "Integer"]
+    pub commodity_id: CommodityId,
+    #[sql_type = "Integer"]
+    pub account_id: AccountId,
+    #[sql_type = "Float"]
+    pub realized_gain: f32,
+    #[sql_type = "Float"]
+    pub invested: f32,
+    #[sql_type = "Float"]
+    pub shares: f32,
+    #[sql_type = "Integer"]
+    pub currency_id: CommodityId,
+    #[sql_type = "Nullable<Float>"]
+    pub balance: Option<f32>,
+    #[sql_type = "Nullable<Float>"]
+    pub computed_price: Option<f32>,
+    #[sql_type = "Nullable<Float>"]
+    pub roi: Option<f32>,
+    #[sql_type = "Nullable<Float>"]
+    pub pl: Option<f32>,
+    #[sql_type = "Nullable<Float>"]
+    pub average_cost: Option<f32>,
+    #[sql_type = "Nullable<Float>"]
+    pub weighted_average: Option<f32>,
+}
 
 #[derive(Serialize)]
 pub struct Position {

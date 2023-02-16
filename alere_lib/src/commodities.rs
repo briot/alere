@@ -46,21 +46,25 @@ pub struct Commodity {
     pub quote_currency_id: Option<CommodityId>,
 }
 
+pub struct CommodityConfig<'a> {
+    pub name: &'a str,
+    pub symbol_before: &'a str,
+    pub symbol_after: &'a str,
+    pub iso_code: Option<&'a str>,
+    pub kind: CommodityKind,
+    pub price_scale: i32,
+    pub quote_symbol: Option<&'a str>,
+    pub quote_source_id: Option<i32>,
+    pub quote_currency_id: Option<CommodityId>,
+}
+
 impl Commodity {
 
     /// Create a new commodity in the database
 
     pub fn create(
         db: &SqliteConnect,
-        name: &str,
-        symbol_before: &str,
-        symbol_after: &str,
-        iso_code: Option<&str>,
-        kind: CommodityKind,
-        price_scale: i32,
-        quote_symbol: Option<&str>,
-        quote_source_id: Option<i32>,
-        quote_currency_id: Option<CommodityId>,
+        config: CommodityConfig,
     ) -> Result<Self> {
         let q = 
             "INSERT INTO alr_commodities
@@ -71,27 +75,24 @@ impl Commodity {
              RETURNING *";
 
         let mut n = diesel::sql_query(q)
-            .bind::<Text, _>(name)
-            .bind::<Text, _>(symbol_before)
-            .bind::<Text, _>(symbol_after)
-            .bind::<Nullable<Text>, _>(iso_code)
-            .bind::<Integer, _>(kind)
-            .bind::<Integer, _>(price_scale)
-            .bind::<Nullable<Text>, _>(quote_symbol)
-            .bind::<Nullable<Integer>, _>(quote_source_id)
-            .bind::<Nullable<Integer>, _>(quote_currency_id)
+            .bind::<Text, _>(config.name)
+            .bind::<Text, _>(config.symbol_before)
+            .bind::<Text, _>(config.symbol_after)
+            .bind::<Nullable<Text>, _>(config.iso_code)
+            .bind::<Integer, _>(config.kind)
+            .bind::<Integer, _>(config.price_scale)
+            .bind::<Nullable<Text>, _>(config.quote_symbol)
+            .bind::<Nullable<Integer>, _>(config.quote_source_id)
+            .bind::<Nullable<Integer>, _>(config.quote_currency_id)
             .load(&db.0)?;
 
-        n.pop().ok_or("Cannot insert commodity".into())
+        n.pop().ok_or_else(|| "Cannot insert commodity".into())
     }
 
     /// Whether this commodity represents a currency
 
     pub fn is_currency(&self) -> bool {
-        match self.kind {
-            CommodityKind::Currency => true,
-            _                       => false,
-        }
+        matches!(self.kind, CommodityKind::Currency)
     }
 
 }

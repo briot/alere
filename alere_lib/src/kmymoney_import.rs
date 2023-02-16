@@ -1,6 +1,6 @@
 use crate::account_kinds::AccountKind;
-use crate::accounts::Account;
-use crate::commodities::Commodity;
+use crate::accounts::{Account, AccountConfig};
+use crate::commodities::{Commodity, CommodityConfig};
 use crate::commodity_kinds::CommodityKind;
 use crate::connections::{Database, SqliteConnect};
 use crate::errors::Result;
@@ -20,7 +20,7 @@ use diesel::sql_types::{Nullable, Text, Date, Float, Integer};
 use log::{error, info};
 use rust_decimal::Decimal;
 use std::collections::{HashMap, HashSet};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 
 #[derive(QueryableByName)]
@@ -606,15 +606,17 @@ impl KmyFile {
             }
             let comm = Commodity::create(
                 target,
-                &c.name,
-                "",                        // symbol_before
-                &c.symbol_string,          // symbol_after
-                Some(&c.iso_code),
-                CommodityKind::Currency,   // kind
-                i32::pow(10, c.price_precision as u32), // price_scale
-                None,                      // quote_symbol
-                None,                      // quote_source_id
-                None,                      // quote_currency_id
+                CommodityConfig {
+                    name: &c.name,
+                    symbol_before: "",
+                    symbol_after: &c.symbol_string,
+                    iso_code: Some(&c.iso_code),
+                    kind: CommodityKind::Currency,
+                    price_scale: i32::pow(10, c.price_precision as u32),
+                    quote_symbol: None,
+                    quote_source_id: None,
+                    quote_currency_id: None,
+                },
             )?;
             self.qty_scales.insert(
                 c.iso_code.clone(), c.smallest_account_fraction);
@@ -645,15 +647,17 @@ impl KmyFile {
 
             let comm = Commodity::create(
                 target,
-                &c.name,
-                "",                        // symbol_before
-                &c.symbol,                 // symbol_after
-                None,                      // iso_code
-                kind,                      // kind
-                i32::pow(10, c.price_precision as u32),  // price_scale
-                Some(&c.symbol),           // quote_symbol
-                None,                      // quote_source_id
-                None,                      // quote_currency_id
+                CommodityConfig {
+                    name: &c.name,
+                    symbol_before: "",
+                    symbol_after: &c.symbol,
+                    iso_code: None,
+                    kind,
+                    price_scale: i32::pow(10, c.price_precision as u32),
+                    quote_symbol: Some(&c.symbol),
+                    quote_source_id: None,
+                    quote_currency_id: None,
+                },
             )?;
             self.qty_scales.insert(
                 c.id.clone(), c.smallest_account_fraction);
@@ -727,23 +731,26 @@ impl KmyFile {
             };
 
             let mut acc = Account::new(
-                &a.account_name,                      // name
-                a.description.as_deref(),             // description
-                self.account_iban.get(&a.id).map(|c| c.as_str()),
-                a.account_number.as_deref(),          // number
-                self.account_is_closed.contains(&a.id), // closed
-                *self.qty_scales.get(&a.currency_id)   // commodity_scu
-                    .unwrap_or_else(|| panic!(
-                        "No qty_scales for {}", a.currency_id)),
-                a.last_reconciled               // last_reconciled
-                    .and_then(|r| r.and_hms_opt(0, 0, 0)),
-                a.opening_date,                 // opening_date
-                self.commodities.get(&a.currency_id).unwrap().id,
-                a.institution_id
-                    .and_then(|id| self.institutions.get(&id))
-                    .map(|inst| inst.id),
-                akind,
-                None,   // parent
+                AccountConfig {
+                    name: &a.account_name,
+                    commodity_scu: *self.qty_scales.get(&a.currency_id)
+                        .unwrap_or_else(|| panic!(
+                            "No qty_scales for {}", a.currency_id)),
+                    commodity_id: self.commodities
+                        .get(&a.currency_id).unwrap().id,
+                    kind_id: akind,
+                    description: a.description.as_deref(),
+                    iban: self.account_iban.get(&a.id).map(|c| c.as_str()),
+                    number: a.account_number.as_deref(),
+                    closed: self.account_is_closed.contains(&a.id),
+                    last_reconciled: a.last_reconciled
+                       .and_then(|r| r.and_hms_opt(0, 0, 0)),
+                    opening_date: a.opening_date,
+                    institution_id: a.institution_id
+                       .and_then(|id| self.institutions.get(&id))
+                       .map(|inst| inst.id),
+                    parent_id: None,
+                },
             );
 
             //  Save the account to get a unique id in the database
@@ -1129,7 +1136,7 @@ impl KmyFile {
 
 
 pub fn import(
-    target: &PathBuf,
+    target: &Path,
     source: &Path,
 ) -> Result<()> {
     info!("import {} into {}", source.display(), target.display());
@@ -1142,7 +1149,7 @@ pub fn import(
     };
 
     // Create the target file
-    let mut db = Database::new();
+    let mut db = Database::default();
     if let Err(e) = db.create_file(target) {
         return Err(
             format!("Error creating {}, {}", target.display(), e).into());

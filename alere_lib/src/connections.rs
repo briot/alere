@@ -10,7 +10,7 @@ use memoize::memoize;
 use regex::Regex;
 use rrule::{RRule, RRuleError, RRuleSet, Unvalidated};
 use std::ops::Deref;
-use std::path::PathBuf;
+use std::path::Path;
 
 diesel_migrations::embed_migrations!(); //  creates embedded_migrations
 
@@ -112,17 +112,12 @@ impl Deref for SqliteConnect {
 /// A pool of connections.
 /// Compared to a straight r2d2 pool, this wrapper can be modified to point to
 /// a new database when the user opens a new file.
+#[derive(Default)]
 pub struct Database {
     low: Option<Pool<ConnectionManager<SqliteConnection>>>,
 }
 
 impl Database {
-
-    pub fn new() -> Self {
-        Database {
-            low: None,
-        }
-    }
 
     /// Change the active database file.
     /// It tries to apply any migration to bring the schema to the version
@@ -131,7 +126,7 @@ impl Database {
 
     pub fn open_file(
         &mut self,
-        path: &PathBuf,
+        path: &Path,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let db = String::from(path.to_str().unwrap());
         log::info!("Open database {:?}", &db);
@@ -147,7 +142,7 @@ impl Database {
 
     pub fn create_file(
         &mut self,
-        path: &PathBuf,
+        path: &Path,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let db = String::from(path.to_str().unwrap());
         log::info!("Create database {:?}", &db);
@@ -183,7 +178,7 @@ impl Database {
     /// It panics if the database was not initialized via a call to open_file.
 
     pub fn get(&self) -> Result<SqliteConnect, &'static str> {
-        return match &self.low {
+        match &self.low {
             None     => Err("No database was selected"),
             Some(db) => {
                let connection = db.get().unwrap();

@@ -28,6 +28,6 @@ impl Payee {
         let mut q: Vec<Self> = diesel::sql_query(qstr)
             .bind::<Text, _>(&name)
             .load(&db.0)?;
-        q.pop().ok_or("Cannot insert new payee".into())
+        q.pop().ok_or_else(|| "Cannot insert new payee".into())
     }
 }

@@ -74,39 +74,41 @@ pub struct Account {
     // all transactions in that account are also for the same user)
 }
 
+pub struct AccountConfig<'a> {
+    pub name: &'a str,
+    pub commodity_scu: i32,
+    pub commodity_id: CommodityId,
+    pub kind_id: AccountKindId,
+    pub description: Option<&'a str>,
+    pub iban: Option<&'a str>,
+    pub number: Option<&'a str>,
+    pub last_reconciled: Option<NaiveDateTime>,
+    pub opening_date: Option<NaiveDate>,
+    pub institution_id: Option<InstitutionId>,
+    pub parent_id: Option<AccountId>,
+    pub closed: bool,
+}
+
 impl Account {
 
     /// Create a new account. This is only in memory, and the account is
     /// not saved in the database.
 
-    pub fn new(
-        name: &str,
-        description: Option<&str>,
-        iban: Option<&str>,
-        number: Option<&str>,
-        closed: bool,
-        commodity_scu: i32,
-        last_reconciled: Option<NaiveDateTime>,
-        opening_date: Option<NaiveDate>,
-        commodity_id: CommodityId,
-        institution_id: Option<InstitutionId>,
-        kind_id: AccountKindId,
-        parent_id: Option<AccountId>,
-    ) -> Self {
+    pub fn new(config: AccountConfig) -> Self {
         Self {
             id: NOT_SAVED,
-            name: name.into(),
-            description: description.map(str::to_string),
-            closed,
-            iban: iban.map(str::to_string),
-            number: number.map(str::to_string),
-            commodity_id,
-            commodity_scu,
-            last_reconciled,
-            opening_date,
-            institution_id,
-            kind_id,
-            parent_id,
+            name: config.name.into(),
+            description: config.description.map(str::to_string),
+            closed: config.closed,
+            iban: config.iban.map(str::to_string),
+            number: config.number.map(str::to_string),
+            commodity_id: config.commodity_id,
+            commodity_scu: config.commodity_scu,
+            last_reconciled: config.last_reconciled,
+            opening_date: config.opening_date,
+            institution_id: config.institution_id,
+            kind_id: config.kind_id,
+            parent_id: config.parent_id,
         }
     }
 
@@ -117,7 +119,7 @@ impl Account {
         let mut q = diesel::sql_query(s)
             .bind::<Integer, _>(id)
             .load::<Account>(&db.0)?;
-        q.pop().ok_or("Cannot insert new institution".into())
+        q.pop().ok_or_else(|| "Cannot insert new institution".into())
     }
 
     /// Save (or update) the account in the database

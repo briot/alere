@@ -42,6 +42,6 @@ impl Institution {
             .bind::<Nullable<Text>, _>(&phone)
             .bind::<Nullable<Text>, _>(&routing_code)
             .load(&db.0)?;
-        q.pop().ok_or("Cannot insert new institution".into())
+        q.pop().ok_or_else(|| "Cannot insert new institution".into())
     }
 }

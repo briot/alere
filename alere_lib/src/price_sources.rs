@@ -34,7 +34,8 @@ impl PriceSource {
                 let mut r: Vec<Self> = diesel::sql_query(q)
                     .bind::<Text, _>(name)
                     .load(&db.0)?;
-                r.pop().ok_or("Cannot insert new PriceSource".into())
+                r.pop().ok_or_else(
+                    || "Cannot insert new PriceSource".into())
             }
         }
     }

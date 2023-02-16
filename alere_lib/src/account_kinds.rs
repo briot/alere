@@ -225,8 +225,7 @@ impl AccountKindManager {
     pub fn get_or_create(
         &self, db: &SqliteConnect
     ) -> Result<AccountKind> {
-        _ = self.is_valid()?;
-
+        self.is_valid()?;
         let lookup = 
             "SELECT * FROM alr_account_kinds
              WHERE category=?1
@@ -252,7 +251,7 @@ impl AccountKindManager {
             .bind::<Bool, _>(self.is_work_income)
             .load(&db.0)?;
 
-        if q.len() == 0 {
+        if q.is_empty() {
             let insert = 
                 "INSERT INTO alr_account_kinds
                    (name, category, name_when_positive,
@@ -277,7 +276,7 @@ impl AccountKindManager {
                 .load(&db.0)?;
         }
 
-        return match q.len() {
+        match q.len() {
             1 => {
                 if let Some(e) = q.pop() {
                     Ok(e)

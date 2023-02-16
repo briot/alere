@@ -42,7 +42,7 @@ pub fn income_expense(
     if income {
         categories.push(AccountKindCategory::INCOME);
     }
-    if categories.len() == 0 {
+    if categories.is_empty() {
         return IncomeExpenseInPeriod {
             items: vec![],
             min_ts,
