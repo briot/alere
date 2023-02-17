@@ -12,35 +12,46 @@ use crate::account_lists::price_sources;
 
 
 #[derive(QueryableByName, Debug)]
-pub struct Roi {
-    #[sql_type = "Timestamp"]
-    pub min_ts: NaiveDateTime,
-    #[sql_type = "Timestamp"]
-    pub max_ts: NaiveDateTime,
-    #[sql_type = "Integer"]
-    pub commodity_id: CommodityId,
+struct Roi {
     #[sql_type = "Integer"]
     pub account_id: AccountId,
-    #[sql_type = "Float"]
-    pub realized_gain: f32,
-    #[sql_type = "Float"]
-    pub invested: f32,
-    #[sql_type = "Float"]
-    pub shares: f32,
+
     #[sql_type = "Integer"]
-    pub currency_id: CommodityId,
+    #[column_name = "commodity_id"]
+    pub _commodity_id: CommodityId,
+
+    #[sql_type = "Timestamp"]
+    pub min_ts: NaiveDateTime,
+
+    #[sql_type = "Timestamp"]
+    pub max_ts: NaiveDateTime,
+
     #[sql_type = "Nullable<Float>"]
-    pub balance: Option<f32>,
+    pub shares: Option<f32>,
+
+    #[sql_type = "Nullable<Float>"]
+    pub realized_gains: Option<f32>,
+
+    #[sql_type = "Nullable<Float>"]
+    pub price_paid: Option<f32>,
+
+    #[sql_type = "Nullable<Float>"]
+    pub shares_worth: Option<f32>,
+
     #[sql_type = "Nullable<Float>"]
     pub computed_price: Option<f32>,
-    #[sql_type = "Nullable<Float>"]
-    pub roi: Option<f32>,
+
     #[sql_type = "Nullable<Float>"]
     pub pl: Option<f32>,
+
     #[sql_type = "Nullable<Float>"]
-    pub average_cost: Option<f32>,
+    pub roi: Option<f32>,
+
     #[sql_type = "Nullable<Float>"]
     pub weighted_average: Option<f32>,
+
+    #[sql_type = "Nullable<Float>"]
+    pub average_cost: Option<f32>,
 }
 
 #[derive(Serialize)]
@@ -56,15 +67,15 @@ pub struct Position {
 }
 
 impl Position {
-    pub fn new(roi: &Roi) -> Self {
+    fn new(roi: &Roi) -> Self {
         Position {
             avg_cost: roi.average_cost.unwrap_or(f32::NAN),
-            equity: roi.balance.unwrap_or(f32::NAN),
-            gains: roi.realized_gain,
-            invested: roi.invested,
+            equity: roi.shares_worth.unwrap_or(f32::NAN),
+            gains: roi.realized_gains.unwrap_or(f32::NAN),
+            invested: roi.price_paid.unwrap_or(f32::NAN),
             pl: roi.pl.unwrap_or(f32::NAN),
             roi: roi.roi.unwrap_or(f32::NAN),
-            shares: roi.shares,
+            shares: roi.shares.unwrap_or(f32::NAN),
             weighted_avg: roi.weighted_average.unwrap_or(f32::NAN),
         }
     }
@@ -224,11 +235,17 @@ pub fn quotes(
         .map(|(id, _)| id.to_string())
         .collect::<Vec<_>>()
         .join(",");
+
+    // ??? Also no point in getting too many points, so we should ignore if
+    //    granularity is too small.  Perhaps should get the list of historical
+    //    prices from alr_balances_currency instead.
     let query = format!(
         "SELECT * \
         FROM alr_roi r \
         WHERE r.account_id IN ({accs_ids}) \
         AND r.currency_id = {currency} \
+        AND r.min_ts < '{max_ts}'
+        AND '{min_ts}' < r.max_ts
         ORDER BY r.min_ts"
     );
 
@@ -236,22 +253,21 @@ pub fn quotes(
     rois
         .iter()
         .for_each(|r| {
-            let a_in_map = accs.get_mut(&r.account_id);
-            let mut a = a_in_map.unwrap();
+            let mut a = accs.get_mut(&r.account_id).unwrap();
             let mi = Utc.from_utc_datetime(&r.min_ts);
             let ma = Utc.from_utc_datetime(&r.max_ts);
 
             if a.oldest.is_none() {
+                // The oldest transaction is also the one that corresponds
+                // to the minimal requested date from the user.
                 a.oldest = Some(mi);
             }
-            a.most_recent = Some(mi);
-
             if mi <= min_ts && min_ts < ma {
                 a.start = Position::new(r);
             }
-            if mi <= max_ts && max_ts < ma {
-                a.end = Position::new(r);
-            }
+
+            a.most_recent = Some(mi);
+            a.end = Position::new(r);
 
             a.prices.push(Price {
                 t: mi.timestamp_millis(),
@@ -260,7 +276,7 @@ pub fn quotes(
                     Some(val) => (val - 1.0) * 100.0,
                     None      => f32::NAN,
                 },
-                shares: r.shares,
+                shares: r.shares.unwrap_or(f32::NAN),
             });
         });
 

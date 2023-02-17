@@ -235,7 +235,7 @@ fn main() {
         return;
     }
 
-    let mut db = Database::default();
+    let mut db: Database = Default::default();
 
     // Might fail to open the database
     {

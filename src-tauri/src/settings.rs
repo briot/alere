@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use std::error;
 use log::{info, error};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 struct SavedSettings {
     recent_files: Vec<PathBuf>,
 }
@@ -29,7 +29,7 @@ impl Settings {
         app_config_dir: &Option<PathBuf>
     ) -> Result<Self, Box<dyn error::Error>> {
         let filename = Settings::config_file(app_config_dir);
-        return match std::fs::File::open(&filename) {
+        match std::fs::File::open(&filename) {
             Ok(f)  => {
                 let saved = serde_yaml::from_reader::<_, SavedSettings>(f)?;
                 info!("Loaded settings {}", filename.display());
@@ -47,7 +47,7 @@ impl Settings {
                 s2.save();
                 Ok(s2)
             }
-        };
+        }
     }
 
     pub fn save(&self) {
@@ -87,20 +87,12 @@ impl Settings {
 
         let mut doc = match tauri::api::path::document_dir() {
             Some(d) => d,
-            None    => PathBuf::from(tauri::api::path::home_dir().unwrap()),
+            None    => tauri::api::path::home_dir().unwrap(),
         };
         doc.push("alere");
         _ = std::fs::create_dir(doc.as_path()); //  Create directory if needed
 
         doc.push("alere_db.sqlite3");
         doc
-    }
-}
-
-impl Default for SavedSettings {
-    fn default() -> Self {
-        SavedSettings {
-            recent_files: vec!(),
-        }
     }
 }

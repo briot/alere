@@ -1,7 +1,7 @@
 use chrono::{NaiveDateTime, TimeZone};
 use chrono_tz::UTC;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
-use diesel::sql_types::{Nullable, Text, Timestamp};
+use diesel::sql_types::{Nullable, Text, Timestamp, Float};
 use diesel::sqlite::{Sqlite, SqliteConnection};
 use diesel::{sql_query, QueryResult, RunQueryDsl};
 use lazy_static::lazy_static;
@@ -181,13 +181,22 @@ impl Database {
         match &self.low {
             None     => Err("No database was selected"),
             Some(db) => {
-               let connection = db.get().unwrap();
+                let connection = db.get().unwrap();
 
-               // Register custom functions, has to be done per connection
-               alr_next_event::register_impl(&connection, next_event)
-                   .expect("Could not register custom functions with sqlite");
+                // Register custom functions, has to be done per connection
+                alr_next_event::register_impl(&connection, next_event)
+                    .expect(
+                        "Could not register custom functions with sqlite");
 
-               Ok(SqliteConnect (connection))
+                //  Those exist in sqlite3 itself, but it needs to be
+                //  compiled with special flags that apparently are not used
+                //  by Rust.
+                exp::register_impl(&connection, alr_exp)
+                    .expect("Could not register custom functions with sqlite");
+                ln::register_impl(&connection, alr_ln)
+                    .expect("Could not register custom functions with sqlite");
+
+                Ok(SqliteConnect (connection))
             }
         }
     }
@@ -199,6 +208,21 @@ sql_function!(
         timestamp: Timestamp,  //  reference timestamp
         previous: Nullable<Timestamp>) -> Nullable<Timestamp>
 );
+sql_function!(
+    fn ln(val: Nullable<Float>) -> Nullable<Float>
+);
+sql_function!(
+    fn exp(val: Nullable<Float>) -> Nullable<Float>
+);
+
+fn alr_ln(val: Option<f32>) -> Option<f32> {
+   val.map(|v| v.ln())
+}
+
+fn alr_exp(val: Option<f32>) -> Option<f32> {
+   val.map(|v| v.exp())
+}
+
 
 #[memoize(Capacity: 120)] // thread-local
 fn parse_ruleset(start: NaiveDateTime, rule: String) -> Result<RRuleSet, RRuleError> {
@@ -244,4 +268,3 @@ lazy_static! {
     static ref RE_REMOVE_COMMENTS: Regex = Regex::new(r"--.*").unwrap();
     static ref RE_COLLAPSE_SPACES: Regex = Regex::new(r"\s+").unwrap();
 }
-
