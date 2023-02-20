@@ -327,9 +327,9 @@ const columnPrice: Column<TableRowData, ComputedBaseLedgerProps> = {
 }
 
 const columnSharesBalance: Column<TableRowData, ComputedBaseLedgerProps> = {
-   id: "SBalance",
+   id: "Balance",
    className: "shares",
-   title: "Balance of shares",
+   title: "Current worth at the time of the transaction. For stock accounts, this is the number of stocks times their price at the time (not the cumulated amount you have bought or sold for)",
    cell: (d: TableRowData) =>
       d.split === MAIN &&
       <Numeric
@@ -337,19 +337,6 @@ const columnSharesBalance: Column<TableRowData, ComputedBaseLedgerProps> = {
          commodity={d.account?.commodity}  //  the account's commodity
          hideCommodity={true}
          scale={Math.log10(d.account?.commodity_scu ?? 100)}
-      />
-}
-
-const columnBalance: Column<TableRowData, ComputedBaseLedgerProps> = {
-   id: "Balance",
-   className: "amount",
-   title: "Current worth at the time of the transaction. For stock accounts, this is the number of stocks times their price at the time (not the cumulated amount you have bought or sold for)",
-   cell: (d: TableRowData, _, settings) =>
-      d.split === MAIN &&
-      <Numeric
-         amount={d.transaction.balance}
-         commodity={d.firstRowSplit.currency}
-         hideCommodity={hideCommodity(d.firstRowSplit, settings)}
       />
 }
 
@@ -743,7 +730,6 @@ const Ledger: React.FC<BaseLedgerProps & ExtraProps> = p => {
       singleAccount,
    }
    const isStock = singleAccount?.kind.is_stock;
-   const isLiquid = is_liquid(singleAccount?.kind);
 
    const columns = [
       columnDate,
@@ -757,8 +743,7 @@ const Ledger: React.FC<BaseLedgerProps & ExtraProps> = p => {
       p.valueColumn                     ? undefined           : columnDeposit,
       isStock                           ? columnShares        : undefined,
       isStock                           ? columnPrice         : undefined,
-      isStock && singleAccount          ? columnSharesBalance : undefined,
-      p.hideBalance || !isLiquid        ? undefined           : columnBalance,
+      isStock && singleAccount          ? columnSharesBalance : columnSharesBalance,
    ];
 
    const footColumns = [

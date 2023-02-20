@@ -7,8 +7,8 @@
    }
 
    .tr {
-      //@include set-colors(table-row-details);
-      //font-style: italic;
+      @include set-colors(table-row-details);
+      font-style: italic;
 
       &.nesting-0 {
          color: inherit;

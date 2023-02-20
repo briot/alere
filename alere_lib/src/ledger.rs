@@ -1,4 +1,3 @@
-use crate::dates::{DateSet, DateValues};
 use crate::errors::Result;
 use crate::models::{AccountId, CommodityId};
 use crate::occurrences::Occurrences;
@@ -30,7 +29,6 @@ pub struct TransactionDescr {
     id: TransactionId,
     occurrence: i32,
     date: DateTime<Utc>,
-    balance: f32,
     balance_shares: f32,
     memo: String,
     check_number: String,
@@ -56,13 +54,10 @@ struct SplitRow {
     check_number: Option<String>,
 
     #[sql_type = "Float"]
-    scaled_qty: f32,
+    qty: f32,
 
     #[sql_type = "Float"]
     ratio_qty: f32,
-
-    #[sql_type = "Float"]
-    commodity_scu: f32,
 
     #[sql_type = "Nullable<Float>"]
     computed_price: Option<f32>,
@@ -89,7 +84,7 @@ struct SplitRow {
     payee: Option<String>,
 
     #[sql_type = "Float"]
-    scaled_qty_balance: f32,
+    qty_balance: f32,
 }
 
 /// Return the ledger information.
@@ -116,33 +111,24 @@ pub fn ledger(
         accountids, occurrences
     );
     let _occ = Occurrences::new(occurrences);
-    let dates = DateValues::new(Some(vec![
-        min_ts,
-        max_ts,
-    ]));
     let filter_acct = match accountids.len() {
         0 => "".to_string(),
         _ => {
            let s: Vec<String> = accountids.iter().map(|&id| id.to_string()).collect();
            let ids = s.join(",");
-           format!(" AND s.account_id IN ({ids})")
+           format!(" AND b.account_id IN ({ids})")
         }
     };
-    let ref_id: AccountId = match accountids.len() {
-        1 => *accountids.first().unwrap(),
-        _ => -1,
-    };
-    let dates_start = dates.get_start();
+    //let dates_start = dates.get_start();
     let query = format!(
-        "SELECT  \
+        "SELECT \
            s.transaction_id, \
-           s.occurrence, \
+           1 AS occurrence, \
            t.timestamp, \
-           t.memo AS memo, \
-           t.check_number AS check_number, \
-           s.scaled_qty, \
+           t.memo, \
+           t.check_number, \
+           s.scaled_qty / a.commodity_scu AS qty, \
            s.ratio_qty, \
-           a.commodity_scu, \
            CAST(s.scaled_value * a.commodity_scu AS FLOAT) \
               / (s.scaled_qty * c.price_scale) \
               AS computed_price, \
@@ -153,20 +139,17 @@ pub fn ledger(
            s.reconcile, \
            t.scheduled, \
            p.name AS payee, \
-           s.scaled_balance AS scaled_qty_balance \
-        FROM alr_balances s \
-           JOIN alr_transactions t ON (s.transaction_id=t.id) \
+           b.scaled_balance / a.commodity_scu AS qty_balance
+        FROM alr_balances b \
+           JOIN alr_splits s USING (transaction_id) \
+           JOIN alr_transactions t ON (s.transaction_id = t.id) \
            JOIN alr_accounts a ON (s.account_id = a.id) \
            JOIN alr_commodities c ON (s.value_commodity_id = c.id) \
            LEFT JOIN alr_payees p ON (s.payee_id = p.id) \
-       WHERE ( \
-            s.post_ts >= '{dates_start}'  \
-            OR t.scheduled IS NOT NULL  \
-           ){filter_acct} \
-       ORDER BY t.timestamp, s.transaction_id"
-
-       //  t.scheduled is NOT NULL is to always include non-validated
-       //  occurrences of recurring transactions
+        WHERE b.post_ts >= '{min_ts}' \
+        AND b.post_ts < '{max_ts}' \
+        {filter_acct} \
+        ORDER BY t.timestamp, transaction_id"
     );
 
     let r = connection.exec::<SplitRow>("ledger", &query)?;
@@ -180,8 +163,7 @@ pub fn ledger(
                 id: split.transaction_id,
                 occurrence: split.occurrence,
                 date: Utc.from_utc_datetime(&split.timestamp),
-                balance: 0.0,
-                balance_shares: 0.0,
+                balance_shares: split.qty_balance,
                 memo: split.memo.unwrap_or_default(),
                 check_number: split.check_number.unwrap_or_default(),
                 is_recurring: split.scheduled.unwrap_or(false),
@@ -189,24 +171,19 @@ pub fn ledger(
             });
         }
 
-        let mut r = result.last_mut().unwrap();
-
-        if split.account_id == ref_id {
-            r.balance_shares += split.scaled_qty_balance / split.commodity_scu;
-            r.balance = r.balance_shares * split.computed_price.unwrap_or(std::f32::NAN);
+        if let Some(tr) = result.last_mut() {
+            tr.splits.push(SplitDescr {
+                account_id: split.account_id,
+                post_ts: Utc.from_utc_datetime(&split.post_ts),
+                amount: split.value,
+                currency: split.value_commodity_id,
+                reconcile: format!("{}", split.reconcile),
+                shares: split.qty,
+                ratio: split.ratio_qty,
+                price: split.computed_price.unwrap_or(std::f32::NAN),
+                payee: split.payee.unwrap_or_default(),
+            });
         }
-
-        r.splits.push(SplitDescr {
-            account_id: split.account_id,
-            post_ts: Utc.from_utc_datetime(&split.post_ts),
-            amount: split.value,
-            currency: split.value_commodity_id,
-            reconcile: format!("{}", split.reconcile),
-            shares: split.scaled_qty / split.commodity_scu,
-            ratio: split.ratio_qty,
-            price: split.computed_price.unwrap_or(std::f32::NAN),
-            payee: split.payee.unwrap_or_default(),
-        });
     }
     Ok(result)
 }
