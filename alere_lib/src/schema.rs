@@ -40,7 +40,6 @@ table! {
         name -> Text,
         symbol_before -> Text,
         symbol_after -> Text,
-        iso_code -> Nullable<Text>,
         kind -> Integer,
         price_scale -> Integer,
         quote_symbol -> Nullable<Text>,

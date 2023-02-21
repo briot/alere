@@ -119,7 +119,6 @@ pub fn ledger(
            format!(" AND b.account_id IN ({ids})")
         }
     };
-    //let dates_start = dates.get_start();
     let query = format!(
         "SELECT \
            s.transaction_id, \
