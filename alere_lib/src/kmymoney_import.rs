@@ -147,14 +147,17 @@ struct KmmCurrencies {
     #[sql_type = "Integer"]
     #[column_name = "smallestCashFraction"]
     _smallest_cash_fraction: i32,
+    // Smallest fraction of the currency used for cash accounts
 
     #[sql_type = "Integer"]
     #[column_name = "smallestAccountFraction"]
     smallest_account_fraction: i32,
+    // Smallest fraction of the currency used for bank accounts
 
     #[sql_type = "Integer"]
     #[column_name = "pricePrecision"]
     price_precision: i32,
+    //  Price precision for this currency used in exchange rates
 }
 
 #[derive(QueryableByName, Debug)]

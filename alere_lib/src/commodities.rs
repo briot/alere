@@ -42,6 +42,7 @@ pub struct Commodity {
     /// Scaling used for prices and values.
     /// If this is 100, then a value given as 2312 in the database is actuall 23.12.
     /// This is used to avoid rounding errors.
+    /// Each account can override this value via its commodity_scu field.
     pub price_scale: ScalingFactor,
 
     /// For online quotes. 

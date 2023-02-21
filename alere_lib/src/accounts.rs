@@ -11,6 +11,12 @@ const NOT_SAVED: AccountId = -1;
 
 /// An account is used for user bank accounts, portfolios,... but also
 /// to represent third-party accounts and income/expense categories.
+///
+/// Tracking investment is a bit more complicated: you will generally have one
+/// or more portfolio/investment accounts, like one per broker or institution.
+/// But you also need one Stock account for each security you are trading (so
+/// for instance buying AAPL is not tracked directly in the investment account,
+/// but inside a Stock account which you could also name 'AAPL'.
 
 #[derive(diesel::Queryable,
          diesel::QueryableByName,
@@ -36,7 +42,11 @@ pub struct Account {
     // For instance, a EUR checking account will typically have two decimal
     // digits precision, so the commodity_scu is "100". But a broker like
     // Kraken, when trading Bitcoin, uses 0.0001 precision or less, so the
-    // commodity_scu is set to 10000
+    // commodity_scu is set to 10000.
+    //
+    // This defaults to the commoditie's price_scale when the account is
+    // created, and should only be changed carefully afterwards, since that
+    // requires changing all stored prices.
     pub commodity_scu: ScalingFactor,
 
     // When has the user last reconciled this account with the bank statements
