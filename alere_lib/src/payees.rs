@@ -1,5 +1,5 @@
 use crate::connections::SqliteConnect;
-use crate::errors::Result;
+use crate::errors::AlrResult;
 use crate::models::PayeeId;
 use crate::schema::alr_payees;
 use diesel::RunQueryDsl;
@@ -19,7 +19,7 @@ impl Payee {
     pub fn create(
         db: &SqliteConnect,
         name: String,
-    ) -> Result<Self> {
+    ) -> AlrResult<Self> {
         let qstr = 
             "INSERT INTO alr_payees
              (name)

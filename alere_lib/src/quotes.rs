@@ -1,6 +1,6 @@
 use crate::connections::SqliteConnect;
 use crate::commodities::Commodity;
-use crate::errors::Result;
+use crate::errors::AlrResult;
 use crate::models::{AccountId, CommodityId};
 use chrono::{DateTime, Utc, TimeZone, NaiveDateTime};
 use diesel::prelude::*;
@@ -164,7 +164,7 @@ pub fn quotes(
     currency: CommodityId,
     commodities: Option<Vec<CommodityId>>,
     accounts: Option<Vec<AccountId>>
-) -> Result<(Vec<Symbol>, HashMap<AccountId, ForAccount>)> {
+) -> AlrResult<(Vec<Symbol>, HashMap<AccountId, ForAccount>)> {
     info!("quotes {:?} {:?} {}", &min_ts, &max_ts, currency);
 
     // Find all commodities

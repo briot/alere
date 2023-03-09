@@ -3,7 +3,7 @@
 /// specific currency), or exchange rates between currencies.
 
 use crate::connections::SqliteConnect;
-use crate::errors::Result;
+use crate::errors::AlrResult;
 use crate::models::{CommodityId, PriceSourceId};
 use crate::schema::alr_prices;
 use diesel::RunQueryDsl;
@@ -32,7 +32,7 @@ impl Price {
         timestamp: chrono::NaiveDateTime,
         scaled_price: u64,
         source_id: PriceSourceId,
-    ) -> Result<()> {
+    ) -> AlrResult<()> {
         let q = 
             "INSERT INTO alr_prices
              (ts, scaled_price, origin_id, target_id, source_id)

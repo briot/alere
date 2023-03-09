@@ -1,6 +1,6 @@
 use crate::connections::SqliteConnect;
 use crate::commodity_kinds::CommodityKind;
-use crate::errors::Result;
+use crate::errors::AlrResult;
 use crate::models::{CommodityId, PriceSourceId, ScalingFactor};
 use diesel::RunQueryDsl;
 use diesel::sql_types::{Integer, Nullable, Text};
@@ -79,7 +79,7 @@ impl Commodity {
     pub fn create(
         db: &SqliteConnect,
         config: CommodityConfig,
-    ) -> Result<Self> {
+    ) -> AlrResult<Self> {
         let q = 
             "INSERT INTO alr_commodities
              (name, symbol_before, symbol_after, kind,

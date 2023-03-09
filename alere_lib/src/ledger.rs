@@ -1,4 +1,4 @@
-use crate::errors::Result;
+use crate::errors::AlrResult;
 use crate::models::{AccountId, CommodityId};
 use crate::occurrences::Occurrences;
 use crate::connections::SqliteConnect;
@@ -105,7 +105,7 @@ pub fn ledger(
     max_ts: DateTime<Utc>,
     accountids: Vec<AccountId>,
     occurrences: u16,
-) -> Result<Vec<TransactionDescr>> {
+) -> AlrResult<Vec<TransactionDescr>> {
     info!(
         "ledger {min_ts} {max_ts} {:?} {:?}",
         accountids, occurrences

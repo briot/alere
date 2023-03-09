@@ -1,5 +1,5 @@
 use crate::connections::SqliteConnect;
-use crate::errors::Result;
+use crate::errors::AlrResult;
 use crate::models::TransactionId;
 use diesel::RunQueryDsl;
 use diesel::sql_types::{Nullable, Text, Integer, Timestamp};
@@ -119,7 +119,7 @@ impl Transaction {
         scheduled: Option<String>,
         last_occurrence: Option<chrono::NaiveDateTime>,
         scenario: crate::scenarios::Scenario,
-    ) -> Result<Self> {
+    ) -> AlrResult<Self> {
         let qstr = 
             "INSERT INTO alr_transactions
              (timestamp, memo, check_number, scheduled, last_occurrence,
@@ -139,7 +139,7 @@ impl Transaction {
 
     pub fn add_to_memo(
             &mut self, db: &SqliteConnect, memo: &str
-    ) -> Result<()> {
+    ) -> AlrResult<()> {
         if !memo.is_empty() {
             match &self.memo {
                 Some(m) => {
@@ -162,7 +162,7 @@ impl Transaction {
 
     pub fn set_check_number(
         &mut self, db: &SqliteConnect, check_number: Option<&str>,
-    ) -> Result<()> {
+    ) -> AlrResult<()> {
         match check_number {
             None | Some("") => {},
             Some(c) => {

@@ -1,5 +1,5 @@
 use crate::connections::SqliteConnect;
-use crate::errors::Result;
+use crate::errors::AlrResult;
 use crate::models::InstitutionId;
 use diesel::RunQueryDsl;
 use diesel::sql_types::{Nullable, Text};
@@ -29,7 +29,7 @@ impl Institution {
         address: Option<String>,
         phone: Option<String>,
         routing_code: Option<String>,
-    ) -> Result<Self> {
+    ) -> AlrResult<Self> {
         let qstr = 
             "INSERT INTO alr_institutions
              (name, manager, address, phone, routing_code)

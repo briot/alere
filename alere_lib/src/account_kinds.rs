@@ -1,5 +1,5 @@
 use crate::connections::SqliteConnect;
-use crate::errors::Result;
+use crate::errors::AlrResult;
 use crate::models::AccountKindId;
 use diesel::{sql_query, RunQueryDsl};
 use diesel::backend::Backend;
@@ -196,11 +196,11 @@ impl AccountKindManager {
 
     /// Check whether the combination of flags is valid
 
-    fn is_valid(&self) -> Result<()> {
+    fn is_valid(&self) -> AlrResult<()> {
         if self.is_passive_income || self.is_work_income {
             match self.category {
                 AccountKindCategory::INCOME => {},
-                _ => return Result::Err("Must be an income".into()),
+                _ => return AlrResult::Err("Must be an income".into()),
             };
         }
         if self.is_networth {
@@ -224,7 +224,7 @@ impl AccountKindManager {
 
     pub fn get_or_create(
         &self, db: &SqliteConnect
-    ) -> Result<AccountKind> {
+    ) -> AlrResult<AccountKind> {
         self.is_valid()?;
         let lookup = 
             "SELECT * FROM alr_account_kinds

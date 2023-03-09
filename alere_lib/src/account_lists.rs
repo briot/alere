@@ -1,6 +1,6 @@
 use crate::accounts::Account;
 use crate::commodities::Commodity;
-use crate::errors::Result;
+use crate::errors::AlrResult;
 use crate::institutions::Institution;
 use crate::account_kinds::AccountKind;
 use crate::connections::SqliteConnect;
@@ -14,7 +14,7 @@ pub struct Accounts {
     institutions: Vec<Institution>,
 }
 
-pub fn fetch_accounts(connection: SqliteConnect) -> Result<Accounts> {
+pub fn fetch_accounts(connection: SqliteConnect) -> AlrResult<Accounts> {
     use crate::schema::alr_account_kinds::dsl::*;
     use crate::schema::alr_accounts::dsl::*;
     use crate::schema::alr_commodities::dsl::*;

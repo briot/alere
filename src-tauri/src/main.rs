@@ -8,7 +8,7 @@ pub mod settings;
 use alere_lib::models::{AccountId, CommodityId};
 use alere_lib::quotes::{ForAccount, Symbol};
 use alere_lib::connections::Database;
-use alere_lib::errors::Result;
+use alere_lib::errors::AlrResult;
 use crate::settings::Settings;
 use chrono::{DateTime, Utc};
 use env_logger::Env;
@@ -57,7 +57,7 @@ fn create_menu() -> Menu {
 #[tauri::command]
 async fn fetch_accounts(
     pool: tauri::State<'_, LockedPool>,
-) -> Result<alere_lib::account_lists::Accounts> {
+) -> AlrResult<alere_lib::account_lists::Accounts> {
     let p = pool.0.read().unwrap();
     let connection = p.get()?;
     alere_lib::account_lists::fetch_accounts(connection)
@@ -71,7 +71,7 @@ async fn quotes(
     currency: CommodityId,
     commodities: Option<Vec<CommodityId>>,
     accounts: Option<Vec<AccountId>>
-) -> Result<(Vec<Symbol>, HashMap<AccountId, ForAccount>)> {
+) -> AlrResult<(Vec<Symbol>, HashMap<AccountId, ForAccount>)> {
     let p = pool.0.read().unwrap();
     let connection = p.get()?;
     alere_lib::quotes::quotes(
@@ -87,7 +87,7 @@ async fn income_expense(
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     currency: CommodityId,
-) -> Result<alere_lib::income_expense::IncomeExpenseInPeriod> {
+) -> AlrResult<alere_lib::income_expense::IncomeExpenseInPeriod> {
     let p = pool.0.read().unwrap();
     let connection = p.get()?;
     Ok(alere_lib::income_expense::income_expense(
@@ -100,7 +100,7 @@ async fn balance(
     pool: tauri::State<'_, LockedPool>,
     dates: Vec<DateTime<Utc>>,
     currency: CommodityId,
-) -> Result<Vec<alere_lib::metrics::PerAccount>> {
+) -> AlrResult<Vec<alere_lib::metrics::PerAccount>> {
     let p = pool.0.read().unwrap();
     let connection = p.get()?;
     alere_lib::metrics::balance(connection, dates, currency)
@@ -112,7 +112,7 @@ async fn metrics(
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     currency: CommodityId,
-) -> Result<alere_lib::metrics::Networth> {
+) -> AlrResult<alere_lib::metrics::Networth> {
     let p = pool.0.read().unwrap();
     let connection = p.get()?;
     alere_lib::metrics::metrics(connection, mindate, maxdate, currency)
@@ -124,7 +124,7 @@ async fn networth_history(
     mindate: DateTime<Utc>,
     maxdate: DateTime<Utc>,
     currency: CommodityId,
-) -> Result<Vec<alere_lib::metrics::NWPoint>> {
+) -> AlrResult<Vec<alere_lib::metrics::NWPoint>> {
     let p = pool.0.read().unwrap();
     let connection = p.get()?;
     alere_lib::metrics::networth_history(
@@ -140,7 +140,7 @@ async fn mean(
     prior: u8,
     after: u8,
     unrealized: bool,
-) -> Result<Vec<alere_lib::means::Point>> {
+) -> AlrResult<Vec<alere_lib::means::Point>> {
     let p = pool.0.read().unwrap();
     let connection = p.get()?;
     alere_lib::means::mean(
@@ -154,7 +154,7 @@ async fn ledger(
     maxdate: DateTime<Utc>,
     accountids: Vec<AccountId>,
     occurrences: u16,
-) -> Result<Vec<alere_lib::ledger::TransactionDescr>> {
+) -> AlrResult<Vec<alere_lib::ledger::TransactionDescr>> {
     let p = pool.0.read().unwrap();
     let connection = p.get()?;
     alere_lib::ledger::ledger(
@@ -166,7 +166,7 @@ fn open_file(
     pool: tauri::State<'_, LockedPool>,
     settings: tauri::State<'_, LockedSettings>,
     name: String,
-) -> Result<()> {
+) -> AlrResult<()> {
     let path = PathBuf::from(name);
     let mut p = pool.0.write().unwrap();
     match p.open_file(&path) {
@@ -186,28 +186,26 @@ fn new_file(
     name: String,
     kind: String,
     source: String,
-) -> Result<()> {
+) -> AlrResult<()> {
     let path = PathBuf::from(name);
     match kind.as_str() {
-        "none"     => {},
+        "none"     => {
+            let mut p = pool.0.write().unwrap();
+            p.create_file(&path)
+        },
         "kmymoney" => {
             let s = PathBuf::from(source);
             if let Err(e) = alere_lib::kmymoney_import::import(&path, &s) {
                 return Err(format!("{}", e).into());
             }
-        },
-        _  => return Err("Invalid import kind".into()),
-    };
-
-    let mut p = pool.0.write().unwrap();
-    match p.create_file(&path) {
-        Ok(()) => {
-            let mut s = settings.0.write().unwrap();
-            s.add_recent_file(&path);
             Ok(())
         },
-        Err(e) => Err(format!("{}", e).into()),
-    }
+        _  => Err("Invalid import kind".into()),
+    }?;
+
+    let mut s = settings.0.write().unwrap();
+    s.add_recent_file(&path);
+    Ok(())
 }
 
 fn main() {

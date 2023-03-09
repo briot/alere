@@ -1,6 +1,6 @@
 use chrono::{NaiveDate, NaiveDateTime};
 use crate::connections::SqliteConnect;
-use crate::errors::Result;
+use crate::errors::AlrResult;
 use crate::models::{
     AccountId, AccountKindId, CommodityId, InstitutionId, ScalingFactor};
 use diesel::RunQueryDsl;
@@ -124,7 +124,7 @@ impl Account {
 
     /// Lookup a company by id
 
-    pub fn lookup(&self, db: &SqliteConnect, id: AccountId) -> Result<Self> {
+    pub fn lookup(&self, db: &SqliteConnect, id: AccountId) -> AlrResult<Self> {
         let s = "SELECT * FROM alr_accounts WHERE id=?";
         let mut q = diesel::sql_query(s)
             .bind::<Integer, _>(id)
@@ -134,7 +134,7 @@ impl Account {
 
     /// Save (or update) the account in the database
 
-    pub fn save(&mut self, db: &SqliteConnect) -> Result<()> {
+    pub fn save(&mut self, db: &SqliteConnect) -> AlrResult<()> {
         let s = match self.id {
             NOT_SAVED =>
                 "INSERT INTO alr_accounts

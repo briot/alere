@@ -3,7 +3,7 @@ use crate::accounts::{Account, AccountConfig};
 use crate::commodities::{Commodity, CommodityConfig};
 use crate::commodity_kinds::CommodityKind;
 use crate::connections::{Database, SqliteConnect};
-use crate::errors::Result;
+use crate::errors::AlrResult;
 use crate::institutions::Institution;
 use crate::models::AccountId;
 use crate::prices::Price;
@@ -474,7 +474,7 @@ impl KmyFile {
     /// Import key/value pairs from KMyMoney
     pub fn import_key_values(
         &mut self, kmy: &SqliteConnection
-    ) -> Result<()> {
+    ) -> AlrResult<()> {
         let kv = sql_query(GET_KMM_KEY_VALUE_FOR_ACCOUNTS)
             .load::<KmmKeyValue>(kmy)?;
         let mut ignored = HashSet::new();
@@ -551,7 +551,7 @@ impl KmyFile {
     pub fn create_account_kinds(
         &mut self,
         target: &SqliteConnect,
-    ) -> Result<()> {
+    ) -> AlrResult<()> {
         // Download the list of account kinds already defined in the database
         // (which come from the initial data we loaded via migrations).
 
@@ -568,7 +568,7 @@ impl KmyFile {
         &mut self,
         kmy: &SqliteConnection,
         target: &SqliteConnect,
-    ) -> Result<()> {
+    ) -> AlrResult<()> {
         let q = "SELECT kmmInstitutions.* from kmmInstitutions";
         let inst = diesel::sql_query(q).load::<KmmInstitutions>(kmy)?;
         for t in inst {
@@ -598,7 +598,7 @@ impl KmyFile {
         &mut self,
         kmy: &SqliteConnection,
         target: &SqliteConnect,
-    ) -> Result<()> {
+    ) -> AlrResult<()> {
         let q = "SELECT * FROM kmmCurrencies";
         let currencies = diesel::sql_query(q).load::<KmmCurrencies>(kmy)?;
 
@@ -634,7 +634,7 @@ impl KmyFile {
         &mut self,
         kmy: &SqliteConnection,
         target: &SqliteConnect,
-    ) -> Result<()> {
+    ) -> AlrResult<()> {
         let q = "SELECT * FROM kmmSecurities";
         let securities = diesel::sql_query(q).load::<KmmSecurities>(kmy)?;
 
@@ -674,7 +674,7 @@ impl KmyFile {
         &mut self,
         kmy: &SqliteConnection,
         target: &SqliteConnect,
-    ) -> Result<()> {
+    ) -> AlrResult<()> {
         let q = "SELECT * FROM kmmPayees";
         let payees = diesel::sql_query(q).load::<KmmPayees>(kmy)?;
 
@@ -691,7 +691,7 @@ impl KmyFile {
         &mut self,
         kmy: &SqliteConnection,
         target: &SqliteConnect,
-    ) -> Result<()> {
+    ) -> AlrResult<()> {
         let q = "SELECT * FROM kmmAccounts";
         let mut parents = HashMap::new();
         for a in diesel::sql_query(q).load::<KmmAccounts>(kmy)? {
@@ -777,7 +777,7 @@ impl KmyFile {
         &mut self,
         kmy: &SqliteConnection,
         target: &SqliteConnect,
-    ) -> Result<HashMap<String, PriceSource>> {
+    ) -> AlrResult<HashMap<String, PriceSource>> {
         let q = "SELECT DISTINCT kmmPrices.priceSource from kmmPrices";
         let r = diesel::sql_query(q).load::<KmmPriceSource>(kmy)?;
         let mut result = HashMap::new();
@@ -817,7 +817,7 @@ impl KmyFile {
         kmy: &SqliteConnection,
         target: &SqliteConnect,
         price_sources: &HashMap<String, PriceSource>,
-    ) -> Result<()> {
+    ) -> AlrResult<()> {
         let q = "SELECT * FROM kmmPrices";
         let prices = diesel::sql_query(q).load::<KmmPrices>(kmy)?;
         for price in prices {
@@ -895,7 +895,7 @@ impl KmyFile {
         &mut self,
         kmy: &SqliteConnection,
         target: &SqliteConnect,
-    ) -> Result<()> {
+    ) -> AlrResult<()> {
         // transactions too
         // - transaction.entryDate:  not needed
         // - ??? transaction.bankId: for imports
@@ -1139,7 +1139,7 @@ impl KmyFile {
 pub fn import(
     target: &Path,
     source: &Path,
-) -> Result<()> {
+) -> AlrResult<()> {
     info!("import {} into {}", source.display(), target.display());
 
     // Establish a new connection to a kmymoney database.

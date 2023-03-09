@@ -5,7 +5,7 @@ use crate::accounts::Account;
 use crate::commodities::Commodity;
 use crate::connections::SqliteConnect;
 use crate::dates::DateSet;
-use crate::errors::Result;
+use crate::errors::AlrResult;
 use crate::models::{AccountId, CommodityId, PayeeId, SplitId, TransactionId};
 use crate::occurrences::Occurrences;
 use crate::payees::Payee;
@@ -138,7 +138,7 @@ impl Split {
         value: Decimal,  //  original amount of transaction
         value_commodity: &Commodity,
         post_ts: chrono::NaiveDateTime,
-    ) -> Result<Self> {
+    ) -> AlrResult<Self> {
         let scaled_qty = scale_value(Some(qty), account.commodity_scu)
             .ok_or_else(|| format!("Could not scale {}", qty))?;
         let scaled_value = scale_value(Some(value), value_commodity.price_scale)
@@ -184,7 +184,7 @@ impl Split {
     pub fn save(
         &self,
         db: &SqliteConnect,
-    ) -> Result<()> {
+    ) -> AlrResult<()> {
         let qstr = 
             "INSERT INTO alr_splits
             (scaled_qty, ratio_qty, scaled_value, reconcile, reconcile_ts,

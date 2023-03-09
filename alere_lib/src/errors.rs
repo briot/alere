@@ -59,4 +59,4 @@ impl serde::Serialize for AlrError {
   }
 }
 
-pub type Result<T> = core::result::Result<T, AlrError>;
+pub type AlrResult<T> = core::result::Result<T, AlrError>;

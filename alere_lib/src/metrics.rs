@@ -2,7 +2,7 @@ use crate::cte_list_splits::{
     cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
 use crate::cte_query_networth::{cte_query_networth, CTE_QUERY_NETWORTH};
 use crate::dates::{DateRange, DateSet, DateValues, GroupBy, CTE_DATES};
-use crate::errors::Result;
+use crate::errors::AlrResult;
 use crate::models::{AccountId, CommodityId};
 use crate::occurrences::Occurrences;
 use crate::scenarios::{Scenario, NO_SCENARIO};
@@ -49,7 +49,7 @@ pub fn networth(
     currency: CommodityId,
     scenario: Scenario,
     max_scheduled_occurrences: &Occurrences,
-) -> Result<Vec<PerAccount>> {
+) -> AlrResult<Vec<PerAccount>> {
     let list_splits = cte_list_splits(
         &dates.unbounded_start(),
         scenario,
@@ -122,7 +122,7 @@ pub fn query_networth_history(
     max_scheduled_occurrences: &Occurrences,
     prior: u8, // number of rows preceding to compute rolling average
     after: u8, // number of rows following
-) -> Result<Vec<NWPoint>> {
+) -> AlrResult<Vec<NWPoint>> {
     let q_networth = cte_query_networth(currency);
     let list_splits = cte_list_splits(
         &dates.unbounded_start(), //  from the start to get balances right
@@ -162,7 +162,7 @@ pub fn networth_history(
     min_ts: DateTime<Utc>,
     max_ts: DateTime<Utc>,
     currency: CommodityId,
-) -> Result<Vec<NWPoint>> {
+) -> AlrResult<Vec<NWPoint>> {
     info!("networth_history {:?} {:?}", &min_ts, &max_ts);
 
     let group_by: GroupBy = GroupBy::MONTHS;
@@ -196,7 +196,7 @@ pub fn balance(
     connection: SqliteConnect,
     dates: Vec<DateTime<Utc>>,
     currency: CommodityId,
-) -> Result<Vec<PerAccount>> {
+) -> AlrResult<Vec<PerAccount>> {
     info!("balance {:?} currency={}", &dates, currency);
     let d = &DateValues::new(
         Some(dates)
@@ -337,7 +337,7 @@ pub fn metrics(
     min_ts: DateTime<Utc>,
     max_ts: DateTime<Utc>,
     currency: CommodityId,
-) -> Result<Networth> {
+) -> AlrResult<Networth> {
     info!("metrics {:?} {:?}", &min_ts, &max_ts);
     let dates = DateValues::new(Some(vec![
         min_ts,

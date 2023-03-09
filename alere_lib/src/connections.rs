@@ -1,3 +1,4 @@
+use crate::errors::AlrResult;
 use chrono::{NaiveDateTime, TimeZone};
 use chrono_tz::UTC;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
@@ -127,7 +128,7 @@ impl Database {
     pub fn open_file(
         &mut self,
         path: &Path,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> AlrResult<()> {
         let db = String::from(path.to_str().unwrap());
         log::info!("Open database {:?}", &db);
 
@@ -143,7 +144,7 @@ impl Database {
     pub fn create_file(
         &mut self,
         path: &Path,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> AlrResult<()> {
         let db = String::from(path.to_str().unwrap());
         log::info!("Create database {:?}", &db);
         _ = std::fs::remove_file(&db);
@@ -155,7 +156,7 @@ impl Database {
     fn internal_open(
         &mut self,
         dburl: &str
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> AlrResult<()> {
         self.low = None;
 
         let pool = Pool::builder()
@@ -163,12 +164,12 @@ impl Database {
             .build(ConnectionManager::new(dburl))
             .expect("Failed to create connection pool");
         let connection = pool.get().unwrap();
-        let migrated = embedded_migrations::run_with_output(
-            &connection, &mut std::io::stdout());
-        match migrated {
-            Ok(_) => (),
-            Err(e) => log::error!("{}", e),
-        };
+        match embedded_migrations::run_with_output(
+            &connection, &mut std::io::stdout())
+        {
+            Ok(_) => {},
+            Err(e) => return Err(format!("{}", e).into()),
+        }
 
         self.low = Some(pool);
         Ok(())

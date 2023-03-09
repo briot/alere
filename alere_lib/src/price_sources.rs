@@ -1,7 +1,7 @@
 //! All known source of prices
 
 use crate::connections::SqliteConnect;
-use crate::errors::Result;
+use crate::errors::AlrResult;
 use crate::models::PriceSourceId;
 use crate::schema::alr_price_sources;
 use diesel::RunQueryDsl;
@@ -19,7 +19,7 @@ impl PriceSource {
     pub fn create(
         db: &SqliteConnect,
         name: &str,
-    ) -> Result<Self> {
+    ) -> AlrResult<Self> {
         let q = "SELECT * FROM alr_price_sources WHERE name=?";
         let mut r: Vec<Self> = diesel::sql_query(q)
             .bind::<Text, _>(name)

@@ -1,6 +1,6 @@
 use crate::connections::SqliteConnect;
 use crate::dates::{DateRange, GroupBy};
-use crate::errors::Result;
+use crate::errors::AlrResult;
 use crate::models::CommodityId;
 use crate::occurrences::Occurrences;
 use crate::scenarios::NO_SCENARIO;
@@ -28,7 +28,7 @@ pub fn mean(
     prior: u8,
     after: u8,
     unrealized: bool,
-) -> Result<Vec<Point>> {
+) -> AlrResult<Vec<Point>> {
     info!("mean {:?} {:?} prior={} after={} unrealized={} {}",
           &min_ts, &max_ts, prior, after, unrealized, currency);
 
