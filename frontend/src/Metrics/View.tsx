@@ -1,20 +1,13 @@
 import * as React from 'react';
-import { DateRange, monthCount } from '@/Dates';
+import { DateRange, monthCount, display_months } from '@/Dates';
 import { Commodity, CommodityId } from '@/services/useAccounts';
 import Numeric from '@/Numeric';
 import Tooltip, { TooltipProps } from '@/Tooltip';
 import usePrefs from '@/services/usePrefs';
 import usePL from '@/services/usePL';
-import "./Metrics.scss";
+import { isNumeric} from '@/services/utils';
 
-const commMonths: Commodity = {
-   id: -2,
-   name: "month",
-   symbol_before: '',
-   symbol_after: 'months',
-   price_scale: 1,
-   is_currency: false,
-}
+import "./Metrics.scss";
 
 interface MetricsLineProps extends TooltipProps<undefined> {
    name: string;
@@ -25,8 +18,9 @@ interface MetricsLineProps extends TooltipProps<undefined> {
 }
 
 const MetricsLine: React.FC<MetricsLineProps> = p => {
-   if (p.value === null || p.value === undefined ||
-       (isNaN(p.value as any) && !React.isValidElement(p.value))
+   if (p.value === null
+       || p.value === undefined
+       // || (isNaN(p.value as any) && !React.isValidElement(p.value))
    ) {
       return null;
    }
@@ -42,13 +36,13 @@ const MetricsLine: React.FC<MetricsLineProps> = p => {
                <Tooltip {...p} >
                   <span className="value">
                   {
-                     React.isValidElement(p.value)
-                     ? p.value
-                     : <Numeric
+                     isNumeric(p.value)
+                     ? <Numeric
                            amount={p.value as number}
                            commodity={p.commodity}
                            suffix={p.suffix}
                         />
+                     : p.value
                   }
                   </span>
                </Tooltip>
@@ -92,41 +86,6 @@ const Metrics: React.FC<MetricsProps> = p => {
                </p>
             }
             suffix=" %"
-         />
-
-         <MetricsLine
-            name="Return on Investment for liquid assets"
-            descr="How much passive income your liquid assets provides"
-            value={non_work_income / pl.liquid_assets_at_start * 100}
-            tooltip={() =>
-               <p>
-                  Passive income and unrealized
-                  gains <Numeric amount={non_work_income} />
-                  <br />
-                  / Liquid assets at
-                  start <Numeric amount={pl.liquid_assets_at_start} />
-                  <br/>
-                  Goal: more than 4%
-               </p>
-            }
-            suffix=" %"
-         />
-
-         {/* www.doughroller.net/personal-finance/3-step-financial-checkup/ */}
-         <MetricsLine
-            name="Emergency Fund Ratio"
-            descr="How many months worth of expenses can be funded through liquid assets"
-            value={pl.liquid_assets / monthly_expenses}
-            tooltip={() =>
-               <p>
-                  liquid assets <Numeric amount={pl.liquid_assets} />
-                  <br/>
-                  / monthly expenses <Numeric amount={monthly_expenses} />
-                  <br/>
-                  Goal: more than 4 months
-               </p>
-            }
-            commodity={commMonths}
          />
 
       {/*
@@ -173,6 +132,24 @@ const Metrics: React.FC<MetricsProps> = p => {
          />
 
          <MetricsLine
+            name="Return on Investment for liquid assets"
+            descr="How much passive income your liquid assets provides"
+            value={non_work_income / pl.liquid_assets_at_start * 100}
+            tooltip={() =>
+               <p>
+                  Passive income and unrealized
+                  gains <Numeric amount={non_work_income} />
+                  <br />
+                  / Liquid assets at
+                  start <Numeric amount={pl.liquid_assets_at_start} />
+                  <br/>
+                  Goal: more than 4%
+               </p>
+            }
+            suffix=" %"
+         />
+
+         <MetricsLine
             name="Return on Investment"
             descr="How much passive income your whole networth provides"
             value={non_work_income / pl.networth_start * 100}
@@ -199,10 +176,26 @@ const Metrics: React.FC<MetricsProps> = p => {
          />
          */}
 
+         {/* www.doughroller.net/personal-finance/3-step-financial-checkup/ */}
+         <MetricsLine
+            name="Emergency Fund Ratio"
+            descr="How many months worth of expenses can be funded through liquid assets"
+            value={display_months(pl.liquid_assets / monthly_expenses)}
+            tooltip={() =>
+               <p>
+                  liquid assets <Numeric amount={pl.liquid_assets} />
+                  <br/>
+                  / monthly expenses <Numeric amount={monthly_expenses} />
+                  <br/>
+                  Goal: more than 4 months
+               </p>
+            }
+         />
+
          <MetricsLine
             name="Wealth"
             descr="How many months worth of expenses you own in total"
-            value={pl.networth / monthly_expenses}
+            value={display_months(pl.networth / monthly_expenses)}
             tooltip={() =>
                <p>
                   Networth <Numeric amount={pl.networth} />
@@ -212,7 +205,6 @@ const Metrics: React.FC<MetricsProps> = p => {
                   Goal: more than 6 months
                </p>
             }
-            commodity={commMonths}
          />
 
          <MetricsLine

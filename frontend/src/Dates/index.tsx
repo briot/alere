@@ -7,6 +7,17 @@ import './Dates.scss';
 type Ref = Date|undefined;  //  a reference date
 
 /**
+ * Display a number of months
+ */
+export const display_months = (months: number): string => {
+   const y = Math.floor(months / 12);
+   const m = Math.floor(months - y * 12);
+   const y_str = y > 1 ? `${y}y` : '';
+   const m_str = m > 0 ? `${m}m` : '';
+   return `${y_str} ${m_str}`;
+}
+
+/**
  * Number of days between two dates
  */
 export const daysCount = (date1: Date, date2: Date): number =>
