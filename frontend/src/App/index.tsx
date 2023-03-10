@@ -49,12 +49,6 @@ const Main: React.FC<{}> = () => {
       [setDialogType]
    );
 
-//   const history = useHistory();
-//   const open_file = React.useCallback(
-//      async () => history.push('/open_new'),
-//      [history]
-//   );
-
    React.useEffect(
       () => {
          const unlisten = listen("menu-event", (e: Event<string>) => {

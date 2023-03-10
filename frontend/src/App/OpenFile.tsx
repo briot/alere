@@ -4,6 +4,7 @@ import { useHistory } from 'react-router-dom';
 import { open } from "@tauri-apps/api/dialog";
 import { SharedInput } from '@/Form/';
 import usePost from '@/services/usePost';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface OpenFileParams {
    name: string;
@@ -20,6 +21,7 @@ const OpenFile: React.FC<OpenFileProps> = p => {
    const [fileName, setFileName] = React.useState('');
    const post = useOpenFile();
    const history = useHistory();
+   const queryClient = useQueryClient()
 
    const on_load = React.useCallback(
       () => {
@@ -28,8 +30,9 @@ const OpenFile: React.FC<OpenFileProps> = p => {
          })
          onclose();
          history.push('/');
+         queryClient.invalidateQueries();
       },
-      [post, onclose, fileName, history]
+      [post, onclose, fileName, history, queryClient]
    );
 
    const select_file = React.useCallback(
@@ -62,5 +65,4 @@ const OpenFile: React.FC<OpenFileProps> = p => {
       </Dialog>
    );
 }
-
 export default OpenFile;
