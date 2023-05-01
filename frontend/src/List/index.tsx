@@ -144,8 +144,8 @@ const Table: React.FC<
                   ({width, height}) => (
                      isVariable ? (
                         <VariableSizeList
-                           width={width}
-                           height={height}
+                           width={width ?? 0}
+                           height={height ?? 0}
                            itemCount={p.itemCount}
                            itemSize={p.itemSize as (index:number)=>number}
                            itemKey={p.itemKey}
@@ -155,8 +155,8 @@ const Table: React.FC<
                         </VariableSizeList>
                      ) : (
                         <FixedSizeList
-                           width={width}
-                           height={height}
+                           width={width ?? 0}
+                           height={height ?? 0}
                            ref={ref}
                            itemCount={p.itemCount}
                            itemSize={(p.itemSize ?? ROW_HEIGHT)  as number}

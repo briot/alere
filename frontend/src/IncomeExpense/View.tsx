@@ -219,18 +219,18 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
             p.showBars ?
                ({width, height}) => (
                <div
-                  style={{width: width,
-                          height: height,
+                  style={{width,
+                          height,
                           overflow:'auto'}}
                >
                   <BarChart
-                     width={width - 20 /* scrollbar width ??? */}
+                     width={(width ?? 0) - 20 /* scrollbar width ??? */}
                      height={
                         /* lines should have minimal height to keep label
                          * readable */
                         Math.max(
                            normalized.items.length * MIN_BAR_HEIGHT,
-                           height
+                           height ?? 0
                         ) - 4
                      }
                      className="incomeexpense"
@@ -298,7 +298,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
                   className="incomeexpense"
                >
                {
-                  width >= 400 && !p.hideLegend &&
+                  width && width >= 400 && !p.hideLegend &&
                   <Legend
                      align="right"
                      formatter={legendItem}

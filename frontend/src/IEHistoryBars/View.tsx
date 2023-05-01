@@ -112,7 +112,7 @@ const IEHistoryBars: React.FC<IEHistoryBarsProps> = p => {
             ({width, height}) => (
                <ComposedChart
                   width={Math.max(
-                     width,
+                     width ?? 0,
                      BAR_GAP * points.length
                      + BAR_SIZE * p.ranges.length * points.length)}
                   height={height}

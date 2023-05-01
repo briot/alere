@@ -281,8 +281,8 @@ export const Select = <T extends { toString: () => string }> (p: SelectProps<T>)
                     {
                        ({ width, height }) => (
                            <FixedSizeList
-                              width={width}
-                              height={height}
+                              width={width ?? 100}
+                              height={height ?? 100}
                               itemCount={p.options.length}
                               itemSize={ROW_HEIGHT}
                               itemKey={getKey}
