@@ -9,7 +9,7 @@ import { amountForAccounts, splitsForAccounts, amountIncomeExpense,
          Split, Transaction, reconcileToString } from '@/Transaction';
 import Numeric from '@/Numeric';
 import ListWithColumns, { Column, LogicalRow } from '@/List/ListWithColumns';
-import { Account, AccountId, is_liquid } from '@/services/useAccounts';
+import { Account, AccountId } from '@/services/useAccounts';
 import { TablePrefs } from '@/List/ListPrefs';
 import useAccountIds, {
    AccountIdSet, AccountSet } from '@/services/useAccountIds';

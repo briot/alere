@@ -60,7 +60,7 @@
     "sass": "^1.49.11",
     "the-new-css-reset": "^1.5.1",
     "ts-jest": "^29.1.x",
-    "typescript": "~4.6.3",
+    "typescript": "5.0.x",
     "typescript-language-server": "^0.9.7",
     "vite": "^4.3.3"
   },

@@ -113,15 +113,11 @@ const PriceGraph = (p: PriceGraphProps) => {
    };
 
    const xrange = p.dateRange.map(d => d.getTime()) as [number, number];
-   const hist =
-      (isNumeric(state.xmin)
-         ? p.prices
-              .filter(r => r.t >= state.xmin && r.t <= state.xmax
-                           && r.price !== null)
-         : p.prices
-              .filter(r => r.t >= xrange[0] && r.t <= xrange[1]
-                           && r.price !== null)
-      );
+   const min: number = isNumeric(state.xmin) ? state.xmin as number: xrange[0];
+   const max: number = isNumeric(state.xmax) ? state.xmax as number: xrange[1];
+
+   const hist = p.prices
+      .filter(r => r.t >= min && r.t <= max && r.price !== null);
 
    if (p.showHolding) {
       hist.forEach(p => {p.hold = p.shares * p.price});
