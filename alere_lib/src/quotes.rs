@@ -253,7 +253,7 @@ pub fn quotes(
     rois
         .iter()
         .for_each(|r| {
-            let mut a = accs.get_mut(&r.account_id).unwrap();
+            let a = accs.get_mut(&r.account_id).unwrap();
             let mi = Utc.from_utc_datetime(&r.min_ts);
             let ma = Utc.from_utc_datetime(&r.max_ts);
 

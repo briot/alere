@@ -763,7 +763,7 @@ impl KmyFile {
         // We can now set the parent accounts
         for (key, parent) in parents.iter() {
             let p = self.accounts[parent].id;
-            let mut acc = self.accounts.get_mut(key).unwrap();
+            let acc = self.accounts.get_mut(key).unwrap();
             acc.parent_id = Some(p);
             acc.save(target)?;
         }

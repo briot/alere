@@ -224,22 +224,24 @@ fn main() {
         app_config_dir);
 
     let mut settings = Settings::load(&app_config_dir).unwrap();
+    let default_db_file = settings.default_file();
 
-//    if let Err(e) = alere_lib::kmymoney_import::import(
-//        &PathBuf::from("/home/briot/alere/test.sqlite3"),
-//        &PathBuf::from("/home/briot/alere/Comptes.kmy"),
-//    ) {
-//        println!("Error importing file: {}", e);
-//        return;
-//    }
+    if let Err(e) = alere_lib::kmymoney_import::import(
+        &PathBuf::from(&default_db_file),
+
+        // Current directory is src-tauri, in development mode
+        &PathBuf::from(std::path::Path::new("../Comptes.kmy")),
+    ) {
+        println!("Error importing file: {}", e);
+        return;
+    }
 
     let mut db: Database = Default::default();
 
     // Might fail to open the database
     {
-        let f = settings.default_file();
-        if db.open_file(&f).is_ok() {
-             settings.add_recent_file(&f);
+        if db.open_file(&default_db_file).is_ok() {
+             settings.add_recent_file(&default_db_file);
         }
     }
 
