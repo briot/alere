@@ -1,5 +1,5 @@
 import * as React from 'react';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import AutoSizer, { Size } from 'react-virtualized-auto-sizer';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import Tooltip, { TooltipFunc } from '@/Tooltip';
 import Dropdown from '@/Form/Dropdown';
@@ -279,7 +279,7 @@ export const Select = <T extends { toString: () => string }> (p: SelectProps<T>)
                >
                   <AutoSizer>
                     {
-                       ({ width, height }) => (
+                       ({ width, height }: Size ) => (
                            <FixedSizeList
                               width={width ?? 100}
                               height={height ?? 100}

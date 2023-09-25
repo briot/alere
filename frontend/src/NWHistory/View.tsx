@@ -8,7 +8,7 @@ import { CommodityId } from '@/services/useAccounts';
 import Numeric from '@/Numeric';
 import usePrefs from '@/services/usePrefs';
 import useFetch from '@/services/useFetch';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import AutoSizer, { Size } from 'react-virtualized-auto-sizer';
 import { Option } from '@/Form';
 import './NetworthHistory.scss';
 
@@ -180,7 +180,7 @@ const NetworthHistory: React.FC<NetworthHistoryProps> = p => {
          <div>
             <AutoSizer>
             {
-               ({width, height}) => (
+               ({width, height}: Size) => (
                   <ComposedChart
                      width={width}
                      height={height}

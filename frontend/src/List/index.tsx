@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { VariableSizeList, FixedSizeList,
          ListChildComponentProps } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import AutoSizer, { Size } from 'react-virtualized-auto-sizer';
 import classes from '@/services/classes';
 import Tooltip, { TooltipProps } from '@/Tooltip';
 import './List.scss';
@@ -141,7 +141,7 @@ const Table: React.FC<
          <div className="tbody">
             <AutoSizer>
                {
-                  ({width, height}) => (
+                  ({width, height}: Size) => (
                      isVariable ? (
                         <VariableSizeList
                            width={width ?? 0}

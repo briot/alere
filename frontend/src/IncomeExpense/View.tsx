@@ -3,7 +3,7 @@ import { Legend, PieChart, Sector, SectorProps,
          XAxis, YAxis, BarChart, Bar, CartesianGrid, LabelList, Label,
          Pie, Cell, Tooltip, TooltipProps, LabelProps } from 'recharts';
 import { DateRange } from '@/Dates';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import AutoSizer, { Size } from 'react-virtualized-auto-sizer';
 import Numeric, { useNumericFormat } from '@/Numeric';
 import AccountName from '@/Account/AccountName';
 import usePrefs from '@/services/usePrefs';
@@ -217,7 +217,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
          <AutoSizer>
          {
             p.showBars ?
-               ({width, height}) => (
+               ({width, height}: Size) => (
                <div
                   style={{width,
                           height,
@@ -291,7 +291,7 @@ const IncomeExpense: React.FC<IncomeExpenseProps> = p => {
                   </div>
                </div>
             ) :
-               ({width, height}) => (
+               ({width, height}: Size) => (
                <PieChart
                   width={width}
                   height={height}

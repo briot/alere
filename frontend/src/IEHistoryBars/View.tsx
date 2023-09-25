@@ -1,5 +1,5 @@
 import * as React from 'react';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import AutoSizer, { Size } from 'react-virtualized-auto-sizer';
 import { ComposedChart, XAxis, YAxis, CartesianGrid, Bar, Cell,
    Tooltip, TooltipProps } from 'recharts';
 import { useFetchIERanges } from '@/services/useFetchIE';
@@ -109,7 +109,7 @@ const IEHistoryBars: React.FC<IEHistoryBarsProps> = p => {
       <div className='iehistorybars'>
          <AutoSizer>
          {
-            ({width, height}) => (
+            ({width, height}: Size) => (
                <ComposedChart
                   width={Math.max(
                      width ?? 0,

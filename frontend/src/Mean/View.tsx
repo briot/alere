@@ -7,7 +7,7 @@ import { CommodityId } from '@/services/useAccounts';
 import Numeric from '@/Numeric';
 import { AccountIdSet } from '@/services/useAccountIds';
 import usePrefs from '@/services/usePrefs';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import AutoSizer, { Size } from 'react-virtualized-auto-sizer';
 import useFetch from '@/services/useFetch';
 import useColors from '@/services/useColors';
 import './Mean.scss';
@@ -288,7 +288,7 @@ const Mean: React.FC<MeanProps> = p => {
       <div className='meanHistory'>
          <AutoSizer>
          {
-            ({width, height}) => (
+            ({width, height}: Size) => (
                <ComposedChart
                   width={width}
                   height={height}

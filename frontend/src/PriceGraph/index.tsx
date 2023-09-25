@@ -1,5 +1,5 @@
 import * as React from 'react';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import AutoSizer, { Size } from 'react-virtualized-auto-sizer';
 import { ComposedChart, XAxis, YAxis, Area, Tooltip, Line, Legend,
          ReferenceArea,
          ReferenceLine, TooltipProps } from 'recharts';
@@ -175,7 +175,7 @@ const PriceGraph = (p: PriceGraphProps) => {
       <div className="priceGraph">
          <AutoSizer>
             {
-               ({width, height}) => (
+               ({width, height}: Size) => (
                  <ComposedChart
                     width={width}
                     height={height}
