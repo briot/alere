@@ -11,6 +11,7 @@ rust-version = "1.57"
 
 [build-dependencies]
 tauri-build = { version = "1.0.0", features = [] }
+cargo-watch = "8.4.1"
 
 [dependencies]
 alere_lib = { path = '../alere_lib', version = '*'}
