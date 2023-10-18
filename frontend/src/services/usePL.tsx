@@ -14,6 +14,11 @@ export interface Metric {
    networth_start: number;
    liquid_assets: number;
    liquid_assets_at_start: number;
+   illiquid_delta: number;   // variation of equity for illiquid assets
+   liquid_delta: number;     // variation of equity for liquid assets
+   networth_delta: number;   // total variation of equity
+   cashflow: number;         // Total realized income - Total expenses
+   unrealized: number;       // Total unrealized income
 }
 
 const NULL_METRIC: Metric = {
@@ -27,6 +32,11 @@ const NULL_METRIC: Metric = {
    liquid_assets_at_start: NaN,
    income_taxes: NaN,
    other_taxes: NaN,
+   illiquid_delta: NaN,
+   liquid_delta: NaN,
+   networth_delta: NaN,
+   unrealized: NaN,
+   cashflow: NaN,
 };
 
 const usePL = (range: DateRange, currencyId: CommodityId): Metric => {
@@ -42,7 +52,8 @@ const usePL = (range: DateRange, currencyId: CommodityId): Metric => {
       [range, currencyId]
    );
 
-   const { data } = useFetch<Metric, unknown, {}>({cmd: 'metrics', args});
+   const { data } = useFetch<Metric, unknown, {}>(
+      {cmd: 'metrics', args});
    return data ?? NULL_METRIC;
 }
 

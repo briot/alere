@@ -63,11 +63,11 @@ const Metrics: React.FC<MetricsProps> = p => {
    const pl = usePL(p.range, currency);
    const months = monthCount(p.range);
    const monthly_expenses = pl.expenses / months;
-   const networth_delta = pl.networth - pl.networth_start;
-   const cashflow = pl.income - pl.expenses;
-   const unrealized = networth_delta - cashflow;
 
-   const non_work_income = pl.passive_income + unrealized;
+   // Passive income not including the change in equity for illiquid.
+   // In practice: realized + unrealized from stocks, and realized from
+   //    properties.
+   const passive_liquid = pl.passive_income + pl.unrealized;
 
    return (
       <div className="cashflow">
@@ -75,10 +75,10 @@ const Metrics: React.FC<MetricsProps> = p => {
          <MetricsLine
             name="Savings rate"
             descr="How much of your realized income you are saving"
-            value={cashflow / pl.income * 100}
+            value={pl.cashflow / pl.income * 100}
             tooltip={() =>
                <p>
-                  cashflow <Numeric amount={cashflow} />
+                  cashflow <Numeric amount={pl.cashflow} />
                   <br/>
                   / income <Numeric amount={pl.income} />
                   <br/>
@@ -88,26 +88,18 @@ const Metrics: React.FC<MetricsProps> = p => {
             suffix=" %"
          />
 
-      {/*
-         <MetricsLine
-            name="Housing expenses"
-            descr="How much you spend on housing, including rent, electricity, gaz, home improvements,..."
-            value={NaN}
-            ideal={33}
-            suffix=" %"
-         />
-         */}
-
          <MetricsLine
             name="Financial independence"
             descr="Part of your expenses covered by passive income"
-            value={non_work_income / pl.expenses * 100}
+            value={(pl.passive_income + pl.unrealized) / pl.expenses * 100}
             tooltip={() =>
                <p>
-                  Passive income and unrealized
-                  gains <Numeric amount={non_work_income} />
+                  (
+                  Passive income <Numeric amount={pl.passive_income} />
                   <br />
-                  / Expenses <Numeric amount={pl.expenses} />
+                  + Unrealized <Numeric amount={pl.unrealized}/>
+                  <br />
+                  ) / Total Expenses <Numeric amount={pl.expenses} />
                   <br/>
                   Goal: more than 100%
                </p>
@@ -117,13 +109,15 @@ const Metrics: React.FC<MetricsProps> = p => {
          <MetricsLine
             name="Passive income"
             descr="What part of the total income comes from sources other than the result of our work"
-            value={non_work_income / pl.income * 100}
+            value={(pl.passive_income + pl.unrealized) / pl.income * 100}
             tooltip={() =>
                <p>
-                  Passive income and unrealized
-                  gains <Numeric amount={non_work_income} />
-                  <br/>
-                  / Total Income <Numeric amount={pl.income} />
+                  (
+                  Passive income <Numeric amount={pl.passive_income} />
+                  <br />
+                  + Unrealized <Numeric amount={pl.unrealized}/>
+                  <br />
+                  ) / Total Income <Numeric amount={pl.income} />
                   <br/>
                   Goal: more than 50%
                </p>
@@ -133,12 +127,14 @@ const Metrics: React.FC<MetricsProps> = p => {
 
          <MetricsLine
             name="Return on Investment for liquid assets"
-            descr="How much passive income your liquid assets provides"
-            value={non_work_income / pl.liquid_assets_at_start * 100}
+            descr="How much passive income your liquid assets provide"
+            value={
+               (pl.passive_income + pl.unrealized - pl.illiquid_delta)
+               / pl.liquid_assets_at_start * 100}
             tooltip={() =>
                <p>
                   Passive income and unrealized
-                  gains <Numeric amount={non_work_income} />
+                  gains <Numeric amount={pl.passive_income} />
                   <br />
                   / Liquid assets at
                   start <Numeric amount={pl.liquid_assets_at_start} />
@@ -152,13 +148,18 @@ const Metrics: React.FC<MetricsProps> = p => {
          <MetricsLine
             name="Return on Investment"
             descr="How much passive income your whole networth provides"
-            value={non_work_income / pl.networth_start * 100}
+            value={(pl.passive_income + pl.unrealized)
+                   / pl.networth_start * 100}
             tooltip={() =>
                <p>
-                  Passive income and unrealized
-                  gains <Numeric amount={non_work_income} />
+                  (
+                  Passive income and unrealized gains from liquid
+                  assets <Numeric amount={passive_liquid} />
+                  +
+                  Change of value of illiquid
+                  assets <Numeric amount={pl.illiquid_delta} />
                   <br/>
-                  / Networth at start <Numeric amount={pl.networth_start} />
+                  ) / Networth at start <Numeric amount={pl.networth_start} />
                   <br/>
                   Goal: more than 4%
                </p>

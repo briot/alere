@@ -18,9 +18,6 @@ interface PL_Result {
    range: DateRange;
    pl: Metric;
    months: number;
-   unrealized: number;
-   cashflow: number;
-   networth_delta: number;
 }
 
 const Flowrow = (r: {
@@ -99,16 +96,11 @@ const Cashflow: React.FC<CashflowProps> = p => {
    const currency = prefs.currencyId;
    const pl_raw = usePLMultiple(p.ranges, currency);
    const pls = pl_raw.map((pl, index) => {
-      const cashflow = pl.income - pl.expenses;
-      const networth_delta = pl.networth - pl.networth_start;
       const range = p.ranges[index];
       return {
          range,
          pl,
          months: monthCount(range),
-         unrealized: networth_delta - cashflow,
-         cashflow,
-         networth_delta,
       };
    });
 
@@ -168,8 +160,11 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   currency={currency}
                   roundValues={p.roundValues}
                   head='  Other income'
-                  amount={v => v.pl.income - v.pl.work_income
-                               - v.pl.passive_income}
+                  amount={v =>
+                     v.pl.income
+                     - v.pl.work_income
+                     - v.pl.passive_income
+                  }
                   tooltip="Unclassified income"
                   padding={1}
                   url={r => `/ledger?accounts=other_income&range=${r}`}
@@ -216,7 +211,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   currency={currency}
                   roundValues={p.roundValues}
                   head='Cashflow'
-                  amount={v => v.cashflow}
+                  amount={v => v.pl.cashflow}
                   tooltip="Income minus expenses, not counting the delta in the valuation of stocks"
                   bold={true}
                   border={true}
@@ -226,7 +221,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   currency={currency}
                   roundValues={p.roundValues}
                   head='Unrealized gains'
-                  amount={v => v.unrealized}
+                  amount={v => v.pl.unrealized}
                   tooltip="Variation in the price of your investments"
                   bold={true}
                   padding={1}
@@ -237,7 +232,7 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   currency={currency}
                   roundValues={p.roundValues}
                   head='Net worth change'
-                  amount={v => v.networth_delta}
+                  amount={v => v.pl.networth_delta}
                   tooltip="How much your total networth change during that period"
                   bold={true}
                   border={true}
