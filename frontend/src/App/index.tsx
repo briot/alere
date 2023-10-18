@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { useLocation, BrowserRouter, Redirect,
-   Route, Switch } from "react-router-dom";
+import { useLocation, BrowserRouter, Navigate,
+   Route, Routes } from "react-router-dom";
 import LeftSideBar from '@/LeftSideBar';
 import useOnlineUpdate from '@/Header/OnlineUpdate';
 import Spinner from '@/Spinner';
@@ -33,17 +33,16 @@ const queryClient = new QueryClient({
 
 type DialogType = undefined | 'settings' | 'open_file' | 'new_file';
 
-const Main: React.FC<{}> = () => {
-   const location = useLocation();
+const MainTab: React.FC<{}> = () => {
    const { prefs } = usePrefs();
+   const location = useLocation();
    const { accounts } = useAccounts();
-   const { update } = useOnlineUpdate();
    const c = classes(
       'page',
       prefs.neumorph_mode ? 'neumorph_mode' : 'not_neumorph_mode',
    );
+   const { update } = useOnlineUpdate();
    const [dialogType, setDialogType] = React.useState<DialogType>();
-
    const on_dialog_close = React.useCallback(
       () => setDialogType(undefined),
       [setDialogType]
@@ -73,43 +72,41 @@ const Main: React.FC<{}> = () => {
    );
 
    return (
-      <Switch>
-         <Route path="/styleguide">
-             <StyleGuide />
-         </Route>
-         <Route>
-            <div className={prefs.dark_mode ? 'darkpalette' : 'lightpalette'}>
-               <div id="app" className={c} >
-                  <LeftSideBar />
-                  <Route path="/welcome">
-                      <Page url={location.pathname} />
-                  </Route>
-                  <Route>
-                     {
-                        !accounts.loaded
-                        ? <div className="dashboard main"><Spinner /></div>
-                        : !accounts.has_accounts()
-                        ? <Redirect to="/welcome" />
-                        : <Page url={location.pathname} />
-                     }
-                  </Route>
-               </div>
+      <div className={prefs.dark_mode ? 'darkpalette' : 'lightpalette'}>
+         <div id="app" className={c} >
+            <LeftSideBar />
+            {
+               !accounts.loaded
+               ? <div className="dashboard main"><Spinner /></div>
+               : !accounts.has_accounts()
+               ? <Navigate to="/welcome" replace={true} />
+               : <Page url={location.pathname} />
+            }
+         </div>
 
-               {
-                   dialogType === 'settings' &&
-                   <Settings onclose={on_dialog_close} />
-               }
-               {
-                   dialogType === 'open_file' &&
-                   <OpenFile onclose={on_dialog_close} />
-               }
-               {
-                   dialogType === 'new_file' &&
-                   <ImportFile onclose={on_dialog_close} />
-               }
-            </div>
-         </Route>
-      </Switch>
+         {
+             dialogType === 'settings' &&
+             <Settings onclose={on_dialog_close} />
+         }
+         {
+             dialogType === 'open_file' &&
+             <OpenFile onclose={on_dialog_close} />
+         }
+         {
+             dialogType === 'new_file' &&
+             <ImportFile onclose={on_dialog_close} />
+         }
+      </div>
+   );
+}
+
+const Main: React.FC<{}> = () => {
+   return (
+      <Routes>
+         <Route path="/styleguide" element={<StyleGuide />} />
+         <Route path="welcome" element={ <Page url="/welcome" /> } />
+         <Route path="/*" element={<MainTab />} />
+      </Routes>
    );
 }
 

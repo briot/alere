@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { DateRange, endOfMonth, toDates } from '@/Dates';
 import { ComposedChart, XAxis, YAxis, CartesianGrid, Bar, ReferenceLine,
          Line, Tooltip, TooltipProps, Label } from 'recharts';
@@ -221,19 +221,19 @@ const Mean: React.FC<MeanProps> = p => {
    const points = useMeanHistory(
       p.range, p.prior, p.after,
       p.showUnrealized, p.negateExpenses, prefs.currencyId);
-   const history = useHistory();
+   const navigate = useNavigate();
    const colorExpense = useColors(true, 1);
    const colorIncome = useColors(false, 2);
 
    const clickOnBar = React.useCallback(
       (data: Point, accounts: AccountIdSet) => {
          const d = endOfMonth(0, new Date(data.date));
-         history.push(
+         navigate(
             `/ledger?accounts=${accounts}`
             + `&date=${d.toISOString()}`
             + `&range=current month`);
       },
-      [history]
+      [navigate]
    );
 
    const meanIncome = React.useMemo(

@@ -1,6 +1,6 @@
 import React from 'react';
 import { DateRange, rangeDisplay } from '@/Dates';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { usePages } from '@/services/usePages';
 import { PanelBaseProps } from '@/Dashboard/Props';
 import Tooltip from '@/Tooltip';
@@ -35,7 +35,7 @@ const Header = (p: HeaderProps) => {
    const r = p.range ? rangeDisplay(p.range) : undefined;
 
    const { addPage } = usePages();
-   const history = useHistory();
+   const navigate = useNavigate();
    const maximize = React.useCallback(
       () => {
          if (p.panel) {
@@ -44,10 +44,10 @@ const Header = (p: HeaderProps) => {
                `/userPage/${p.name ?? ''}` /* url */,
                [{...p.panel, rowspan: 1, colspan: 4}],
                true /* tmp */)
-            .then(url => history.push(url));
+            .then(url => navigate(url));
          }
       },
-      [p.name, p.panel, addPage, history]
+      [p.name, p.panel, addPage, navigate]
    );
 
    const canMaximize = p.panel !== undefined;

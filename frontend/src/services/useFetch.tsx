@@ -7,7 +7,10 @@ export interface FetchProps<T, RAW_T, TArgs extends Record<string, any>> {
    args?: TArgs,
    parse?: (json: RAW_T) => T;  // parse the server's response
    enabled?: boolean;
-   options?: UseQueryOptions<T, string /* error */, T /* TData */>;
+   options?: Omit<
+      UseQueryOptions<T, string /* error */, T /* TData */>,
+      "queryKey"    // Automatically computed from cmd and args
+   >,
 }
 
 const toQueryProps = <T, RAW_T, TArgs extends Record<string, any>>

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { keepPreviousData } from '@tanstack/react-query';
 import { THRESHOLD, Ticker } from '@/Ticker/types';
 import { ClosePrice } from '@/PriceGraph';
 import { DateRange, toDates } from '@/Dates';
@@ -75,7 +76,7 @@ const useTickers = (
       args,
       enabled: !skip,
       options: {
-         keepPreviousData: true,
+         placeholderData: keepPreviousData,
       },
       parse: (json: FullJSON) => {
          return json[0].map(t => ({

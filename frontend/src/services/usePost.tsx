@@ -26,12 +26,11 @@ const usePost = <RESULT, VARS extends {}|undefined> (
    p?: PostProps<RESULT, VARS>,
 ) => {
    const queries = useQueryClient();
-   const mutation = useMutation<RESULT, unknown, VARS, unknown>(
-      async (body: VARS) => {
-         const json: RESULT = await invoke(cmd, body);
-         return json;
-      },
-      {
+   const mutation = useMutation<RESULT, unknown, VARS, unknown>({
+         mutationFn: async (body: VARS) => {
+            const json: RESULT = await invoke(cmd, body);
+            return json;
+         },
          onSuccess: (data: RESULT, vars: VARS) => {
             // On success, invalidate all caches, since the kind of accounts
             // might impact a lot of queries, for instance.

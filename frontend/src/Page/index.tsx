@@ -2,7 +2,7 @@
  * A button that displays a page, showing a number of hard-coded panels
  */
 import * as React from 'react';
-import { Redirect } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { DashboardFromPanels } from '@/Dashboard';
 import { PanelBaseProps } from '@/Dashboard/Panel';
 import { usePages } from '@/services/usePages';
@@ -42,7 +42,7 @@ export const Page: React.FC<PageProps> = React.memo(p => {
    );
 
    if (!page) {
-      return <Redirect to="/" />;
+      return <Navigate to="/" replace={true} />;
    }
    return (
       <>

@@ -2,7 +2,7 @@ import * as React from 'react';
 import useAccounts, {
    AccountId, AccountKindId, Account, InstitutionId,
    useAddOrEditAccount } from '@/services/useAccounts';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { SelectAccount } from '@/Account/SelectAccount';
 import SelectAccountKind from '@/Account/SelectAccountKinds';
 import SelectInstitution from '@/Account/SelectInstitution';
@@ -18,7 +18,7 @@ export interface AccountEditProps {
 
 const AccountEdit: React.FC<AccountEditProps> = p => {
    const { accounts } = useAccounts();
-   const history = useHistory();
+   const navigate = useNavigate();
    const addOrEdit = useAddOrEditAccount();
    const [errorMsg, setErrorMsg] = React.useState("");
    const [acc, setAcc] = React.useState(
@@ -61,11 +61,11 @@ const AccountEdit: React.FC<AccountEditProps> = p => {
    const onSave = React.useCallback(
       (e: React.MouseEvent) => {
          addOrEdit.mutateAsync(acc)
-            .then(history.goBack)
+            .then(() => navigate(-1))   // Go back
             .catch(e => setErrorMsg(e.toString()));
          e.preventDefault();
       },
-      [addOrEdit, acc, history],
+      [addOrEdit, acc, navigate],
    );
 
    return (

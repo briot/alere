@@ -1,15 +1,15 @@
 import * as React from 'react';
-import { useHistory as useRouterHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Account } from '@/services/useAccounts';
 import { SelectAccount } from '@/Account/SelectAccount';
 import useSearch from '@/services/useSearch';
 
 const LedgerPageTitle: React.FC<{}> = () => {
    const query = useSearch();
-   const history = useRouterHistory();
+   const navigate = useNavigate();
    const onAccountChange = React.useCallback(
-      (a: Account) => history.push(`/ledger?accounts=${a.id}`),
-      [history]
+      (a: Account) => navigate(`/ledger?accounts=${a.id}`),
+      [navigate]
    );
 
    return query.accounts.accounts.length === 1

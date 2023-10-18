@@ -4,7 +4,7 @@ import { save, open } from "@tauri-apps/api/dialog";
 import { SharedInput, Select } from '@/Form/';
 import usePost from '@/services/usePost';
 import { useQueryClient } from '@tanstack/react-query';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface NewFileParams {
    name: string,     // name of file to create
@@ -23,7 +23,7 @@ const ImportFile: React.FC<ImportFileProps> = p => {
    const [importKind, setImportKind] = React.useState('none');
    const [importFrom, setImportFrom] = React.useState('');
    const post = useNewFile();
-   const history = useHistory();
+   const navigate = useNavigate();
    const queryClient = useQueryClient()
 
    const on_import = React.useCallback(
@@ -34,11 +34,11 @@ const ImportFile: React.FC<ImportFileProps> = p => {
             source: importFrom,
          });
          onclose();
-         history.push('/');
+         navigate('/');
          queryClient.invalidateQueries();
       },
       [onclose, fileName, importKind, importFrom, post,
-       history, queryClient]
+       navigate, queryClient]
    );
 
    const onKindChange = React.useCallback(

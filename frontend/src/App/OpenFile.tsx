@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Dialog from '@/Dialog';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { open } from "@tauri-apps/api/dialog";
 import { SharedInput } from '@/Form/';
 import usePost from '@/services/usePost';
@@ -20,7 +20,7 @@ const OpenFile: React.FC<OpenFileProps> = p => {
    const { onclose } = p;
    const [fileName, setFileName] = React.useState('');
    const post = useOpenFile();
-   const history = useHistory();
+   const navigate = useNavigate();
    const queryClient = useQueryClient()
 
    const on_load = React.useCallback(
@@ -29,10 +29,10 @@ const OpenFile: React.FC<OpenFileProps> = p => {
             name: fileName,
          })
          onclose();
-         history.push('/');
+         navigate('/');
          queryClient.invalidateQueries();
       },
-      [post, onclose, fileName, history, queryClient]
+      [post, onclose, fileName, navigate, queryClient]
    );
 
    const select_file = React.useCallback(
