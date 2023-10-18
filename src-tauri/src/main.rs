@@ -5,53 +5,56 @@
 
 pub mod settings;
 
-use alere_lib::models::{AccountId, CommodityId};
-use alere_lib::quotes::{ForAccount, Symbol};
+use crate::settings::Settings;
 use alere_lib::connections::Database;
 use alere_lib::errors::AlrResult;
-use crate::settings::Settings;
+use alere_lib::models::{AccountId, CommodityId};
+use alere_lib::quotes::{ForAccount, Symbol};
 use chrono::{DateTime, Utc};
 use env_logger::Env;
 use log::debug;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::RwLock;
-use tauri::{Menu, CustomMenuItem, MenuItem, Submenu};
+use tauri::{CustomMenuItem, Menu, MenuItem, Submenu};
 
-struct LockedPool (pub RwLock<Database>);
-struct LockedSettings (pub RwLock<Settings>);
+struct LockedPool(pub RwLock<Database>);
+struct LockedSettings(pub RwLock<Settings>);
 
 fn create_menu() -> Menu {
     Menu::new()
-    .add_submenu(Submenu::new(
-        "File",
-        Menu::new()
-        .add_item(CustomMenuItem::new("new_file", "New..."))
-//        .add_submenu(Submenu::new(
-//            "New",
-//            Menu::new()
-//            .add_item(CustomMenuItem::new("new_empty",    "From Scratch"))
-//            .add_item(CustomMenuItem::new("new_kmymoney", "From KmyMoney"))
-//        ))
-        .add_item(CustomMenuItem::new("open_file", "Open..."))
-        .add_native_item(MenuItem::Quit)
-    )).add_submenu(Submenu::new(
-        "Edit",
-        Menu::new()
-        .add_native_item(MenuItem::Cut)
-        .add_native_item(MenuItem::Copy)
-        .add_native_item(MenuItem::Paste)
-    )).add_submenu(Submenu::new(
-        "Tools",
-        Menu::new()
-        .add_item(CustomMenuItem::new("update_prices", "Update Prices"))
-        .add_item(CustomMenuItem::new("settings", "Settings..."))
-    )).add_submenu(Submenu::new(
-        "Window",
-        Menu::new()
-        .add_native_item(MenuItem::Minimize)
-        .add_native_item(MenuItem::CloseWindow)
-    ))
+        .add_submenu(Submenu::new(
+            "File",
+            Menu::new()
+                .add_item(CustomMenuItem::new("new_file", "New..."))
+                //        .add_submenu(Submenu::new(
+                //            "New",
+                //            Menu::new()
+                //            .add_item(CustomMenuItem::new("new_empty",    "From Scratch"))
+                //            .add_item(CustomMenuItem::new("new_kmymoney", "From KmyMoney"))
+                //        ))
+                .add_item(CustomMenuItem::new("open_file", "Open..."))
+                .add_native_item(MenuItem::Quit),
+        ))
+        .add_submenu(Submenu::new(
+            "Edit",
+            Menu::new()
+                .add_native_item(MenuItem::Cut)
+                .add_native_item(MenuItem::Copy)
+                .add_native_item(MenuItem::Paste),
+        ))
+        .add_submenu(Submenu::new(
+            "Tools",
+            Menu::new()
+                .add_item(CustomMenuItem::new("update_prices", "Update Prices"))
+                .add_item(CustomMenuItem::new("settings", "Settings...")),
+        ))
+        .add_submenu(Submenu::new(
+            "Window",
+            Menu::new()
+                .add_native_item(MenuItem::Minimize)
+                .add_native_item(MenuItem::CloseWindow),
+        ))
 }
 
 #[tauri::command]
@@ -70,13 +73,18 @@ async fn quotes(
     maxdate: DateTime<Utc>,
     currency: CommodityId,
     commodities: Option<Vec<CommodityId>>,
-    accounts: Option<Vec<AccountId>>
+    accounts: Option<Vec<AccountId>>,
 ) -> AlrResult<(Vec<Symbol>, HashMap<AccountId, ForAccount>)> {
     let p = pool.0.read().unwrap();
     let connection = p.get()?;
     alere_lib::quotes::quotes(
-        connection, mindate, maxdate, currency, commodities,
-        accounts)
+        connection,
+        mindate,
+        maxdate,
+        currency,
+        commodities,
+        accounts,
+    )
 }
 
 #[tauri::command]
@@ -91,7 +99,7 @@ async fn income_expense(
     let p = pool.0.read().unwrap();
     let connection = p.get()?;
     Ok(alere_lib::income_expense::income_expense(
-        connection, income, expense, mindate, maxdate, currency
+        connection, income, expense, mindate, maxdate, currency,
     ))
 }
 
@@ -127,8 +135,7 @@ async fn networth_history(
 ) -> AlrResult<Vec<alere_lib::metrics::NWPoint>> {
     let p = pool.0.read().unwrap();
     let connection = p.get()?;
-    alere_lib::metrics::networth_history(
-        connection, mindate, maxdate, currency)
+    alere_lib::metrics::networth_history(connection, mindate, maxdate, currency)
 }
 
 #[tauri::command]
@@ -144,7 +151,8 @@ async fn mean(
     let p = pool.0.read().unwrap();
     let connection = p.get()?;
     alere_lib::means::mean(
-        connection, mindate, maxdate, currency, prior, after, unrealized)
+        connection, mindate, maxdate, currency, prior, after, unrealized,
+    )
 }
 
 #[tauri::command]
@@ -157,8 +165,7 @@ async fn ledger(
 ) -> AlrResult<Vec<alere_lib::ledger::TransactionDescr>> {
     let p = pool.0.read().unwrap();
     let connection = p.get()?;
-    alere_lib::ledger::ledger(
-       connection, mindate, maxdate, accountids, occurrences)
+    alere_lib::ledger::ledger(connection, mindate, maxdate, accountids, occurrences)
 }
 
 #[tauri::command]
@@ -174,7 +181,7 @@ fn open_file(
             let mut s = settings.0.write().unwrap();
             s.add_recent_file(&path);
             Ok(())
-        },
+        }
         Err(e) => Err(format!("{}", e).into()),
     }
 }
@@ -189,18 +196,18 @@ fn new_file(
 ) -> AlrResult<()> {
     let path = PathBuf::from(name);
     match kind.as_str() {
-        "none"     => {
+        "none" => {
             let mut p = pool.0.write().unwrap();
             p.create_file(&path)
-        },
+        }
         "kmymoney" => {
             let s = PathBuf::from(source);
             if let Err(e) = alere_lib::kmymoney_import::import(&path, &s) {
                 return Err(format!("{}", e).into());
             }
             Ok(())
-        },
-        _  => Err("Invalid import kind".into()),
+        }
+        _ => Err("Invalid import kind".into()),
     }?;
 
     let mut s = settings.0.write().unwrap();
@@ -210,25 +217,24 @@ fn new_file(
 
 fn main() {
     // Configure logging, with a default to show all traces
-    env_logger::Builder::from_env(
-        Env::default().default_filter_or("trace")
-        ).init();
+    env_logger::Builder::from_env(Env::default().default_filter_or("trace")).init();
 
     let context = tauri::generate_context!();
 
     let config = context.config();
     let app_config_dir = tauri::api::path::app_config_dir(config);
-    debug!("App: log={:?} data={:?} config={:?}",
+    debug!(
+        "App: log={:?} data={:?} config={:?}",
         tauri::api::path::app_log_dir(config).unwrap(),
         tauri::api::path::app_data_dir(config).unwrap(),
-        app_config_dir);
+        app_config_dir
+    );
 
     let mut settings = Settings::load(&app_config_dir).unwrap();
     let default_db_file = settings.default_file();
 
     if let Err(e) = alere_lib::kmymoney_import::import(
         &PathBuf::from(&default_db_file),
-
         // Current directory is src-tauri, in development mode
         &PathBuf::from(std::path::Path::new("../Comptes.kmy")),
     ) {
@@ -241,7 +247,7 @@ fn main() {
     // Might fail to open the database
     {
         if db.open_file(&default_db_file).is_ok() {
-             settings.add_recent_file(&default_db_file);
+            settings.add_recent_file(&default_db_file);
         }
     }
 
@@ -251,7 +257,8 @@ fn main() {
         .menu(create_menu())
         .on_menu_event(|event| {
             //  Send the event to the front-end
-            event.window()
+            event
+                .window()
                 .emit("menu-event", event.menu_item_id())
                 .unwrap();
         })

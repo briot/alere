@@ -320,16 +320,28 @@ struct AccountIsNWRow {
 
 #[derive(serde::Serialize)]
 pub struct Networth {
-    income: f32,
-    passive_income: f32,
-    work_income: f32,
-    expenses: f32,
+    income: f32,         // Total income (includes misc income)
+    passive_income: f32, // Realized passive income
+    work_income: f32,    // Work income
+
+    expenses: f32,       // Total expenses
     income_taxes: f32,
     other_taxes: f32,
+
     networth: f32,
     networth_start: f32,
+    networth_delta: f32,   // total variation of equity
+
     liquid_assets: f32,
     liquid_assets_at_start: f32,
+    liquid_delta: f32,     // variation of equity for liquid assets
+
+    // networth_delta = illiquid_delta + liquid_delta
+    illiquid_delta: f32,   // variation of equity for illiquid assets
+
+    // networth_delta = cashflow + unrealized
+    cashflow: f32,         // Total income - Total expenses
+    unrealized: f32,       // Total unrealized income
 }
 
 pub fn metrics(
@@ -422,7 +434,7 @@ pub fn metrics(
     let work_income = -sum_splits(&over_period, |a| {
         accounts.get(a).map(|ac| ac.is_work_income).unwrap_or(false)
     });
-    let expense = sum_splits(&over_period, |a| {
+    let expenses = sum_splits(&over_period, |a| {
         accounts.get(a).map(|ac| ac.is_expense).unwrap_or(false)
     });
     let other_taxes = sum_splits(&over_period, |a| {
@@ -431,17 +443,29 @@ pub fn metrics(
     let income_taxes = sum_splits(&over_period, |a| {
         accounts.get(a).map(|ac| ac.is_income_tax).unwrap_or(false)
     });
+    let networth = networth_at_end.to_f32().unwrap();
+    let networth_start = networth_at_start.to_f32().unwrap();
+    let networth_delta = networth - networth_start;
+    let liquid_assets = liquid_assets_at_end.to_f32().unwrap();
+    let liquid_assets_at_start = liquid_assets_at_start.to_f32().unwrap();
+    let liquid_delta = liquid_assets - liquid_assets_at_start;
+    let cashflow = income - expenses;
 
     Ok(Networth {
         income,
         passive_income,
         work_income,
-        expenses: expense,
+        expenses,
         income_taxes,
         other_taxes,
-        networth: networth_at_end.to_f32().unwrap(),
-        networth_start: networth_at_start.to_f32().unwrap(),
-        liquid_assets: liquid_assets_at_end.to_f32().unwrap(),
-        liquid_assets_at_start: liquid_assets_at_start.to_f32().unwrap(),
+        networth,
+        networth_start,
+        networth_delta,
+        liquid_assets,
+        liquid_assets_at_start,
+        liquid_delta,
+        illiquid_delta: networth_delta - liquid_delta,
+        cashflow,
+        unrealized: networth_delta - cashflow,
     })
 }

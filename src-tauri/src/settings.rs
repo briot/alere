@@ -1,7 +1,7 @@
-use serde::{Serialize, Deserialize};
-use std::path::PathBuf;
+use log::{error, info};
+use serde::{Deserialize, Serialize};
 use std::error;
-use log::{info, error};
+use std::path::PathBuf;
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 struct SavedSettings {
@@ -14,36 +14,27 @@ pub struct Settings {
 }
 
 impl Settings {
-
     fn config_file(app_config_dir: &Option<PathBuf>) -> PathBuf {
         let mut doc = match app_config_dir {
             Some(d) => d.clone(),
-            None    => PathBuf::from("/tmp/alere"),
+            None => PathBuf::from("/tmp/alere"),
         };
         _ = std::fs::create_dir(doc.as_path()); //  Create directory if needed
         doc.push("settings.yaml");
         doc
     }
 
-    pub fn load(
-        app_config_dir: &Option<PathBuf>
-    ) -> Result<Self, Box<dyn error::Error>> {
+    pub fn load(app_config_dir: &Option<PathBuf>) -> Result<Self, Box<dyn error::Error>> {
         let filename = Settings::config_file(app_config_dir);
         match std::fs::File::open(&filename) {
-            Ok(f)  => {
+            Ok(f) => {
                 let saved = serde_yaml::from_reader::<_, SavedSettings>(f)?;
                 info!("Loaded settings {}", filename.display());
-                Ok(Settings {
-                    saved,
-                    filename,
-                })
-            },
+                Ok(Settings { saved, filename })
+            }
             Err(_) => {
                 let saved: SavedSettings = Default::default();
-                let s2 = Settings {
-                    saved,
-                    filename,
-                };
+                let s2 = Settings { saved, filename };
                 s2.save();
                 Ok(s2)
             }
@@ -62,13 +53,15 @@ impl Settings {
                     Ok(_) => info!("Saved settings {}", self.filename.display()),
                     Err(e) => error!("Failed to save settings: {}", e),
                 };
-            },
+            }
             Err(e) => error!("Failed to save settings: {:?}", e),
         };
     }
 
     pub fn add_recent_file(&mut self, filename: &PathBuf) {
-        self.saved.recent_files = self.saved.recent_files
+        self.saved.recent_files = self
+            .saved
+            .recent_files
             .drain(..)
             .filter(|n| n != filename)
             .collect();
@@ -87,7 +80,7 @@ impl Settings {
 
         let mut doc = match tauri::api::path::document_dir() {
             Some(d) => d,
-            None    => tauri::api::path::home_dir().unwrap(),
+            None => tauri::api::path::home_dir().unwrap(),
         };
         doc.push("alere");
         _ = std::fs::create_dir(doc.as_path()); //  Create directory if needed
