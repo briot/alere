@@ -37,3 +37,8 @@ custom-protocol = [ "tauri/custom-protocol" ]
 # strip = true  # Automatically strip symbols from the binary.
 # opt-level = "z"  # Optimize for size.
 # lto = true
+
+[profile.dev]
+opt-level = 1
+[profile.dev.package."*"]
+opt-level = 3
