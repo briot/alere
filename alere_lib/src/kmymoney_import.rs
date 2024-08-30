@@ -22,7 +22,6 @@ use rust_decimal::Decimal;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
-
 #[derive(QueryableByName)]
 struct KmmKeyValue {
 
@@ -696,7 +695,9 @@ impl KmyFile {
         let mut parents = HashMap::new();
         for a in diesel::sql_query(q).load::<KmmAccounts>(kmy)? {
             if let Some(p) = a.parent_id {
-                parents.insert(a.id.clone(), p);
+                if p != "" {
+                    parents.insert(a.id.clone(), p);
+                }
             }
 
             // To ease importing, we consider every line in the decription
@@ -1041,8 +1042,9 @@ impl KmyFile {
                     qty = Decimal::ZERO;
                     extra_msg.push_str("Dividends");
                 },
-                (Some("Add"), None) => {
+                (Some("Add"), _) => {
                     assert_eq!(value, Decimal::ZERO);
+                    assert!(price.is_none() || price.unwrap() == Decimal::ONE);
                     extra_msg.push_str(
                         if qty.is_sign_positive() { "Add shares" }
                         else { "Remove shared" }
@@ -1063,7 +1065,7 @@ impl KmyFile {
                        else { "Sell shares" }
                     );
                 },
-                (Some("Split"), None) => {
+                (Some("Split"), _) => {
                     // Split could be represented as:
                     // - an entry in a separate table. Useful to take them into
                     //   account when looking at performance.
@@ -1074,6 +1076,7 @@ impl KmyFile {
                     //   the same values ?
 
                     assert_eq!(value, Decimal::ZERO);
+                    assert!(price.is_none() || price.unwrap() == Decimal::ONE);
                     ratio = qty;
                     qty = Decimal::ZERO;
                     extra_msg.push_str("Split");
@@ -1091,6 +1094,8 @@ impl KmyFile {
                     extra_msg.push_str("Reinvested dividend");
                 },
                 (None, None) => {  // standard transaction, not for shares
+                },
+                (Some(""), _) => {
                 },
                 (_, None) => {
                     return Err(format!("Missing price, {:?}", sp).into());
