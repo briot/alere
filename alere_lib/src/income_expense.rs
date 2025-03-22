@@ -1,19 +1,18 @@
-use crate::cte_list_splits::{
-    cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
+use crate::account_kinds::AccountKindCategory;
+use crate::connections::SqliteConnect;
+use crate::cte_list_splits::{cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
 use crate::dates::DateValues;
 use crate::models::{AccountId, CommodityId};
 use crate::occurrences::Occurrences;
 use crate::scenarios::NO_SCENARIO;
-use crate::account_kinds::AccountKindCategory;
-use crate::connections::SqliteConnect;
 use chrono::{DateTime, Utc};
-use serde::Serialize;
 use log::info;
+use serde::Serialize;
 
 #[derive(Serialize)]
 pub struct OneIncomeExpense {
     accountid: AccountId,
-    value: f32,      // total for this account in the time range
+    value: f32, // total for this account in the time range
 }
 
 #[derive(Serialize)]
@@ -23,17 +22,18 @@ pub struct IncomeExpenseInPeriod {
     max_ts: DateTime<Utc>,
 }
 
-
 pub fn income_expense(
-    connection: SqliteConnect,
+    mut connection: SqliteConnect,
     income: bool,
     expense: bool,
     min_ts: DateTime<Utc>,
     max_ts: DateTime<Utc>,
     currency: CommodityId,
 ) -> IncomeExpenseInPeriod {
-    info!("income_expense {:?} {:?} income={} expense={}",
-          &min_ts, &max_ts, income, expense);
+    info!(
+        "income_expense {:?} {:?} income={} expense={}",
+        &min_ts, &max_ts, income, expense
+    );
 
     let mut categories = vec![];
     if expense {
@@ -51,14 +51,13 @@ pub fn income_expense(
     }
 
     let list_splits = cte_list_splits(
-        &DateValues::new(Some(vec![
-            min_ts,
-            max_ts,
-        ])),
+        &DateValues::new(Some(vec![min_ts, max_ts])),
         NO_SCENARIO,
-        &Occurrences::no_recurrence());
+        &Occurrences::no_recurrence(),
+    );
     let with_values = cte_splits_with_values();
-    let cats = categories.iter()
+    let cats = categories
+        .iter()
         .map(|&cat| (cat as u32).to_string())
         .collect::<Vec<_>>()
         .join(",");
@@ -76,27 +75,23 @@ pub fn income_expense(
         GROUP BY s.account_id
         "
     );
-    let rows = connection.exec::<crate::metrics::SplitsPerAccount>(
-        "inc_exp", &query);
+    let rows = connection.exec::<crate::metrics::SplitsPerAccount>("inc_exp", &query);
     match rows {
-        Ok(r) => {
-            IncomeExpenseInPeriod {
-                min_ts,
-                max_ts,
-                items: r.iter()
-                    .map(|acc| OneIncomeExpense {
-                        accountid: acc.account_id,
-                        value: -acc.value
-                    })
-                    .collect()
-            }
+        Ok(r) => IncomeExpenseInPeriod {
+            min_ts,
+            max_ts,
+            items: r
+                .iter()
+                .map(|acc| OneIncomeExpense {
+                    accountid: acc.account_id,
+                    value: -acc.value,
+                })
+                .collect(),
         },
-        Err(_) => {
-            IncomeExpenseInPeriod {
-                items: vec![],
-                min_ts,
-                max_ts,
-            }
-        }
+        Err(_) => IncomeExpenseInPeriod {
+            items: vec![],
+            min_ts,
+            max_ts,
+        },
     }
 }

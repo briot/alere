@@ -4,14 +4,14 @@ use crate::errors::AlrResult;
 use crate::models::CommodityId;
 use crate::occurrences::Occurrences;
 use crate::scenarios::NO_SCENARIO;
-use chrono::{NaiveDate, DateTime, Utc, Datelike};
+use chrono::{DateTime, Datelike, NaiveDate, Utc};
 use log::info;
 use serde::Serialize;
 use std::collections::HashMap;
 
 #[derive(Serialize)]
 pub struct Point {
-    date: NaiveDate,   // one per month
+    date: NaiveDate, // one per month
     value_expenses: f32,
     average_expenses: f32,
     value_realized: f32,
@@ -19,9 +19,8 @@ pub struct Point {
     average_networth_delta: f32,
 }
 
-
 pub fn mean(
-    connection: SqliteConnect,
+    mut connection: SqliteConnect,
     min_ts: DateTime<Utc>,
     max_ts: DateTime<Utc>,
     currency: CommodityId,
@@ -29,15 +28,13 @@ pub fn mean(
     after: u8,
     unrealized: bool,
 ) -> AlrResult<Vec<Point>> {
-    info!("mean {:?} {:?} prior={} after={} unrealized={} {}",
-          &min_ts, &max_ts, prior, after, unrealized, currency);
+    info!(
+        "mean {:?} {:?} prior={} after={} unrealized={} {}",
+        &min_ts, &max_ts, prior, after, unrealized, currency
+    );
 
-    let dates = DateRange::new(
-        Some(min_ts),
-        Some(max_ts),
-        GroupBy::MONTHS,
-    ).restrict_to_splits(
-        &connection,
+    let dates = DateRange::new(Some(min_ts), Some(max_ts), GroupBy::MONTHS).restrict_to_splits(
+        &mut connection,
         NO_SCENARIO,
         &Occurrences::no_recurrence(),
     );
@@ -50,7 +47,7 @@ pub fn mean(
     let mut unreal = HashMap::new();
     if unrealized {
         let points = crate::metrics::query_networth_history(
-            &connection,
+            &mut connection,
             &dates,
             currency,
             NO_SCENARIO,
@@ -60,15 +57,14 @@ pub fn mean(
         )?;
         for p in &points {
             unreal.insert(
-                NaiveDate::from_ymd_opt(
-                    p.date.year(), p.date.month(), 1).unwrap(),
-                (p.diff, p.average)
+                NaiveDate::from_ymd_opt(p.date.year(), p.date.month(), 1).unwrap(),
+                (p.diff, p.average),
             );
         }
     }
 
     let cashflow = crate::cashflow::monthly_cashflow(
-        &connection,
+        &mut connection,
         &dates,
         currency,
         NO_SCENARIO,

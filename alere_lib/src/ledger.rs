@@ -1,13 +1,12 @@
+use crate::connections::SqliteConnect;
 use crate::errors::AlrResult;
 use crate::models::{AccountId, CommodityId};
 use crate::occurrences::Occurrences;
-use crate::connections::SqliteConnect;
 use crate::reconciliation::ReconcileKind;
-use chrono::{DateTime, TimeZone, Utc, NaiveDateTime};
-use diesel::sql_types::{
-    Bool, Float, Integer, Nullable, Text, SmallInt, Timestamp};
-use serde::Serialize;
+use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
+use diesel::sql_types::{Bool, Float, Integer, Nullable, SmallInt, Text, Timestamp};
 use log::info;
+use serde::Serialize;
 
 #[derive(Serialize, Clone, Debug)]
 pub struct SplitDescr {
@@ -38,52 +37,52 @@ pub struct TransactionDescr {
 
 #[derive(QueryableByName)]
 struct SplitRow {
-    #[sql_type = "Integer"]
+    #[diesel(sql_type = Integer)]
     transaction_id: TransactionId,
 
-    #[sql_type = "Integer"]
+    #[diesel(sql_type = Integer)]
     occurrence: i32,
 
-    #[sql_type = "Timestamp"]
+    #[diesel(sql_type = Timestamp)]
     timestamp: NaiveDateTime,
 
-    #[sql_type = "Nullable<Text>"]
+    #[diesel(sql_type = Nullable<Text>)]
     memo: Option<String>,
 
-    #[sql_type = "Nullable<Text>"]
+    #[diesel(sql_type = Nullable<Text>)]
     check_number: Option<String>,
 
-    #[sql_type = "Float"]
+    #[diesel(sql_type = Float)]
     qty: f32,
 
-    #[sql_type = "Float"]
+    #[diesel(sql_type = Float)]
     ratio_qty: f32,
 
-    #[sql_type = "Nullable<Float>"]
+    #[diesel(sql_type = Nullable<Float>)]
     computed_price: Option<f32>,
 
-    #[sql_type = "Integer"]
+    #[diesel(sql_type = Integer)]
     account_id: AccountId,
 
-    #[sql_type = "Timestamp"]
+    #[diesel(sql_type = Timestamp)]
     post_ts: NaiveDateTime,
 
-    #[sql_type = "Float"]
+    #[diesel(sql_type = Float)]
     value: f32,
 
-    #[sql_type = "Integer"]
+    #[diesel(sql_type = Integer)]
     value_commodity_id: CommodityId,
 
-    #[sql_type = "SmallInt"]
+    #[diesel(sql_type = SmallInt)]
     reconcile: ReconcileKind,
 
-    #[sql_type = "Nullable<Bool>"]
+    #[diesel(sql_type = Nullable<Bool>)]
     scheduled: Option<bool>,
 
-    #[sql_type = "Nullable<Text>"]
+    #[diesel(sql_type = Nullable<Text>)]
     payee: Option<String>,
 
-    #[sql_type = "Float"]
+    #[diesel(sql_type = Float)]
     qty_balance: f32,
 }
 
@@ -100,7 +99,7 @@ struct SplitRow {
 ///     if 1, only look at the next occurrence of them.
 
 pub fn ledger(
-    connection: SqliteConnect,
+    mut connection: SqliteConnect,
     min_ts: DateTime<Utc>,
     max_ts: DateTime<Utc>,
     accountids: Vec<AccountId>,
@@ -114,9 +113,9 @@ pub fn ledger(
     let filter_acct = match accountids.len() {
         0 => "".to_string(),
         _ => {
-           let s: Vec<String> = accountids.iter().map(|&id| id.to_string()).collect();
-           let ids = s.join(",");
-           format!(" AND b.account_id IN ({ids})")
+            let s: Vec<String> = accountids.iter().map(|&id| id.to_string()).collect();
+            let ids = s.join(",");
+            format!(" AND b.account_id IN ({ids})")
         }
     };
     let query = format!(

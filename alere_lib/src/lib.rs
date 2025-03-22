@@ -1,9 +1,9 @@
-pub mod account_lists;
 pub mod account_kinds;
+pub mod account_lists;
 pub mod accounts;
 pub mod cashflow;
-pub mod commodity_kinds;
 pub mod commodities;
+pub mod commodity_kinds;
 pub mod connections;
 pub mod cte_list_splits;
 pub mod cte_query_networth;
@@ -31,9 +31,6 @@ pub mod transactions;
 
 #[macro_use]
 extern crate diesel;
-
-#[macro_use]
-extern crate diesel_migrations;
 
 extern crate num;
 

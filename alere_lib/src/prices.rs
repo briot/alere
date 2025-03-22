@@ -1,17 +1,15 @@
 /// Conversion between various commodities.
 /// Typically, this includes historical prices of securities (in a
 /// specific currency), or exchange rates between currencies.
-
-use crate::connections::SqliteConnect;
+use crate::connections::PooledSqlite;
 use crate::errors::AlrResult;
 use crate::models::{CommodityId, PriceSourceId};
 use crate::schema::alr_prices;
+use diesel::sql_types::{Bigint, Integer, Timestamp};
 use diesel::RunQueryDsl;
-use diesel::sql_types::{Integer, Timestamp, Bigint};
 
-#[derive(diesel::QueryableByName, diesel::Queryable,
-         Debug, serde::Serialize)]
-#[table_name = "alr_prices"]
+#[derive(diesel::QueryableByName, diesel::Queryable, Debug, serde::Serialize)]
+#[diesel(table_name = alr_prices)]
 pub struct Price {
     pub origin_id: CommodityId,
     pub target_id: CommodityId,
@@ -26,15 +24,14 @@ pub struct Price {
 
 impl Price {
     pub fn create(
-        db: &SqliteConnect,
+        db: &mut PooledSqlite,
         origin_id: CommodityId,
         target_id: CommodityId,
         timestamp: chrono::NaiveDateTime,
         scaled_price: u64,
         source_id: PriceSourceId,
     ) -> AlrResult<()> {
-        let q = 
-            "INSERT INTO alr_prices
+        let q = "INSERT INTO alr_prices
              (ts, scaled_price, origin_id, target_id, source_id)
              VALUES (?, ?, ?, ?, ?)";
         let _: usize = diesel::sql_query(q)
@@ -43,7 +40,7 @@ impl Price {
             .bind::<Integer, _>(origin_id)
             .bind::<Integer, _>(target_id)
             .bind::<Integer, _>(source_id)
-            .execute(&db.0)?;
+            .execute(db)?;
         Ok(())
     }
 }

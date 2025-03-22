@@ -1,11 +1,11 @@
 //! Describe a range or set of dates
 
-use crate::cte_list_splits::{cte_list_splits, CTE_SPLITS};
 use crate::connections::SqliteConnect;
-use chrono::{DateTime, NaiveDateTime, Duration, Utc, TimeZone};
-use serde::Deserialize;
-use lazy_static::lazy_static;
+use crate::cte_list_splits::{cte_list_splits, CTE_SPLITS};
+use chrono::{DateTime, Duration, NaiveDateTime, TimeZone, Utc};
 use core::cmp::{max, min};
+use lazy_static::lazy_static;
+use serde::Deserialize;
 
 pub const CTE_DATES: &str = "cte_dates";
 pub const SQL_ARMAGEDDON: &str = "'2099-12-31 00:00:00'";
@@ -15,10 +15,8 @@ const MAX_DATES: u16 = 366;
 // scope of queries.
 
 lazy_static! {
-    static ref MIN_QUERY_DATE: DateTime<Utc> =
-       Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap();
-    static ref MAX_QUERY_DATE: DateTime<Utc> =
-       Utc.with_ymd_and_hms(2200, 1, 1, 0, 0, 0).unwrap();
+    static ref MIN_QUERY_DATE: DateTime<Utc> = Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap();
+    static ref MAX_QUERY_DATE: DateTime<Utc> = Utc.with_ymd_and_hms(2200, 1, 1, 0, 0, 0).unwrap();
 }
 
 #[derive(Deserialize, Clone)]
@@ -30,12 +28,11 @@ pub enum GroupBy {
 
 #[derive(QueryableByName)]
 struct SplitsRange {
-    #[sql_type = "diesel::sql_types::Timestamp"]
+    #[diesel(sql_type = diesel::sql_types::Timestamp)]
     min_ts: NaiveDateTime,
-    #[sql_type = "diesel::sql_types::Timestamp"]
+    #[diesel(sql_type = diesel::sql_types::Timestamp)]
     max_ts: NaiveDateTime,
 }
-
 
 /// Describes a set of dates in a range [start, end]
 
@@ -59,7 +56,9 @@ pub trait DateSet {
 
     /// Return the end date, formatted as a string suitable for sql
     fn get_end(&self) -> String {
-        self.get_most_recent().format("%Y-%m-%d %H:%M:%S").to_string()
+        self.get_most_recent()
+            .format("%Y-%m-%d %H:%M:%S")
+            .to_string()
     }
 }
 
@@ -76,7 +75,7 @@ impl DateRange {
     pub fn new(
         start: Option<DateTime<Utc>>,
         end: Option<DateTime<Utc>>,
-        granularity: GroupBy
+        granularity: GroupBy,
     ) -> Self {
         DateRange {
             start: start.unwrap_or(*MIN_QUERY_DATE),
@@ -90,12 +89,11 @@ impl DateRange {
 
     pub fn restrict_to_splits(
         &self,
-        connection: &SqliteConnect,
+        connection: &mut SqliteConnect,
         scenario: super::scenarios::Scenario,
         max_scheduled_occurrences: &super::occurrences::Occurrences,
     ) -> Self {
-        let list_splits = cte_list_splits(
-            self, scenario, max_scheduled_occurrences);
+        let list_splits = cte_list_splits(self, scenario, max_scheduled_occurrences);
         let query = format!(
             "
             WITH RECURSIVE {list_splits} \
@@ -108,10 +106,12 @@ impl DateRange {
                 Some(r) => DateRange::new(
                     Some(max(
                         DateTime::<Utc>::from_utc(r.min_ts, Utc),
-                        self.get_earliest())),
+                        self.get_earliest(),
+                    )),
                     Some(min(
                         DateTime::<Utc>::from_utc(r.max_ts, Utc),
-                        self.get_most_recent())),
+                        self.get_most_recent(),
+                    )),
                     self.granularity.clone(),
                 ),
                 None => DateRange::new(
@@ -223,9 +223,7 @@ impl DateSet for DateValues {
                 "VALUES {}",
                 d.iter()
                     .enumerate()
-                    .map(|(idx, d)|
-                        format!("({},{})", idx + 1,
-                                d.format("'%Y-%m-%d %H:%M:%S'")))
+                    .map(|(idx, d)| format!("({},{})", idx + 1, d.format("'%Y-%m-%d %H:%M:%S'")))
                     .collect::<Vec<_>>()
                     .join(",")
             ),
@@ -238,14 +236,16 @@ impl DateSet for DateValues {
     fn get_earliest(&self) -> DateTime<Utc> {
         *self
             .dates
-            .as_ref().and_then(|d| d.first())
+            .as_ref()
+            .and_then(|d| d.first())
             .unwrap_or(&MIN_QUERY_DATE)
     }
 
     fn get_most_recent(&self) -> DateTime<Utc> {
         *self
             .dates
-            .as_ref().and_then(|d| d.last())
+            .as_ref()
+            .and_then(|d| d.last())
             .unwrap_or(&MAX_QUERY_DATE)
     }
 }

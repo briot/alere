@@ -1,42 +1,39 @@
-use crate::cte_list_splits::{
-    cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
+use crate::account_kinds::AccountKindCategory;
+use crate::connections::SqliteConnect;
+use crate::cte_list_splits::{cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
 use crate::dates::{DateRange, DateSet, CTE_DATES};
 use crate::models::CommodityId;
 use crate::occurrences::Occurrences;
 use crate::scenarios::Scenario;
-use crate::connections::SqliteConnect;
 use chrono::NaiveDate;
-use crate::account_kinds::AccountKindCategory;
 use diesel::sql_types::{Date, Float, Nullable};
-
 
 #[derive(QueryableByName)]
 pub struct CashFlow {
-
-    #[sql_type = "Date"]
+    #[diesel(sql_type = Date)]
     pub month: NaiveDate,
 
-    #[sql_type = "Nullable<Float>"]
+    #[diesel(sql_type = Nullable<Float>)]
     pub realized_inc_total: Option<f32>,
 
-    #[sql_type = "Nullable<Float>"]
+    #[diesel(sql_type = Nullable<Float>)]
     pub inc_average: Option<f32>,
 
-    #[sql_type = "Nullable<Float>"]
+    #[diesel(sql_type = Nullable<Float>)]
     pub unrealized_inc_total: Option<f32>,
 
-    #[sql_type = "Nullable<Float>"]
+    #[diesel(sql_type = Nullable<Float>)]
     pub unrealized_average: Option<f32>,
 
-    #[sql_type = "Nullable<Float>"]
+    #[diesel(sql_type = Nullable<Float>)]
     pub exp_total: Option<f32>,
 
-    #[sql_type = "Nullable<Float>"]
+    #[diesel(sql_type = Nullable<Float>)]
     pub exp_average: Option<f32>,
 }
 
 pub fn monthly_cashflow(
-    connection: &SqliteConnect,
+    connection: &mut SqliteConnect,
     dates: &DateRange,
     currency: CommodityId,
     scenario: Scenario,
@@ -44,7 +41,6 @@ pub fn monthly_cashflow(
     prior: u8,
     after: u8,
 ) -> Vec<CashFlow> {
-
     let adjusted = dates.extend(prior, after);
     let adjusted_cte = adjusted.cte();
     let splits = cte_list_splits(dates, scenario, max_scheduled_occurrences);

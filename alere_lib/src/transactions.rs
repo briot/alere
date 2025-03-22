@@ -1,16 +1,15 @@
-use crate::connections::SqliteConnect;
+use crate::connections::PooledSqlite;
 use crate::errors::AlrResult;
 use crate::models::TransactionId;
-use diesel::RunQueryDsl;
-use diesel::sql_types::{Nullable, Text, Integer, Timestamp};
 use crate::schema::alr_transactions;
+use diesel::sql_types::{Integer, Nullable, Text, Timestamp};
+use diesel::RunQueryDsl;
 
 /// A transaction is made of one or more splits, the sum of which is zero
 /// (we take from one or more accounts and give to one or more accounts).
 
-#[derive(diesel::QueryableByName, diesel::Queryable,
-         Debug, serde::Serialize)]
-#[table_name = "alr_transactions"]
+#[derive(diesel::QueryableByName, diesel::Queryable, Debug, serde::Serialize)]
+#[diesel(table_name = alr_transactions)]
 pub struct Transaction {
     pub id: TransactionId,
 
@@ -112,7 +111,7 @@ pub struct Transaction {
 
 impl Transaction {
     pub fn create(
-        db: &SqliteConnect,
+        db: &mut PooledSqlite,
         timestamp: chrono::NaiveDateTime,
         memo: Option<String>,
         check_number: Option<String>,
@@ -120,8 +119,7 @@ impl Transaction {
         last_occurrence: Option<chrono::NaiveDateTime>,
         scenario: crate::scenarios::Scenario,
     ) -> AlrResult<Self> {
-        let qstr = 
-            "INSERT INTO alr_transactions
+        let qstr = "INSERT INTO alr_transactions
              (timestamp, memo, check_number, scheduled, last_occurrence,
              scenario_id)
              VALUES (?, ?, ?, ?, ?, ?)
@@ -133,20 +131,19 @@ impl Transaction {
             .bind::<Nullable<Text>, _>(&scheduled)
             .bind::<Nullable<Timestamp>, _>(&last_occurrence)
             .bind::<Integer, _>(&scenario)
-            .load(&db.0)?;
-        q.pop().ok_or_else(|| "Cannot insert new transaction".into())
+            .load(db)?;
+        q.pop()
+            .ok_or_else(|| "Cannot insert new transaction".into())
     }
 
-    pub fn add_to_memo(
-            &mut self, db: &SqliteConnect, memo: &str
-    ) -> AlrResult<()> {
+    pub fn add_to_memo(&mut self, db: &mut PooledSqlite, memo: &str) -> AlrResult<()> {
         if !memo.is_empty() {
             match &self.memo {
                 Some(m) => {
                     let mut s = String::from(m);
                     s.push_str(memo);
                     self.memo = Some(s);
-                },
+                }
                 None => {
                     self.memo = Some(String::from(memo));
                 }
@@ -155,24 +152,26 @@ impl Transaction {
             let _ = diesel::sql_query(q)
                 .bind::<Nullable<Text>, _>(&self.memo)
                 .bind::<Integer, _>(self.id)
-                .execute(&db.0)?;
+                .execute(db)?;
         }
         Ok(())
     }
 
     pub fn set_check_number(
-        &mut self, db: &SqliteConnect, check_number: Option<&str>,
+        &mut self,
+        db: &mut PooledSqlite,
+        check_number: Option<&str>,
     ) -> AlrResult<()> {
         match check_number {
-            None | Some("") => {},
+            None | Some("") => {}
             Some(c) => {
                 let q = "UPDATE alr_transactions
                     SET check_number = ? WHERE id = ?";
                 let _ = diesel::sql_query(q)
                     .bind::<Text, _>(&c)
                     .bind::<Integer, _>(self.id)
-                    .execute(&db.0)?;
-            },
+                    .execute(db)?;
+            }
         };
         Ok(())
     }

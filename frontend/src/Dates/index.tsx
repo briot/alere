@@ -107,6 +107,7 @@ export type RelativeDate = 'today' | 'yesterday' | 'tomorrow'
    | 'end of month' | 'end of last month' | 'end of 2 months ago'
    | 'end of 3 months ago' | 'end of 4 months ago'
    | '1 month ago' | '2 months ago' | '3 months ago'
+   | '4 months ago' | '6 months ago'
    | '1 year ago' | '2 years ago' | '3 years ago' | '4 years ago'
    | '5 years ago' | 'start of last year' | 'start of year'
    | 'start of 2 years ago' | 'start of 3 years ago'
@@ -135,6 +136,8 @@ const relativeDates: Record<RelativeDate, RelativeDateType> = {
    "1 month ago":           {group: 3, toDate: (r: Ref) => addMonth(-1, r)},
    "2 months ago":          {group: 3, toDate: (r: Ref) => addMonth(-2, r)},
    "3 months ago":          {group: 3, toDate: (r: Ref) => addMonth(-3, r)},
+   "4 months ago":          {group: 3, toDate: (r: Ref) => addMonth(-4, r)},
+   "6 months ago":          {group: 3, toDate: (r: Ref) => addMonth(-6, r)},
 
    "1 year ago":            {group: 4, toDate: (r: Ref) => addMonth(-12, r)},
    "2 years ago":           {group: 4, toDate: (r: Ref) => addMonth(-24, r)},
@@ -191,6 +194,7 @@ interface DateRangeType {
 }
 
 export type DateRange = '1 day' | '1 month' | '2 months' | '3 months'
+   | '4 months' | '6 months'
    | 'current month' | 'month so far' | 'last month' | '1 year' | '2 years'
    | '3 years' | '4 years' | '5 years' | 'current year so far' | 'current year'
    | 'last year' | '2 years ago' | '3 years ago' | '4 years ago'
@@ -216,6 +220,16 @@ const dateRanges: Record<DateRange, DateRangeType> = {
       range: ['3 months ago', 'today'],
       group: 1,
       months: 3,
+   },
+   '4 months':      {
+      range: ['4 months ago', 'today'],
+      group: 1,
+      months: 4,
+   },
+   '6 months':      {
+      range: ['6 months ago', 'today'],
+      group: 1,
+      months: 6,
    },
    'current month': {
       range: ['start of month', 'end of month'],

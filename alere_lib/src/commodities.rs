@@ -1,10 +1,10 @@
-use crate::connections::SqliteConnect;
 use crate::commodity_kinds::CommodityKind;
+use crate::connections::PooledSqlite;
 use crate::errors::AlrResult;
 use crate::models::{CommodityId, PriceSourceId, ScalingFactor};
-use diesel::RunQueryDsl;
-use diesel::sql_types::{Integer, Nullable, Text};
 use crate::schema::alr_commodities;
+use diesel::sql_types::{Integer, Nullable, Text};
+use diesel::RunQueryDsl;
 
 /// Currencies, securities and any tangible asset accounted for in accounts.
 ///
@@ -19,11 +19,9 @@ use crate::schema::alr_commodities;
 ///
 ///   split --account_id--> account --commodity_id--> commodity
 
-#[derive(diesel::Queryable, diesel::QueryableByName,
-         Debug, serde::Serialize)]
-#[table_name = "alr_commodities"]
+#[derive(diesel::Queryable, diesel::QueryableByName, Debug, serde::Serialize)]
+#[diesel(table_name = alr_commodities)]
 pub struct Commodity {
-
     pub id: CommodityId,
 
     /// Name as displayed in selection boxes in the GUI.  For instance, it
@@ -45,7 +43,7 @@ pub struct Commodity {
     /// Each account can override this value via its commodity_scu field.
     pub price_scale: ScalingFactor,
 
-    /// For online quotes. 
+    /// For online quotes.
     /// The source refers to one of the plugins available to download
     /// online information.
     ///
@@ -73,15 +71,10 @@ pub struct CommodityConfig<'a> {
 }
 
 impl Commodity {
-
     /// Create a new commodity in the database
 
-    pub fn create(
-        db: &SqliteConnect,
-        config: CommodityConfig,
-    ) -> AlrResult<Self> {
-        let q = 
-            "INSERT INTO alr_commodities
+    pub fn create(db: &mut PooledSqlite, config: CommodityConfig) -> AlrResult<Self> {
+        let q = "INSERT INTO alr_commodities
              (name, symbol_before, symbol_after, kind,
               price_scale, quote_symbol, quote_source_id,
               quote_currency_id)
@@ -97,7 +90,7 @@ impl Commodity {
             .bind::<Nullable<Text>, _>(config.quote_symbol)
             .bind::<Nullable<Integer>, _>(config.quote_source_id)
             .bind::<Nullable<Integer>, _>(config.quote_currency_id)
-            .load(&db.0)?;
+            .load(db)?;
 
         n.pop().ok_or_else(|| "Cannot insert commodity".into())
     }
@@ -107,5 +100,4 @@ impl Commodity {
     pub fn is_currency(&self) -> bool {
         matches!(self.kind, CommodityKind::Currency)
     }
-
 }

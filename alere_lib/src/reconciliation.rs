@@ -1,9 +1,14 @@
 use diesel::backend::Backend;
 use diesel::deserialize::FromSql;
-use diesel::serialize::{ToSql, Output};
+use diesel::serialize::{Output, ToSql};
 use diesel::sql_types::SmallInt;
+use diesel::sqlite::Sqlite;
 
-#[derive(Copy, Clone, Debug, serde::Serialize,
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    serde::Serialize,
     FromSqlRow,    // so that struct containing this can be Queryable
     FromPrimitive, // from num-derive crate, convert from i32 to this enum
 )]
@@ -30,38 +35,30 @@ impl Default for ReconcileKind {
 impl std::fmt::Display for ReconcileKind {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            ReconcileKind::NEW        => write!(f, "n"),
-            ReconcileKind::CLEARED    => write!(f, "c"),
+            ReconcileKind::NEW => write!(f, "n"),
+            ReconcileKind::CLEARED => write!(f, "c"),
             ReconcileKind::RECONCILED => write!(f, "R"),
         }
     }
 }
 
 impl<DB> FromSql<SmallInt, DB> for ReconcileKind
-    where DB: Backend,
-          i16: FromSql<SmallInt, DB>
+where
+    DB: Backend,
+    i16: FromSql<SmallInt, DB>,
 {
-    fn from_sql(
-        bytes: Option<&DB::RawValue>
-    ) -> diesel::deserialize::Result<ReconcileKind> {
+    fn from_sql(bytes: DB::RawValue<'_>) -> diesel::deserialize::Result<ReconcileKind> {
         let r: i16 = i16::from_sql(bytes)?;
         match num::FromPrimitive::from_i16(r) {
             Some(v) => Ok(v),
-            None    => Err(
-                format!("Cannot convert {} to ReconcileKind", r)
-                .into())
+            None => Err(format!("Cannot convert {} to ReconcileKind", r).into()),
         }
     }
 }
 
-impl<DB> ToSql<SmallInt, DB> for ReconcileKind
-where
-    DB: Backend,
-    i16: ToSql<SmallInt, DB>,
-{
-    fn to_sql<W: std::io::Write>(
-        &self, out: &mut Output<W, DB>
-    ) -> diesel::serialize::Result {
-        (*self as i16).to_sql(out)
+impl ToSql<SmallInt, Sqlite> for ReconcileKind {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Sqlite>) -> diesel::serialize::Result {
+        out.set_value(*self as i32);
+        Ok(diesel::serialize::IsNull::No)
     }
 }

@@ -1,56 +1,55 @@
-use crate::connections::SqliteConnect;
+use crate::account_lists::price_sources;
 use crate::commodities::Commodity;
+use crate::connections::SqliteConnect;
 use crate::errors::AlrResult;
 use crate::models::{AccountId, CommodityId};
-use chrono::{DateTime, Utc, TimeZone, NaiveDateTime};
+use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 use diesel::prelude::*;
-use diesel::sql_types::{Integer, Float, Timestamp, Nullable};
+use diesel::sql_types::{Float, Integer, Nullable, Timestamp};
 use log::info;
 use serde::Serialize;
 use std::collections::HashMap;
-use crate::account_lists::price_sources;
-
 
 #[derive(QueryableByName, Debug)]
 struct Roi {
-    #[sql_type = "Integer"]
+    #[diesel(sql_type = Integer)]
     pub account_id: AccountId,
 
-    #[sql_type = "Integer"]
-    #[column_name = "commodity_id"]
+    #[diesel(sql_type = Integer)]
+    #[diesel(column_name = commodity_id)]
     pub _commodity_id: CommodityId,
 
-    #[sql_type = "Timestamp"]
+    #[diesel(sql_type = Timestamp)]
     pub min_ts: NaiveDateTime,
 
-    #[sql_type = "Timestamp"]
+    #[diesel(sql_type = Timestamp)]
     pub max_ts: NaiveDateTime,
 
-    #[sql_type = "Nullable<Float>"]
+    #[diesel(sql_type = Nullable<Float>)]
     pub shares: Option<f32>,
 
-    #[sql_type = "Nullable<Float>"]
+    #[diesel(sql_type = Nullable<Float>)]
     pub realized_gains: Option<f32>,
 
-    #[sql_type = "Nullable<Float>"]
+    #[diesel(sql_type = Nullable<Float>)]
     pub price_paid: Option<f32>,
 
-    #[sql_type = "Nullable<Float>"]
+    #[diesel(sql_type = Nullable<Float>)]
     pub shares_worth: Option<f32>,
 
-    #[sql_type = "Nullable<Float>"]
+    #[diesel(sql_type = Nullable<Float>)]
     pub computed_price: Option<f32>,
 
-    #[sql_type = "Nullable<Float>"]
+    #[diesel(sql_type = Nullable<Float>)]
     pub pl: Option<f32>,
 
-    #[sql_type = "Nullable<Float>"]
+    #[diesel(sql_type = Nullable<Float>)]
     pub roi: Option<f32>,
 
-    #[sql_type = "Nullable<Float>"]
+    #[diesel(sql_type = Nullable<Float>)]
     pub weighted_average: Option<f32>,
 
-    #[sql_type = "Nullable<Float>"]
+    #[diesel(sql_type = Nullable<Float>)]
     pub average_cost: Option<f32>,
 }
 
@@ -98,7 +97,7 @@ impl Default for Position {
 
 #[derive(Serialize)]
 pub struct Price {
-    t: i64,  //  DateTime<Utc>,
+    t: i64, //  DateTime<Utc>,
     price: f32,
     roi: f32,
     shares: f32,
@@ -138,7 +137,8 @@ impl ForAccount {
 /// Details on a traded symbol
 
 #[derive(Serialize)]
-pub struct Symbol {  //  <'a> {
+pub struct Symbol {
+    //  <'a> {
     id: CommodityId,
     ticker: String,
     source: i32,
@@ -149,63 +149,59 @@ pub struct Symbol {  //  <'a> {
 
 #[derive(QueryableByName)]
 struct AccountIdAndCommodity {
-
-    #[sql_type = "Integer"]
+    #[diesel(sql_type = Integer)]
     id: AccountId,
 
-    #[sql_type = "Integer"]
+    #[diesel(sql_type = Integer)]
     commodity_id: CommodityId,
 }
 
 pub fn quotes(
-    connection: SqliteConnect,
+    mut connection: SqliteConnect,
     min_ts: DateTime<Utc>,
     max_ts: DateTime<Utc>,
     currency: CommodityId,
     commodities: Option<Vec<CommodityId>>,
-    accounts: Option<Vec<AccountId>>
+    accounts: Option<Vec<AccountId>>,
 ) -> AlrResult<(Vec<Symbol>, HashMap<AccountId, ForAccount>)> {
     info!("quotes {:?} {:?} {}", &min_ts, &max_ts, currency);
 
     // Find all commodities
 
     let mut all_commodities: Vec<Commodity> = {
-       use crate::schema::alr_commodities::dsl::*;
-       alr_commodities.load::<Commodity>(&connection.0)?
+        use crate::schema::alr_commodities::dsl::*;
+        alr_commodities.load::<Commodity>(&mut connection.0)?
     };
 
     if let Some(commodities) = commodities {
         all_commodities.retain(|comm| commodities.contains(&comm.id));
     }
     let mut symbols = HashMap::new();
-    all_commodities.iter_mut().for_each(
-        |comm| {
-            symbols.insert(comm.id, Symbol {
+    all_commodities.iter_mut().for_each(|comm| {
+        symbols.insert(
+            comm.id,
+            Symbol {
                 id: comm.id,
-                ticker: comm.quote_symbol
-                    .as_ref()
-                    .cloned()
-                    .unwrap_or_default(),
+                ticker: comm.quote_symbol.as_ref().cloned().unwrap_or_default(),
                 source: comm.quote_source_id.unwrap_or(price_sources::USER),
                 is_currency: comm.is_currency(),
                 price_scale: comm.price_scale,
                 accounts: vec![],
-            });
-        }
-    );
+            },
+        );
+    });
 
     // Find the corresponding accounts
 
     let filter_account = match accounts {
         Some(accs) => format!(
             "AND a.id IN ({})",
-            accs
-            .iter()
-            .map(|id| id.to_string())
-            .collect::<Vec<_>>()
-            .join(",")
+            accs.iter()
+                .map(|id| id.to_string())
+                .collect::<Vec<_>>()
+                .join(",")
         ),
-        None       => "".to_string(),
+        None => "".to_string(),
     };
     let query = format!(
         "SELECT a.id, a.commodity_id \
@@ -213,16 +209,17 @@ pub fn quotes(
         JOIN alr_account_kinds k ON (a.kind_id = k.id) \
         WHERE k.is_trading {filter_account}"
     );
-    let accounts = connection.exec::<AccountIdAndCommodity>(
-        "quotes", &query)?;
+    let accounts = connection.exec::<AccountIdAndCommodity>("quotes", &query)?;
     let mut accs = HashMap::new();
-    accounts
-        .iter()
-        .for_each(|a| {
-            let acc = ForAccount::new(a.id);
-            accs.insert(a.id, acc);
-            symbols.get_mut(&a.commodity_id).unwrap().accounts.push(a.id);
-        });
+    accounts.iter().for_each(|a| {
+        let acc = ForAccount::new(a.id);
+        accs.insert(a.id, acc);
+        symbols
+            .get_mut(&a.commodity_id)
+            .unwrap()
+            .accounts
+            .push(a.id);
+    });
 
     // Remove all symbols for which we have zero account, to limit the scope
     // of the following query.
@@ -231,7 +228,8 @@ pub fn quotes(
 
     // Compute metrics
 
-    let accs_ids = accs.iter()
+    let accs_ids = accs
+        .iter()
         .map(|(id, _)| id.to_string())
         .collect::<Vec<_>>()
         .join(",");
@@ -250,35 +248,33 @@ pub fn quotes(
     );
 
     let rois = connection.exec::<Roi>("roi", &query)?;
-    rois
-        .iter()
-        .for_each(|r| {
-            let a = accs.get_mut(&r.account_id).unwrap();
-            let mi = Utc.from_utc_datetime(&r.min_ts);
-            let ma = Utc.from_utc_datetime(&r.max_ts);
+    rois.iter().for_each(|r| {
+        let a = accs.get_mut(&r.account_id).unwrap();
+        let mi = Utc.from_utc_datetime(&r.min_ts);
+        let ma = Utc.from_utc_datetime(&r.max_ts);
 
-            if a.oldest.is_none() {
-                // The oldest transaction is also the one that corresponds
-                // to the minimal requested date from the user.
-                a.oldest = Some(mi);
-            }
-            if mi <= min_ts && min_ts < ma {
-                a.start = Position::new(r);
-            }
+        if a.oldest.is_none() {
+            // The oldest transaction is also the one that corresponds
+            // to the minimal requested date from the user.
+            a.oldest = Some(mi);
+        }
+        if mi <= min_ts && min_ts < ma {
+            a.start = Position::new(r);
+        }
 
-            a.most_recent = Some(mi);
-            a.end = Position::new(r);
+        a.most_recent = Some(mi);
+        a.end = Position::new(r);
 
-            a.prices.push(Price {
-                t: mi.timestamp_millis(),
-                price: r.computed_price.unwrap_or(f32::NAN),
-                roi: match r.roi {
-                    Some(val) => (val - 1.0) * 100.0,
-                    None      => f32::NAN,
-                },
-                shares: r.shares.unwrap_or(f32::NAN),
-            });
+        a.prices.push(Price {
+            t: mi.timestamp_millis(),
+            price: r.computed_price.unwrap_or(f32::NAN),
+            roi: match r.roi {
+                Some(val) => (val - 1.0) * 100.0,
+                None => f32::NAN,
+            },
+            shares: r.shares.unwrap_or(f32::NAN),
         });
+    });
 
     for (_, a) in accs.iter_mut() {
         let now = Utc::now();
@@ -292,9 +288,7 @@ pub fn quotes(
         // Return over the period [mindata, max_ts]
         let d2 = a.start.equity + a.end.invested - a.start.invested;
         if f32::abs(d2) >= 1E-6 {
-            a.period_roi =
-                (a.end.equity + a.end.gains - a.start.gains)
-                / d2;
+            a.period_roi = (a.end.equity + a.end.gains - a.start.gains) / d2;
         }
     }
 

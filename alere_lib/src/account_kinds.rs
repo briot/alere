@@ -1,23 +1,27 @@
 use crate::connections::SqliteConnect;
 use crate::errors::AlrResult;
 use crate::models::AccountKindId;
-use diesel::{sql_query, RunQueryDsl};
+use crate::schema::alr_account_kinds;
 use diesel::backend::Backend;
 use diesel::deserialize::FromSql;
-use diesel::serialize::{ToSql, Output};
-use diesel::sql_types::{Bool, Text, Integer};
-use crate::schema::alr_account_kinds;
-
+use diesel::serialize::{Output, ToSql};
+use diesel::sql_types::{Bool, Integer, Text};
+use diesel::sqlite::Sqlite;
+use diesel::{sql_query, RunQueryDsl};
 
 /// A general categorization for account kinds.
 /// These broadly match how we present things in the GUI, though the actual
 /// accounts have finer grained flags
 
-#[derive(Clone, Copy, Debug, serde::Serialize,
-    FromSqlRow,     // So that struct containing this can be Queryable
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    serde::Serialize,
+    FromSqlRow, // So that struct containing this can be Queryable
     //AsExpression,
-    FromPrimitive   // from num-derive crate, convert from i32 to this enum
-  )]
+    FromPrimitive, // from num-derive crate, convert from i32 to this enum
+)]
 #[repr(i32)]
 pub enum AccountKindCategory {
     EXPENSE = 0,
@@ -27,11 +31,9 @@ pub enum AccountKindCategory {
     // negative. For instance, buying food is an expense, but if you get
     // reimbursed for one of your purchases, you would still store that
     // reimbursement as an EXPENSE, although with a positive value.
-
     EQUITY = 2,
     LIABILITY = 4,
     // Used for user account. Indicates money owned or money due.
-
     ASSET = 3,
     // For accounts that are blocked until a certain date, or for real-estate
     // and other goods that take a long time to sell like a car, that you want
@@ -39,40 +41,31 @@ pub enum AccountKindCategory {
 }
 
 impl<DB> FromSql<Integer, DB> for AccountKindCategory
-    where DB: Backend,
-          i32: FromSql<Integer, DB>
+where
+    DB: Backend,
+    i32: FromSql<Integer, DB>,
 {
-    fn from_sql(
-        bytes: Option<&DB::RawValue>
-    ) -> diesel::deserialize::Result<AccountKindCategory> {
+    fn from_sql(bytes: DB::RawValue<'_>) -> diesel::deserialize::Result<AccountKindCategory> {
         let r: i32 = i32::from_sql(bytes)?;
         match num::FromPrimitive::from_i32(r) {
             Some(v) => Ok(v),
-            None    => Err(
-                format!("Cannot convert {} to AccountKindCategory", r)
-                .into())
+            None => Err(format!("Cannot convert {} to AccountKindCategory", r).into()),
         }
     }
 }
 
-impl<DB> ToSql<Integer, DB> for AccountKindCategory
-where
-    DB: Backend,
-    i32: ToSql<Integer, DB>,
-{
-    fn to_sql<W: std::io::Write>(
-        &self, out: &mut Output<W, DB>
-    ) -> diesel::serialize::Result {
-        (*self as i32).to_sql(out)
+impl ToSql<Integer, Sqlite> for AccountKindCategory {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Sqlite>) -> diesel::serialize::Result {
+        out.set_value(*self as i32);
+        Ok(diesel::serialize::IsNull::No)
     }
 }
 
 /// Fine-grained properties for accounts. Thanks to these flags, we can make
 /// various computations.
 
-#[derive(Debug, serde::Serialize,
-         diesel::Queryable, diesel::QueryableByName)]
-#[table_name = "alr_account_kinds"]
+#[derive(Debug, serde::Serialize, diesel::Queryable, diesel::QueryableByName)]
+#[diesel(table_name = alr_account_kinds)]
 pub struct AccountKind {
     pub id: AccountKindId,
 
@@ -109,7 +102,6 @@ pub struct AccountKind {
 
     //---------------------------
     // Networth
-
     /// True for all accounts used to compute the networth.
     /// It should be False for categories in general.
     pub is_networth: bool,
@@ -134,7 +126,6 @@ pub struct AccountKind {
     // Whether this should count as taxes, other than income taxes
     pub is_misc_tax: bool,
 }
-
 
 /// We want to avoid duplicating account kinds in the database (though it would
 /// not matter for the queries, it is better for user convenience).
@@ -170,28 +161,52 @@ impl AccountKindManager {
     }
 
     pub fn is_income_tax(self, val: bool) -> Self {
-        Self { is_income_tax: val, ..self }
+        Self {
+            is_income_tax: val,
+            ..self
+        }
     }
     pub fn is_misc_tax(self, val: bool) -> Self {
-        Self { is_misc_tax: val, ..self }
+        Self {
+            is_misc_tax: val,
+            ..self
+        }
     }
     pub fn is_networth(self, val: bool) -> Self {
-        Self { is_networth: val, ..self }
+        Self {
+            is_networth: val,
+            ..self
+        }
     }
     pub fn is_passive_income(self, val: bool) -> Self {
-        Self { is_passive_income: val, ..self }
+        Self {
+            is_passive_income: val,
+            ..self
+        }
     }
     pub fn is_stock(self, val: bool) -> Self {
-        Self { is_stock: val, ..self }
+        Self {
+            is_stock: val,
+            ..self
+        }
     }
     pub fn is_trading(self, val: bool) -> Self {
-        Self { is_trading: val, ..self }
+        Self {
+            is_trading: val,
+            ..self
+        }
     }
     pub fn is_unrealized(self, val: bool) -> Self {
-        Self { is_unrealized: val, ..self }
+        Self {
+            is_unrealized: val,
+            ..self
+        }
     }
     pub fn is_work_income(self, val: bool) -> Self {
-        Self { is_work_income: val, ..self }
+        Self {
+            is_work_income: val,
+            ..self
+        }
     }
 
     /// Check whether the combination of flags is valid
@@ -199,7 +214,7 @@ impl AccountKindManager {
     fn is_valid(&self) -> AlrResult<()> {
         if self.is_passive_income || self.is_work_income {
             match self.category {
-                AccountKindCategory::INCOME => {},
+                AccountKindCategory::INCOME => {}
                 _ => return AlrResult::Err("Must be an income".into()),
             };
         }
@@ -207,8 +222,8 @@ impl AccountKindManager {
             match self.category {
                 AccountKindCategory::ASSET
                 | AccountKindCategory::LIABILITY
-                | AccountKindCategory::EQUITY => {},
-                _ => return Err("networth has incorrect category".into())
+                | AccountKindCategory::EQUITY => {}
+                _ => return Err("networth has incorrect category".into()),
             };
         }
 
@@ -222,12 +237,9 @@ impl AccountKindManager {
     /// Find an existing account_kind that matches the criterias, or create a
     /// new one if none could be found.
 
-    pub fn get_or_create(
-        &self, db: &SqliteConnect
-    ) -> AlrResult<AccountKind> {
+    pub fn get_or_create(&self, db: &mut SqliteConnect) -> AlrResult<AccountKind> {
         self.is_valid()?;
-        let lookup = 
-            "SELECT * FROM alr_account_kinds
+        let lookup = "SELECT * FROM alr_account_kinds
              WHERE category=?1
                  AND is_income_tax=?2
                  AND is_misc_tax=?3
@@ -249,11 +261,10 @@ impl AccountKindManager {
             .bind::<Bool, _>(self.is_trading)
             .bind::<Bool, _>(self.is_unrealized)
             .bind::<Bool, _>(self.is_work_income)
-            .load(&db.0)?;
+            .load(&mut db.0)?;
 
         if q.is_empty() {
-            let insert = 
-                "INSERT INTO alr_account_kinds
+            let insert = "INSERT INTO alr_account_kinds
                    (name, category, name_when_positive,
                     name_when_negative, is_work_income,
                     is_passive_income, is_unrealized, is_networth,
@@ -273,7 +284,7 @@ impl AccountKindManager {
                 .bind::<Bool, _>(self.is_stock)
                 .bind::<Bool, _>(self.is_income_tax)
                 .bind::<Bool, _>(self.is_misc_tax)
-                .load(&db.0)?;
+                .load(&mut db.0)?;
         }
 
         match q.len() {
@@ -283,9 +294,8 @@ impl AccountKindManager {
                 } else {
                     Err("Cannot insert account_kind".into())
                 }
-            },
+            }
             _ => Err(format!("Too many matches for {:?}", self).into()),
         }
     }
 }
-

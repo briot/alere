@@ -108,7 +108,8 @@ pub fn cte_list_splits(
                 --  acknowledged.
                 --   AND post_ts >= '{dates_start}'
            UNION {non_recurring_splits} \
-        )".into()
+        )"
+        .into()
     } else {
         format!("{CTE_SPLITS} AS ({non_recurring_splits})")
     }

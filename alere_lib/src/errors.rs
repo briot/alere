@@ -1,4 +1,3 @@
-
 #[derive(Debug)]
 pub enum AlrError {
     IOError(std::io::Error),
@@ -49,14 +48,12 @@ impl From<&str> for AlrError {
 
 //  So that our Result can be returned from tauri
 impl serde::Serialize for AlrError {
-
-  fn serialize<S>(
-        &self, serializer: S
-  ) -> core::result::Result<S::Ok, S::Error>
-      where S: serde::ser::Serializer,
-  {
-    serializer.serialize_str(self.to_string().as_ref())
-  }
+    fn serialize<S>(&self, serializer: S) -> core::result::Result<S::Ok, S::Error>
+    where
+        S: serde::ser::Serializer,
+    {
+        serializer.serialize_str(self.to_string().as_ref())
+    }
 }
 
 pub type AlrResult<T> = core::result::Result<T, AlrError>;

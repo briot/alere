@@ -75,6 +75,7 @@ impl Settings {
     /// The default file that we should open
     pub fn default_file(&mut self) -> PathBuf {
         if let Some(r) = self.saved.recent_files.last() {
+            //  ??? Should check if file exists
             return r.clone();
         }
 

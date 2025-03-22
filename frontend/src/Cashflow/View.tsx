@@ -220,9 +220,20 @@ const Cashflow: React.FC<CashflowProps> = p => {
                   pls={pls}
                   currency={currency}
                   roundValues={p.roundValues}
-                  head='Unrealized gains'
-                  amount={v => v.pl.unrealized}
-                  tooltip="Variation in the price of your investments"
+                  head='Unrealized liquid'
+                  amount={v => v.pl.unrealized_liquid}
+                  tooltip="Variation in the price of your liquid investments"
+                  bold={true}
+                  padding={1}
+                  marginTop={10}
+               />
+               <Flowrow
+                  pls={pls}
+                  currency={currency}
+                  roundValues={p.roundValues}
+                  head='Unrealized illiquid'
+                  amount={v => v.pl.unrealized_illiquid}
+                  tooltip="Variation in the price of your illiquid investments"
                   bold={true}
                   padding={1}
                   marginTop={10}

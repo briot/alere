@@ -1,25 +1,23 @@
 /// Compute the list of splits in a given time range, including the
 /// recurrences of scheduled transactions.
-
 use crate::accounts::Account;
 use crate::commodities::Commodity;
-use crate::connections::SqliteConnect;
+use crate::connections::PooledSqlite;
 use crate::dates::DateSet;
 use crate::errors::AlrResult;
 use crate::models::{AccountId, CommodityId, PayeeId, SplitId, TransactionId};
 use crate::occurrences::Occurrences;
 use crate::payees::Payee;
-use crate::query::{Query, SQL, CTE};
+use crate::query::{Query, CTE, SQL};
 use crate::reconciliation::ReconcileKind;
 use crate::scaling::scale_value;
 use crate::scenarios::{Scenario, NO_SCENARIO};
 use crate::schema::alr_splits;
 use crate::transactions::Transaction;
+use diesel::sql_types::{BigInt, Float, Integer, Nullable, SmallInt, Timestamp};
 use diesel::RunQueryDsl;
-use diesel::sql_types::{Nullable, Integer, Timestamp, SmallInt, BigInt, Float};
-use rust_decimal::Decimal;
 use num_traits::ToPrimitive;
-
+use rust_decimal::Decimal;
 
 /// The various actions that can be performed on stocks.
 /// Non-stock related splits will simply use None.
@@ -27,7 +25,7 @@ use num_traits::ToPrimitive;
 pub enum SplitStockAction {
     Buy = 0,
     Sell = 1,
-    Dividend = 2,    // Also Yield or InterestIncome
+    Dividend = 2, // Also Yield or InterestIncome
     AddShares = 3,
     RemoveShares = 4,
     Split = 5,
@@ -37,27 +35,24 @@ pub enum SplitStockAction {
 impl std::fmt::Display for SplitStockAction {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            SplitStockAction::Buy              => write!(f, "Buy"),
-            SplitStockAction::Sell             => write!(f, "Sell"),
-            SplitStockAction::Dividend         => write!(f, "Dividend"),
-            SplitStockAction::AddShares        => write!(f, "Add Shares"),
-            SplitStockAction::RemoveShares     => write!(f, "Remove Shares"),
-            SplitStockAction::Split            => write!(f, "Split"),
+            SplitStockAction::Buy => write!(f, "Buy"),
+            SplitStockAction::Sell => write!(f, "Sell"),
+            SplitStockAction::Dividend => write!(f, "Dividend"),
+            SplitStockAction::AddShares => write!(f, "Add Shares"),
+            SplitStockAction::RemoveShares => write!(f, "Remove Shares"),
+            SplitStockAction::Split => write!(f, "Split"),
             SplitStockAction::ReinvestDividend => write!(f, "Reinvest Dividend"),
         }
     }
 }
-
-
 
 /// Parts of a transaction.
 /// The sum for all splits in a balanced transaction must be 0.  However, it
 /// is not possible in general to sum qty directly, since there might be
 /// different commodities/currencies involved (see example of AAPL below).
 
-#[derive(diesel::QueryableByName, diesel::Queryable,
-         Debug, Default, serde::Serialize)]
-#[table_name = "alr_splits"]
+#[derive(diesel::QueryableByName, diesel::Queryable, Debug, Default, serde::Serialize)]
+#[diesel(table_name = alr_splits)]
 pub struct Split {
     pub id: SplitId,
 
@@ -126,7 +121,6 @@ pub struct Split {
 }
 
 impl Split {
-
     // Create a new split with default values.
     // This is only created in memory, not in the database.
 
@@ -135,7 +129,7 @@ impl Split {
         account: &Account,
         qty: Decimal, // like on bank statement (e.g. number of shares or money)
         ratio_qty: Decimal,
-        value: Decimal,  //  original amount of transaction
+        value: Decimal, //  original amount of transaction
         value_commodity: &Commodity,
         post_ts: chrono::NaiveDateTime,
     ) -> AlrResult<Self> {
@@ -158,11 +152,7 @@ impl Split {
 
     // Set the reconciliation status
 
-    pub fn set_reconcile(
-        &mut self,
-        reconcile: ReconcileKind,
-        ts: Option<chrono::NaiveDateTime>,
-    ) {
+    pub fn set_reconcile(&mut self, reconcile: ReconcileKind, ts: Option<chrono::NaiveDateTime>) {
         self.reconcile = reconcile;
         self.reconcile_ts = ts;
     }
@@ -181,12 +171,8 @@ impl Split {
 
     // Save the split in the database.
 
-    pub fn save(
-        &self,
-        db: &SqliteConnect,
-    ) -> AlrResult<()> {
-        let qstr = 
-            "INSERT INTO alr_splits
+    pub fn save(&self, db: &mut PooledSqlite) -> AlrResult<()> {
+        let qstr = "INSERT INTO alr_splits
             (scaled_qty, ratio_qty, scaled_value, reconcile, reconcile_ts,
              post_ts, account_id, payee_id, transaction_id,
              value_commodity_id)
@@ -202,11 +188,10 @@ impl Split {
             .bind::<Nullable<Integer>, _>(self.payee_id)
             .bind::<Integer, _>(self.transaction_id)
             .bind::<Integer, _>(self.value_commodity_id)
-            .execute(&db.0)?;
+            .execute(db)?;
         Ok(())
     }
 }
-
 
 pub struct SplitsList<'a> {
     dates: &'a dyn DateSet,
@@ -215,11 +200,10 @@ pub struct SplitsList<'a> {
 }
 
 pub struct SplitsListResult {
-//    account_id: u32,
+    //    account_id: u32,
 }
 
 impl<'a> SplitsList<'a> {
-
     pub fn new(dates: &'a dyn DateSet) -> Self {
         SplitsList {
             dates,
@@ -238,7 +222,6 @@ impl<'a> SplitsList<'a> {
         self.occurrences = occurrences;
         self
     }
-
 }
 
 impl<'a> Query for SplitsList<'a> {
@@ -282,11 +265,10 @@ impl<'a> Query for SplitsList<'a> {
             // overrides the post_ts for the splits associated with a
             // recurring transaction
             SQL::new(
-                vec![
-                    CTE::new(
-                        String::from("recurring_splits_and_transaction"),
-                        format!(
-                            "SELECT
+                vec![CTE::new(
+                    String::from("recurring_splits_and_transaction"),
+                    format!(
+                        "SELECT
                                t.id as transaction_id,
                                1 as occurrence,
                                s.id as split_id,
@@ -338,10 +320,9 @@ impl<'a> Query for SplitsList<'a> {
                             WHERE s.post_ts IS NOT NULL
                               AND s.post_ts <= '{dates_end}'
                               AND s.occurrence < {maxo}
-                            ")
-                    )
-                ],
-
+                            "
+                    ),
+                )],
                 format!(
                     "
                     SELECT * FROM recurring_splits_and_transaction
@@ -355,17 +336,13 @@ impl<'a> Query for SplitsList<'a> {
                          --   AND post_ts >= '{dates_start}'
                     UNION {non_recurring_splits}
                     "
-                )
+                ),
             )
         } else {
-            SQL::new(
-                Vec::new(),
-                non_recurring_splits,
-            )
+            SQL::new(Vec::new(), non_recurring_splits)
         }
     }
 }
-
 
 //fn test(dates: &dyn DateSet) {
 //    let q = SplitsList::new(dates).scenario(&NO_SCENARIO).query();

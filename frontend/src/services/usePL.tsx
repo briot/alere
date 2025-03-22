@@ -18,7 +18,8 @@ export interface Metric {
    liquid_delta: number;     // variation of equity for liquid assets
    networth_delta: number;   // total variation of equity
    cashflow: number;         // Total realized income - Total expenses
-   unrealized: number;       // Total unrealized income
+   unrealized_liquid: number;    // Total unrealized income (liquid assets)
+   unrealized_illiquid: number;  // Total unrealized income (illiquid assets)
 }
 
 const NULL_METRIC: Metric = {
@@ -35,7 +36,8 @@ const NULL_METRIC: Metric = {
    illiquid_delta: NaN,
    liquid_delta: NaN,
    networth_delta: NaN,
-   unrealized: NaN,
+   unrealized_liquid: NaN,
+   unrealized_illiquid: NaN,
    cashflow: NaN,
 };
 

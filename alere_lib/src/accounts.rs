@@ -1,11 +1,10 @@
-use chrono::{NaiveDate, NaiveDateTime};
-use crate::connections::SqliteConnect;
+use crate::connections::PooledSqlite;
 use crate::errors::AlrResult;
-use crate::models::{
-    AccountId, AccountKindId, CommodityId, InstitutionId, ScalingFactor};
-use diesel::RunQueryDsl;
-use diesel::sql_types::{Integer, Nullable, Text, Date, Bool, Timestamp};
+use crate::models::{AccountId, AccountKindId, CommodityId, InstitutionId, ScalingFactor};
 use crate::schema::alr_accounts;
+use chrono::{NaiveDate, NaiveDateTime};
+use diesel::sql_types::{Bool, Date, Integer, Nullable, Text, Timestamp};
+use diesel::RunQueryDsl;
 
 const NOT_SAVED: AccountId = -1;
 
@@ -18,14 +17,11 @@ const NOT_SAVED: AccountId = -1;
 /// for instance buying AAPL is not tracked directly in the investment account,
 /// but inside a Stock account which you could also name 'AAPL'.
 
-#[derive(diesel::Queryable,
-         diesel::QueryableByName,
-         Debug,
-         serde::Serialize)]
-#[table_name = "alr_accounts"]
+#[derive(diesel::Queryable, diesel::QueryableByName, Debug, serde::Serialize)]
+#[diesel(table_name = alr_accounts)]
 pub struct Account {
     pub id: AccountId,
-    pub name: String,    //  Short name as displayed to users
+    pub name: String, //  Short name as displayed to users
     pub description: Option<String>,
 
     // Only for actual IBAN, not free-form
@@ -44,7 +40,7 @@ pub struct Account {
     // Kraken, when trading Bitcoin, uses 0.0001 precision or less, so the
     // commodity_scu is set to 10000.
     //
-    // This defaults to the commoditie's price_scale when the account is
+    // This defaults to the commodity's price_scale when the account is
     // created, and should only be changed carefully afterwards, since that
     // requires changing all stored prices.
     pub commodity_scu: ScalingFactor,
@@ -65,7 +61,6 @@ pub struct Account {
     pub institution_id: Option<InstitutionId>,
     pub kind_id: AccountKindId,
     pub parent_id: Option<AccountId>,
-
     // ??? Could we use
     // parent: Option<RefCell<Weak<Account>>>,
     // children: RefCell<Vec<Rc<Account>>>,
@@ -100,7 +95,6 @@ pub struct AccountConfig<'a> {
 }
 
 impl Account {
-
     /// Create a new account. This is only in memory, and the account is
     /// not saved in the database.
 
@@ -124,31 +118,34 @@ impl Account {
 
     /// Lookup a company by id
 
-    pub fn lookup(&self, db: &SqliteConnect, id: AccountId) -> AlrResult<Self> {
+    pub fn lookup(&self, db: &mut PooledSqlite, id: AccountId) -> AlrResult<Self> {
         let s = "SELECT * FROM alr_accounts WHERE id=?";
         let mut q = diesel::sql_query(s)
             .bind::<Integer, _>(id)
-            .load::<Account>(&db.0)?;
-        q.pop().ok_or_else(|| "Cannot insert new institution".into())
+            .load::<Account>(db)?;
+        q.pop()
+            .ok_or_else(|| "Cannot insert new institution".into())
     }
 
     /// Save (or update) the account in the database
 
-    pub fn save(&mut self, db: &SqliteConnect) -> AlrResult<()> {
+    pub fn save(&mut self, db: &mut PooledSqlite) -> AlrResult<()> {
         let s = match self.id {
-            NOT_SAVED =>
+            NOT_SAVED => {
                 "INSERT INTO alr_accounts
                  (name, description, iban, number, closed, commodity_scu,
                   last_reconciled, opening_date, commodity_id,
                   institution_id, kind_id, parent_id)
                  VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                 RETURNING *",
-            _ =>
+                 RETURNING *"
+            }
+            _ => {
                 "UPDATE alr_accounts \
                 SET name=?, description=?, iban=?, number=?, closed=?, \
                 commodity_scu=?, last_reconciled=?, opening_date=?, \
                 commodity_id=?, institution_id=?, kind_id=?, parent_id=? \
-                WHERE id=?",
+                WHERE id=?"
+            }
         };
         let q = diesel::sql_query(s)
             .bind::<Text, _>(&self.name)
@@ -166,12 +163,12 @@ impl Account {
 
         match self.id {
             NOT_SAVED => {
-                let v = q.get_result::<Account>(&db.0)?;
+                let v = q.get_result::<Account>(db)?;
                 self.id = v.id;
-            },
+            }
             _ => {
-                q.bind::<Integer, _>(&self.id).execute(&db.0)?;
-            },
+                q.bind::<Integer, _>(&self.id).execute(db)?;
+            }
         };
         Ok(())
     }

@@ -1,20 +1,19 @@
-use crate::cte_list_splits::{
-    cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
+use crate::account_kinds::AccountKindCategory;
+use crate::connections::SqliteConnect;
+use crate::cte_list_splits::{cte_list_splits, cte_splits_with_values, CTE_SPLITS_WITH_VALUE};
 use crate::cte_query_networth::{cte_query_networth, CTE_QUERY_NETWORTH};
 use crate::dates::{DateRange, DateSet, DateValues, GroupBy, CTE_DATES};
 use crate::errors::AlrResult;
 use crate::models::{AccountId, CommodityId};
 use crate::occurrences::Occurrences;
 use crate::scenarios::{Scenario, NO_SCENARIO};
-use crate::connections::SqliteConnect;
-use crate::account_kinds::AccountKindCategory;
 use chrono::{DateTime, NaiveDate, Utc};
-use diesel::sql_types::{Bool, Float, Integer, Date};
+use diesel::sql_types::{Bool, Date, Float, Integer};
+use log::info;
 use rust_decimal::prelude::*; //  to_f32
 use rust_decimal::Decimal;
 use serde::Serialize;
 use std::collections::HashMap;
-use log::info;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct PerAccount {
@@ -25,16 +24,16 @@ pub struct PerAccount {
 
 #[derive(Debug, QueryableByName)]
 struct NetworthRow {
-    #[sql_type = "Integer"]
+    #[diesel(sql_type = Integer)]
     idx: i32,
 
-    #[sql_type = "Integer"]
+    #[diesel(sql_type = Integer)]
     account: AccountId,
 
-    #[sql_type = "Float"]
+    #[diesel(sql_type = Float)]
     shares: f32,
 
-    #[sql_type = "Float"]
+    #[diesel(sql_type = Float)]
     computed_price: f32,
 }
 
@@ -44,7 +43,7 @@ struct NetworthRow {
 /// and currency_id).
 
 pub fn networth(
-    connection: &SqliteConnect,
+    connection: &mut SqliteConnect,
     dates: &dyn DateSet,
     currency: CommodityId,
     scenario: Scenario,
@@ -87,24 +86,23 @@ pub fn networth(
             price: vec![Decimal::ZERO; 3],
         });
         e.shares[row.idx as usize - 1] = Decimal::new((row.shares * 100.0) as i64, 2);
-        e.price[row.idx as usize - 1] =
-            Decimal::new((row.computed_price * 100.0) as i64, 2);
+        e.price[row.idx as usize - 1] = Decimal::new((row.computed_price * 100.0) as i64, 2);
     }
     Ok(per_account.values().cloned().collect())
 }
 
 #[derive(QueryableByName, Serialize)]
 pub struct NWPoint {
-    #[sql_type = "Date"]
+    #[diesel(sql_type = Date)]
     pub date: NaiveDate,
 
-    #[sql_type = "Float"]
+    #[diesel(sql_type = Float)]
     pub diff: f32,
 
-    #[sql_type = "Float"]
+    #[diesel(sql_type = Float)]
     pub average: f32,
 
-    #[sql_type = "Float"]
+    #[diesel(sql_type = Float)]
     pub value: f32,
 }
 
@@ -115,7 +113,7 @@ pub struct NWPoint {
 /// previous one, and the mean of those diffs.
 
 pub fn query_networth_history(
-    connection: &SqliteConnect,
+    connection: &mut SqliteConnect,
     dates: &dyn DateSet,
     currency: CommodityId,
     scenario: Scenario,
@@ -153,12 +151,13 @@ pub fn query_networth_history(
         "
     );
 
-    connection.exec::<NWPoint>("networth_hist", &query)
-       .map_err(|e| e.into())
+    connection
+        .exec::<NWPoint>("networth_hist", &query)
+        .map_err(|e| e.into())
 }
 
 pub fn networth_history(
-    connection: SqliteConnect,
+    mut connection: SqliteConnect,
     min_ts: DateTime<Utc>,
     max_ts: DateTime<Utc>,
     currency: CommodityId,
@@ -169,15 +168,9 @@ pub fn networth_history(
     let include_scheduled: bool = false;
     let prior: u8 = 0;
     let after: u8 = 0;
-    let dates = DateRange::new(
-            Some(min_ts),
-            Some(max_ts),
-            group_by)
+    let dates = DateRange::new(Some(min_ts), Some(max_ts), group_by)
         .extend(prior, after)
-        .restrict_to_splits(
-           &connection,
-           NO_SCENARIO,
-           &Occurrences::no_recurrence());
+        .restrict_to_splits(&mut connection, NO_SCENARIO, &Occurrences::no_recurrence());
     let scenario = NO_SCENARIO;
     let occurrences = match include_scheduled {
         true => Occurrences::unlimited(),
@@ -185,24 +178,28 @@ pub fn networth_history(
     };
 
     query_networth_history(
-        &connection, &dates, currency, scenario, &occurrences,
-        prior, after)
+        &mut connection,
+        &dates,
+        currency,
+        scenario,
+        &occurrences,
+        prior,
+        after,
+    )
 }
 
 /// For each date, compute the current price and number of shares for each
 /// account.
 
 pub fn balance(
-    connection: SqliteConnect,
+    mut connection: SqliteConnect,
     dates: Vec<DateTime<Utc>>,
     currency: CommodityId,
 ) -> AlrResult<Vec<PerAccount>> {
     info!("balance {:?} currency={}", &dates, currency);
-    let d = &DateValues::new(
-        Some(dates)
-    );
+    let d = &DateValues::new(Some(dates));
     networth(
-        &connection,
+        &mut connection,
         d, // ??? Can we pass directly an iterator instead
         currency,
         NO_SCENARIO,
@@ -212,10 +209,10 @@ pub fn balance(
 
 #[derive(Debug, QueryableByName)]
 pub struct SplitsPerAccount {
-    #[sql_type = "Integer"]
+    #[diesel(sql_type = Integer)]
     pub account_id: AccountId,
 
-    #[sql_type = "Float"]
+    #[diesel(sql_type = Float)]
     pub value: f32,
 }
 
@@ -223,7 +220,7 @@ pub struct SplitsPerAccount {
 /// given time range.
 
 pub fn sum_splits_per_account(
-    connection: &SqliteConnect,
+    connection: &mut SqliteConnect,
     dates: &dyn DateSet,
     currency: CommodityId,
     scenario: Scenario,
@@ -290,31 +287,31 @@ where
 
 #[derive(QueryableByName, Debug)]
 struct AccountIsNWRow {
-    #[sql_type = "Integer"]
+    #[diesel(sql_type = Integer)]
     account_id: AccountId,
 
-    #[sql_type = "Bool"]
+    #[diesel(sql_type = Bool)]
     is_networth: bool,
 
-    #[sql_type = "Bool"]
+    #[diesel(sql_type = Bool)]
     is_liquid: bool,
 
-    #[sql_type = "Bool"]
+    #[diesel(sql_type = Bool)]
     realized_income: bool,
 
-    #[sql_type = "Bool"]
+    #[diesel(sql_type = Bool)]
     is_passive_income: bool,
 
-    #[sql_type = "Bool"]
+    #[diesel(sql_type = Bool)]
     is_work_income: bool,
 
-    #[sql_type = "Bool"]
+    #[diesel(sql_type = Bool)]
     is_expense: bool,
 
-    #[sql_type = "Bool"]
+    #[diesel(sql_type = Bool)]
     is_misc_tax: bool,
 
-    #[sql_type = "Bool"]
+    #[diesel(sql_type = Bool)]
     is_income_tax: bool,
 }
 
@@ -324,39 +321,37 @@ pub struct Networth {
     passive_income: f32, // Realized passive income
     work_income: f32,    // Work income
 
-    expenses: f32,       // Total expenses
+    expenses: f32, // Total expenses
     income_taxes: f32,
     other_taxes: f32,
 
     networth: f32,
     networth_start: f32,
-    networth_delta: f32,   // total variation of equity
+    networth_delta: f32, // total variation of equity
 
     liquid_assets: f32,
     liquid_assets_at_start: f32,
-    liquid_delta: f32,     // variation of equity for liquid assets
+    liquid_delta: f32, // variation of equity for liquid assets
 
     // networth_delta = illiquid_delta + liquid_delta
-    illiquid_delta: f32,   // variation of equity for illiquid assets
+    illiquid_delta: f32, // variation of equity for illiquid assets
 
     // networth_delta = cashflow + unrealized
-    cashflow: f32,         // Total income - Total expenses
-    unrealized: f32,       // Total unrealized income
+    cashflow: f32,            // Total income - Total expenses
+    unrealized_liquid: f32,   // Total unrealized income
+    unrealized_illiquid: f32, // Total unrealized income
 }
 
 pub fn metrics(
-    connection: SqliteConnect,
+    mut connection: SqliteConnect,
     min_ts: DateTime<Utc>,
     max_ts: DateTime<Utc>,
     currency: CommodityId,
 ) -> AlrResult<Networth> {
     info!("metrics {:?} {:?}", &min_ts, &max_ts);
-    let dates = DateValues::new(Some(vec![
-        min_ts,
-        max_ts,
-    ]));
+    let dates = DateValues::new(Some(vec![min_ts, max_ts]));
     let all_networth = networth(
-        &connection,
+        &mut connection,
         &dates,
         currency,
         NO_SCENARIO,
@@ -412,7 +407,7 @@ pub fn metrics(
     );
 
     let over_period = sum_splits_per_account(
-        &connection,
+        &mut connection,
         &dates,
         currency,
         NO_SCENARIO,
@@ -466,6 +461,7 @@ pub fn metrics(
         liquid_delta,
         illiquid_delta: networth_delta - liquid_delta,
         cashflow,
-        unrealized: networth_delta - cashflow,
+        unrealized_liquid: networth_delta - cashflow,
+        unrealized_illiquid: 0.0,
     })
 }
