@@ -29,6 +29,10 @@ impl InstitutionCollection {
         self.insts.push(inst.clone());
         inst
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = &Institution> {
+        self.insts.iter()
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -57,6 +61,11 @@ impl Institution {
     #[must_use]
     pub fn get_name(&self) -> String {
         self.0.borrow().name.clone()
+    }
+
+    #[must_use]
+    pub fn get_icon(&self) -> String {
+        self.0.borrow().icon.clone().unwrap_or_default()
     }
 }
 

@@ -273,7 +273,7 @@ impl KmyMoneyImporter {
             let currency = self.commodities.get(kmm_currency).unwrap();
             let name: &str = row.get("accountName");
 
-            let acc = repo.accounts.add(
+            let mut acc = repo.accounts.add(
                 name,
                 self.guess_account_kind(
                     repo,
@@ -305,6 +305,7 @@ impl KmyMoneyImporter {
                 // (not needed) balanceFormatted
                 // (not needed) transactionCount
             );
+            acc.set_display_commodity(currency.clone());
 
             self.accounts.insert(kmm_id.into(), acc);
             self.account_currency

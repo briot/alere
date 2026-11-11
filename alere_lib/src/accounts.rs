@@ -1,5 +1,6 @@
 use crate::{
     account_kinds::AccountKind,
+    commodities::Commodity,
     institutions::Institution,
     multi_values::MultiValue,
     transactions::{Split, Transaction},
@@ -80,6 +81,7 @@ impl AccountCollection {
             _number: number.map(str::to_string),
             closed,
             _opened_on: opened_on,
+            display_commodity: None,
             transactions: Vec::new(),
             reconciliations: Vec::new(),
         })));
@@ -126,6 +128,13 @@ impl AccountCollection {
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Copy, Default, PartialOrd, Ord)]
 pub struct AccountId(u16);
 
+impl AccountId {
+    #[must_use]
+    pub fn as_u16(self) -> u16 {
+        self.0
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Reconciliation {
     pub timestamp: DateTime<Local>,
@@ -169,6 +178,9 @@ struct AccountDetails {
 
     // When the account was opened
     _opened_on: Option<DateTime<Local>>,
+
+    // Preferred display commodity for import/export adapters.
+    display_commodity: Option<Commodity>,
 
     kind: AccountKind,
 
@@ -308,6 +320,35 @@ impl Account {
     #[must_use]
     pub fn get_id(&self) -> AccountId {
         self.0.borrow().id
+    }
+
+    #[must_use]
+    pub fn get_description(&self) -> String {
+        self.0.borrow()._description.clone().unwrap_or_default()
+    }
+
+    #[must_use]
+    pub fn get_number(&self) -> String {
+        self.0.borrow()._number.clone().unwrap_or_default()
+    }
+
+    #[must_use]
+    pub fn get_iban(&self) -> String {
+        self.0.borrow().iban.clone().unwrap_or_default()
+    }
+
+    #[must_use]
+    pub fn get_opened_on(&self) -> Option<DateTime<Local>> {
+        self.0.borrow()._opened_on
+    }
+
+    pub fn set_display_commodity(&mut self, commodity: Commodity) {
+        self.0.borrow_mut().display_commodity = Some(commodity);
+    }
+
+    #[must_use]
+    pub fn get_display_commodity(&self) -> Option<Commodity> {
+        self.0.borrow().display_commodity.clone()
     }
 
     pub fn set_iban(&mut self, iban: &str) {

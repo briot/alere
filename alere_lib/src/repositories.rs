@@ -41,6 +41,16 @@ impl Repository {
         &self.accounts
     }
 
+    #[must_use]
+    pub fn institutions(&self) -> &InstitutionCollection {
+        &self.institutions
+    }
+
+    #[must_use]
+    pub fn account_kinds(&self) -> &AccountKindCollection {
+        &self.account_kinds
+    }
+
     pub fn add_transaction(&mut self, tx: Transaction) -> Result<()> {
         for s in tx.splits().iter() {
             // Register prices from transactions

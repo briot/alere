@@ -3,3 +3,4 @@ hledger.journal
 *.profraw
 node_modules/
 dist/
+target/

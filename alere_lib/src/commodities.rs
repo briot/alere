@@ -6,6 +6,13 @@ use std::{
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
 pub struct CommodityId(u32);
 
+impl CommodityId {
+    #[must_use]
+    pub fn as_u32(self) -> u32 {
+        self.0
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Commodity(Rc<RefCell<CommodityDetails>>);
 

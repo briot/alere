@@ -1,7 +1,9 @@
 # Rust web API
 
-The initial Axum server exposes one endpoint: `GET /api/health`, returning
-`{"status":"ok"}`. It listens on `127.0.0.1:3000`.
+The Axum server exposes `GET /api/health`, returning `{"status":"ok"}`, and
+`GET /api/account/list`, returning the account-list arrays expected by the
+restored frontend. At startup it imports `./Comptes.kmy`; set `ALERE_KMY` to
+use another KMyMoney file. It listens on `127.0.0.1:3000`.
 Each request is logged with its method, full URI, and response status, including
 unsupported paths (for example, `GET /api/accounts -> 404`).
 

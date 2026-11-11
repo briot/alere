@@ -142,6 +142,10 @@ impl AccountKindCollection {
     pub fn lookup(&self, name: &str) -> Option<&AccountKind> {
         self.kinds.get(name)
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = &AccountKind> {
+        self.kinds.values()
+    }
 }
 
 #[derive(Debug)]
@@ -318,6 +322,21 @@ impl AccountKind {
     #[must_use]
     pub fn get_name(&self) -> String {
         self.0.borrow().name.clone()
+    }
+
+    #[must_use]
+    pub fn get_name_when_positive(&self) -> String {
+        self.0.borrow()._name_when_positive.clone()
+    }
+
+    #[must_use]
+    pub fn get_name_when_negative(&self) -> String {
+        self.0.borrow()._name_when_negative.clone()
+    }
+
+    #[must_use]
+    pub fn get_category(&self) -> AccountCategory {
+        self.0.borrow().category
     }
 
     #[must_use]
