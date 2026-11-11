@@ -93,22 +93,7 @@ pub fn ledger_view(
 
             // Update running total
             let amount_mv = if for_total {
-                let v = match &s.operation {
-                    Operation::Credit(v) => v.clone(),
-                    Operation::BuyAmount { qty, .. } => {
-                        MultiValue::new(qty.amount, &qty.commodity)
-                    }
-                    Operation::BuyPrice { qty, .. } => {
-                        MultiValue::new(qty.amount, &qty.commodity)
-                    }
-                    Operation::AddShares { qty } => {
-                        MultiValue::new(qty.amount, &qty.commodity)
-                    }
-                    Operation::Reinvest { shares, .. } => shares.clone(),
-                    Operation::Dividend | Operation::Split { .. } => {
-                        MultiValue::default()
-                    }
-                };
+                let v = s.operation.shares();
                 running_total += &v;
                 v
             } else {

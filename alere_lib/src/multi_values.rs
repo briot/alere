@@ -66,6 +66,43 @@ pub enum Operation {
     },
 }
 
+impl Operation {
+    /// Return the amount represented by this split, in its amount commodity.
+    #[must_use]
+    pub fn value(&self) -> MultiValue {
+        match self {
+            Operation::Credit(value) => value.clone(),
+            Operation::BuyAmount { amount, .. } => {
+                MultiValue::new(amount.amount, &amount.commodity)
+            }
+            Operation::BuyPrice { qty, price } => {
+                MultiValue::new(qty.amount * price.amount, &price.commodity)
+            }
+            Operation::AddShares { qty } => {
+                MultiValue::new(qty.amount, &qty.commodity)
+            }
+            Operation::Reinvest { amount, .. } => amount.clone(),
+            Operation::Split { .. } | Operation::Dividend => MultiValue::zero(),
+        }
+    }
+
+    /// Return the quantity represented by this split, in its account
+    /// commodity. For a currency account, this is its currency amount.
+    #[must_use]
+    pub fn shares(&self) -> MultiValue {
+        match self {
+            Operation::Credit(value) => value.clone(),
+            Operation::BuyAmount { qty, .. }
+            | Operation::BuyPrice { qty, .. }
+            | Operation::AddShares { qty } => {
+                MultiValue::new(qty.amount, &qty.commodity)
+            }
+            Operation::Reinvest { shares, .. } => shares.clone(),
+            Operation::Split { .. } | Operation::Dividend => MultiValue::zero(),
+        }
+    }
+}
+
 /// A value includes zero or more pairs (amount, commodity) to express prices
 /// or account balances.
 /// It can represent values like   1 EUR + 3 USD

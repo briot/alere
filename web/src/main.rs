@@ -4,7 +4,7 @@ use alere_lib::{
     commodities::Commodity,
     importers::Importer,
     kmymoney::KmyMoneyImporter,
-    multi_values::{MultiValue, Operation},
+    multi_values::MultiValue,
     networth::{GroupBy, Networth, Settings},
     repositories::Repository,
     times::{Instant, Intv},
@@ -626,37 +626,6 @@ async fn ledger(
         .map_err(|error| (StatusCode::BAD_REQUEST, error))
 }
 
-fn operation_amount(operation: &Operation) -> MultiValue {
-    match operation {
-        Operation::Credit(value) => value.clone(),
-        Operation::BuyAmount { amount, .. } => {
-            MultiValue::new(amount.amount, &amount.commodity)
-        }
-        Operation::Reinvest { amount, .. } => amount.clone(),
-        Operation::BuyPrice { qty, price } => {
-            MultiValue::new(qty.amount * price.amount, &price.commodity)
-        }
-        Operation::AddShares { qty } => {
-            MultiValue::new(qty.amount, &qty.commodity)
-        }
-        Operation::Split { .. } | Operation::Dividend => MultiValue::zero(),
-    }
-}
-
-fn operation_shares(operation: &Operation) -> MultiValue {
-    match operation {
-        Operation::Credit(value) => value.clone(),
-        Operation::BuyAmount { qty, .. } | Operation::BuyPrice { qty, .. } => {
-            MultiValue::new(qty.amount, &qty.commodity)
-        }
-        Operation::AddShares { qty } => {
-            MultiValue::new(qty.amount, &qty.commodity)
-        }
-        Operation::Reinvest { shares, .. } => shares.clone(),
-        Operation::Split { .. } | Operation::Dividend => MultiValue::zero(),
-    }
-}
-
 fn first_value(value: &MultiValue) -> Option<(f64, u16)> {
     value.iter().next().map(|v| {
         (
@@ -708,8 +677,8 @@ fn ledger_json(
         let mut tx_shares = Decimal::ZERO;
         let mut tx_amount = Decimal::ZERO;
         for split in splits.iter() {
-            let amount = operation_amount(&split.operation);
-            let shares = operation_shares(&split.operation);
+            let amount = split.operation.value();
+            let shares = split.operation.shares();
             let converted = prices.convert_multi_value(&amount, &split.post_ts);
             if converted.iter().any(|value| value.commodity != currency) {
                 anyhow::bail!(
@@ -1188,37 +1157,14 @@ fn income_expense_json(
         .with_context(|| format!("unknown currency id {currency_id}"))?;
     let min = NaiveDate::parse_from_str(mindate, "%Y-%m-%d")?;
     let max = NaiveDate::parse_from_str(maxdate, "%Y-%m-%d")?;
-    let mut prices = repository.market_prices(Some(currency.clone()));
-    let mut totals: std::collections::BTreeMap<u16, Decimal> =
-        std::collections::BTreeMap::new();
-    for transaction in repository.transactions().iter() {
-        for split in transaction.splits().iter() {
-            let kind = split.account.get_kind();
-            let date = split.post_ts.date_naive();
-            if date < min
-                || date > max
-                || kind.is_unrealized()
-                || !(include_income && kind.is_income()
-                    || include_expense && kind.is_expense())
-            {
-                continue;
-            }
-            let converted = prices.convert_multi_value(
-                &operation_amount(&split.operation),
-                &split.post_ts,
-            );
-            if converted.iter().any(|value| value.commodity != currency) {
-                anyhow::bail!(
-                    "cannot convert split for account {} on {} to currency {}",
-                    split.account.get_id().as_u16(),
-                    split.post_ts.format("%Y-%m-%d"),
-                    currency_id
-                );
-            }
-            *totals.entry(split.account.get_id().as_u16()).or_default() +=
-                decimal_in_currency(&converted, &currency);
-        }
-    }
+    let totals = alere_lib::metrics::realized_cashflow_per_account(
+        repository,
+        &currency,
+        min,
+        max,
+        include_income,
+        include_expense,
+    )?;
     let items = totals
         .into_iter()
         .filter(|(_, amount)| !amount.is_zero())
@@ -1285,7 +1231,7 @@ fn price_history_json(
     };
     let mut origins = std::collections::BTreeMap::<u32, Commodity>::new();
     account.for_each_split(|split| {
-        for value in operation_shares(&split.operation).iter() {
+        for value in split.operation.shares().iter() {
             origins
                 .entry(value.commodity.get_id().as_u32())
                 .or_insert(value.commodity);
@@ -1412,54 +1358,33 @@ fn mean_json(
     for index in 0..months.len() {
         networth_delta[index] = networth[index + 1] - networth[index];
     }
-    let mut income_by_month =
-        std::collections::HashMap::<String, Decimal>::new();
-    let mut expense_by_month =
-        std::collections::HashMap::<String, Decimal>::new();
-    let mut prices = repository.market_prices(Some(currency.clone()));
-    for transaction in repository.transactions().iter() {
-        for split in transaction.splits().iter() {
-            let date = split.post_ts.date_naive();
-            if date < expanded_min || date > expanded_max {
-                continue;
-            }
-            let kind = split.account.get_kind();
-            if !(kind.is_income() || kind.is_expense()) {
-                continue;
-            }
-            if kind.is_unrealized() && !include_unrealized {
-                continue;
-            }
-            let converted = prices.convert_multi_value(
-                &operation_amount(&split.operation),
-                &split.post_ts,
-            );
-            if converted.iter().any(|value| value.commodity != currency) {
-                anyhow::bail!(
-                    "cannot convert split for account {} on {} to currency {}",
-                    split.account.get_id().as_u16(),
-                    split.post_ts.format("%Y-%m-%d"),
-                    currency_id
-                );
-            }
-            let month = date.format("%Y-%m").to_string();
-            let amount = decimal_in_currency(&converted, &currency);
-            if kind.is_expense() {
-                *expense_by_month.entry(month).or_default() += amount;
-            } else if !kind.is_unrealized() {
-                *income_by_month.entry(month).or_default() += amount;
-            }
-        }
-    }
+    let cashflow_by_month = alere_lib::metrics::realized_cashflow_per_month(
+        repository,
+        &currency,
+        expanded_min,
+        expanded_max,
+    )?;
     let rows = months.iter().enumerate().map(|(index, date)| {
         let month = date.format("%Y-%m").to_string();
-        let income = *income_by_month.get(&month).unwrap_or(&Decimal::ZERO);
-        let expense = *expense_by_month.get(&month).unwrap_or(&Decimal::ZERO);
+        let (income, expense) = cashflow_by_month
+            .get(&month)
+            .copied()
+            .unwrap_or((Decimal::ZERO, Decimal::ZERO));
         let start = index.saturating_sub(prior as usize);
         let end = (index + after as usize + 1).min(months.len());
         let count = Decimal::from((end - start) as u32);
-        let avg_income = (start..end).map(|i| *income_by_month.get(&months[i].format("%Y-%m").to_string()).unwrap_or(&Decimal::ZERO)).sum::<Decimal>() / count;
-        let avg_expense = (start..end).map(|i| *expense_by_month.get(&months[i].format("%Y-%m").to_string()).unwrap_or(&Decimal::ZERO)).sum::<Decimal>() / count;
+        let avg_income = (start..end).map(|i| {
+            cashflow_by_month
+                .get(&months[i].format("%Y-%m").to_string())
+                .map(|values| values.0)
+                .unwrap_or(Decimal::ZERO)
+        }).sum::<Decimal>() / count;
+        let avg_expense = (start..end).map(|i| {
+            cashflow_by_month
+                .get(&months[i].format("%Y-%m").to_string())
+                .map(|values| values.1)
+                .unwrap_or(Decimal::ZERO)
+        }).sum::<Decimal>() / count;
         let avg_nw = networth_delta[start..end].iter().copied().sum::<Decimal>() / count;
         let delta = if include_unrealized { networth_delta[index] } else { Decimal::ZERO };
         let average_delta = if include_unrealized { avg_nw } else { Decimal::ZERO };

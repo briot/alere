@@ -6,9 +6,10 @@ use crate::{
     times::{Intv, TimeInterval},
 };
 use anyhow::Result;
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Local, NaiveDate};
 use itertools::Itertools;
 use rust_decimal::Decimal;
+use std::collections::BTreeMap;
 
 /// Format a duration in days as whole years and remaining months, matching
 /// the duration columns used by the CLI metrics view.
@@ -22,6 +23,117 @@ pub fn format_duration(days: &Option<Decimal>) -> String {
         format!("{}y {}m", years, months)
     })
     .unwrap_or_else(|| "n/a".to_owned())
+}
+
+fn split_cashflow_value(
+    prices: &mut MarketPrices,
+    split: &crate::transactions::Split,
+) -> MultiValue {
+    match &split.operation {
+        Operation::Credit(value) => {
+            prices.convert_multi_value(value, &split.post_ts)
+        }
+        Operation::AddShares { qty } => {
+            prices.convert_value(qty, &split.post_ts)
+        }
+        Operation::BuyAmount { .. }
+        | Operation::BuyPrice { .. }
+        | Operation::Reinvest { .. }
+        | Operation::Split { .. }
+        | Operation::Dividend => MultiValue::zero(),
+    }
+}
+
+fn visit_realized_cashflow<F>(
+    repository: &Repository,
+    currency: &Commodity,
+    mindate: NaiveDate,
+    maxdate: NaiveDate,
+    mut visit: F,
+) -> Result<()>
+where
+    F: FnMut(u16, String, bool, Decimal),
+{
+    let mut prices = repository.market_prices(Some(currency.clone()));
+    for transaction in repository.transactions().iter() {
+        for split in transaction.splits().iter() {
+            let kind = split.account.get_kind();
+            let date = split.post_ts.date_naive();
+            if date < mindate
+                || date > maxdate
+                || kind.is_unrealized()
+                || !(kind.is_income() || kind.is_expense())
+            {
+                continue;
+            }
+            let value = split_cashflow_value(&mut prices, split);
+            let amount = value
+                .iter()
+                .filter(|part| part.commodity == *currency)
+                .map(|part| part.amount)
+                .sum();
+            visit(
+                split.account.get_id().as_u16(),
+                date.format("%Y-%m").to_string(),
+                kind.is_income(),
+                amount,
+            );
+        }
+    }
+    Ok(())
+}
+
+/// Sum realized income and expenses per account, retaining the sign used by
+/// `Metrics::load` (income is normally negative; expenses positive).
+pub fn realized_cashflow_per_account(
+    repository: &Repository,
+    currency: &Commodity,
+    mindate: NaiveDate,
+    maxdate: NaiveDate,
+    include_income: bool,
+    include_expense: bool,
+) -> Result<BTreeMap<u16, Decimal>> {
+    let mut totals = BTreeMap::new();
+    visit_realized_cashflow(
+        repository,
+        currency,
+        mindate,
+        maxdate,
+        |id, _, is_income, value| {
+            if (is_income && include_income) || (!is_income && include_expense)
+            {
+                *totals.entry(id).or_insert(Decimal::ZERO) += value;
+            }
+        },
+    )?;
+    Ok(totals)
+}
+
+/// Aggregate realized income and expenses by calendar month.
+pub fn realized_cashflow_per_month(
+    repository: &Repository,
+    currency: &Commodity,
+    mindate: NaiveDate,
+    maxdate: NaiveDate,
+) -> Result<BTreeMap<String, (Decimal, Decimal)>> {
+    let mut totals = BTreeMap::new();
+    visit_realized_cashflow(
+        repository,
+        currency,
+        mindate,
+        maxdate,
+        |_, month, is_income, value| {
+            let (income, expense) = totals
+                .entry(month)
+                .or_insert((Decimal::ZERO, Decimal::ZERO));
+            if is_income {
+                *income += value;
+            } else {
+                *expense += value;
+            }
+        },
+    )?;
+    Ok(totals)
 }
 
 pub struct Settings {
@@ -222,19 +334,7 @@ impl Metrics {
                         || kind.is_income()
                         || kind.is_passive_income()
                     {
-                        let val = match &s.operation {
-                            Operation::Credit(v) => {
-                                prices.convert_multi_value(v, &s.post_ts)
-                            }
-                            Operation::AddShares { qty } => {
-                                prices.convert_value(qty, &s.post_ts)
-                            }
-                            Operation::BuyAmount { .. }
-                            | Operation::BuyPrice { .. }
-                            | Operation::Reinvest { .. }
-                            | Operation::Split { .. }
-                            | Operation::Dividend => MultiValue::zero(),
-                        };
+                        let val = split_cashflow_value(&mut prices, s);
 
                         if interval.intv.contains(s.post_ts) {
                             if kind.is_income_tax() {
