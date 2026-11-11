@@ -19,6 +19,7 @@ import useTickers from '@/services/useTickers';
 export interface PerformanceProps {
    hideIfNoShare: boolean;
    range: DateRange;
+   hiddenColumns?: string[];
 }
 
 interface ComputedPerformanceProps extends PerformanceProps, Aggregated {
@@ -67,7 +68,9 @@ const Performance: React.FC<PerformanceProps> = p => {
       prefs.currencyId, 'all' /* accountIds */, p.range, p.hideIfNoShare);
    const [sorted, setSorted] = React.useState('');
 
-   const cols = columns;
+   const cols = columns.filter(
+      column => !p.hiddenColumns?.includes(column.id),
+   );
 
    // We compute the date range once for all tickers, so that they all have
    // exactly the same range (otherwise resolving "now" might result in
