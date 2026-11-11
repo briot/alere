@@ -12,6 +12,12 @@ returns one object per net-worth account. Each object has `accountId`, plus
 `shares` and `price` arrays aligned with the requested dates. `currency` is a
 commodity ID from `/api/account/list`; dates use `YYYY-MM-DD` format.
 
+`GET /api/metrics?mindate=2025-11-11&maxdate=2026-11-11&currency=1`
+returns income, expenses, taxes, net worth, and liquid assets for the inclusive
+date range. Its fields are `income`, `passive_income`, `work_income`,
+`expenses`, `income_taxes`, `other_taxes`, `networth`, `networth_start`,
+`liquid_assets`, and `liquid_assets_at_start`.
+
 From the repository root, build the frontend once and run the API with:
 
 ```sh

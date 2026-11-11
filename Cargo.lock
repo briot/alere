@@ -3829,6 +3829,7 @@ dependencies = [
  "futures",
  "mime_guess",
  "rust-embed",
+ "rust_decimal",
  "serde",
  "serde_json",
  "tokio",

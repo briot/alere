@@ -4,6 +4,7 @@ use alere_lib::{
     commodities::Commodity,
     importers::Importer,
     kmymoney::KmyMoneyImporter,
+    multi_values::{MultiValue, Operation},
     networth::{GroupBy, Networth, Settings},
     repositories::Repository,
     times::{Instant, Intv},
@@ -21,6 +22,7 @@ use axum::{
     routing::get,
 };
 use chrono::{Local, NaiveDate};
+use rust_decimal::Decimal;
 use rust_embed::RustEmbed;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -43,12 +45,23 @@ struct HealthResponse {
 #[derive(Clone)]
 struct AppState {
     account_list: Arc<Value>,
-    networth_requests: mpsc::Sender<NetworthRequest>,
+    repository_requests: mpsc::Sender<RepositoryRequest>,
 }
 
-struct NetworthRequest {
-    currency_id: u32,
-    dates: Vec<String>,
+enum RepositoryCommand {
+    Networth {
+        currency_id: u32,
+        dates: Vec<String>,
+    },
+    Metrics {
+        currency_id: u32,
+        mindate: String,
+        maxdate: String,
+    },
+}
+
+struct RepositoryRequest {
+    command: RepositoryCommand,
     response: oneshot::Sender<Result<Value, String>>,
 }
 
@@ -56,6 +69,13 @@ struct NetworthRequest {
 struct NetworthQuery {
     currency: u32,
     dates: String,
+}
+
+#[derive(Deserialize)]
+struct MetricsQuery {
+    mindate: String,
+    maxdate: String,
+    currency: u32,
 }
 
 #[derive(Serialize)]
@@ -212,10 +232,12 @@ async fn networth(
         .map_err(|error| (StatusCode::BAD_REQUEST, error))?;
     let (response, receiver) = oneshot::channel();
     state
-        .networth_requests
-        .send(NetworthRequest {
-            currency_id: query.currency,
-            dates,
+        .repository_requests
+        .send(RepositoryRequest {
+            command: RepositoryCommand::Networth {
+                currency_id: query.currency,
+                dates,
+            },
             response,
         })
         .map_err(|_| {
@@ -233,6 +255,196 @@ async fn networth(
     result
         .map(Json)
         .map_err(|error| (StatusCode::BAD_REQUEST, error))
+}
+
+async fn metrics(
+    State(state): State<AppState>,
+    Query(query): Query<MetricsQuery>,
+) -> Result<Json<Value>, (StatusCode, String)> {
+    let dates =
+        parse_networth_dates(&format!("{},{}", query.mindate, query.maxdate))
+            .map_err(|error| (StatusCode::BAD_REQUEST, error))?;
+    if dates[0] > dates[1] {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "mindate must be on or before maxdate".to_owned(),
+        ));
+    }
+
+    let (response, receiver) = oneshot::channel();
+    state
+        .repository_requests
+        .send(RepositoryRequest {
+            command: RepositoryCommand::Metrics {
+                currency_id: query.currency,
+                mindate: dates[0].clone(),
+                maxdate: dates[1].clone(),
+            },
+            response,
+        })
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker is unavailable".to_owned(),
+            )
+        })?;
+    let result = receiver.await.map_err(|_| {
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "repository worker stopped before responding".to_owned(),
+        )
+    })?;
+    result
+        .map(Json)
+        .map_err(|error| (StatusCode::BAD_REQUEST, error))
+}
+
+fn decimal_in_currency(value: &MultiValue, currency: &Commodity) -> Decimal {
+    value
+        .iter()
+        .filter(|component| component.commodity == *currency)
+        .map(|component| component.amount)
+        .sum()
+}
+
+fn networth_totals(
+    repository: &Repository,
+    currency: &Commodity,
+    dates: &[String],
+) -> anyhow::Result<(Vec<Decimal>, Vec<Decimal>)> {
+    let intervals = dates
+        .iter()
+        .cloned()
+        .map(|date| Intv::UpTo(Instant::EndDay(date)))
+        .collect();
+    let networth = Networth::new(
+        repository,
+        Settings {
+            hide_zero_rows: false,
+            hide_all_same: false,
+            group_by: GroupBy::None,
+            subtotals: false,
+            commodity: Some(currency.clone()),
+            elide_boring_accounts: false,
+            intervals,
+        },
+        Local::now(),
+        |account| account.get_kind().is_networth(),
+    )?;
+    let mut total = vec![Decimal::ZERO; dates.len()];
+    let mut liquid = vec![Decimal::ZERO; dates.len()];
+    networth.tree.traverse(
+        |node| {
+            let Key::Account(account) = &node.data.key else {
+                return Ok(());
+            };
+            let is_liquid = account.get_kind().is_liquid();
+            for index in 0..dates.len() {
+                let value = decimal_in_currency(
+                    node.data.data.get_market_value(index)?,
+                    currency,
+                );
+                total[index] += value;
+                if is_liquid {
+                    liquid[index] += value;
+                }
+            }
+            Ok(())
+        },
+        true,
+    )?;
+    Ok((total, liquid))
+}
+
+fn metrics_json(
+    repository: &Repository,
+    currency_id: u32,
+    mindate: &str,
+    maxdate: &str,
+) -> anyhow::Result<Value> {
+    let currency = repository
+        .commodities
+        .iter_commodities()
+        .find(|commodity| commodity.get_id().as_u32() == currency_id)
+        .cloned()
+        .with_context(|| format!("unknown currency id {currency_id}"))?;
+    let mut prices = repository.market_prices(Some(currency.clone()));
+    let mut income = Decimal::ZERO;
+    let mut passive_income = Decimal::ZERO;
+    let mut work_income = Decimal::ZERO;
+    let mut expenses = Decimal::ZERO;
+    let mut income_taxes = Decimal::ZERO;
+    let mut other_taxes = Decimal::ZERO;
+    let mindate = NaiveDate::parse_from_str(mindate, "%Y-%m-%d")?;
+    let maxdate = NaiveDate::parse_from_str(maxdate, "%Y-%m-%d")?;
+
+    for transaction in repository.transactions().iter() {
+        for split in transaction.splits().iter() {
+            let kind = split.account.get_kind();
+            let split_date = split.post_ts.date_naive();
+            if split_date < mindate
+                || split_date > maxdate
+                || kind.is_unrealized()
+                || !(kind.is_expense()
+                    || kind.is_income()
+                    || kind.is_passive_income())
+            {
+                continue;
+            }
+
+            let converted = match &split.operation {
+                Operation::Credit(value) => {
+                    prices.convert_multi_value(value, &split.post_ts)
+                }
+                Operation::AddShares { qty } => {
+                    prices.convert_value(qty, &split.post_ts)
+                }
+                Operation::BuyAmount { .. }
+                | Operation::BuyPrice { .. }
+                | Operation::Reinvest { .. }
+                | Operation::Split { .. }
+                | Operation::Dividend => MultiValue::zero(),
+            };
+            let value = decimal_in_currency(&converted, &currency);
+            if kind.is_income_tax() {
+                income_taxes += value;
+            } else if kind.is_misc_tax() {
+                other_taxes += value;
+            }
+
+            if kind.is_expense() {
+                expenses += value;
+            } else if kind.is_passive_income() {
+                passive_income += value;
+                income += value;
+            } else if kind.is_work_income() {
+                work_income += value;
+                income += value;
+            } else {
+                income += value;
+            }
+        }
+    }
+
+    let (networth, liquid_assets) = networth_totals(
+        repository,
+        &currency,
+        &[mindate.to_string(), maxdate.to_string()],
+    )?;
+    let as_number =
+        |value: Decimal| value.to_string().parse::<f64>().unwrap_or(0.0);
+    Ok(json!({
+        "income": as_number(-income),
+        "passive_income": as_number(-passive_income),
+        "work_income": as_number(-work_income),
+        "expenses": as_number(expenses),
+        "income_taxes": as_number(income_taxes),
+        "other_taxes": as_number(other_taxes),
+        "networth": as_number(networth[1]),
+        "networth_start": as_number(networth[0]),
+        "liquid_assets": as_number(liquid_assets[1]),
+        "liquid_assets_at_start": as_number(liquid_assets[0]),
+    }))
 }
 
 fn networth_json(
@@ -344,8 +556,9 @@ fn networth_json(
 
 fn start_repository_worker(
     input: PathBuf,
-) -> anyhow::Result<(Value, mpsc::Sender<NetworthRequest>)> {
-    let (request_sender, request_receiver) = mpsc::channel::<NetworthRequest>();
+) -> anyhow::Result<(Value, mpsc::Sender<RepositoryRequest>)> {
+    let (request_sender, request_receiver) =
+        mpsc::channel::<RepositoryRequest>();
     let (ready_sender, ready_receiver) = mpsc::channel();
     std::thread::Builder::new()
         .name("alere-repository".to_owned())
@@ -369,12 +582,24 @@ fn start_repository_worker(
             }
 
             while let Ok(request) = request_receiver.recv() {
-                let result = networth_json(
-                    &repository,
-                    request.currency_id,
-                    &request.dates,
-                )
-                .map_err(|error| format!("compute net worth: {error:#}"));
+                let result = match request.command {
+                    RepositoryCommand::Networth { currency_id, dates } => {
+                        networth_json(&repository, currency_id, &dates).map_err(
+                            |error| format!("compute net worth: {error:#}"),
+                        )
+                    }
+                    RepositoryCommand::Metrics {
+                        currency_id,
+                        mindate,
+                        maxdate,
+                    } => metrics_json(
+                        &repository,
+                        currency_id,
+                        &mindate,
+                        &maxdate,
+                    )
+                    .map_err(|error| format!("compute metrics: {error:#}")),
+                };
                 let _ = request.response.send(result);
             }
         })?;
@@ -437,17 +662,18 @@ async fn main() -> anyhow::Result<()> {
     let input = std::env::var_os("ALERE_KMY")
         .map(PathBuf::from)
         .unwrap_or_else(|| PathBuf::from("./Comptes.kmy"));
-    let (account_list_data, networth_requests) =
+    let (account_list_data, repository_requests) =
         start_repository_worker(input)?;
     let state = AppState {
         account_list: Arc::new(account_list_data),
-        networth_requests,
+        repository_requests,
     };
 
     let app = Router::new()
         .route("/api/health", get(health))
         .route("/api/account/list", get(account_list))
         .route("/api/plots/networth", get(networth))
+        .route("/api/metrics", get(metrics))
         .fallback(frontend)
         .layer(middleware::from_fn(log_request))
         .with_state(state);
