@@ -38,8 +38,18 @@
 
       .select {
          .dropdownButton {
+            cursor: pointer;
             @include set-colors(page);
             border: none;
+
+            * {
+               cursor: pointer;
+            }
+         }
+
+         .menu .option,
+         .menu .option * {
+            cursor: pointer;
          }
          .selector .menu {
             font-size: 1rem;
