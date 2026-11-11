@@ -71,6 +71,10 @@ enum RepositoryCommand {
         start_at: String,
         end_at: String,
     },
+    NetworthHistory {
+        currency_id: u32,
+        dates: Vec<String>,
+    },
 }
 
 struct RepositoryRequest {
@@ -105,6 +109,15 @@ struct QuotesQuery {
     commodities: Option<String>,
     mindate: Option<String>,
     maxdate: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct NetworthHistoryQuery {
+    mindate: String,
+    maxdate: String,
+    groupby: String,
+    currency: u32,
+    scheduled: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -621,6 +634,156 @@ async fn quotes(
         .map_err(|error| (StatusCode::BAD_REQUEST, error))
 }
 
+async fn networth_history(
+    State(state): State<AppState>,
+    Query(query): Query<NetworthHistoryQuery>,
+) -> Result<Json<Value>, (StatusCode, String)> {
+    let dates =
+        parse_networth_dates(&format!("{},{}", query.mindate, query.maxdate))
+            .map_err(|error| (StatusCode::BAD_REQUEST, error))?;
+    if dates[0] > dates[1] {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "mindate must be on or before maxdate".to_owned(),
+        ));
+    }
+    let group_by = match query.groupby.as_str() {
+        "days" => GroupByHistory::Days,
+        "months" => GroupByHistory::Months,
+        "years" => GroupByHistory::Years,
+        other => {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                format!(
+                    "unsupported groupby {other:?}; expected days, months, or years"
+                ),
+            ));
+        }
+    };
+    // Recurring transactions are not represented in the Rust repository yet;
+    // the legacy scheduled flag is accepted and ignored.
+    let _include_scheduled = query
+        .scheduled
+        .as_deref()
+        .is_some_and(|value| value == "true" || value == "1");
+    let points = history_dates(&dates[0], &dates[1], group_by)
+        .map_err(|error| (StatusCode::BAD_REQUEST, error.to_string()))?;
+    let (response, receiver) = oneshot::channel();
+    state
+        .repository_requests
+        .send(RepositoryRequest {
+            command: RepositoryCommand::NetworthHistory {
+                currency_id: query.currency,
+                dates: points,
+            },
+            response,
+        })
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker is unavailable".to_owned(),
+            )
+        })?;
+    receiver
+        .await
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker stopped before responding".to_owned(),
+            )
+        })?
+        .map(Json)
+        .map_err(|error| (StatusCode::BAD_REQUEST, error))
+}
+
+#[derive(Clone, Copy)]
+enum GroupByHistory {
+    Days,
+    Months,
+    Years,
+}
+
+fn history_dates(
+    mindate: &str,
+    maxdate: &str,
+    group_by: GroupByHistory,
+) -> anyhow::Result<Vec<String>> {
+    use chrono::{Datelike, Duration, Months};
+    let min = NaiveDate::parse_from_str(mindate, "%Y-%m-%d")?
+        .max(NaiveDate::from_ymd_opt(1980, 1, 1).unwrap());
+    let requested_max = NaiveDate::parse_from_str(maxdate, "%Y-%m-%d")?;
+    let max = requested_max.min(Local::now().date_naive());
+    if min > max {
+        return Ok(Vec::new());
+    }
+    let mut dates = Vec::new();
+    match group_by {
+        GroupByHistory::Days => {
+            let start = max
+                .checked_sub_days(chrono::Days::new(365))
+                .unwrap_or(min)
+                .max(min);
+            let mut date = start;
+            while date <= max {
+                dates.push(date);
+                date += Duration::days(1);
+            }
+        }
+        GroupByHistory::Months => {
+            let mut month =
+                NaiveDate::from_ymd_opt(min.year(), min.month(), 1).unwrap();
+            loop {
+                let next =
+                    month.checked_add_months(Months::new(1)).unwrap_or(max);
+                let end_of_month = next - Duration::days(1);
+                if end_of_month >= min && end_of_month <= max {
+                    dates.push(end_of_month);
+                }
+                if next > max || month >= max {
+                    break;
+                }
+                month = next;
+            }
+            if dates.len() > 366 {
+                dates.drain(..dates.len() - 366);
+            }
+        }
+        GroupByHistory::Years => {
+            let mut year = min.year();
+            while year <= max.year() {
+                let end_of_year =
+                    NaiveDate::from_ymd_opt(year, 12, 31).unwrap();
+                if end_of_year >= min && end_of_year <= max {
+                    dates.push(end_of_year);
+                }
+                year += 1;
+            }
+            if dates.len() > 366 {
+                dates.drain(..dates.len() - 366);
+            }
+        }
+    }
+    Ok(dates.into_iter().map(|date| date.to_string()).collect())
+}
+
+fn networth_history_json(
+    repository: &Repository,
+    currency_id: u32,
+    dates: &[String],
+) -> anyhow::Result<Value> {
+    let currency = repository
+        .commodities
+        .iter_commodities()
+        .find(|commodity| commodity.get_id().as_u32() == currency_id)
+        .cloned()
+        .with_context(|| format!("unknown currency id {currency_id}"))?;
+    let (values, _) = networth_totals(repository, &currency, dates)?;
+    Ok(Value::Array(dates.iter().zip(values).map(|(date, amount)| json!({
+        "date": date,
+        "networth": amount.to_string().parse::<f64>().unwrap_or(0.0),
+    })).collect()))
+}
+
 fn quotes_json(
     repository: &Repository,
     currency_id: u32,
@@ -1067,6 +1230,15 @@ fn start_repository_worker(
                         &end_at,
                     )
                     .map_err(|error| format!("compute quotes: {error:#}")),
+                    RepositoryCommand::NetworthHistory {
+                        currency_id,
+                        dates,
+                    } => {
+                        networth_history_json(&repository, currency_id, &dates)
+                            .map_err(|error| {
+                                format!("compute net worth history: {error:#}")
+                            })
+                    }
                 };
                 let _ = request.response.send(result);
             }
@@ -1105,7 +1277,7 @@ fn missing_query_parameters(
         "/api/metrics" => &["mindate", "maxdate", "currency"],
         "/api/quotes" => &["currency"],
         "/api/networth_history" => {
-            &["mindate", "maxdate", "groupby", "currency", "scheduled"]
+            &["mindate", "maxdate", "groupby", "currency"]
         }
         p if p.starts_with("/api/ledger/") => &["currency"],
         _ => return Vec::new(),
@@ -1183,6 +1355,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/metrics", get(metrics))
         .route("/api/ledger/:ids", get(ledger))
         .route("/api/quotes", get(quotes))
+        .route("/api/networth_history", get(networth_history))
         .fallback(frontend)
         .layer(middleware::from_fn(log_request))
         .with_state(state);

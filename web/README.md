@@ -18,6 +18,11 @@ date range. Its fields are `income`, `passive_income`, `work_income`,
 `expenses`, `income_taxes`, `other_taxes`, `networth`, `networth_start`,
 `liquid_assets`, and `liquid_assets_at_start`.
 
+`GET /api/networth_history?mindate=1970-01-01&maxdate=2200-01-01&groupby=months&currency=1`
+returns `{date, networth}` points in the requested currency. `groupby` accepts
+`days`, `months`, or `years`; the optional `scheduled` flag is accepted but has
+no effect because recurring transactions are not represented yet.
+
 `GET /api/ledger/10,11?mindate=2025-11-11&maxdate=2026-11-11&currency=1`
 returns transactions affecting the listed account IDs. Each transaction
 includes all of its splits and the legacy frontend ledger fields. Split amounts
