@@ -3,6 +3,12 @@
    box-sizing: border-box;
    transition: transform 0.3s;
 
+   .header h5 {
+      font-size: 1em;
+      min-width: 0;
+      overflow: hidden;
+   }
+
    &:hover {
       // ??? With this, tooltips are displayed below graphs in other boxes
       // transform: scale(1.1);

@@ -1,5 +1,6 @@
 use super::*;
 use serde::Deserialize;
+use std::collections::{BTreeSet, HashMap};
 
 #[derive(Deserialize)]
 pub(super) struct NetworthQuery {
@@ -617,6 +618,9 @@ pub(super) fn quotes_json(
     let mut symbols: std::collections::BTreeMap<u32, (Commodity, Vec<Value>)> =
         std::collections::BTreeMap::new();
     let now = Local::now();
+    let mut history_by_timestamp =
+        HashMap::<i64, HashMap<u16, (Decimal, Option<Decimal>, Decimal)>>::new(
+        );
     for performance in end {
         let account_id = performance.account.get_id().as_u16();
         if account_ids.is_some_and(|ids| !ids.contains(&(account_id as u32))) {
@@ -659,18 +663,57 @@ pub(super) fn quotes_json(
         let transactions: Vec<_> = account.iter_transactions().collect();
         let oldest = transactions.iter().map(|tx| tx.timestamp()).min();
         let most_recent = transactions.iter().map(|tx| tx.timestamp()).max();
-        let end_price = performance.price.as_ref().and_then(|value| {
-            value
-                .iter()
-                .find(|v| v.commodity == currency)
-                .map(|v| v.amount)
-        });
-        let price_rows = end_price.map(|price| vec![json!({
-            "t": end_at.timestamp_millis(),
-            "price": decimal_json(Some(price)),
-            "roi": decimal_json(performance.roi.map(|roi| (roi - Decimal::ONE) * Decimal::ONE_HUNDRED)),
-            "shares": decimal_json(performance.shares.iter().next().map(|v| v.amount)),
-        })]).unwrap_or_default();
+        let mut timestamps = BTreeSet::from([start_at, end_at]);
+        timestamps.extend(
+            repository
+                .prices()
+                .history_for_commodity(&commodity)
+                .map(|(_, _, price)| price.timestamp)
+                .filter(|timestamp| {
+                    *timestamp >= start_at && *timestamp <= end_at
+                }),
+        );
+        let mut price_rows = Vec::new();
+        for timestamp in timestamps {
+            let timestamp_key = timestamp.timestamp_millis();
+            if !history_by_timestamp.contains_key(&timestamp_key) {
+                let historical = alere_lib::perf::Performance::load(
+                    repository,
+                    alere_lib::perf::Settings {
+                        commodity: Some(currency.clone()),
+                    },
+                    timestamp,
+                )?;
+                let values = historical
+                    .into_iter()
+                    .filter_map(|position| {
+                        let price = position
+                            .price
+                            .as_ref()?
+                            .iter()
+                            .find(|value| value.commodity == currency)?
+                            .amount;
+                        let shares = position.shares.iter().next()?.amount;
+                        Some((
+                            position.account.get_id().as_u16(),
+                            (price, position.roi, shares),
+                        ))
+                    })
+                    .collect();
+                history_by_timestamp.insert(timestamp_key, values);
+            }
+            if let Some((price, roi, shares)) = history_by_timestamp
+                .get(&timestamp_key)
+                .and_then(|positions| positions.get(&account_id))
+            {
+                price_rows.push(json!({
+                    "t": timestamp_key,
+                    "price": decimal_json(Some(*price)),
+                    "roi": decimal_json(roi.map(|roi| (roi - Decimal::ONE) * Decimal::ONE_HUNDRED)),
+                    "shares": decimal_json(Some(*shares)),
+                }));
+            }
+        }
         let account_json = json!({
             "account": account_id,
             "start": start_pos,

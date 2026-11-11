@@ -36,6 +36,22 @@ impl PriceCollection {
             .map(Vec::as_slice)
             .unwrap_or_default()
     }
+
+    /// Return all price observations involving a commodity, regardless of
+    /// whether it was stored as the origin or target of the price pair.
+    pub fn history_for_commodity(
+        &self,
+        commodity: &Commodity,
+    ) -> impl Iterator<Item = (&Commodity, &Commodity, &Price)> {
+        self.prices
+            .iter()
+            .filter(move |((origin, target), _)| {
+                origin == commodity || target == commodity
+            })
+            .flat_map(|((origin, target), prices)| {
+                prices.iter().map(move |price| (origin, target, price))
+            })
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
