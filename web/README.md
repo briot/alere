@@ -18,6 +18,12 @@ date range. Its fields are `income`, `passive_income`, `work_income`,
 `expenses`, `income_taxes`, `other_taxes`, `networth`, `networth_start`,
 `liquid_assets`, and `liquid_assets_at_start`.
 
+`GET /api/ledger/10,11?mindate=2025-11-11&maxdate=2026-11-11&currency=1`
+returns transactions affecting the listed account IDs. Each transaction
+includes all of its splits and the legacy frontend ledger fields. Split amounts
+and running balances are converted to the requested currency; share quantities
+remain in their account commodity. Recurring transactions are not returned.
+
 From the repository root, build the frontend once and run the API with:
 
 ```sh

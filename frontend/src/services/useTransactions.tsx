@@ -2,6 +2,7 @@ import useAccounts, { Account } from '@/services/useAccounts';
 import { DateRange, rangeToHttp } from '@/Dates';
 import { Transaction, incomeExpenseSplits } from '@/Transaction';
 import useFetch from '@/services/useFetch';
+import usePrefs from '@/services/usePrefs';
 
 /**
  * Fetch a ledger from the server
@@ -13,10 +14,11 @@ const useTransactions = (
    refDate: Date,                // starting point of the date range
 ): Transaction[] => {
    const { accounts } = useAccounts();
+   const { prefs } = usePrefs();
    const idsForQuery = accountList.map(a => a.id).sort().join(',');
    const discardIE = accountList.length > 1;
    const { data } = useFetch({
-      url: `/api/ledger/${idsForQuery}?${rangeToHttp(range, refDate)}`,
+      url: `/api/ledger/${idsForQuery}?${rangeToHttp(range, refDate)}&currency=${prefs.currencyId}`,
       placeholder: [],
       enabled: !!idsForQuery,
       parse: (json: Transaction[]) => {

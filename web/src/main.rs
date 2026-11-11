@@ -14,7 +14,7 @@ use anyhow::Context;
 use axum::{
     Json, Router,
     body::Body,
-    extract::{Query, State},
+    extract::{Path, Query, State},
     http::StatusCode,
     http::{Request, Uri, header},
     middleware::{self, Next},
@@ -58,6 +58,12 @@ enum RepositoryCommand {
         mindate: String,
         maxdate: String,
     },
+    Ledger {
+        account_ids: Vec<u16>,
+        mindate: String,
+        maxdate: String,
+        currency_id: u32,
+    },
 }
 
 struct RepositoryRequest {
@@ -75,6 +81,13 @@ struct NetworthQuery {
 struct MetricsQuery {
     mindate: String,
     maxdate: String,
+    currency: u32,
+}
+
+#[derive(Deserialize)]
+struct LedgerQuery {
+    mindate: Option<String>,
+    maxdate: Option<String>,
     currency: u32,
 }
 
@@ -297,6 +310,205 @@ async fn metrics(
     result
         .map(Json)
         .map_err(|error| (StatusCode::BAD_REQUEST, error))
+}
+
+async fn ledger(
+    State(state): State<AppState>,
+    Path(ids): Path<String>,
+    Query(query): Query<LedgerQuery>,
+) -> Result<Json<Value>, (StatusCode, String)> {
+    let mindate = query.mindate.as_deref().unwrap_or("1980-01-01");
+    let maxdate = query.maxdate.as_deref().unwrap_or("2200-01-01");
+    let dates = parse_networth_dates(&format!("{mindate},{maxdate}"))
+        .map_err(|error| (StatusCode::BAD_REQUEST, error))?;
+    if dates[0] > dates[1] {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "mindate must be on or before maxdate".to_owned(),
+        ));
+    }
+    let account_ids = ids
+        .split(',')
+        .map(|id| {
+            id.parse::<u16>().map_err(|_| {
+                (
+                    StatusCode::BAD_REQUEST,
+                    format!("invalid account id {id:?}"),
+                )
+            })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    if account_ids.is_empty() {
+        return Ok(Json(json!([])));
+    }
+    let (response, receiver) = oneshot::channel();
+    state
+        .repository_requests
+        .send(RepositoryRequest {
+            command: RepositoryCommand::Ledger {
+                account_ids,
+                mindate: dates[0].clone(),
+                maxdate: dates[1].clone(),
+                currency_id: query.currency,
+            },
+            response,
+        })
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker is unavailable".to_owned(),
+            )
+        })?;
+    receiver
+        .await
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker stopped before responding".to_owned(),
+            )
+        })?
+        .map(Json)
+        .map_err(|error| (StatusCode::BAD_REQUEST, error))
+}
+
+fn operation_amount(operation: &Operation) -> MultiValue {
+    match operation {
+        Operation::Credit(value) => value.clone(),
+        Operation::BuyAmount { amount, .. } => {
+            MultiValue::new(amount.amount, &amount.commodity)
+        }
+        Operation::Reinvest { amount, .. } => amount.clone(),
+        Operation::BuyPrice { qty, price } => {
+            MultiValue::new(qty.amount * price.amount, &price.commodity)
+        }
+        Operation::AddShares { qty } => {
+            MultiValue::new(qty.amount, &qty.commodity)
+        }
+        Operation::Split { .. } | Operation::Dividend => MultiValue::zero(),
+    }
+}
+
+fn operation_shares(operation: &Operation) -> MultiValue {
+    match operation {
+        Operation::Credit(value) => value.clone(),
+        Operation::BuyAmount { qty, .. } | Operation::BuyPrice { qty, .. } => {
+            MultiValue::new(qty.amount, &qty.commodity)
+        }
+        Operation::AddShares { qty } => {
+            MultiValue::new(qty.amount, &qty.commodity)
+        }
+        Operation::Reinvest { shares, .. } => shares.clone(),
+        Operation::Split { .. } | Operation::Dividend => MultiValue::zero(),
+    }
+}
+
+fn first_value(value: &MultiValue) -> Option<(f64, u16)> {
+    value.iter().next().map(|v| {
+        (
+            v.amount.to_string().parse().unwrap_or(0.0),
+            v.commodity.get_id().as_u32() as u16,
+        )
+    })
+}
+
+fn ledger_json(
+    repository: &Repository,
+    account_ids: &[u16],
+    mindate: &str,
+    maxdate: &str,
+    currency_id: u32,
+) -> anyhow::Result<Value> {
+    let mindate = NaiveDate::parse_from_str(mindate, "%Y-%m-%d")?;
+    let maxdate = NaiveDate::parse_from_str(maxdate, "%Y-%m-%d")?;
+    let reference_id = if account_ids.len() == 1 {
+        account_ids[0]
+    } else {
+        u16::MAX
+    };
+    let currency = repository
+        .commodities
+        .iter_commodities()
+        .find(|commodity| commodity.get_id().as_u32() == currency_id)
+        .cloned()
+        .with_context(|| format!("unknown currency id {currency_id}"))?;
+    let mut prices = repository.market_prices(Some(currency.clone()));
+    let mut running = Decimal::ZERO;
+    let mut running_shares = Decimal::ZERO;
+    let mut rows = Vec::new();
+    for (index, transaction) in repository.transactions().iter().enumerate() {
+        let splits = transaction.splits();
+        let selected_splits = splits.iter().filter(|split| {
+            account_ids.contains(&split.account.get_id().as_u16())
+                && split.post_ts.date_naive() <= maxdate
+        });
+        let selected_in_range = splits.iter().any(|split| {
+            account_ids.contains(&split.account.get_id().as_u16())
+                && (mindate..=maxdate).contains(&split.post_ts.date_naive())
+        });
+        if selected_splits.count() == 0 {
+            continue;
+        }
+        let date = transaction.timestamp().date_naive();
+        let mut split_json = Vec::new();
+        let mut tx_shares = Decimal::ZERO;
+        let mut tx_amount = Decimal::ZERO;
+        for split in splits.iter() {
+            let amount = operation_amount(&split.operation);
+            let shares = operation_shares(&split.operation);
+            let converted = prices.convert_multi_value(&amount, &split.post_ts);
+            if converted.iter().any(|value| value.commodity != currency) {
+                anyhow::bail!(
+                    "cannot convert split for account {} on {} to currency {}",
+                    split.account.get_id().as_u16(),
+                    split.post_ts.format("%Y-%m-%d"),
+                    currency_id
+                );
+            }
+            let amount_num = decimal_in_currency(&converted, &currency)
+                .to_string()
+                .parse::<f64>()
+                .unwrap_or(0.0);
+            let (shares_num, _) =
+                first_value(&shares).unwrap_or((0.0, currency_id as u16));
+            if split.account.get_id().as_u16() == reference_id {
+                tx_shares +=
+                    Decimal::from_f64_retain(shares_num).unwrap_or_default();
+                tx_amount +=
+                    Decimal::from_f64_retain(amount_num).unwrap_or_default();
+            }
+            let reconcile = match &split.reconciled {
+                alere_lib::transactions::ReconcileKind::New => "n",
+                alere_lib::transactions::ReconcileKind::Cleared => "c",
+                alere_lib::transactions::ReconcileKind::Reconciled(_) => "y",
+            };
+            split_json.push(json!({
+                "accountId": split.account.get_id().as_u16(),
+                "amount": amount_num,
+                "currency": currency_id,
+                "date": split.post_ts.format("%Y-%m-%d").to_string(),
+                "payee": transaction.payee().map(|p| p.get_name().to_string()),
+                "price": if shares_num == 0.0 { Value::Null } else { json!(amount_num / shares_num) },
+                "reconcile": reconcile,
+                "shares": shares_num,
+            }));
+        }
+        running += tx_amount;
+        running_shares += tx_shares;
+        if selected_in_range {
+            rows.push(json!({
+                "id": index.to_string(),
+                "occ": 0,
+                "date": date.format("%Y-%m-%d").to_string(),
+                "balance": running.to_string().parse::<f64>().unwrap_or(0.0),
+                "balanceShares": running_shares.to_string().parse::<f64>().unwrap_or(0.0),
+                "memo": transaction.memo().as_deref(),
+                "checknum": transaction.check_number(),
+                "recurring": false,
+                "splits": split_json,
+            }));
+        }
+    }
+    Ok(Value::Array(rows))
 }
 
 fn decimal_in_currency(value: &MultiValue, currency: &Commodity) -> Decimal {
@@ -599,6 +811,19 @@ fn start_repository_worker(
                         &maxdate,
                     )
                     .map_err(|error| format!("compute metrics: {error:#}")),
+                    RepositoryCommand::Ledger {
+                        account_ids,
+                        mindate,
+                        maxdate,
+                        currency_id,
+                    } => ledger_json(
+                        &repository,
+                        &account_ids,
+                        &mindate,
+                        &maxdate,
+                        currency_id,
+                    )
+                    .map_err(|error| format!("compute ledger: {error:#}")),
                 };
                 let _ = request.response.send(result);
             }
@@ -615,8 +840,46 @@ async fn log_request(request: Request<Body>, next: Next) -> Response<Body> {
     let method = request.method().clone();
     let uri = request.uri().clone();
     let response = next.run(request).await;
-    println!("{method} {uri} -> {}", response.status());
+    let missing = missing_query_parameters(uri.path(), uri.query());
+    if missing.is_empty() {
+        println!("{method} {uri} -> {}", response.status());
+    } else {
+        println!(
+            "{method} {uri} -> {} (missing parameters: {})",
+            response.status(),
+            missing.join(", ")
+        );
+    }
     response
+}
+
+fn missing_query_parameters(
+    path: &str,
+    query: Option<&str>,
+) -> Vec<&'static str> {
+    let required: &[&str] = match path {
+        "/api/plots/networth" => &["currency", "dates"],
+        "/api/metrics" => &["mindate", "maxdate", "currency"],
+        "/api/networth_history" => {
+            &["mindate", "maxdate", "groupby", "currency", "scheduled"]
+        }
+        p if p.starts_with("/api/ledger/") => &["currency"],
+        _ => return Vec::new(),
+    };
+    let supplied: std::collections::HashSet<&str> = query
+        .unwrap_or_default()
+        .split('&')
+        .filter_map(|item| {
+            let (key, value) = item.split_once('=')?;
+            (!value.is_empty() && value != "undefined" && value != "null")
+                .then_some(key)
+        })
+        .collect();
+    required
+        .iter()
+        .copied()
+        .filter(|name| !supplied.contains(name))
+        .collect()
 }
 
 async fn frontend(uri: Uri) -> Response<Body> {
@@ -674,6 +937,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/account/list", get(account_list))
         .route("/api/plots/networth", get(networth))
         .route("/api/metrics", get(metrics))
+        .route("/api/ledger/:ids", get(ledger))
         .fallback(frontend)
         .layer(middleware::from_fn(log_request))
         .with_state(state);

@@ -221,6 +221,11 @@ impl Transaction {
     }
 
     #[must_use]
+    pub fn check_number(&self) -> Option<String> {
+        self.0.borrow().check_number.clone()
+    }
+
+    #[must_use]
     pub fn payee(&self) -> Option<Payee> {
         self.0.borrow().payee.clone()
     }
