@@ -13,6 +13,17 @@ export interface Metric {
    networth_start: number;
    liquid_assets: number;
    liquid_assets_at_start: number;
+   unrealized: number;
+   unrealized_liquid: number;
+   pnl_illiquid: number;
+   saving_rate: number;
+   financial_independence: number;
+   passive_income_ratio: number;
+   roi: number;
+   roi_liquid: number;
+   income_tax_rate: number;
+   emergency_fund: string;
+   wealth: string;
 }
 
 const NULL_METRIC: Metric = {
@@ -26,11 +37,22 @@ const NULL_METRIC: Metric = {
    liquid_assets_at_start: NaN,
    income_taxes: NaN,
    other_taxes: NaN,
+   unrealized: NaN,
+   unrealized_liquid: NaN,
+   pnl_illiquid: NaN,
+   saving_rate: NaN,
+   financial_independence: NaN,
+   passive_income_ratio: NaN,
+   roi: NaN,
+   roi_liquid: NaN,
+   income_tax_rate: NaN,
+   emergency_fund: 'n/a',
+   wealth: 'n/a',
 };
 
 const usePL = (range: DateRange, currencyId: CommodityId) => {
    const { data } = useFetch<Metric, any>({
-      url: `/api/metrics?${rangeToHttp(range)}&currency=${currencyId}`,
+      url: `/api/metrics?${rangeToHttp(range)}&currency=${currencyId}&interval=${encodeURIComponent(range)}`,
    });
    return data ?? NULL_METRIC;
 }
@@ -41,7 +63,7 @@ export const usePLMultiple = (
 ): Metric[]  => {
    const result = useFetchMultiple<Metric, any>(
       ranges.map(r => ({
-         url: `/api/metrics?${rangeToHttp(r)}&currency=${currencyId}`,
+         url: `/api/metrics?${rangeToHttp(r)}&currency=${currencyId}&interval=${encodeURIComponent(r)}`,
       }))
    );
    return result.map(r => r.data ?? NULL_METRIC);

@@ -57,6 +57,7 @@ enum RepositoryCommand {
         currency_id: u32,
         mindate: String,
         maxdate: String,
+        interval: Option<String>,
     },
     Ledger {
         account_ids: Vec<u16>,
@@ -123,6 +124,7 @@ struct MetricsQuery {
     mindate: String,
     maxdate: String,
     currency: u32,
+    interval: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -544,6 +546,7 @@ async fn metrics(
                 currency_id: query.currency,
                 mindate: dates[0].clone(),
                 maxdate: dates[1].clone(),
+                interval: query.interval,
             },
             response,
         })
@@ -1731,6 +1734,7 @@ fn metrics_json(
     currency_id: u32,
     mindate: &str,
     maxdate: &str,
+    period: Option<&str>,
 ) -> anyhow::Result<Value> {
     let currency = repository
         .commodities
@@ -1738,82 +1742,74 @@ fn metrics_json(
         .find(|commodity| commodity.get_id().as_u32() == currency_id)
         .cloned()
         .with_context(|| format!("unknown currency id {currency_id}"))?;
-    let mut prices = repository.market_prices(Some(currency.clone()));
-    let mut income = Decimal::ZERO;
-    let mut passive_income = Decimal::ZERO;
-    let mut work_income = Decimal::ZERO;
-    let mut expenses = Decimal::ZERO;
-    let mut income_taxes = Decimal::ZERO;
-    let mut other_taxes = Decimal::ZERO;
-    let mindate = NaiveDate::parse_from_str(mindate, "%Y-%m-%d")?;
-    let maxdate = NaiveDate::parse_from_str(maxdate, "%Y-%m-%d")?;
-
-    for transaction in repository.transactions().iter() {
-        for split in transaction.splits().iter() {
-            let kind = split.account.get_kind();
-            let split_date = split.post_ts.date_naive();
-            if split_date < mindate
-                || split_date > maxdate
-                || kind.is_unrealized()
-                || !(kind.is_expense()
-                    || kind.is_income()
-                    || kind.is_passive_income())
-            {
-                continue;
-            }
-
-            let converted = match &split.operation {
-                Operation::Credit(value) => {
-                    prices.convert_multi_value(value, &split.post_ts)
-                }
-                Operation::AddShares { qty } => {
-                    prices.convert_value(qty, &split.post_ts)
-                }
-                Operation::BuyAmount { .. }
-                | Operation::BuyPrice { .. }
-                | Operation::Reinvest { .. }
-                | Operation::Split { .. }
-                | Operation::Dividend => MultiValue::zero(),
-            };
-            let value = decimal_in_currency(&converted, &currency);
-            if kind.is_income_tax() {
-                income_taxes += value;
-            } else if kind.is_misc_tax() {
-                other_taxes += value;
-            }
-
-            if kind.is_expense() {
-                expenses += value;
-            } else if kind.is_passive_income() {
-                passive_income += value;
-                income += value;
-            } else if kind.is_work_income() {
-                work_income += value;
-                income += value;
-            } else {
-                income += value;
-            }
-        }
-    }
-
-    let (networth, liquid_assets) = networth_totals(
+    let fallback_interval = || -> anyhow::Result<Intv> {
+        let min = NaiveDate::parse_from_str(mindate, "%Y-%m-%d")?;
+        let max = NaiveDate::parse_from_str(maxdate, "%Y-%m-%d")?;
+        let end = max.succ_opt().context("maxdate is out of range")?;
+        Ok(Intv::Bounded {
+            begin: Instant::StartDay(min.to_string()),
+            end: Instant::StartDay(end.to_string()),
+        })
+    };
+    let interval = match period.unwrap_or_default() {
+        "1 day" => Intv::LastNDays(1),
+        "1 month" => Intv::LastNMonths(1),
+        "2 months" => Intv::LastNMonths(2),
+        "3 months" => Intv::LastNMonths(3),
+        "current month" => Intv::MonthAgo(0),
+        "last month" => Intv::MonthAgo(-1),
+        "1 year" => Intv::LastNYears(1),
+        "2 years" => Intv::LastNYears(2),
+        "3 years" => Intv::LastNYears(3),
+        "4 years" => Intv::LastNYears(4),
+        "5 years" => Intv::LastNYears(5),
+        "current year so far" => Intv::YearToDate,
+        "current year" => Intv::YearAgo(0),
+        "last year" => Intv::YearAgo(-1),
+        "2 years ago" => Intv::YearAgo(-2),
+        "3 years ago" => Intv::YearAgo(-3),
+        "4 years ago" => Intv::YearAgo(-4),
+        "5 years ago" => Intv::YearAgo(-5),
+        _ => fallback_interval()?,
+    };
+    let mut metrics = alere_lib::metrics::Metrics::load(
         repository,
-        &currency,
-        &[mindate.to_string(), maxdate.to_string()],
+        alere_lib::metrics::Settings {
+            commodity: Some(currency.clone()),
+            intervals: vec![interval],
+        },
+        Local::now(),
     )?;
+    let metric = metrics
+        .pop()
+        .context("metrics query returned no interval")?;
     let as_number =
         |value: Decimal| value.to_string().parse::<f64>().unwrap_or(0.0);
+    let as_percent = |value: Option<Decimal>| {
+        decimal_json(value.map(|ratio| ratio * Decimal::ONE_HUNDRED))
+    };
     Ok(json!({
-        "income": as_number(-income),
-        "passive_income": as_number(-passive_income),
-        "work_income": as_number(-work_income),
-        "expenses": as_number(expenses),
-        "income_taxes": as_number(income_taxes),
-        "other_taxes": as_number(other_taxes),
-        "networth": as_number(networth[1]),
-        "networth_start": as_number(networth[0]),
-        "liquid_assets": as_number(liquid_assets[1]),
-        "liquid_assets_at_start": as_number(liquid_assets[0]),
+        "income": as_number(decimal_in_currency(&(-&metric.income), &currency)),
+        "passive_income": as_number(decimal_in_currency(&(-&metric.passive_income), &currency)),
+        "work_income": as_number(decimal_in_currency(&(-&metric.work_income), &currency)),
+        "expenses": as_number(decimal_in_currency(&metric.expense, &currency)),
+        "income_taxes": as_number(decimal_in_currency(&metric.income_tax, &currency)),
+        "other_taxes": as_number(decimal_in_currency(&metric.misc_tax, &currency)),
+        "networth": as_number(decimal_in_currency(&metric.end_networth, &currency)),
+        "networth_start": as_number(decimal_in_currency(&metric.start_networth, &currency)),
+        "liquid_assets": as_number(decimal_in_currency(&metric.end_networth_liquid, &currency)),
+        "liquid_assets_at_start": as_number(decimal_in_currency(&metric.start_networth_liquid, &currency)),
+        "unrealized": as_number(decimal_in_currency(&metric.unrealized, &currency)),
+        "unrealized_liquid": as_number(decimal_in_currency(&metric.unrealized_liquid, &currency)),
+        "pnl_illiquid": as_number(decimal_in_currency(&metric.pnl_illiquid, &currency)),
+        "saving_rate": as_percent(metric.saving_rate),
+        "financial_independence": as_percent(metric.financial_independence),
+        "passive_income_ratio": as_percent(metric.passive_income_ratio),
+        "roi": as_percent(metric.roi),
+        "roi_liquid": as_percent(metric.roi_liquid),
+        "income_tax_rate": as_percent(metric.income_tax_rate),
+        "emergency_fund": alere_lib::metrics::format_duration(&metric.emergency_fund),
+        "wealth": alere_lib::metrics::format_duration(&metric.wealth),
     }))
 }
 
@@ -1962,11 +1958,13 @@ fn start_repository_worker(
                         currency_id,
                         mindate,
                         maxdate,
+                        interval,
                     } => metrics_json(
                         &repository,
                         currency_id,
                         &mindate,
                         &maxdate,
+                        interval.as_deref(),
                     )
                     .map_err(|error| format!("compute metrics: {error:#}")),
                     RepositoryCommand::Ledger {

@@ -16,7 +16,10 @@ commodity ID from `/api/account/list`; dates use `YYYY-MM-DD` format.
 returns income, expenses, taxes, net worth, and liquid assets for the inclusive
 date range. Its fields are `income`, `passive_income`, `work_income`,
 `expenses`, `income_taxes`, `other_taxes`, `networth`, `networth_start`,
-`liquid_assets`, and `liquid_assets_at_start`.
+`liquid_assets`, and `liquid_assets_at_start`, plus the CLI-compatible ratio
+fields and `emergency_fund` / `wealth` duration strings. The frontend sends an
+`interval` name for standard ranges so calculations use the same time interval
+semantics as the CLI.
 
 `GET /api/networth_history?mindate=1970-01-01&maxdate=2200-01-01&groupby=months&currency=1`
 returns `{date, networth}` points in the requested currency. `groupby` accepts

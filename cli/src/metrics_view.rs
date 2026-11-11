@@ -7,17 +7,6 @@ fn percent(val: &Option<Decimal>) -> String {
     crate::global_settings::format_percent(val)
 }
 
-fn duration(val: &Option<Decimal>) -> String {
-    val.map(|p| {
-        let days_in_year = Decimal::from(365_i16);
-        let days_in_month = days_in_year / Decimal::from(12_i8);
-        let years = (p / days_in_year).floor();
-        let months = ((p - years * days_in_year) / days_in_month).floor();
-        format!("{}y {}m", years, months)
-    })
-    .unwrap_or("n/a".to_string())
-}
-
 struct MetricRow {
     name: String,
     values: Vec<String>,
@@ -53,8 +42,12 @@ pub fn metrics_view(
         MetricRow::new("Networth at end", &m, |s| {
             s.end_networth.display(&globals.format)
         }),
-        MetricRow::new("Income", &m, |s| (-&s.income + &s.unrealized).display(&globals.format)),
-        MetricRow::new("  Realized", &m, |s| (-&s.income).display(&globals.format)),
+        MetricRow::new("Income", &m, |s| {
+            (-&s.income + &s.unrealized).display(&globals.format)
+        }),
+        MetricRow::new("  Realized", &m, |s| {
+            (-&s.income).display(&globals.format)
+        }),
         MetricRow::new("    inc work", &m, |s| {
             (-&s.work_income).display(&globals.format)
         }),
@@ -98,8 +91,12 @@ pub fn metrics_view(
         }),
         MetricRow::new("Return on Investment", &m, |s| percent(&s.roi)),
         MetricRow::new("  inc Liquid", &m, |s| percent(&s.roi_liquid)),
-        MetricRow::new("Emergency Fund", &m, |s| duration(&s.emergency_fund)),
-        MetricRow::new("Wealth", &m, |s| duration(&s.wealth)),
+        MetricRow::new("Emergency Fund", &m, |s| {
+            alere_lib::metrics::format_duration(&s.emergency_fund)
+        }),
+        MetricRow::new("Wealth", &m, |s| {
+            alere_lib::metrics::format_duration(&s.wealth)
+        }),
         MetricRow::new("Income Tax Rate", &m, |s| percent(&s.income_tax_rate)),
     ];
 

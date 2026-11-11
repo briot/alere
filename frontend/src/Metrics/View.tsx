@@ -7,26 +7,17 @@ import usePrefs from '@/services/usePrefs';
 import usePL from '@/services/usePL';
 import "./Metrics.scss";
 
-const commMonths: Commodity = {
-   id: -2,
-   name: "month",
-   symbol_before: '',
-   symbol_after: 'months',
-   price_scale: 1,
-   is_currency: false,
-}
-
 interface MetricsLineProps extends TooltipProps<undefined> {
    name: string;
    descr: string;
-   value: number | React.ReactNode;
+   value: number | string | React.ReactNode;
    commodity?: CommodityId|Commodity;
    suffix?: string;
 }
 
 const MetricsLine: React.FC<MetricsLineProps> = p => {
    if (p.value === null || p.value === undefined ||
-       (isNaN(p.value as any) && !React.isValidElement(p.value))
+       (typeof p.value === 'number' && Number.isNaN(p.value))
    ) {
       return null;
    }
@@ -42,7 +33,7 @@ const MetricsLine: React.FC<MetricsLineProps> = p => {
                <Tooltip {...p} >
                   <span className="value">
                   {
-                     React.isValidElement(p.value)
+                     typeof p.value !== 'number'
                      ? p.value
                      : <Numeric
                            amount={p.value as number}
@@ -69,11 +60,9 @@ const Metrics: React.FC<MetricsProps> = p => {
    const pl = usePL(p.range, currency);
    const months = monthCount(p.range);
    const monthly_expenses = pl.expenses / months;
-   const networth_delta = pl.networth - pl.networth_start;
-   const cashflow = pl.income - pl.expenses;
-   const unrealized = networth_delta - cashflow;
-
-   const non_work_income = pl.passive_income + unrealized;
+   const non_work_income = pl.passive_income + pl.unrealized;
+   const liquid_passive_income = pl.passive_income + pl.unrealized_liquid;
+   const total_return_income = non_work_income + pl.pnl_illiquid;
 
    return (
       <div className="cashflow">
@@ -81,10 +70,10 @@ const Metrics: React.FC<MetricsProps> = p => {
          <MetricsLine
             name="Savings rate"
             descr="How much of your realized income you are saving"
-            value={cashflow / pl.income * 100}
+            value={pl.saving_rate}
             tooltip={() =>
                <p>
-                  cashflow <Numeric amount={cashflow} />
+                  cashflow <Numeric amount={pl.income - pl.expenses} />
                   <br/>
                   / income <Numeric amount={pl.income} />
                   <br/>
@@ -97,11 +86,11 @@ const Metrics: React.FC<MetricsProps> = p => {
          <MetricsLine
             name="Return on Investment for liquid assets"
             descr="How much passive income your liquid assets provides"
-            value={non_work_income / pl.liquid_assets_at_start * 100}
+            value={pl.roi_liquid}
             tooltip={() =>
                <p>
-                  Passive income and unrealized
-                  gains <Numeric amount={non_work_income} />
+                  Passive income and unrealized liquid gains
+                  <Numeric amount={liquid_passive_income} />
                   <br />
                   / Liquid assets at
                   start <Numeric amount={pl.liquid_assets_at_start} />
@@ -116,7 +105,7 @@ const Metrics: React.FC<MetricsProps> = p => {
          <MetricsLine
             name="Emergency Fund Ratio"
             descr="How many months worth of expenses can be funded through liquid assets"
-            value={pl.liquid_assets / monthly_expenses}
+            value={pl.emergency_fund}
             tooltip={() =>
                <p>
                   liquid assets <Numeric amount={pl.liquid_assets} />
@@ -126,7 +115,6 @@ const Metrics: React.FC<MetricsProps> = p => {
                   Goal: more than 4 months
                </p>
             }
-            commodity={commMonths}
          />
 
       {/*
@@ -142,7 +130,7 @@ const Metrics: React.FC<MetricsProps> = p => {
          <MetricsLine
             name="Financial independence"
             descr="Part of your expenses covered by passive income"
-            value={non_work_income / pl.expenses * 100}
+            value={pl.financial_independence}
             tooltip={() =>
                <p>
                   Passive income and unrealized
@@ -158,7 +146,7 @@ const Metrics: React.FC<MetricsProps> = p => {
          <MetricsLine
             name="Passive income"
             descr="What part of the total income comes from sources other than the result of our work"
-            value={non_work_income / pl.income * 100}
+            value={pl.passive_income_ratio}
             tooltip={() =>
                <p>
                   Passive income and unrealized
@@ -175,11 +163,11 @@ const Metrics: React.FC<MetricsProps> = p => {
          <MetricsLine
             name="Return on Investment"
             descr="How much passive income your whole networth provides"
-            value={non_work_income / pl.networth_start * 100}
+            value={pl.roi}
             tooltip={() =>
                <p>
-                  Passive income and unrealized
-                  gains <Numeric amount={non_work_income} />
+                  Passive income, unrealized gains, and illiquid P&L
+                  <Numeric amount={total_return_income} />
                   <br/>
                   / Networth at start <Numeric amount={pl.networth_start} />
                   <br/>
@@ -202,7 +190,7 @@ const Metrics: React.FC<MetricsProps> = p => {
          <MetricsLine
             name="Wealth"
             descr="How many months worth of expenses you own in total"
-            value={pl.networth / monthly_expenses}
+            value={pl.wealth}
             tooltip={() =>
                <p>
                   Networth <Numeric amount={pl.networth} />
@@ -212,13 +200,12 @@ const Metrics: React.FC<MetricsProps> = p => {
                   Goal: more than 6 months
                </p>
             }
-            commodity={commMonths}
          />
 
          <MetricsLine
             name="Actual income tax rate"
             descr="How much of your income you spend on income taxes"
-            value={pl.income_taxes / pl.income * 100}
+            value={pl.income_tax_rate}
             tooltip={() =>
                <p>
                   Income taxes <Numeric amount={pl.income_taxes} />

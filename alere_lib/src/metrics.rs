@@ -10,6 +10,20 @@ use chrono::{DateTime, Local};
 use itertools::Itertools;
 use rust_decimal::Decimal;
 
+/// Format a duration in days as whole years and remaining months, matching
+/// the duration columns used by the CLI metrics view.
+#[must_use]
+pub fn format_duration(days: &Option<Decimal>) -> String {
+    days.map(|days| {
+        let days_in_year = Decimal::from(365_i16);
+        let days_in_month = days_in_year / Decimal::from(12_i8);
+        let years = (days / days_in_year).floor();
+        let months = ((days - years * days_in_year) / days_in_month).floor();
+        format!("{}y {}m", years, months)
+    })
+    .unwrap_or_else(|| "n/a".to_owned())
+}
+
 pub struct Settings {
     pub commodity: Option<Commodity>,
 

@@ -374,19 +374,33 @@ impl TimeInterval {
 /// ```
 #[derive(Clone, Debug, PartialEq)]
 pub enum Intv {
+    /// A single custom closed-open interval.
+    Bounded {
+        begin: Instant,
+        end: Instant,
+    },
     UpTo(Instant), // from start of time to the given instant
 
     LastNDays(i32), // from same time, n days ago, to now
 
     LastNMonths(i32), // from same day and time, n months ago, to now
-    Daily { begin: Instant, end: Instant },
+    Daily {
+        begin: Instant,
+        end: Instant,
+    },
     MonthAgo(i32), // a full month: 0=current month, -1=last month,...
-    Monthly { begin: Instant, end: Instant },
+    Monthly {
+        begin: Instant,
+        end: Instant,
+    },
 
     LastNYears(i32), // from same date and time, n years ago, to now
     SpecificYear(u16), // one specific year (e.g. 2023)
     YearAgo(i32),    // a full year: 0=current year, -1=last year,...
-    Yearly { begin: Instant, end: Instant },
+    Yearly {
+        begin: Instant,
+        end: Instant,
+    },
     YearToDate,
 }
 
@@ -394,6 +408,13 @@ impl Intv {
     /// Compute the time range for a given interval.
     pub fn to_ranges(&self, now: DateTime<Local>) -> Result<Vec<TimeInterval>> {
         let r = match self {
+            Intv::Bounded { begin, end } => vec![TimeInterval {
+                intv: Interval::new_closed_open(
+                    begin.to_time(now)?,
+                    end.to_time(now)?,
+                ),
+                descr: format!("{begin}..{end}"),
+            }],
             Intv::UpTo(then) => {
                 let lower = Instant::Epoch.to_time(now)?;
                 let upper = then.to_time(now)?;
