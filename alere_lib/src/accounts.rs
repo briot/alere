@@ -195,6 +195,34 @@ struct AccountDetails {
 pub struct Account(Rc<RefCell<AccountDetails>>);
 
 impl Account {
+    pub fn set_name(&mut self, name: &str) {
+        self.0.borrow_mut().name = name.to_owned();
+    }
+
+    pub fn set_kind(&mut self, kind: AccountKind) {
+        self.0.borrow_mut().kind = kind;
+    }
+
+    pub fn set_institution(&mut self, institution: Option<Institution>) {
+        self.0.borrow_mut().institution = institution;
+    }
+
+    pub fn set_description(&mut self, description: Option<&str>) {
+        self.0.borrow_mut()._description = description.map(str::to_owned);
+    }
+
+    pub fn set_number(&mut self, number: Option<&str>) {
+        self.0.borrow_mut()._number = number.map(str::to_owned);
+    }
+
+    pub fn set_opened_on(&mut self, opened_on: Option<DateTime<Local>>) {
+        self.0.borrow_mut()._opened_on = opened_on;
+    }
+
+    pub fn set_closed(&mut self, closed: bool) {
+        self.0.borrow_mut().closed = closed;
+    }
+
     fn name_internal(&self, kind: AccountNameDepth, into: &mut String) {
         if kind.0 > 1
             && let Some(p) = &self.0.borrow().parent

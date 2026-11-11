@@ -14,12 +14,12 @@ use anyhow::Context;
 use axum::{
     Json, Router,
     body::Body,
-    extract::{Path, Query, State},
+    extract::{DefaultBodyLimit, Multipart, Path, Query, State},
     http::StatusCode,
     http::{Request, Uri, header},
     middleware::{self, Next},
     response::Response,
-    routing::get,
+    routing::{get, post},
 };
 use chrono::{Local, NaiveDate, TimeZone};
 use rust_decimal::Decimal;
@@ -31,7 +31,7 @@ use std::{
     path::PathBuf,
     sync::{Arc, mpsc},
 };
-use tokio::sync::oneshot;
+use tokio::sync::{RwLock, oneshot};
 
 #[derive(RustEmbed)]
 #[folder = "../dist/"]
@@ -44,7 +44,7 @@ struct HealthResponse {
 
 #[derive(Clone)]
 struct AppState {
-    account_list: Arc<Value>,
+    account_list: Arc<RwLock<Value>>,
     repository_requests: mpsc::Sender<RepositoryRequest>,
 }
 
@@ -74,6 +74,36 @@ enum RepositoryCommand {
     NetworthHistory {
         currency_id: u32,
         dates: Vec<String>,
+    },
+    IncomeExpense {
+        currency_id: u32,
+        mindate: String,
+        maxdate: String,
+        income: bool,
+        expense: bool,
+    },
+    PriceHistory {
+        account_id: u16,
+        currency_id: u32,
+    },
+    PriceSources,
+    Mean {
+        currency_id: u32,
+        mindate: String,
+        maxdate: String,
+        prior: u32,
+        after: u32,
+        unrealized: bool,
+    },
+    EditAccount {
+        account: Value,
+    },
+    ImportKmymoney {
+        path: PathBuf,
+    },
+    OnlineSymbols,
+    AddOnlinePrices {
+        prices: Vec<(u32, Decimal, String)>,
     },
 }
 
@@ -118,6 +148,30 @@ struct NetworthHistoryQuery {
     groupby: String,
     currency: u32,
     scheduled: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct IncomeExpenseQuery {
+    income: bool,
+    expense: bool,
+    currency: u32,
+    mindate: String,
+    maxdate: String,
+}
+
+#[derive(Deserialize)]
+struct MeanQuery {
+    mindate: String,
+    maxdate: String,
+    prior: u32,
+    after: u32,
+    unrealized: Option<String>,
+    currency: u32,
+}
+
+#[derive(Deserialize)]
+struct PriceHistoryQuery {
+    currency: u32,
 }
 
 #[derive(Serialize)]
@@ -243,7 +297,176 @@ fn account_list_json(repository: &Repository) -> Value {
 }
 
 async fn account_list(State(state): State<AppState>) -> Json<Value> {
-    Json(state.account_list.as_ref().clone())
+    Json(state.account_list.read().await.clone())
+}
+
+async fn account_edit(
+    State(state): State<AppState>,
+    Json(account): Json<Value>,
+) -> Result<Json<Value>, (StatusCode, String)> {
+    let (response, receiver) = oneshot::channel();
+    state
+        .repository_requests
+        .send(RepositoryRequest {
+            command: RepositoryCommand::EditAccount { account },
+            response,
+        })
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker is unavailable".to_owned(),
+            )
+        })?;
+    let accounts = receiver
+        .await
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker stopped before responding".to_owned(),
+            )
+        })?
+        .map_err(|error| (StatusCode::BAD_REQUEST, error))?;
+    *state.account_list.write().await = accounts;
+    Ok(Json(Value::Null))
+}
+
+fn edit_account_json(
+    repository: &Repository,
+    data: &Value,
+) -> anyhow::Result<Value> {
+    let id = data
+        .get("id")
+        .and_then(Value::as_u64)
+        .context("account id is required")? as u16;
+    let mut account = repository
+        .accounts()
+        .iter()
+        .find(|account| account.get_id().as_u16() == id)
+        .with_context(|| format!("unknown account id {id}"))?;
+    let name = data
+        .get("name")
+        .and_then(Value::as_str)
+        .context("account name is required")?;
+    let kind_name = data
+        .get("kindId")
+        .and_then(Value::as_str)
+        .context("kindId is required")?;
+    let kind = repository
+        .account_kinds()
+        .lookup(kind_name)
+        .with_context(|| format!("unknown account kind {kind_name:?}"))?
+        .clone();
+    account.set_name(name);
+    account.set_kind(kind);
+    account.set_description(
+        data.get("description")
+            .and_then(Value::as_str)
+            .filter(|s| !s.is_empty()),
+    );
+    account.set_number(
+        data.get("account_num")
+            .and_then(Value::as_str)
+            .filter(|s| !s.is_empty()),
+    );
+    account
+        .set_iban(data.get("iban").and_then(Value::as_str).unwrap_or_default());
+    if let Some(parent_id) = data.get("parent").and_then(Value::as_u64) {
+        let parent_id = parent_id as u16;
+        let parent = repository
+            .accounts()
+            .iter()
+            .find(|candidate| candidate.get_id().as_u16() == parent_id)
+            .with_context(|| {
+                format!("unknown parent account id {parent_id}")
+            })?;
+        account.set_parent(parent);
+    }
+    if let Some(opened) = data
+        .get("opening_date")
+        .and_then(Value::as_str)
+        .filter(|s| !s.is_empty())
+    {
+        let date = NaiveDate::parse_from_str(opened, "%Y-%m-%d")?;
+        let timestamp = Local
+            .from_local_datetime(&date.and_hms_opt(0, 0, 0).unwrap())
+            .single()
+            .context("opening date is ambiguous in local time")?;
+        account.set_opened_on(Some(timestamp));
+    } else {
+        account.set_opened_on(None);
+    }
+    account.set_closed(
+        data.get("closed").and_then(Value::as_bool).unwrap_or(false),
+    );
+    let institution = data
+        .get("institution")
+        .and_then(Value::as_u64)
+        .map(|id| id as usize);
+    let institution = institution
+        .and_then(|id| id.checked_sub(1))
+        .and_then(|index| repository.institutions().iter().nth(index).cloned());
+    account.set_institution(institution);
+    Ok(account_list_json(repository))
+}
+
+async fn import_kmymoney(
+    State(state): State<AppState>,
+    mut multipart: Multipart,
+) -> Result<Json<Value>, (StatusCode, String)> {
+    let mut file_data = None;
+    while let Some(field) = multipart.next_field().await.map_err(|error| {
+        (StatusCode::BAD_REQUEST, format!("read upload: {error}"))
+    })? {
+        if field.name() == Some("file") {
+            file_data = Some(field.bytes().await.map_err(|error| {
+                (
+                    StatusCode::BAD_REQUEST,
+                    format!("read uploaded file: {error}"),
+                )
+            })?);
+            break;
+        }
+    }
+    let file_data = file_data.ok_or((
+        StatusCode::BAD_REQUEST,
+        "multipart field 'file' is required".to_owned(),
+    ))?;
+    static UPLOAD_ID: std::sync::atomic::AtomicU64 =
+        std::sync::atomic::AtomicU64::new(0);
+    let path = std::env::temp_dir().join(format!(
+        "alere-import-{}-{}.kmy",
+        std::process::id(),
+        UPLOAD_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+    ));
+    std::fs::write(&path, &file_data).map_err(|error| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("save uploaded file: {error}"),
+        )
+    })?;
+    let (response, receiver) = oneshot::channel();
+    state
+        .repository_requests
+        .send(RepositoryRequest {
+            command: RepositoryCommand::ImportKmymoney { path: path.clone() },
+            response,
+        })
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker is unavailable".to_owned(),
+            )
+        })?;
+    let result = receiver.await.map_err(|_| {
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "repository worker stopped before responding".to_owned(),
+        )
+    })?;
+    let _ = std::fs::remove_file(&path);
+    let accounts = result.map_err(|error| (StatusCode::BAD_REQUEST, error))?;
+    *state.account_list.write().await = accounts;
+    Ok(Json(json!({ "success": true })))
 }
 
 fn parse_networth_dates(value: &str) -> Result<Vec<String>, String> {
@@ -902,6 +1125,550 @@ fn quotes_json(
     Ok(Value::Array(result))
 }
 
+async fn income_expense(
+    State(state): State<AppState>,
+    Query(query): Query<IncomeExpenseQuery>,
+) -> Result<Json<Value>, (StatusCode, String)> {
+    let dates =
+        parse_networth_dates(&format!("{},{}", query.mindate, query.maxdate))
+            .map_err(|error| (StatusCode::BAD_REQUEST, error))?;
+    if dates[0] > dates[1] {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "mindate must be on or before maxdate".to_owned(),
+        ));
+    }
+    let (response, receiver) = oneshot::channel();
+    state
+        .repository_requests
+        .send(RepositoryRequest {
+            command: RepositoryCommand::IncomeExpense {
+                currency_id: query.currency,
+                mindate: dates[0].clone(),
+                maxdate: dates[1].clone(),
+                income: query.income,
+                expense: query.expense,
+            },
+            response,
+        })
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker is unavailable".to_owned(),
+            )
+        })?;
+    receiver
+        .await
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker stopped before responding".to_owned(),
+            )
+        })?
+        .map(Json)
+        .map_err(|error| (StatusCode::BAD_REQUEST, error))
+}
+
+fn income_expense_json(
+    repository: &Repository,
+    currency_id: u32,
+    mindate: &str,
+    maxdate: &str,
+    include_income: bool,
+    include_expense: bool,
+) -> anyhow::Result<Value> {
+    let currency = repository
+        .commodities
+        .iter_commodities()
+        .find(|commodity| commodity.get_id().as_u32() == currency_id)
+        .cloned()
+        .with_context(|| format!("unknown currency id {currency_id}"))?;
+    let min = NaiveDate::parse_from_str(mindate, "%Y-%m-%d")?;
+    let max = NaiveDate::parse_from_str(maxdate, "%Y-%m-%d")?;
+    let mut prices = repository.market_prices(Some(currency.clone()));
+    let mut totals: std::collections::BTreeMap<u16, Decimal> =
+        std::collections::BTreeMap::new();
+    for transaction in repository.transactions().iter() {
+        for split in transaction.splits().iter() {
+            let kind = split.account.get_kind();
+            let date = split.post_ts.date_naive();
+            if date < min
+                || date > max
+                || kind.is_unrealized()
+                || !(include_income && kind.is_income()
+                    || include_expense && kind.is_expense())
+            {
+                continue;
+            }
+            let converted = prices.convert_multi_value(
+                &operation_amount(&split.operation),
+                &split.post_ts,
+            );
+            if converted.iter().any(|value| value.commodity != currency) {
+                anyhow::bail!(
+                    "cannot convert split for account {} on {} to currency {}",
+                    split.account.get_id().as_u16(),
+                    split.post_ts.format("%Y-%m-%d"),
+                    currency_id
+                );
+            }
+            *totals.entry(split.account.get_id().as_u16()).or_default() +=
+                decimal_in_currency(&converted, &currency);
+        }
+    }
+    let items = totals
+        .into_iter()
+        .filter(|(_, amount)| !amount.is_zero())
+        .map(|(account_id, amount)| {
+            json!({
+                "accountId": account_id,
+                "value": (-amount).to_string().parse::<f64>().unwrap_or(0.0),
+            })
+        })
+        .collect::<Vec<_>>();
+    Ok(json!({ "mindate": mindate, "maxdate": maxdate, "items": items }))
+}
+
+async fn price_history(
+    State(state): State<AppState>,
+    Path(account_id): Path<u16>,
+    Query(query): Query<PriceHistoryQuery>,
+) -> Result<Json<Value>, (StatusCode, String)> {
+    let (response, receiver) = oneshot::channel();
+    state
+        .repository_requests
+        .send(RepositoryRequest {
+            command: RepositoryCommand::PriceHistory {
+                account_id,
+                currency_id: query.currency,
+            },
+            response,
+        })
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker is unavailable".to_owned(),
+            )
+        })?;
+    receiver
+        .await
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker stopped before responding".to_owned(),
+            )
+        })?
+        .map(Json)
+        .map_err(|error| (StatusCode::BAD_REQUEST, error))
+}
+
+fn price_history_json(
+    repository: &Repository,
+    account_id: u16,
+    currency_id: u32,
+) -> anyhow::Result<Value> {
+    let currency = repository
+        .commodities
+        .iter_commodities()
+        .find(|commodity| commodity.get_id().as_u32() == currency_id)
+        .cloned()
+        .with_context(|| format!("unknown currency id {currency_id}"))?;
+    let Some(account) = repository
+        .accounts()
+        .iter()
+        .find(|account| account.get_id().as_u16() == account_id)
+    else {
+        return Ok(json!([]));
+    };
+    let mut origins = std::collections::BTreeMap::<u32, Commodity>::new();
+    account.for_each_split(|split| {
+        for value in operation_shares(&split.operation).iter() {
+            origins
+                .entry(value.commodity.get_id().as_u32())
+                .or_insert(value.commodity);
+        }
+    });
+    let mut rows = origins.values().flat_map(|origin| {
+        repository.prices().history(origin, &currency).iter().map(|price| json!({
+            "date": price.timestamp.format("%Y-%m-%d").to_string(),
+            "price": price.price.to_string().parse::<f64>().unwrap_or(0.0),
+        })).collect::<Vec<_>>()
+    }).collect::<Vec<_>>();
+    rows.sort_by(|a, b| a["date"].as_str().cmp(&b["date"].as_str()));
+    Ok(Value::Array(rows))
+}
+
+async fn mean(
+    State(state): State<AppState>,
+    Query(query): Query<MeanQuery>,
+) -> Result<Json<Value>, (StatusCode, String)> {
+    let dates =
+        parse_networth_dates(&format!("{},{}", query.mindate, query.maxdate))
+            .map_err(|error| (StatusCode::BAD_REQUEST, error))?;
+    if dates[0] > dates[1] {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "mindate must be on or before maxdate".to_owned(),
+        ));
+    }
+    let (response, receiver) = oneshot::channel();
+    state
+        .repository_requests
+        .send(RepositoryRequest {
+            command: RepositoryCommand::Mean {
+                currency_id: query.currency,
+                mindate: dates[0].clone(),
+                maxdate: dates[1].clone(),
+                prior: query.prior.min(24),
+                after: query.after.min(24),
+                unrealized: query
+                    .unrealized
+                    .as_deref()
+                    .is_some_and(|value| value == "true" || value == "1"),
+            },
+            response,
+        })
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker is unavailable".to_owned(),
+            )
+        })?;
+    receiver
+        .await
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker stopped before responding".to_owned(),
+            )
+        })?
+        .map(Json)
+        .map_err(|error| (StatusCode::BAD_REQUEST, error))
+}
+
+fn mean_json(
+    repository: &Repository,
+    currency_id: u32,
+    mindate: &str,
+    maxdate: &str,
+    prior: u32,
+    after: u32,
+    include_unrealized: bool,
+) -> anyhow::Result<Value> {
+    use chrono::{Datelike, Duration, Months};
+    let currency = repository
+        .commodities
+        .iter_commodities()
+        .find(|commodity| commodity.get_id().as_u32() == currency_id)
+        .cloned()
+        .with_context(|| format!("unknown currency id {currency_id}"))?;
+    let min = NaiveDate::parse_from_str(mindate, "%Y-%m-%d")?
+        .max(NaiveDate::from_ymd_opt(1980, 1, 1).unwrap());
+    let max = NaiveDate::parse_from_str(maxdate, "%Y-%m-%d")?
+        .min(Local::now().date_naive());
+    if min > max {
+        return Ok(json!([]));
+    }
+    let expanded_min =
+        min.checked_sub_months(Months::new(prior)).unwrap_or(min);
+    let expanded_max = max
+        .checked_add_months(Months::new(after))
+        .unwrap_or(max)
+        .min(Local::now().date_naive());
+    let mut months = Vec::new();
+    let mut first =
+        NaiveDate::from_ymd_opt(expanded_min.year(), expanded_min.month(), 1)
+            .unwrap();
+    while first <= expanded_max {
+        let next = first
+            .checked_add_months(Months::new(1))
+            .unwrap_or(expanded_max);
+        let last = (next - Duration::days(1)).min(expanded_max);
+        if last >= expanded_min {
+            months.push(last);
+        }
+        if next <= first || next > expanded_max {
+            break;
+        }
+        first = next;
+    }
+    if months.len() > 366 {
+        months.drain(..months.len() - 366);
+    }
+    let prior_date = months
+        .first()
+        .copied()
+        .unwrap_or(min)
+        .checked_sub_months(Months::new(1))
+        .unwrap_or(min);
+    let mut valuation_dates = vec![prior_date.to_string()];
+    valuation_dates.extend(months.iter().map(ToString::to_string));
+    let (networth, _) =
+        networth_totals(repository, &currency, &valuation_dates)?;
+    let mut networth_delta = vec![Decimal::ZERO; months.len()];
+    for index in 0..months.len() {
+        networth_delta[index] = networth[index + 1] - networth[index];
+    }
+    let mut income_by_month =
+        std::collections::HashMap::<String, Decimal>::new();
+    let mut expense_by_month =
+        std::collections::HashMap::<String, Decimal>::new();
+    let mut prices = repository.market_prices(Some(currency.clone()));
+    for transaction in repository.transactions().iter() {
+        for split in transaction.splits().iter() {
+            let date = split.post_ts.date_naive();
+            if date < expanded_min || date > expanded_max {
+                continue;
+            }
+            let kind = split.account.get_kind();
+            if !(kind.is_income() || kind.is_expense()) {
+                continue;
+            }
+            if kind.is_unrealized() && !include_unrealized {
+                continue;
+            }
+            let converted = prices.convert_multi_value(
+                &operation_amount(&split.operation),
+                &split.post_ts,
+            );
+            if converted.iter().any(|value| value.commodity != currency) {
+                anyhow::bail!(
+                    "cannot convert split for account {} on {} to currency {}",
+                    split.account.get_id().as_u16(),
+                    split.post_ts.format("%Y-%m-%d"),
+                    currency_id
+                );
+            }
+            let month = date.format("%Y-%m").to_string();
+            let amount = decimal_in_currency(&converted, &currency);
+            if kind.is_expense() {
+                *expense_by_month.entry(month).or_default() += amount;
+            } else if !kind.is_unrealized() {
+                *income_by_month.entry(month).or_default() += amount;
+            }
+        }
+    }
+    let rows = months.iter().enumerate().map(|(index, date)| {
+        let month = date.format("%Y-%m").to_string();
+        let income = *income_by_month.get(&month).unwrap_or(&Decimal::ZERO);
+        let expense = *expense_by_month.get(&month).unwrap_or(&Decimal::ZERO);
+        let start = index.saturating_sub(prior as usize);
+        let end = (index + after as usize + 1).min(months.len());
+        let count = Decimal::from((end - start) as u32);
+        let avg_income = (start..end).map(|i| *income_by_month.get(&months[i].format("%Y-%m").to_string()).unwrap_or(&Decimal::ZERO)).sum::<Decimal>() / count;
+        let avg_expense = (start..end).map(|i| *expense_by_month.get(&months[i].format("%Y-%m").to_string()).unwrap_or(&Decimal::ZERO)).sum::<Decimal>() / count;
+        let avg_nw = networth_delta[start..end].iter().copied().sum::<Decimal>() / count;
+        let delta = if include_unrealized { networth_delta[index] } else { Decimal::ZERO };
+        let average_delta = if include_unrealized { avg_nw } else { Decimal::ZERO };
+        json!({
+            "date": month,
+            "value_expenses": (-expense).to_string().parse::<f64>().unwrap_or(0.0),
+            "average_expenses": (-avg_expense).to_string().parse::<f64>().unwrap_or(0.0),
+            "value_realized": (-income).to_string().parse::<f64>().unwrap_or(0.0),
+            "average_realized": (-avg_income).to_string().parse::<f64>().unwrap_or(0.0),
+            "value_networth_delta": delta.to_string().parse::<f64>().unwrap_or(0.0),
+            "average_networth_delta": average_delta.to_string().parse::<f64>().unwrap_or(0.0),
+        })
+    }).collect::<Vec<_>>();
+    Ok(Value::Array(rows))
+}
+
+fn price_sources_json(repository: &Repository) -> Value {
+    let mut sources = serde_json::Map::new();
+    for source in repository.price_sources().iter() {
+        let id = source.get_id().as_u8();
+        sources.insert(
+            id.to_string(),
+            json!({ "id": id, "name": source.get_name().to_string() }),
+        );
+    }
+    Value::Object(sources)
+}
+
+async fn price_sources(
+    State(state): State<AppState>,
+) -> Result<Json<Value>, (StatusCode, String)> {
+    let (response, receiver) = oneshot::channel();
+    state
+        .repository_requests
+        .send(RepositoryRequest {
+            command: RepositoryCommand::PriceSources,
+            response,
+        })
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker is unavailable".to_owned(),
+            )
+        })?;
+    receiver
+        .await
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker stopped before responding".to_owned(),
+            )
+        })?
+        .map(Json)
+        .map_err(|error| (StatusCode::INTERNAL_SERVER_ERROR, error))
+}
+
+async fn online_update(
+    State(state): State<AppState>,
+) -> Result<Json<Value>, (StatusCode, String)> {
+    let (response, receiver) = oneshot::channel();
+    state
+        .repository_requests
+        .send(RepositoryRequest {
+            command: RepositoryCommand::OnlineSymbols,
+            response,
+        })
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker is unavailable".to_owned(),
+            )
+        })?;
+    let symbols = receiver
+        .await
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker stopped before responding".to_owned(),
+            )
+        })?
+        .map_err(|error| (StatusCode::INTERNAL_SERVER_ERROR, error))?;
+    let symbols: Vec<(u32, String)> = symbols
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|row| {
+            Some((
+                row.get("id")?.as_u64()? as u32,
+                row.get("symbol")?.as_str()?.to_owned(),
+            ))
+        })
+        .collect();
+    if symbols.is_empty() {
+        return Ok(Json(json!("")));
+    }
+
+    use stock_importer::StockSource;
+    let source = stock_importer::YahooFinance::new().map_err(|error| {
+        (
+            StatusCode::BAD_GATEWAY,
+            format!("initialize Yahoo Finance client: {error}"),
+        )
+    })?;
+    let results = futures::future::join_all(
+        symbols.iter().map(|(_, symbol)| source.fetch_price(symbol)),
+    )
+    .await;
+    let mut updates = Vec::new();
+    let mut failures = Vec::new();
+    for ((commodity_id, symbol), result) in symbols.into_iter().zip(results) {
+        match result {
+            Ok(price) => {
+                if let Some(amount) = Decimal::from_f64_retain(price.price) {
+                    updates.push((
+                        commodity_id,
+                        amount,
+                        price.timestamp.to_rfc3339(),
+                    ));
+                } else {
+                    failures.push(format!("{symbol}: invalid price"));
+                }
+            }
+            Err(error) => failures.push(format!("{symbol}: {error}")),
+        }
+    }
+    if updates.is_empty() && !failures.is_empty() {
+        return Err((StatusCode::BAD_GATEWAY, failures.join("; ")));
+    }
+    for warning in &failures {
+        eprintln!("Online price update failed: {warning}");
+    }
+    let (response, receiver) = oneshot::channel();
+    state
+        .repository_requests
+        .send(RepositoryRequest {
+            command: RepositoryCommand::AddOnlinePrices { prices: updates },
+            response,
+        })
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker is unavailable".to_owned(),
+            )
+        })?;
+    receiver
+        .await
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker stopped before responding".to_owned(),
+            )
+        })?
+        .map_err(|error| (StatusCode::INTERNAL_SERVER_ERROR, error))?;
+    Ok(Json(json!("")))
+}
+
+fn online_symbols_json(repository: &Repository) -> Value {
+    let balances = repository.compute_commodity_balances();
+    let symbols = repository
+        .commodities
+        .iter_commodities()
+        .filter_map(|commodity| {
+            if commodity.is_currency() {
+                return None;
+            }
+            let quote_source = commodity.get_quote_source()?;
+            if !quote_source.to_ascii_lowercase().contains("yahoo") {
+                return None;
+            }
+            let symbol = commodity.get_quote_symbol()?;
+            if balances.get(commodity).copied().unwrap_or_default()
+                <= Decimal::ZERO
+            {
+                return None;
+            }
+            Some(json!({"id": commodity.get_id().as_u32(), "symbol": symbol}))
+        })
+        .collect::<Vec<_>>();
+    Value::Array(symbols)
+}
+
+fn add_online_prices(
+    repository: &mut Repository,
+    prices: Vec<(u32, Decimal, String)>,
+) -> anyhow::Result<()> {
+    use alere_lib::{price_sources::PriceSourceFrom, prices::Price};
+    let target = repository
+        .commodities
+        .iter_commodities()
+        .find(|commodity| commodity.get_id().as_u32() == 1)
+        .cloned()
+        .context("default currency id 1 is missing")?;
+    for (commodity_id, amount, timestamp) in prices {
+        let Some(origin) = repository
+            .commodities
+            .iter_commodities()
+            .find(|commodity| commodity.get_id().as_u32() == commodity_id)
+            .cloned()
+        else {
+            continue;
+        };
+        let timestamp = chrono::DateTime::parse_from_rfc3339(&timestamp)?
+            .with_timezone(&Local);
+        repository.add_price(
+            &origin,
+            &target,
+            Price::new(timestamp, amount, PriceSourceFrom::Transaction),
+        );
+    }
+    Ok(())
+}
+
 fn decimal_in_currency(value: &MultiValue, currency: &Commodity) -> Decimal {
     value
         .iter()
@@ -1170,7 +1937,7 @@ fn start_repository_worker(
             let repository = futures::executor::block_on(
                 importer.import_file(&input, |_, _| {}),
             );
-            let repository = match repository {
+            let mut repository = match repository {
                 Ok(repository) => repository,
                 Err(error) => {
                     let _ = ready_sender.send(Err(error.to_string()));
@@ -1239,6 +2006,81 @@ fn start_repository_worker(
                                 format!("compute net worth history: {error:#}")
                             })
                     }
+                    RepositoryCommand::IncomeExpense {
+                        currency_id,
+                        mindate,
+                        maxdate,
+                        income,
+                        expense,
+                    } => income_expense_json(
+                        &repository,
+                        currency_id,
+                        &mindate,
+                        &maxdate,
+                        income,
+                        expense,
+                    )
+                    .map_err(|error| {
+                        format!("compute income/expense: {error:#}")
+                    }),
+                    RepositoryCommand::PriceHistory {
+                        account_id,
+                        currency_id,
+                    } => {
+                        price_history_json(&repository, account_id, currency_id)
+                            .map_err(|error| {
+                                format!("compute price history: {error:#}")
+                            })
+                    }
+                    RepositoryCommand::PriceSources => {
+                        Ok(price_sources_json(&repository))
+                    }
+                    RepositoryCommand::OnlineSymbols => {
+                        Ok(online_symbols_json(&repository))
+                    }
+                    RepositoryCommand::AddOnlinePrices { prices } => {
+                        add_online_prices(&mut repository, prices)
+                            .map(|()| json!(""))
+                            .map_err(|error| {
+                                format!("apply online prices: {error:#}")
+                            })
+                    }
+                    RepositoryCommand::Mean {
+                        currency_id,
+                        mindate,
+                        maxdate,
+                        prior,
+                        after,
+                        unrealized,
+                    } => mean_json(
+                        &repository,
+                        currency_id,
+                        &mindate,
+                        &maxdate,
+                        prior,
+                        after,
+                        unrealized,
+                    )
+                    .map_err(|error| format!("compute means: {error:#}")),
+                    RepositoryCommand::EditAccount { account } => {
+                        edit_account_json(&repository, &account)
+                            .map_err(|error| format!("edit account: {error:#}"))
+                    }
+                    RepositoryCommand::ImportKmymoney { path } => {
+                        let imported = futures::executor::block_on(
+                            importer.import_file(&path, |_, _| {}),
+                        );
+                        let _ = std::fs::remove_file(&path);
+                        match imported {
+                            Ok(new_repository) => {
+                                repository = new_repository;
+                                Ok(account_list_json(&repository))
+                            }
+                            Err(error) => {
+                                Err(format!("import KMyMoney file: {error:#}"))
+                            }
+                        }
+                    }
                 };
                 let _ = request.response.send(result);
             }
@@ -1279,7 +2121,19 @@ fn missing_query_parameters(
         "/api/networth_history" => {
             &["mindate", "maxdate", "groupby", "currency"]
         }
+        "/api/incomeexpense" => {
+            &["income", "expense", "currency", "mindate", "maxdate"]
+        }
+        "/api/mean" => &[
+            "mindate",
+            "maxdate",
+            "prior",
+            "after",
+            "unrealized",
+            "currency",
+        ],
         p if p.starts_with("/api/ledger/") => &["currency"],
+        p if p.starts_with("/api/prices/") => &["currency"],
         _ => return Vec::new(),
     };
     let supplied: std::collections::HashSet<&str> = query
@@ -1344,18 +2198,29 @@ async fn main() -> anyhow::Result<()> {
     let (account_list_data, repository_requests) =
         start_repository_worker(input)?;
     let state = AppState {
-        account_list: Arc::new(account_list_data),
+        account_list: Arc::new(RwLock::new(account_list_data)),
         repository_requests,
     };
 
     let app = Router::new()
         .route("/api/health", get(health))
         .route("/api/account/list", get(account_list))
+        .route("/api/account/edit", post(account_edit))
         .route("/api/plots/networth", get(networth))
         .route("/api/metrics", get(metrics))
         .route("/api/ledger/:ids", get(ledger))
         .route("/api/quotes", get(quotes))
         .route("/api/networth_history", get(networth_history))
+        .route("/api/incomeexpense", get(income_expense))
+        .route("/api/prices/:account_id", get(price_history))
+        .route("/api/price_source/list", get(price_sources))
+        .route("/api/online", post(online_update))
+        .route("/api/mean", get(mean))
+        .route(
+            "/api/import/kmymoney",
+            post(import_kmymoney)
+                .layer(DefaultBodyLimit::max(512 * 1024 * 1024)),
+        )
         .fallback(frontend)
         .layer(middleware::from_fn(log_request))
         .with_state(state);

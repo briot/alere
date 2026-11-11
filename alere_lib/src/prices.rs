@@ -27,6 +27,15 @@ impl PriceCollection {
         };
         p.insert(pos, price);
     }
+
+    /// Return the known historical prices for an origin/target pair.
+    #[must_use]
+    pub fn history(&self, origin: &Commodity, target: &Commodity) -> &[Price] {
+        self.prices
+            .get(&(origin.clone(), target.clone()))
+            .map(Vec::as_slice)
+            .unwrap_or_default()
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

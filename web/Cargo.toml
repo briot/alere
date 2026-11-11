@@ -6,12 +6,13 @@ edition = "2024"
 [dependencies]
 alere_lib = { path = "../alere_lib", features = ["kmymoney"] }
 anyhow = { workspace = true }
-axum = "0.7"
+axum = { version = "0.7", features = ["multipart"] }
 chrono = { workspace = true }
 futures = { workspace = true }
 mime_guess = "2"
 rust-embed = { version = "8", features = ["debug-embed"] }
 rust_decimal = { workspace = true }
+stock_importer = { path = "../stock_importer" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "net"] }

@@ -37,6 +37,11 @@ impl Repository {
     }
 
     #[must_use]
+    pub fn price_sources(&self) -> &PriceSourceCollection {
+        &self.price_sources
+    }
+
+    #[must_use]
     pub fn accounts(&self) -> &AccountCollection {
         &self.accounts
     }

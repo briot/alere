@@ -7,6 +7,13 @@ use std::{
 #[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
 pub struct PriceSourceId(u8);
 
+impl PriceSourceId {
+    #[must_use]
+    pub fn as_u8(self) -> u8 {
+        self.0
+    }
+}
+
 #[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub enum PriceSourceFrom {
     // The price was computed from a transaction
@@ -40,6 +47,10 @@ pub struct PriceSourceCollection {
 }
 
 impl PriceSourceCollection {
+    pub fn iter(&self) -> impl Iterator<Item = PriceSource> + '_ {
+        self.sources.values().cloned()
+    }
+
     pub fn add(&mut self, name: &str) -> PriceSource {
         let id = PriceSourceId(
             self.sources

@@ -29,6 +29,12 @@ includes all of its splits and the legacy frontend ledger fields. Split amounts
 and running balances are converted to the requested currency; share quantities
 remain in their account commodity. Recurring transactions are not returned.
 
+The legacy frontend endpoints are also available: `GET /api/incomeexpense`,
+`GET /api/prices/{accountId}`, `GET /api/price_source/list`, `POST /api/online`,
+`GET /api/mean`, `POST /api/import/kmymoney`, and `POST /api/account/edit`.
+Online quotes, imported data, and account edits update the running repository
+in memory; they are not written back to the KMyMoney file.
+
 From the repository root, build the frontend once and run the API with:
 
 ```sh
