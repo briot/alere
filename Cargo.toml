@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = [ "alere_lib", "cli" , "kmy_editor", "stock_importer"]
+members = [ "alere_lib", "cli" , "kmy_editor", "stock_importer", "web"]
 
 [workspace.dependencies]
 anyhow = "1.0.86"
