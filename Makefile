@@ -11,6 +11,8 @@ doc:
 	cargo make doc
 	cp -R ${TARGET_DIR}/doc ${DOC_DIR}/
 
+web: frontend-build backend
+
 # Install the frontend dependencies once, then edit in Vite's hot-reload mode.
 frontend-install:
 	npm ci
