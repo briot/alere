@@ -722,6 +722,7 @@ pub(super) fn quotes_json(
             "most_recent": most_recent.map(|date| date.timestamp() as f64).unwrap_or(0.0),
             "now_for_annualized": now.timestamp(),
             "annualized_roi": decimal_json(performance.annualized_roi),
+            "irr": decimal_json(performance.irr),
             "period_roi": period_roi,
             "prices": price_rows,
         });

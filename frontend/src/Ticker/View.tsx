@@ -5,7 +5,7 @@ import { computeTicker } from '@/Ticker/Compute';
 import Perfs from '@/Ticker/Perf';
 import PriceGraph from '@/PriceGraph';
 import { ColumnType, columnEquity, columnTotalReturn,
-   columnAnnualizedReturn, columnShares, columnAverageCost, columnPeriodReturn,
+   columnAnnualizedReturn, columnIRR, columnShares, columnAverageCost, columnPeriodReturn,
    columnWeighedAverage, columnPL, columnInvested } from '@/Ticker/Data';
 import Tooltip from '@/Tooltip';
 import './Ticker.scss';
@@ -63,10 +63,11 @@ const TickerView: React.FC<TickerViewProps & ExtraProps> = p => {
       columnTotalReturn,
       columnPeriodReturn,
       columnAnnualizedReturn,
+      columnIRR,
       columnPL,
       columnEquity,
       columnShares,
-      false ? columnInvested : undefined,
+      columnInvested,
       columnAverageCost,
       columnWeighedAverage,
    ];

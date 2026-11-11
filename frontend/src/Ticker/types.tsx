@@ -23,6 +23,7 @@ export interface AccountForTicker {
    most_recent_transaction: Date;
    now_for_annualized: Date;   // date to compute annualized return
    annualized_roi: number;
+   irr: number;
    period_roi: number;
 
    // sorted chronologically, given in the currency used in the query

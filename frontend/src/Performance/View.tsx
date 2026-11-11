@@ -8,10 +8,9 @@ import ListWithColumns, { Column, LogicalRow } from '@/List/ListWithColumns';
 import { ColumnType, columnEquity, columnTotalReturn, columnAnnualizedReturn,
    columnPL, columnWeighedAverage, columnPeriodPL, columnGains,
    columnAverageCost, columnPeriodReturn, columnLatest,
-   columnShares, columnInvested,
+   columnShares, columnInvested, columnIRR,
    Aggregated, aggregate} from '@/Ticker/Data';
 import useTickers from '@/services/useTickers';
-import usePriceSources from '@/services/usePriceSources';
 
 /**
  * Show all the user's investments
@@ -47,6 +46,7 @@ const dataColumns: ColumnType[] = [
    columnPL,
    columnPeriodPL,
    columnAnnualizedReturn,
+   columnIRR,
    columnAverageCost,
    columnWeighedAverage,
    columnLatest,
@@ -66,21 +66,8 @@ const Performance: React.FC<PerformanceProps> = p => {
    const data = useTickers(
       prefs.currencyId, 'all' /* accountIds */, p.range, p.hideIfNoShare);
    const [sorted, setSorted] = React.useState('');
-   const sources = usePriceSources();
 
-   const cols: PerfColumnType[] = React.useMemo(
-      () => {
-         const columnSource: Column<RowData, ComputedPerformanceProps> = {
-            id: 'Source',
-            cell: (r: RowData) => sources[r.ticker.source]?.name,
-            compare: (r1: RowData, r2: RowData) =>
-               (sources[r1.ticker.source].name ?? '')
-                  .localeCompare(sources[r2.ticker.source].name ?? ''),
-         }
-         return [...columns, columnSource];
-      },
-      [sources],
-   );
+   const cols = columns;
 
    // We compute the date range once for all tickers, so that they all have
    // exactly the same range (otherwise resolving "now" might result in

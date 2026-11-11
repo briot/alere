@@ -31,6 +31,7 @@ interface TickerJSON {
       most_recent: number;
       now_for_annualized: number;
       annualized_roi: number | null;
+      irr: number | null;
       period_roi: number | null;  // null for NaN
 
       // sorted chronologically, given in the currency used in the query
@@ -66,6 +67,7 @@ const useTickers = (
                account: accounts.getAccount(a.account),
                period_roi: nan_dec(a.period_roi),
                annualized_roi: nan_dec(a.annualized_roi),
+               irr: nan_dec(a.irr),
                oldest_transaction: new Date(a.oldest * 1e3),
                most_recent_transaction: new Date(a.most_recent * 1e3),
                now_for_annualized: new Date(a.now_for_annualized * 1e3),

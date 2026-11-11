@@ -154,6 +154,23 @@ export const columnAnnualizedReturn: ColumnType = {
    ),
 }
 
+export const columnIRR: ColumnType = {
+   id: 'IRR',
+   title: 'Internal Rate of Return',
+   className: 'amount',
+   cell: (r: RowData) =>
+      <Numeric
+         amount={r.acc.irr * 100}
+         forceSign={true}
+         suffix='%'
+      />,
+   compare: (r1: RowData, r2: RowData) =>
+      numComp(r1.acc.irr, r2.acc.irr),
+   cellTitle: () =>
+      'Annualized return calculated from the timing of investments, ' +
+      'sales, and current value (money-weighted return)',
+}
+
 export const columnPL: ColumnType = {
    id: 'P&L',
    className: 'amount',
@@ -178,6 +195,7 @@ export const columnPL: ColumnType = {
 
 export const columnInvested: ColumnType = {
    id: 'Invested',
+   title: 'Total Invested',
    className: 'amount',
    cell: (r: RowData) =>
       <Numeric amount={r.acc.end.invested} commodity={r.currencyId} />,
