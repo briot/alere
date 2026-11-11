@@ -272,6 +272,12 @@ impl Performance {
             // much the operation actually cost.
 
             for tx in acc.iter_transactions() {
+                // Ignore transactions which have not happened at the
+                // valuation date.  This lets callers request historical
+                // performance snapshots by passing that date as `now`.
+                if tx.timestamp() > now {
+                    continue;
+                }
                 if args.first_tx.is_none() {
                     args.first_tx = tx.splits().first().map(|s| s.post_ts);
                 }

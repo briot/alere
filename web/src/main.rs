@@ -21,7 +21,7 @@ use axum::{
     response::Response,
     routing::get,
 };
-use chrono::{Local, NaiveDate};
+use chrono::{Local, NaiveDate, TimeZone};
 use rust_decimal::Decimal;
 use rust_embed::RustEmbed;
 use serde::{Deserialize, Serialize};
@@ -64,6 +64,13 @@ enum RepositoryCommand {
         maxdate: String,
         currency_id: u32,
     },
+    Quotes {
+        currency_id: u32,
+        account_ids: Option<Vec<u32>>,
+        commodity_ids: Option<Vec<u32>>,
+        start_at: String,
+        end_at: String,
+    },
 }
 
 struct RepositoryRequest {
@@ -89,6 +96,15 @@ struct LedgerQuery {
     mindate: Option<String>,
     maxdate: Option<String>,
     currency: u32,
+}
+
+#[derive(Deserialize)]
+struct QuotesQuery {
+    currency: u32,
+    accounts: Option<String>,
+    commodities: Option<String>,
+    mindate: Option<String>,
+    maxdate: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -511,6 +527,218 @@ fn ledger_json(
     Ok(Value::Array(rows))
 }
 
+fn decimal_json(value: Option<Decimal>) -> Value {
+    value
+        .and_then(|value| value.to_string().parse::<f64>().ok())
+        .map_or(Value::Null, |value| json!(value))
+}
+
+fn performance_position(
+    performance: &alere_lib::perf::Performance,
+    currency: &Commodity,
+) -> Value {
+    let monetary = |value: &MultiValue| {
+        value
+            .iter()
+            .find(|component| component.commodity == *currency)
+            .map(|component| component.amount)
+    };
+    let shares = performance.shares.iter().next().map(|value| value.amount);
+    json!({
+        "avg_cost": decimal_json(performance.average_cost.as_ref().and_then(monetary)),
+        "equity": decimal_json(monetary(&performance.equity)),
+        "gains": decimal_json(monetary(&performance.realized)),
+        "invested": decimal_json(monetary(&performance.invested)),
+        "pl": decimal_json(monetary(&performance.pnl)),
+        "roi": decimal_json(performance.roi),
+        "shares": decimal_json(shares),
+        "weighted_avg": decimal_json(performance.weighted_average.as_ref().and_then(monetary)),
+    })
+}
+
+async fn quotes(
+    State(state): State<AppState>,
+    Query(query): Query<QuotesQuery>,
+) -> Result<Json<Value>, (StatusCode, String)> {
+    let mindate = query.mindate.as_deref().unwrap_or("1970-01-01");
+    let maxdate = query.maxdate.as_deref().unwrap_or("2200-01-01");
+    let dates = parse_networth_dates(&format!("{mindate},{maxdate}"))
+        .map_err(|error| (StatusCode::BAD_REQUEST, error))?;
+    if dates[0] > dates[1] {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "mindate must be on or before maxdate".to_owned(),
+        ));
+    }
+    let parse_ids = |value: Option<String>| -> Result<Option<Vec<u32>>, (StatusCode, String)> {
+        value.map(|value| {
+            value.split(',').map(|id| id.parse::<u32>().map_err(|_| {
+                (StatusCode::BAD_REQUEST, format!("invalid id {id:?}"))
+            })).collect()
+        }).transpose()
+    };
+    let account_ids = parse_ids(query.accounts)?;
+    let commodity_ids = parse_ids(query.commodities)?;
+    let start_date = NaiveDate::parse_from_str(&dates[0], "%Y-%m-%d").unwrap();
+    let end_date = NaiveDate::parse_from_str(&dates[1], "%Y-%m-%d").unwrap();
+    let to_local = |date: NaiveDate| {
+        Local
+            .from_local_datetime(&date.and_hms_opt(23, 59, 59).unwrap())
+            .single()
+            .unwrap()
+    };
+    let start_at = to_local(start_date);
+    let end_at = to_local(end_date).min(Local::now());
+
+    let (response, receiver) = oneshot::channel();
+    state
+        .repository_requests
+        .send(RepositoryRequest {
+            command: RepositoryCommand::Quotes {
+                currency_id: query.currency,
+                account_ids,
+                commodity_ids,
+                start_at: start_at.to_rfc3339(),
+                end_at: end_at.to_rfc3339(),
+            },
+            response,
+        })
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker is unavailable".to_owned(),
+            )
+        })?;
+    receiver
+        .await
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker stopped before responding".to_owned(),
+            )
+        })?
+        .map(Json)
+        .map_err(|error| (StatusCode::BAD_REQUEST, error))
+}
+
+fn quotes_json(
+    repository: &Repository,
+    currency_id: u32,
+    account_ids: Option<&[u32]>,
+    commodity_ids: Option<&[u32]>,
+    start_at: &str,
+    end_at: &str,
+) -> anyhow::Result<Value> {
+    let currency = repository
+        .commodities
+        .iter_commodities()
+        .find(|commodity| commodity.get_id().as_u32() == currency_id)
+        .cloned()
+        .with_context(|| format!("unknown currency id {currency_id}"))?;
+    let start_at =
+        chrono::DateTime::parse_from_rfc3339(start_at)?.with_timezone(&Local);
+    let end_at =
+        chrono::DateTime::parse_from_rfc3339(end_at)?.with_timezone(&Local);
+    let settings = alere_lib::perf::Settings {
+        commodity: Some(currency.clone()),
+    };
+    let start =
+        alere_lib::perf::Performance::load(repository, settings, start_at)?;
+    let end = alere_lib::perf::Performance::load(
+        repository,
+        alere_lib::perf::Settings {
+            commodity: Some(currency.clone()),
+        },
+        end_at,
+    )?;
+    let starts: std::collections::HashMap<u16, _> = start
+        .into_iter()
+        .map(|performance| (performance.account.get_id().as_u16(), performance))
+        .collect();
+    let mut symbols: std::collections::BTreeMap<u32, (Commodity, Vec<Value>)> =
+        std::collections::BTreeMap::new();
+    let now = Local::now();
+    for performance in end {
+        let account_id = performance.account.get_id().as_u16();
+        if account_ids.is_some_and(|ids| !ids.contains(&(account_id as u32))) {
+            continue;
+        }
+        let Some(commodity) = performance.shares.commodity().or_else(|| {
+            performance.price.as_ref().and_then(MultiValue::commodity)
+        }) else {
+            continue;
+        };
+        let commodity_id = commodity.get_id().as_u32();
+        if commodity_ids.is_some_and(|ids| !ids.contains(&commodity_id)) {
+            continue;
+        }
+        let start_perf = starts.get(&account_id);
+        let start_pos = start_perf.map(|p| performance_position(p, &currency))
+            .unwrap_or_else(|| json!({"avg_cost":null,"equity":0,"gains":0,"invested":0,"pl":0,"roi":null,"shares":0,"weighted_avg":null}));
+        let end_pos = performance_position(&performance, &currency);
+        let get_num = |position: &Value, field: &str| {
+            position.get(field).and_then(Value::as_f64)
+        };
+        let denominator = get_num(&start_pos, "equity").unwrap_or(0.0)
+            + get_num(&end_pos, "invested").unwrap_or(0.0)
+            - get_num(&start_pos, "invested").unwrap_or(0.0);
+        let period_roi = if denominator.abs() < 1e-6 {
+            Value::Null
+        } else {
+            json!(
+                (get_num(&end_pos, "equity").unwrap_or(0.0)
+                    + get_num(&end_pos, "gains").unwrap_or(0.0)
+                    - get_num(&start_pos, "gains").unwrap_or(0.0))
+                    / denominator
+            )
+        };
+        let account = repository
+            .accounts()
+            .iter()
+            .find(|account| account.get_id() == performance.account.get_id())
+            .unwrap();
+        let transactions: Vec<_> = account.iter_transactions().collect();
+        let oldest = transactions.iter().map(|tx| tx.timestamp()).min();
+        let most_recent = transactions.iter().map(|tx| tx.timestamp()).max();
+        let end_price = performance.price.as_ref().and_then(|value| {
+            value
+                .iter()
+                .find(|v| v.commodity == currency)
+                .map(|v| v.amount)
+        });
+        let price_rows = end_price.map(|price| vec![json!({
+            "t": end_at.timestamp_millis(),
+            "price": decimal_json(Some(price)),
+            "roi": decimal_json(performance.roi.map(|roi| (roi - Decimal::ONE) * Decimal::ONE_HUNDRED)),
+            "shares": decimal_json(performance.shares.iter().next().map(|v| v.amount)),
+        })]).unwrap_or_default();
+        let account_json = json!({
+            "account": account_id,
+            "start": start_pos,
+            "end": end_pos,
+            "oldest": oldest.map(|date| date.timestamp() as f64).unwrap_or(0.0),
+            "most_recent": most_recent.map(|date| date.timestamp() as f64).unwrap_or(0.0),
+            "now_for_annualized": now.timestamp(),
+            "annualized_roi": decimal_json(performance.annualized_roi),
+            "period_roi": period_roi,
+            "prices": price_rows,
+        });
+        symbols
+            .entry(commodity_id)
+            .or_insert_with(|| (commodity.clone(), Vec::new()))
+            .1
+            .push(account_json);
+    }
+    let result = symbols.into_iter().map(|(id, (commodity, accounts))| json!({
+        "id": id,
+        "ticker": commodity.get_quote_symbol().unwrap_or_else(|| commodity.get_name().to_string()),
+        "source": if commodity.get_quote_source().is_some() { 1 } else { 0 },
+        "is_currency": commodity.is_currency(),
+        "accounts": accounts,
+    })).collect::<Vec<_>>();
+    Ok(Value::Array(result))
+}
+
 fn decimal_in_currency(value: &MultiValue, currency: &Commodity) -> Decimal {
     value
         .iter()
@@ -824,6 +1052,21 @@ fn start_repository_worker(
                         currency_id,
                     )
                     .map_err(|error| format!("compute ledger: {error:#}")),
+                    RepositoryCommand::Quotes {
+                        currency_id,
+                        account_ids,
+                        commodity_ids,
+                        start_at,
+                        end_at,
+                    } => quotes_json(
+                        &repository,
+                        currency_id,
+                        account_ids.as_deref(),
+                        commodity_ids.as_deref(),
+                        &start_at,
+                        &end_at,
+                    )
+                    .map_err(|error| format!("compute quotes: {error:#}")),
                 };
                 let _ = request.response.send(result);
             }
@@ -860,6 +1103,7 @@ fn missing_query_parameters(
     let required: &[&str] = match path {
         "/api/plots/networth" => &["currency", "dates"],
         "/api/metrics" => &["mindate", "maxdate", "currency"],
+        "/api/quotes" => &["currency"],
         "/api/networth_history" => {
             &["mindate", "maxdate", "groupby", "currency", "scheduled"]
         }
@@ -938,6 +1182,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/plots/networth", get(networth))
         .route("/api/metrics", get(metrics))
         .route("/api/ledger/:ids", get(ledger))
+        .route("/api/quotes", get(quotes))
         .fallback(frontend)
         .layer(middleware::from_fn(log_request))
         .with_state(state);
