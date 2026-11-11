@@ -3,6 +3,9 @@ import Ledger, { BaseLedgerProps } from '@/Ledger/View';
 import Panel, { PanelProps, PanelBaseProps } from '@/Dashboard/Panel';
 import Settings from '@/Ledger/Settings';
 import useSearch from '@/services/useSearch';
+import useAccounts from '@/services/useAccounts';
+import useHistory from '@/services/useHistory';
+import { defaultLedgerAccountId } from '@/Ledger/accountSelection';
 
 export interface LedgerPanelProps extends PanelBaseProps, BaseLedgerProps {
    type: 'ledger';
@@ -11,8 +14,12 @@ export interface LedgerPanelProps extends PanelBaseProps, BaseLedgerProps {
 const LedgerPanel: React.FC<
    PanelProps<LedgerPanelProps>
 > = p => {
+   const { accounts } = useAccounts();
+   const { mostRecent } = useHistory();
+   const defaultAccountId = defaultLedgerAccountId(accounts, mostRecent);
    const query = useSearch({
-      accountIds: p.props.accountIds,  // default
+      accountIds: p.props.accountIds
+         ?? (defaultAccountId === undefined ? undefined : [defaultAccountId]),
       range: p.props.range,
    });
    const setSortOn = (sortOn: string) => p.save({ sortOn });

@@ -19,7 +19,12 @@ interface QueryDefaults {
    range?: DateRange;
 }
 
-const parseAccountIds = (s: number|string|undefined): AccountIdSet => {
+const parseAccountIds = (
+   s: AccountIdSet|number|string|undefined,
+): AccountIdSet => {
+   if (Array.isArray(s)) {
+      return s;
+   }
    if (s && !isNumber(s)) {
       const names = s.split(",");
       if (names.length > 1) {
