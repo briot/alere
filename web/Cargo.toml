@@ -5,5 +5,7 @@ edition = "2024"
 
 [dependencies]
 axum = "0.7"
+mime_guess = "2"
+rust-embed = { version = "8", features = ["debug-embed"] }
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "net"] }

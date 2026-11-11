@@ -1,3 +1,5 @@
 Comptes.kmy
 hledger.journal
 *.profraw
+node_modules/
+dist/
