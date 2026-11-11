@@ -212,6 +212,12 @@ impl NetworthRow {
         let cell = self.0.get(idx).ok_or(AlrError::IndexError)?;
         Ok(&cell.value)
     }
+
+    /// Get the market value at a specific index, after currency conversion.
+    pub fn get_market_value(&self, idx: usize) -> Result<&MultiValue> {
+        let cell = self.0.get(idx).ok_or(AlrError::IndexError)?;
+        Ok(&cell.market_value)
+    }
 }
 
 impl core::ops::AddAssign<&NetworthRow> for NetworthRow {

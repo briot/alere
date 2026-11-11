@@ -4,22 +4,32 @@ use alere_lib::{
     commodities::Commodity,
     importers::Importer,
     kmymoney::KmyMoneyImporter,
+    networth::{GroupBy, Networth, Settings},
     repositories::Repository,
+    times::{Instant, Intv},
+    tree_keys::Key,
 };
 use anyhow::Context;
 use axum::{
     Json, Router,
     body::Body,
-    extract::State,
+    extract::{Query, State},
+    http::StatusCode,
     http::{Request, Uri, header},
     middleware::{self, Next},
     response::Response,
     routing::get,
 };
+use chrono::{Local, NaiveDate};
 use rust_embed::RustEmbed;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use std::{net::SocketAddr, path::PathBuf, sync::Arc};
+use std::{
+    net::SocketAddr,
+    path::PathBuf,
+    sync::{Arc, mpsc},
+};
+use tokio::sync::oneshot;
 
 #[derive(RustEmbed)]
 #[folder = "../dist/"]
@@ -28,6 +38,32 @@ struct FrontendAssets;
 #[derive(Serialize)]
 struct HealthResponse {
     status: &'static str,
+}
+
+#[derive(Clone)]
+struct AppState {
+    account_list: Arc<Value>,
+    networth_requests: mpsc::Sender<NetworthRequest>,
+}
+
+struct NetworthRequest {
+    currency_id: u32,
+    dates: Vec<String>,
+    response: oneshot::Sender<Result<Value, String>>,
+}
+
+#[derive(Deserialize)]
+struct NetworthQuery {
+    currency: u32,
+    dates: String,
+}
+
+#[derive(Serialize)]
+struct NetworthAccount {
+    #[serde(rename = "accountId")]
+    account_id: u16,
+    shares: Vec<Option<f64>>,
+    price: Vec<Option<f64>>,
 }
 
 async fn health() -> Json<HealthResponse> {
@@ -144,8 +180,210 @@ fn account_list_json(repository: &Repository) -> Value {
     json!([accounts, commodities, account_kinds, institutions])
 }
 
-async fn account_list(State(response): State<Arc<Value>>) -> Json<Value> {
-    Json(response.as_ref().clone())
+async fn account_list(State(state): State<AppState>) -> Json<Value> {
+    Json(state.account_list.as_ref().clone())
+}
+
+fn parse_networth_dates(value: &str) -> Result<Vec<String>, String> {
+    let dates: Vec<_> = value.split(',').map(str::trim).collect();
+    if dates.is_empty() || dates.iter().any(|date| date.is_empty()) {
+        return Err(
+            "dates must be a comma-separated list of YYYY-MM-DD dates".into()
+        );
+    }
+
+    dates
+        .into_iter()
+        .map(|date| {
+            NaiveDate::parse_from_str(date, "%Y-%m-%d")
+                .map(|_| date.to_owned())
+                .map_err(|_| {
+                    format!("invalid date {date:?}; expected YYYY-MM-DD")
+                })
+        })
+        .collect()
+}
+
+async fn networth(
+    State(state): State<AppState>,
+    Query(query): Query<NetworthQuery>,
+) -> Result<Json<Value>, (StatusCode, String)> {
+    let dates = parse_networth_dates(&query.dates)
+        .map_err(|error| (StatusCode::BAD_REQUEST, error))?;
+    let (response, receiver) = oneshot::channel();
+    state
+        .networth_requests
+        .send(NetworthRequest {
+            currency_id: query.currency,
+            dates,
+            response,
+        })
+        .map_err(|_| {
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "repository worker is unavailable".to_owned(),
+            )
+        })?;
+    let result = receiver.await.map_err(|_| {
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "repository worker stopped before responding".to_owned(),
+        )
+    })?;
+    result
+        .map(Json)
+        .map_err(|error| (StatusCode::BAD_REQUEST, error))
+}
+
+fn networth_json(
+    repository: &Repository,
+    currency_id: u32,
+    date_strings: &[String],
+) -> anyhow::Result<Value> {
+    let currency = repository
+        .commodities
+        .iter_commodities()
+        .find(|commodity| commodity.get_id().as_u32() == currency_id)
+        .cloned()
+        .with_context(|| format!("unknown currency id {currency_id}"))?;
+    let intervals = date_strings
+        .iter()
+        .cloned()
+        .map(|date| Intv::UpTo(Instant::EndDay(date)))
+        .collect();
+    let networth = Networth::new(
+        repository,
+        Settings {
+            hide_zero_rows: false,
+            hide_all_same: false,
+            group_by: GroupBy::None,
+            subtotals: false,
+            commodity: Some(currency.clone()),
+            elide_boring_accounts: false,
+            intervals,
+        },
+        Local::now(),
+        |account| account.get_kind().is_networth(),
+    )?;
+
+    let mut accounts = Vec::new();
+    networth.tree.traverse(
+        |node| {
+            let Key::Account(account) = &node.data.key else {
+                return Ok(());
+            };
+
+            let mut shares = Vec::with_capacity(date_strings.len());
+            let mut prices = Vec::with_capacity(date_strings.len());
+            for index in 0..date_strings.len() {
+                let balance = node.data.data.get_value(index)?;
+                let market_value = node.data.data.get_market_value(index)?;
+                let share_value = account
+                    .get_display_commodity()
+                    .and_then(|commodity| {
+                        balance
+                            .iter()
+                            .find(|value| value.commodity == commodity)
+                            .map(|value| value.amount)
+                    })
+                    .or_else(|| {
+                        let mut values = balance.iter();
+                        let first = values.next()?;
+                        values.next().is_none().then_some(first.amount)
+                    });
+                let converted_value = market_value
+                    .iter()
+                    .find(|value| value.commodity == currency)
+                    .map(|value| value.amount);
+
+                match (share_value, converted_value) {
+                    (Some(shares_at_date), Some(value_at_date))
+                        if !shares_at_date.is_zero() =>
+                    {
+                        shares.push(shares_at_date.to_string().parse().ok());
+                        prices.push(
+                            (value_at_date / shares_at_date)
+                                .to_string()
+                                .parse()
+                                .ok(),
+                        );
+                    }
+                    (Some(shares_at_date), Some(value_at_date))
+                        if shares_at_date.is_zero()
+                            && !account.get_kind().is_stock() =>
+                    {
+                        shares.push(value_at_date.to_string().parse().ok());
+                        prices.push(Some(1.0));
+                    }
+                    (None, Some(value_at_date))
+                        if !account.get_kind().is_stock() =>
+                    {
+                        // For a non-stock account with several commodities,
+                        // report its converted total as shares at unit price.
+                        shares.push(value_at_date.to_string().parse().ok());
+                        prices.push(Some(1.0));
+                    }
+                    _ => {
+                        shares.push(None);
+                        prices.push(None);
+                    }
+                }
+            }
+            accounts.push(NetworthAccount {
+                account_id: account.get_id().as_u16(),
+                shares,
+                price: prices,
+            });
+            Ok(())
+        },
+        true,
+    )?;
+
+    Ok(serde_json::to_value(accounts)?)
+}
+
+fn start_repository_worker(
+    input: PathBuf,
+) -> anyhow::Result<(Value, mpsc::Sender<NetworthRequest>)> {
+    let (request_sender, request_receiver) = mpsc::channel::<NetworthRequest>();
+    let (ready_sender, ready_receiver) = mpsc::channel();
+    std::thread::Builder::new()
+        .name("alere-repository".to_owned())
+        .spawn(move || {
+            let mut importer = KmyMoneyImporter::default();
+            let repository = futures::executor::block_on(
+                importer.import_file(&input, |_, _| {}),
+            );
+            let repository = match repository {
+                Ok(repository) => repository,
+                Err(error) => {
+                    let _ = ready_sender.send(Err(error.to_string()));
+                    return;
+                }
+            };
+            if ready_sender
+                .send(Ok(account_list_json(&repository)))
+                .is_err()
+            {
+                return;
+            }
+
+            while let Ok(request) = request_receiver.recv() {
+                let result = networth_json(
+                    &repository,
+                    request.currency_id,
+                    &request.dates,
+                )
+                .map_err(|error| format!("compute net worth: {error:#}"));
+                let _ = request.response.send(result);
+            }
+        })?;
+
+    let account_list = ready_receiver
+        .recv()
+        .context("repository worker stopped during startup")?
+        .map_err(anyhow::Error::msg)?;
+    Ok((account_list, request_sender))
 }
 
 async fn log_request(request: Request<Body>, next: Next) -> Response<Body> {
@@ -199,20 +437,20 @@ async fn main() -> anyhow::Result<()> {
     let input = std::env::var_os("ALERE_KMY")
         .map(PathBuf::from)
         .unwrap_or_else(|| PathBuf::from("./Comptes.kmy"));
-    let mut importer = KmyMoneyImporter::default();
-    let repository =
-        futures::executor::block_on(importer.import_file(&input, |_, _| {}))
-            .with_context(|| {
-                format!("import KMyMoney file {}", input.display())
-            })?;
-    let response_json = Arc::new(account_list_json(&repository));
+    let (account_list_data, networth_requests) =
+        start_repository_worker(input)?;
+    let state = AppState {
+        account_list: Arc::new(account_list_data),
+        networth_requests,
+    };
 
     let app = Router::new()
         .route("/api/health", get(health))
         .route("/api/account/list", get(account_list))
+        .route("/api/plots/networth", get(networth))
         .fallback(frontend)
         .layer(middleware::from_fn(log_request))
-        .with_state(response_json);
+        .with_state(state);
     let address = std::env::var("ALERE_ADDR")
         .ok()
         .and_then(|value| value.parse::<SocketAddr>().ok())

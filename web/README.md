@@ -7,6 +7,11 @@ use another KMyMoney file. It listens on `127.0.0.1:3000`.
 Each request is logged with its method, full URI, and response status, including
 unsupported paths (for example, `GET /api/accounts -> 404`).
 
+`GET /api/plots/networth?currency=1&dates=2025-11-11,2026-10-11,2026-11-11`
+returns one object per net-worth account. Each object has `accountId`, plus
+`shares` and `price` arrays aligned with the requested dates. `currency` is a
+commodity ID from `/api/account/list`; dates use `YYYY-MM-DD` format.
+
 From the repository root, build the frontend once and run the API with:
 
 ```sh
