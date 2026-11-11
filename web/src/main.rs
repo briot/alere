@@ -1,7 +1,8 @@
 use axum::{
     Json, Router,
     body::Body,
-    http::{Uri, header},
+    http::{Request, Uri, header},
+    middleware::{self, Next},
     response::Response,
     routing::get,
 };
@@ -20,6 +21,14 @@ struct HealthResponse {
 
 async fn health() -> Json<HealthResponse> {
     Json(HealthResponse { status: "ok" })
+}
+
+async fn log_request(request: Request<Body>, next: Next) -> Response<Body> {
+    let method = request.method().clone();
+    let uri = request.uri().clone();
+    let response = next.run(request).await;
+    println!("{method} {uri} -> {}", response.status());
+    response
 }
 
 async fn frontend(uri: Uri) -> Response<Body> {
@@ -64,7 +73,8 @@ async fn frontend(uri: Uri) -> Response<Body> {
 async fn main() {
     let app = Router::new()
         .route("/api/health", get(health))
-        .fallback(frontend);
+        .fallback(frontend)
+        .layer(middleware::from_fn(log_request));
     let address = std::env::var("ALERE_ADDR")
         .ok()
         .and_then(|value| value.parse::<SocketAddr>().ok())
@@ -74,6 +84,10 @@ async fn main() {
         .expect("bind web server address");
 
     println!("Alere API listening on http://{address}");
+    println!(
+        "Windows browser (WSL2): http://localhost:{}",
+        address.port()
+    );
     axum::serve(listener, app)
         .await
         .expect("serve HTTP requests");

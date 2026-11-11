@@ -2,6 +2,8 @@
 
 The initial Axum server exposes one endpoint: `GET /api/health`, returning
 `{"status":"ok"}`. It listens on `127.0.0.1:3000`.
+Each request is logged with its method, full URI, and response status, including
+unsupported paths (for example, `GET /api/accounts -> 404`).
 
 From the repository root, build the frontend once and run the API with:
 
