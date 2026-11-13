@@ -1177,6 +1177,7 @@ pub(super) fn metrics_json(
         "unrealized_liquid": as_number(decimal_in_currency(&metric.unrealized_liquid, &currency)),
         "pnl_illiquid": as_number(decimal_in_currency(&metric.pnl_illiquid, &currency)),
         "saving_rate": as_percent(metric.saving_rate),
+        "saving_rate_realized": as_percent(metric.saving_rate_realized),
         "financial_independence": as_percent(metric.financial_independence),
         "passive_income_ratio": as_percent(metric.passive_income_ratio),
         "roi": as_percent(metric.roi),

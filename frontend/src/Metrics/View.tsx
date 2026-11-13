@@ -69,13 +69,21 @@ const Metrics: React.FC<MetricsProps> = p => {
          {/* thepoorswiss.com/11-best-personal-finance-metrics/ */}
          <MetricsLine
             name="Savings rate"
-            descr="How much of your realized income you are saving"
+            descr="How much of your total income you are saving"
             value={pl.saving_rate}
             tooltip={() =>
                <p>
-                  cashflow <Numeric amount={pl.income - pl.expenses} />
+                  Total P&L <Numeric amount={pl.networth - pl.networth_start} />
                   <br/>
-                  / income <Numeric amount={pl.income} />
+                  / Total income <Numeric amount={pl.income + pl.unrealized} />
+                  <br/>
+                  Total saving rate <Numeric amount={pl.saving_rate} suffix=" %" />
+                  <br/><br/>
+                  Realized cashflow <Numeric amount={pl.income - pl.expenses} />
+                  <br/>
+                  / Realized income <Numeric amount={pl.income} />
+                  <br/>
+                  Realized saving rate <Numeric amount={pl.saving_rate_realized} suffix=" %" />
                   <br/>
                   Goal: more than 20%
                </p>

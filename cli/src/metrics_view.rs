@@ -83,6 +83,9 @@ pub fn metrics_view(
         //     s.pnl_illiquid.display(&globals.format)
         // }),
         MetricRow::new("Saving Rate", &m, |s| percent(&s.saving_rate)),
+        MetricRow::new("  inc Realized", &m, |s| {
+            percent(&s.saving_rate_realized)
+        }),
         MetricRow::new("Financial Independence", &m, |s| {
             percent(&s.financial_independence)
         }),

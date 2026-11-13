@@ -17,6 +17,7 @@ export interface Metric {
    unrealized_liquid: number;
    pnl_illiquid: number;
    saving_rate: number;
+   saving_rate_realized: number;
    financial_independence: number;
    passive_income_ratio: number;
    roi: number;
@@ -41,6 +42,7 @@ const NULL_METRIC: Metric = {
    unrealized_liquid: NaN,
    pnl_illiquid: NaN,
    saving_rate: NaN,
+   saving_rate_realized: NaN,
    financial_independence: NaN,
    passive_income_ratio: NaN,
    roi: NaN,

@@ -196,9 +196,10 @@ pub struct Metrics {
     pub unrealized_liquid: MultiValue,
     pub unrealized_illiquid: MultiValue,
 
-    // Saving rate = 1 - Expense / Income
-    // How much of the income we are saving (i.e. they remain in accounts)
+    // P&L / total income, where total income includes unrealized income.
     pub saving_rate: Option<Decimal>,
+    // Realized cashflow / realized income.
+    pub saving_rate_realized: Option<Decimal>,
 
     // Financial independence = (passive_income + unrealized_income) / expenses
     // How much our expenses are covered by passive income.  I.e. would we be
@@ -276,13 +277,15 @@ impl Metrics {
         let expense = &args.expense - &pnl_liabilities;
         let cashflow = &args.income + &expense;
         let unrealized = &pnl + &cashflow;
+        let total_income = -&args.income + &unrealized;
         let unrealized_liquid = &pnl_liquid + &cashflow;
         let days = interval.duration(now).num_days();
         let daily_expense = &expense / Decimal::from(days);
         Metrics {
             interval,
             unrealized_liquid: &pnl_liquid + &cashflow,
-            saving_rate: &cashflow / &args.income,
+            saving_rate: &pnl / &total_income,
+            saving_rate_realized: &cashflow / &args.income,
             financial_independence: (&unrealized - &args.passive_income)
                 / &expense,
             passive_income_ratio: (&args.passive_income - &unrealized)
