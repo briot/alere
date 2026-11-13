@@ -396,7 +396,7 @@ pub enum Intv {
 
     LastNYears(i32), // from same date and time, n years ago, to now
     SpecificYear(u16), // one specific year (e.g. 2023)
-    YearAgo(i32),    // a full year: 0=current year, -1=last year,...
+    YearAgo(i32),    // a full year: 0=current year, 1=last year,...
     Yearly {
         begin: Instant,
         end: Instant,

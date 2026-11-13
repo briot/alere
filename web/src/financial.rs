@@ -1139,11 +1139,11 @@ pub(super) fn metrics_json(
         "5 years" => Intv::LastNYears(5),
         "current year so far" => Intv::YearToDate,
         "current year" => Intv::YearAgo(0),
-        "last year" => Intv::YearAgo(-1),
-        "2 years ago" => Intv::YearAgo(-2),
-        "3 years ago" => Intv::YearAgo(-3),
-        "4 years ago" => Intv::YearAgo(-4),
-        "5 years ago" => Intv::YearAgo(-5),
+        "last year" => Intv::YearAgo(1),
+        "2 years ago" => Intv::YearAgo(2),
+        "3 years ago" => Intv::YearAgo(3),
+        "4 years ago" => Intv::YearAgo(4),
+        "5 years ago" => Intv::YearAgo(5),
         _ => fallback_interval()?,
     };
     let mut metrics = alere_lib::metrics::Metrics::load(
