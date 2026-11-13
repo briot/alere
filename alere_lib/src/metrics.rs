@@ -205,8 +205,9 @@ pub struct Metrics {
     // able to cover those expenses if we stopped getting a salary.
     pub financial_independence: Option<Decimal>,
 
-    // Passive income ratio = (passive_income + unrealized) / income
-    // What part of total income comes from sources other that salaries
+    // Passive income ratio = (passive_income + unrealized)
+    //                       / (income + unrealized)
+    // What part of total income comes from sources other than salaries
     pub passive_income_ratio: Option<Decimal>,
 
     // Return-on-Investment =
@@ -285,7 +286,7 @@ impl Metrics {
             financial_independence: (&unrealized - &args.passive_income)
                 / &expense,
             passive_income_ratio: (&args.passive_income - &unrealized)
-                / &args.income,
+                / (&args.income - &unrealized),
             roi: (&args.passive_income + &unrealized
                 + &pnl_illiquid - &pnl_liabilities)
                 / &start_nw,

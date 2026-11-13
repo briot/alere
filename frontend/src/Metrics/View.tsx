@@ -152,7 +152,7 @@ const Metrics: React.FC<MetricsProps> = p => {
                   Passive income and unrealized
                   gains <Numeric amount={non_work_income} />
                   <br/>
-                  / Total Income <Numeric amount={pl.income} />
+                  / Total Income <Numeric amount={pl.income + pl.unrealized} />
                   <br/>
                   Goal: more than 50%
                </p>
