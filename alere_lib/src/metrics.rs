@@ -233,8 +233,10 @@ pub struct Metrics {
 struct MetricsArgs {
     start_liquid: MultiValue,
     start_illiquid: MultiValue,
+    start_liabilities: MultiValue,
     end_liquid: MultiValue,
     end_illiquid: MultiValue,
+    end_liabilities: MultiValue,
     income: MultiValue,
     passive_income: MultiValue,
     work_income: MultiValue,
@@ -255,28 +257,37 @@ impl Metrics {
         let start_liquid = prices.convert_multi_value(&args.start_liquid, lo);
         let start_illiquid =
             prices.convert_multi_value(&args.start_illiquid, lo);
+        let start_liabilities =
+            prices.convert_multi_value(&args.start_liabilities, lo);
         let end_liquid = prices.convert_multi_value(&args.end_liquid, up);
         let end_illiquid = prices.convert_multi_value(&args.end_illiquid, up);
+        let end_liabilities =
+            prices.convert_multi_value(&args.end_liabilities, up);
         let income_tax = prices.convert_multi_value(&args.income_tax, up);
-        let cashflow = &args.income + &args.expense;
         let start_nw = &start_liquid + &start_illiquid;
         let end_nw = &end_liquid + &end_illiquid;
         let pnl = &end_nw - &start_nw;
         let pnl_liquid = &end_liquid - &start_liquid;
         let pnl_illiquid = &end_illiquid - &start_illiquid;
+        let pnl_liabilities = &end_liabilities - &start_liabilities;
+        // Changes in liability accounts are treated as expenses, rather
+        // than as unrealized changes in illiquid net worth.
+        let expense = &args.expense - &pnl_liabilities;
+        let cashflow = &args.income + &expense;
         let unrealized = &pnl + &cashflow;
         let unrealized_liquid = &pnl_liquid + &cashflow;
         let days = interval.duration(now).num_days();
-        let daily_expense = &args.expense / Decimal::from(days);
+        let daily_expense = &expense / Decimal::from(days);
         Metrics {
             interval,
             unrealized_liquid: &pnl_liquid + &cashflow,
             saving_rate: &cashflow / &args.income,
             financial_independence: (&unrealized - &args.passive_income)
-                / &args.expense,
+                / &expense,
             passive_income_ratio: (&args.passive_income - &unrealized)
                 / &args.income,
-            roi: (&args.passive_income + &unrealized + &pnl_illiquid)
+            roi: (&args.passive_income + &unrealized
+                + &pnl_illiquid - &pnl_liabilities)
                 / &start_nw,
             roi_liquid: (&args.passive_income + unrealized_liquid)
                 / &start_liquid,
@@ -284,7 +295,9 @@ impl Metrics {
             wealth: &end_nw / &daily_expense,
             income_tax_rate: &income_tax / -&args.income,
             unrealized,
-            unrealized_illiquid: pnl_illiquid.clone(),
+            // Liability balance changes remain in net worth and are
+            // classified as expenses above, not illiquid unrealized changes.
+            unrealized_illiquid: &pnl_illiquid - &pnl_liabilities,
             income_tax,
             misc_tax: args.misc_tax,
             start_networth_liquid: start_liquid,
@@ -296,7 +309,7 @@ impl Metrics {
             income: args.income,
             passive_income: args.passive_income,
             work_income: args.work_income,
-            expense: args.expense,
+            expense,
             pnl,
             pnl_liquid,
             pnl_illiquid,
@@ -359,7 +372,13 @@ impl Metrics {
                         // An operation before the start of the time range:
                         // this is used to compute the starting state
                         if interval.intv.strictly_right_of(s.post_ts) {
-                            if kind.is_liquid() {
+                            if matches!(
+                                kind.get_category(),
+                                crate::account_categories::AccountCategory::LIABILITY
+                            ) {
+                                args.start_liabilities.apply(&s.operation);
+                                args.start_illiquid.apply(&s.operation);
+                            } else if kind.is_liquid() {
                                 args.start_liquid.apply(&s.operation);
                             } else {
                                 args.start_illiquid.apply(&s.operation);
@@ -369,7 +388,13 @@ impl Metrics {
                         // An operation before the end of the time range:
                         // this is used to compute the ending state.
                         if !interval.intv.strictly_left_of(s.post_ts) {
-                            if kind.is_liquid() {
+                            if matches!(
+                                kind.get_category(),
+                                crate::account_categories::AccountCategory::LIABILITY
+                            ) {
+                                args.end_liabilities.apply(&s.operation);
+                                args.end_illiquid.apply(&s.operation);
+                            } else if kind.is_liquid() {
                                 args.end_liquid.apply(&s.operation);
                             } else {
                                 args.end_illiquid.apply(&s.operation);
