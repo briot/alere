@@ -91,24 +91,6 @@ const Metrics: React.FC<MetricsProps> = p => {
             suffix=" %"
          />
 
-         <MetricsLine
-            name="Return on Investment for liquid assets"
-            descr="How much passive income your liquid assets provides"
-            value={pl.roi_liquid}
-            tooltip={() =>
-               <p>
-                  Passive income and unrealized liquid gains
-                  <Numeric amount={liquid_passive_income} />
-                  <br />
-                  / Liquid assets at
-                  start <Numeric amount={pl.liquid_assets_at_start} />
-                  <br/>
-                  Goal: more than 4%
-               </p>
-            }
-            suffix=" %"
-         />
-
          {/* www.doughroller.net/personal-finance/3-step-financial-checkup/ */}
          <MetricsLine
             name="Emergency Fund Ratio"
@@ -178,6 +160,24 @@ const Metrics: React.FC<MetricsProps> = p => {
                   <Numeric amount={total_return_income} />
                   <br/>
                   / Networth at start <Numeric amount={pl.networth_start} />
+                  <br/>
+                  Goal: more than 4%
+               </p>
+            }
+            suffix=" %"
+         />
+
+         <MetricsLine
+            name="Return on Investment for liquid assets"
+            descr="How much passive income your liquid assets provides"
+            value={pl.roi_liquid}
+            tooltip={() =>
+               <p>
+                  Passive income and unrealized liquid gains
+                  <Numeric amount={liquid_passive_income} />
+                  <br />
+                  / Liquid assets at
+                  start <Numeric amount={pl.liquid_assets_at_start} />
                   <br/>
                   Goal: more than 4%
                </p>
